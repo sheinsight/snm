@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/cli",
+    "crates/snm_pm",
+    "crates/snm_node",
+    "crates/snm_core",
+]
