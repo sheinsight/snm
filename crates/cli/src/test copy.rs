@@ -6,19 +6,6 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::time::Instant;
 
-#[derive(Deserialize, Debug)]
-struct PackageInfo {
-    version: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct LockFile {
-    packages: HashMap<String, PackageInfo>,
-
-    #[serde(alias = "lockfileVersion")]
-    lockfile_version: u8,
-}
-
 // 定义节点结构体，用于存储路径段和子节点
 #[derive(Debug, Default, Serialize, Clone)]
 struct Node {
@@ -127,57 +114,57 @@ fn main() -> Result<()> {
     // let file_path = "/Users/10015448/GitRepository/plm-front/package-lock.json";
     let file_path = "/Users/ityuany/GitRepository/pdc/package-lock.json";
     let data = fs::read_to_string(file_path).expect("Unable to read file");
-    // let mut v: Value = serde_json::from_str(&data).unwrap();
+    let mut v: Value = serde_json::from_str(&data).unwrap();
 
-    let mut v: LockFile = serde_json::from_str(&data).unwrap();
-
-    if v.lockfile_version == 1u8 {
-        println!("package-lock.json version is 1, please update to version 2");
+    if let Value::Number(root) = &v["lockfileVersion"] {
+        if root.as_i64().unwrap() == 1 {
+            println!("package-lock.json version is 1, please update to version 2");
+        }
     }
 
-    let nodeList = v
-        .packages
-        .iter()
-        .filter(|(k, _)| !k.is_empty())
-        .map(|(k, v)| Node {
-            name: k
-                .clone()
-                .split("/")
-                .filter(|&seg| seg != "node_modules")
-                .collect::<Vec<&str>>()
-                .join("/"),
-            version: v.version.to_string(),
+    if let Value::Object(package) = &v["packages"] {
+        let nodeList = package
+            .iter()
+            .filter(|(k, _)| !k.is_empty())
+            .map(|(k, v)| Node {
+                name: k
+                    .clone()
+                    .split("/")
+                    .filter(|&seg| seg != "node_modules")
+                    .collect::<Vec<&str>>()
+                    .join("/"),
+                version: v["version"].as_str().unwrap().to_string(),
+                children: HashMap::new(),
+                // resolved: v["resolved"].as_str().unwrap().to_string(),
+                // integrity: v["integrity"].as_str().unwrap().to_string(),
+                // dev: v["dev"].as_bool().unwrap(),
+                // license: v["license"].as_str().unwrap().to_string(),
+            })
+            .collect::<Vec<Node>>();
+
+        let mut root = Node {
+            name: ".".to_string(),
+            version: ".".to_string(),
             children: HashMap::new(),
-            // resolved: v["resolved"].as_str().unwrap().to_string(),
-            // integrity: v["integrity"].as_str().unwrap().to_string(),
-            // dev: v["dev"].as_bool().unwrap(),
-            // license: v["license"].as_str().unwrap().to_string(),
-        })
-        .collect::<Vec<Node>>();
+        };
 
-    let mut root = Node {
-        name: ".".to_string(),
-        version: ".".to_string(),
-        children: HashMap::new(),
-    };
+        nodeList.iter().for_each(|node| {
+            let path = simplify_path_with_scope(&node.name.to_string());
+            insert(&mut root, &path, &node.version);
+        });
 
-    nodeList.iter().for_each(|node| {
-        let path = simplify_path_with_scope(&node.name.to_string());
-        insert(&mut root, &path, &node.version);
-    });
+        let query = "query-string";
 
-    let query = "query-string";
+        let mut cache: HashMap<String, Option<Node>> = HashMap::new(); // 创建
 
-    let mut cache: HashMap<String, Option<Node>> = HashMap::new(); // 创建
+        let x = filter_dependencies(&root, query, &mut cache);
 
-    let x = filter_dependencies(&root, query, &mut cache);
+        if let Some(v) = x {
+            print_tree(&v, "".to_string(), true, query);
+        }
 
-    if let Some(v) = x {
-        print_tree(&v, "".to_string(), true, query);
+        // println!("{}", serde_json::to_string_pretty(&root).unwrap());
     }
-
-    // println!("{}", serde_json::to_string_pretty(&root).unwrap());
-
     // 计算并打印经过的时间
     let duration = start.elapsed();
 
