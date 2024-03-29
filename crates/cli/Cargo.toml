@@ -1,0 +1,46 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[[bin]]
+name = "snm"
+path = "src/main.rs"
+
+[[bin]]
+name = "npm"
+path = "src/shim/npm.rs"
+
+[[bin]]
+name = "pnpm"
+path = "src/shim/pnpm.rs"
+
+[[bin]]
+name = "yarn"
+path = "src/shim/yarn.rs"
+
+[[bin]]
+name = "node"
+path = "src/shim/node.rs"
+
+[dependencies]
+log = "0.4.20"
+anyhow = "1.0"
+colored = "2.1.0"
+semver = "1.0.21"
+serde_json = "1.0"
+dialoguer = "0.11.0"
+env_logger = "0.11.2"
+crossterm = "0.27.0"
+snm_pm = { path = "../snm_pm"}
+snm_core ={ path = "../snm_core"}
+snm_node = { path = "../snm_node" }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0.0", features = ["full"] }
+clap = { version = "4.5.1" , features = ["derive"] }
+ansi_term = "0.12.1"
+regex = "1.10.4"
+glob = "0.3.1"
