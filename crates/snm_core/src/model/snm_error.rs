@@ -1,5 +1,5 @@
 use colored::*;
-use std::{io::stdout, path::StripPrefixError};
+use std::{env::VarError, io::stdout, path::StripPrefixError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -78,6 +78,12 @@ pub enum SnmError {
 
     #[error("Multi package manager lock file error")]
     MultiPackageManagerLockFileError { lock_file: Vec<String> },
+}
+
+impl From<VarError> for SnmError {
+    fn from(_error: VarError) -> Self {
+        SnmError::UnknownError
+    }
 }
 
 impl From<semver::Error> for SnmError {
