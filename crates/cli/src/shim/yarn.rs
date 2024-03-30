@@ -1,6 +1,15 @@
+use snm_core::model::snm_error::handle_snm_error;
+
 mod shim;
 
 #[tokio::main]
 async fn main() {
-    crate::shim::launch("yarn").await;
+    match crate::shim::launch("yarn").await {
+        Ok(output) => {
+            if !output.status.success() {
+                std::process::exit(output.status.code().unwrap_or(-1));
+            }
+        }
+        Err(error) => handle_snm_error(error),
+    }
 }
