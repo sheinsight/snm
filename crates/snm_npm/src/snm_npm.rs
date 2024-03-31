@@ -11,6 +11,7 @@ use snm_core::{
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
+        package_manager_parser::parse_package_json_bin_to_hashmap,
         tarball::decompress_tgz,
     },
 };
@@ -134,6 +135,45 @@ impl SnmNpm {
         Self {
             prefix: prefix.unwrap_or("npm".to_string()),
         }
+    }
+
+    pub async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
+
+        if let Some(v) = v {
+            let pkg = node_modules_dir
+                .join(format!("{}@{}", self.prefix, v))
+                .join("package.json");
+
+            let bin = parse_package_json_bin_to_hashmap(&pkg)
+                .await?
+                .get(bin)
+                .map(|bin_file_path| PathBuf::from(bin_file_path))
+                .ok_or(SnmError::UnknownError)?;
+
+            return Ok(bin);
+        }
+
+        let default_dir = node_modules_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .find_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| file_name.ends_with("default"))
+            })
+            .map(|dir_name| node_modules_dir.join(dir_name))
+            .ok_or(SnmError::UnknownError)?;
+
+        let bin = parse_package_json_bin_to_hashmap(&default_dir.join("package.json"))
+            .await?
+            .get(bin)
+            .map(|bin_file_path| PathBuf::from(bin_file_path))
+            .ok_or(SnmError::UnknownError)?;
+
+        return Ok(bin);
     }
 
     pub async fn install(&self, v: &str) -> Result<(), SnmError> {

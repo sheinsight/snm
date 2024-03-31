@@ -9,7 +9,12 @@ async fn main() {
     init_config().unwrap();
     // todo!("execute_command")
     let snm_npm = SnmNpm::new(None);
-    snm_npm.install("6.14.4").await.unwrap();
+
+    let res = snm_npm.use_bin("npm", None).await.unwrap();
+
+    println!("{:?}", res);
+
+    // snm_npm.install("6.14.4").await.unwrap();
 
     // snm_npm.uninstall("6.14.4").unwrap();
 
