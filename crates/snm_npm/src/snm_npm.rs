@@ -1,9 +1,11 @@
 use std::{
-    fs::{self, DirEntry},
+    default,
+    fs::{self, remove_dir_all, DirEntry},
     io::stdout,
     path::{Path, PathBuf},
 };
 
+use async_trait::async_trait;
 use dialoguer::Confirm;
 use snm_core::{
     config::{DOWNLOAD_DIR_KEY, NODE_MODULES_DIR_KEY, SNM_NPM_REGISTRY_HOST_KEY},
@@ -21,6 +23,29 @@ pub struct SnmNpm {
 }
 
 impl SnmNpm {
+    pub fn new(prefix: Option<String>) -> Self {
+        Self {
+            prefix: prefix.unwrap_or("npm".to_string()),
+        }
+    }
+}
+
+#[async_trait(?Send)]
+pub trait SnmNpmTrait {
+    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError>;
+
+    async fn install(&self, v: &str) -> Result<(), SnmError>;
+
+    async fn default(&self, v: &str) -> Result<bool, SnmError>;
+
+    fn uninstall(&self, v: &str) -> Result<(), SnmError>;
+
+    fn list(&self) -> Result<(), SnmError>;
+
+    fn set_prefix(&mut self, prefix: String);
+
+    fn get_prefix(&self) -> String;
+
     fn decompress(&self, tar: &PathBuf, v: &str) -> Result<PathBuf, SnmError> {
         let npm_dir = self.get_npm_dir(v)?;
 
@@ -29,7 +54,12 @@ impl SnmNpm {
         let mut progress = Some(|_from: &PathBuf, _to: &PathBuf| {
             // print_warning!(stdout, "Waiting Decompress...")
         });
-        decompress_tgz(&tar, &npm_dir, &mut progress)?;
+        decompress_tgz(
+            &tar,
+            &npm_dir,
+            |output| output.join("package"),
+            &mut progress,
+        )?;
         println_success!(stdout, "Decompressed");
 
         Ok(npm_dir)
@@ -55,7 +85,8 @@ impl SnmNpm {
         let proceed = Confirm::new()
             .with_prompt(format!(
                 "🤔 {} {} is installed, do you want to uninstall it ?",
-                self.prefix, &v
+                self.get_prefix(),
+                &v
             ))
             .interact()?;
         Ok(proceed)
@@ -65,7 +96,8 @@ impl SnmNpm {
         let proceed = Confirm::new()
             .with_prompt(format!(
                 "🤔 {} {} is already installed, do you want to reinstall it ?",
-                self.prefix, &v
+                self.get_prefix(),
+                &v
             ))
             .interact()?;
         Ok(proceed)
@@ -75,7 +107,8 @@ impl SnmNpm {
         let proceed = Confirm::new()
             .with_prompt(format!(
                 "🤔 {} {} does not exist, do you want to download it ?",
-                self.prefix, &v
+                self.get_prefix(),
+                &v
             ))
             .interact()?;
         Ok(proceed)
@@ -88,13 +121,13 @@ impl SnmNpm {
 
     fn get_npm_dir(&self, v: &str) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
-        let dir = node_modules_dir.join(format!("{}@{}", self.prefix, v));
+        let dir = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
         Ok(dir)
     }
 
     fn get_npm_dir_for_default(&self, v: &str) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
-        let dir = node_modules_dir.join(format!("{}@{}-default", self.prefix, v));
+        let dir = node_modules_dir.join(format!("{}@{}-default", self.get_prefix(), v));
         Ok(dir)
     }
 
@@ -102,7 +135,10 @@ impl SnmNpm {
         let npm_registry = self.get_npm_registry()?;
         let url = format!(
             "{}/{}/-/{}-{}.tgz",
-            npm_registry, self.prefix, self.prefix, v
+            npm_registry,
+            self.get_prefix(),
+            self.get_prefix(),
+            v
         );
         Ok(url)
     }
@@ -125,24 +161,48 @@ impl SnmNpm {
     fn get_tar_file_path(&self, v: &str) -> Result<PathBuf, SnmError> {
         let download_dir = self.get_download_dir()?;
         let download_dir_buf = PathBuf::from(download_dir);
-        let tar_file_path = download_dir_buf.join(format!("{}@{}.tgz", self.prefix, v));
+        let tar_file_path = download_dir_buf.join(format!("{}@{}.tgz", self.get_prefix(), v));
         Ok(tar_file_path)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(
+        &self,
+        original: P,
+        link: Q,
+    ) -> std::io::Result<()> {
+        // 在 Windows 上创建目录符号链接
+        std::os::windows::fs::symlink_dir(original, link)
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(
+        &self,
+        original: P,
+        link: Q,
+    ) -> std::io::Result<()> {
+        // 对于非 Windows 的 Unix 系统，包括 Linux 和 macOS，创建符号链接
+        // macOS 基于 Unix，因此这部分代码也适用于 macOS。
+        std::os::unix::fs::symlink(original, link)
     }
 }
 
-impl SnmNpm {
-    pub fn new(prefix: Option<String>) -> Self {
-        Self {
-            prefix: prefix.unwrap_or("npm".to_string()),
-        }
+#[async_trait(?Send)]
+impl SnmNpmTrait for SnmNpm {
+    fn set_prefix(&mut self, prefix: String) {
+        self.prefix = prefix;
     }
 
-    pub async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
+    fn get_prefix(&self) -> String {
+        self.prefix.clone()
+    }
+
+    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
 
         if let Some(v) = v {
             let pkg = node_modules_dir
-                .join(format!("{}@{}", self.prefix, v))
+                .join(format!("{}@{}", self.get_prefix(), v))
                 .join("package.json");
 
             let bin = parse_package_json_bin_to_hashmap(&pkg)
@@ -176,7 +236,7 @@ impl SnmNpm {
         return Ok(bin);
     }
 
-    pub async fn install(&self, v: &str) -> Result<(), SnmError> {
+    async fn install(&self, v: &str) -> Result<(), SnmError> {
         let package_json_file = self.get_npm_package_json_file(v)?;
 
         if package_json_file.exists() && !self.ask_reinstall(v)? {
@@ -189,7 +249,7 @@ impl SnmNpm {
         Ok(())
     }
 
-    pub fn uninstall(&self, v: &str) -> Result<(), SnmError> {
+    fn uninstall(&self, v: &str) -> Result<(), SnmError> {
         let dirs = self
             .get_node_modules_dir()?
             .read_dir()?
@@ -200,7 +260,7 @@ impl SnmNpm {
                     .into_string()
                     .ok()
                     .filter(|file_name| {
-                        file_name.starts_with(format!("{}@{}", self.prefix, &v).as_str())
+                        file_name.starts_with(format!("{}@{}", self.get_prefix(), &v).as_str())
                     })
                     .map(|_| item)
             })
@@ -209,7 +269,8 @@ impl SnmNpm {
         if dirs.is_empty() {
             println!(
                 "{} {} is not found , please check you input version",
-                self.prefix, &v
+                self.get_prefix(),
+                &v
             );
             return Ok(());
         }
@@ -223,7 +284,7 @@ impl SnmNpm {
         Ok(())
     }
 
-    pub fn list(&self) -> Result<(), SnmError> {
+    fn list(&self) -> Result<(), SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
 
         // find dir
@@ -235,7 +296,9 @@ impl SnmNpm {
                 item.file_name()
                     .into_string()
                     .ok()
-                    .filter(|file_name| file_name.starts_with(format!("{}@", self.prefix).as_str()))
+                    .filter(|file_name| {
+                        file_name.starts_with(format!("{}@", self.get_prefix()).as_str())
+                    })
                     .map(|_| item)
             })
             .collect::<Vec<DirEntry>>();
@@ -249,7 +312,22 @@ impl SnmNpm {
         Ok(())
     }
 
-    pub async fn default(&self, v: &str) -> Result<bool, SnmError> {
+    async fn default(&self, v: &str) -> Result<bool, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
+        node_modules_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .filter_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| file_name.ends_with("default"))
+            })
+            .map(|dir_name| node_modules_dir.join(dir_name))
+            .into_iter()
+            .try_for_each(|item| fs::remove_dir_all(item))?;
+
         let package_json_file = self.get_npm_package_json_file(v)?;
         if !package_json_file.exists() {
             let proceed = self.ask_download(v)?;
@@ -261,20 +339,7 @@ impl SnmNpm {
         }
         let npm_dir = self.get_npm_dir(v)?;
         let npm_default_dir = self.get_npm_dir_for_default(v)?;
-        create_symlink(npm_dir, npm_default_dir)?;
+        self.create_symlink(npm_dir, npm_default_dir)?;
         Ok(true)
     }
-}
-
-#[cfg(target_os = "windows")]
-fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> std::io::Result<()> {
-    // 在 Windows 上创建目录符号链接
-    std::os::windows::fs::symlink_dir(original, link)
-}
-
-#[cfg(not(target_os = "windows"))]
-fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> std::io::Result<()> {
-    // 对于非 Windows 的 Unix 系统，包括 Linux 和 macOS，创建符号链接
-    // macOS 基于 Unix，因此这部分代码也适用于 macOS。
-    std::os::unix::fs::symlink(original, link)
 }
