@@ -78,6 +78,9 @@ pub enum SnmError {
 
     #[error("Multi package manager lock file error")]
     MultiPackageManagerLockFileError { lock_file: Vec<String> },
+
+    #[error("Not found default npm binary")]
+    NotFoundDefaultNpmBinary,
 }
 
 impl From<VarError> for SnmError {
@@ -236,6 +239,13 @@ pub fn handle_snm_error(error: SnmError) {
                 stdout,
                 "Multiple package manager lock files found: {} , Please remove the unnecessary ones.",
                 lock_file.join(", ").bright_red()
+            )
+        }
+        SnmError::NotFoundDefaultNpmBinary => {
+            crate::println_error!(
+                stdout,
+                "No npm default detected. Please configure package.json -> packageManager or use {} to set the default version.",
+                "snm npm default [version]".bright_green().bold()
             )
         }
     }
