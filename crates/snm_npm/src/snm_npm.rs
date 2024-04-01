@@ -1,6 +1,5 @@
 use std::{
-    default,
-    fs::{self, remove_dir_all, DirEntry},
+    fs::{self, DirEntry},
     io::stdout,
     path::{Path, PathBuf},
 };
@@ -35,10 +34,6 @@ pub trait SnmNpmTrait {
     async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError>;
 
     async fn install(&self, v: &str) -> Result<(), SnmError>;
-
-    async fn default(&self, v: &str) -> Result<bool, SnmError>;
-
-    fn uninstall(&self, v: &str) -> Result<(), SnmError>;
 
     fn list(&self) -> Result<(), SnmError>;
 
@@ -185,6 +180,72 @@ pub trait SnmNpmTrait {
         // macOS 基于 Unix，因此这部分代码也适用于 macOS。
         std::os::unix::fs::symlink(original, link)
     }
+
+    async fn default(&self, v: &str) -> Result<bool, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
+        node_modules_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .filter_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| file_name.ends_with("default"))
+            })
+            .map(|dir_name| node_modules_dir.join(dir_name))
+            .into_iter()
+            .try_for_each(|item| fs::remove_dir_all(item))?;
+
+        let package_json_file = self.get_npm_package_json_file(v)?;
+        if !package_json_file.exists() {
+            let proceed = self.ask_download(v)?;
+            if !proceed {
+                self.download(v).await?;
+            } else {
+                return Ok(false);
+            }
+        }
+        let npm_dir = self.get_npm_dir(v)?;
+        let npm_default_dir = self.get_npm_dir_for_default(v)?;
+        self.create_symlink(npm_dir, npm_default_dir)?;
+        Ok(true)
+    }
+
+    fn uninstall(&self, v: &str) -> Result<(), SnmError> {
+        let dirs = self
+            .get_node_modules_dir()?
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .filter_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| {
+                        file_name.starts_with(format!("{}@{}", self.get_prefix(), &v).as_str())
+                    })
+                    .map(|_| item)
+            })
+            .collect::<Vec<DirEntry>>();
+
+        if dirs.is_empty() {
+            println!(
+                "{} {} is not found , please check you input version",
+                self.get_prefix(),
+                &v
+            );
+            return Ok(());
+        }
+
+        if self.ask_uninstall(v)? {
+            for dir in dirs.into_iter() {
+                fs::remove_dir_all(dir.path())?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -249,46 +310,8 @@ impl SnmNpmTrait for SnmNpm {
         Ok(())
     }
 
-    fn uninstall(&self, v: &str) -> Result<(), SnmError> {
-        let dirs = self
-            .get_node_modules_dir()?
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|item| item.path().is_dir())
-            .filter_map(|item| {
-                item.file_name()
-                    .into_string()
-                    .ok()
-                    .filter(|file_name| {
-                        file_name.starts_with(format!("{}@{}", self.get_prefix(), &v).as_str())
-                    })
-                    .map(|_| item)
-            })
-            .collect::<Vec<DirEntry>>();
-
-        if dirs.is_empty() {
-            println!(
-                "{} {} is not found , please check you input version",
-                self.get_prefix(),
-                &v
-            );
-            return Ok(());
-        }
-
-        if self.ask_uninstall(v)? {
-            for dir in dirs.into_iter() {
-                fs::remove_dir_all(dir.path())?;
-            }
-        }
-
-        Ok(())
-    }
-
     fn list(&self) -> Result<(), SnmError> {
-        let node_modules_dir = self.get_node_modules_dir()?;
-
-        // find dir
-        let x = node_modules_dir
+        self.get_node_modules_dir()?
             .read_dir()?
             .filter_map(|entry| entry.ok())
             .filter(|item| item.path().is_dir())
@@ -301,45 +324,11 @@ impl SnmNpmTrait for SnmNpm {
                     })
                     .map(|_| item)
             })
-            .collect::<Vec<DirEntry>>();
-
-        // show list
-        x.iter().for_each(|item| {
-            item.file_name().into_string().ok().map(|file_name| {
-                println!("{}", file_name);
+            .for_each(|item| {
+                item.file_name().into_string().ok().map(|file_name| {
+                    println!("{}", file_name);
+                });
             });
-        });
         Ok(())
-    }
-
-    async fn default(&self, v: &str) -> Result<bool, SnmError> {
-        let node_modules_dir = self.get_node_modules_dir()?;
-        node_modules_dir
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|item| item.path().is_dir())
-            .filter_map(|item| {
-                item.file_name()
-                    .into_string()
-                    .ok()
-                    .filter(|file_name| file_name.ends_with("default"))
-            })
-            .map(|dir_name| node_modules_dir.join(dir_name))
-            .into_iter()
-            .try_for_each(|item| fs::remove_dir_all(item))?;
-
-        let package_json_file = self.get_npm_package_json_file(v)?;
-        if !package_json_file.exists() {
-            let proceed = self.ask_download(v)?;
-            if !proceed {
-                self.download(v).await?;
-            } else {
-                return Ok(false);
-            }
-        }
-        let npm_dir = self.get_npm_dir(v)?;
-        let npm_default_dir = self.get_npm_dir_for_default(v)?;
-        self.create_symlink(npm_dir, npm_default_dir)?;
-        Ok(true)
     }
 }

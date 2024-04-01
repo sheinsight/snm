@@ -12,7 +12,12 @@ use snm_core::{
     },
 };
 use snm_npm::snm_npm::SnmNpmTrait;
-use std::{fs, io::stdout, path::PathBuf, str::FromStr};
+use std::{
+    fs::{self, create_dir_all, DirEntry},
+    io::stdout,
+    path::PathBuf,
+    str::FromStr,
+};
 
 pub struct SnmYarn {
     prefix: String,
@@ -57,6 +62,7 @@ impl SnmNpmTrait for SnmYarn {
                 &mut progress,
             )?;
         } else {
+            fs::create_dir_all(&npm_dir)?;
             fs::copy(tar, &npm_dir.join("yarn.js"))?;
         }
         println_success!(stdout, "Decompressed");
@@ -120,15 +126,25 @@ impl SnmNpmTrait for SnmYarn {
         Ok(())
     }
 
-    async fn default(&self, v: &str) -> Result<bool, SnmError> {
-        unimplemented!("default");
-    }
-
-    fn uninstall(&self, v: &str) -> Result<(), SnmError> {
-        unimplemented!("uninstall");
-    }
-
     fn list(&self) -> Result<(), SnmError> {
-        unimplemented!("list");
+        self.get_node_modules_dir()?
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .filter_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| {
+                        file_name.starts_with(format!("{}@", self.get_prefix()).as_str())
+                    })
+                    .map(|_| item)
+            })
+            .for_each(|item| {
+                item.file_name().into_string().ok().map(|file_name| {
+                    println!("{}", file_name);
+                });
+            });
+        Ok(())
     }
 }
