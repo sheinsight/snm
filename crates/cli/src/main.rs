@@ -8,6 +8,7 @@ use snm_core::{model::snm_error::handle_snm_error, println_success};
 use snm_node::node_mg::{
     install_node, list, list_remote, set_default, snm_node_env, un_install_node,
 };
+use snm_npm::snm_npm::SnmNpm;
 use std::io::stdout;
 
 mod commands;
@@ -25,8 +26,35 @@ enum Commands {
         #[command(subcommand)]
         command: NodeCommands,
     },
+
+    Npm {
+        #[command(subcommand)]
+        command: NpmCommands,
+    },
+
     Install(InstallCommandArgs),
     Add(AddCommandArgs),
+}
+
+#[derive(Subcommand, Debug)]
+enum NpmCommands {
+    /// Set default npm version
+    Default {
+        #[arg(help = "Need to set the npm version number as the default version.")]
+        version: String,
+    },
+    /// Install npm
+    Install {
+        #[arg(help = "The version number of npm to be installed")]
+        version: String,
+    },
+    /// Uninstall npm
+    Uninstall {
+        #[arg(help = "The npm version number to be deleted")]
+        version: String,
+    },
+    /// List installed npm versions
+    List,
 }
 
 #[derive(Subcommand, Debug)]
@@ -78,6 +106,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout();
 
     match cli.command {
+        Commands::Npm { command } => {
+            let snm_npm = SnmNpm::new(None);
+            match command {
+                NpmCommands::Default { version } => {
+                    snm_npm.default(&version).await?;
+                }
+                NpmCommands::Install { version } => snm_npm.install(&version).await?,
+                NpmCommands::Uninstall { version } => snm_npm.uninstall(&version)?,
+                NpmCommands::List => snm_npm.list()?,
+            }
+        }
         Commands::Node { command } => match command {
             NodeCommands::List => {
                 if let Err(e) = list().await {
