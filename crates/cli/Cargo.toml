@@ -44,6 +44,7 @@ snm_pm = { path = "../snm_pm"}
 snm_core ={ path = "../snm_core"}
 snm_node = { path = "../snm_node" }
 snm_npm = { path = "../snm_npm" }
+snm_yarn = { path = "../snm_yarn" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }
 clap = { version = "4.5.1" , features = ["derive"] }
