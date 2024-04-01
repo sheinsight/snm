@@ -1,4 +1,4 @@
-use clap::{command, Parser, Subcommand};
+use clap::{command, CommandFactory, Parser, Subcommand};
 
 use commands::{
     automatic,
@@ -44,6 +44,7 @@ enum Commands {
         #[command(subcommand)]
         command: PnpmCommands,
     },
+    FigSpec,
     Install(InstallCommandArgs),
     Add(AddCommandArgs),
 }
@@ -75,6 +76,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 handle_snm_error(error);
             };
         }
+        Commands::FigSpec => clap_complete::generate(
+            clap_complete_fig::Fig,
+            &mut SnmCli::command(),
+            "snm",
+            &mut std::io::stdout(),
+        ),
         Commands::Install(args) => {
             let package_manager = automatic().await?;
             package_manager.install(args)?;
