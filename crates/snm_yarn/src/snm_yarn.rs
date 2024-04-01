@@ -125,26 +125,4 @@ impl SnmNpmTrait for SnmYarn {
         self.decompress(&tar, v)?;
         Ok(())
     }
-
-    fn list(&self) -> Result<(), SnmError> {
-        self.get_node_modules_dir()?
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|item| item.path().is_dir())
-            .filter_map(|item| {
-                item.file_name()
-                    .into_string()
-                    .ok()
-                    .filter(|file_name| {
-                        file_name.starts_with(format!("{}@", self.get_prefix()).as_str())
-                    })
-                    .map(|_| item)
-            })
-            .for_each(|item| {
-                item.file_name().into_string().ok().map(|file_name| {
-                    println!("{}", file_name);
-                });
-            });
-        Ok(())
-    }
 }
