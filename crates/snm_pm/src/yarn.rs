@@ -38,7 +38,6 @@ impl Yarn {
 
     pub fn get_download_url(&self) -> String {
         let VersionParsed { version, .. } = &self.version_parsed;
-
         let url = if self.is_less_2 {
             format!(
                 "{}/yarn/-/yarn-{}.tgz",
@@ -80,7 +79,12 @@ impl Yarn {
                     // print_warning!(stdout, "Waiting Decompress...");
                 });
 
-                decompress_tgz(&tgz_downloaded_path, &dir, &mut progress)?;
+                decompress_tgz(
+                    &tgz_downloaded_path,
+                    &dir,
+                    |output| output.join(format!("yarn-v{}", version)),
+                    &mut progress,
+                )?;
 
                 println_success!(stdout, "Decompressed");
             }

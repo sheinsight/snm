@@ -52,7 +52,12 @@ impl Npm {
                 // print_warning!(stdout, "Waiting Decompress...")
             });
 
-            decompress_tgz(&tgz_downloaded_path, &dir, &mut progress)?;
+            decompress_tgz(
+                &tgz_downloaded_path,
+                &dir,
+                |output| output.join("package"),
+                &mut progress,
+            )?;
 
             println_success!(stdout, "Decompressed");
         }
