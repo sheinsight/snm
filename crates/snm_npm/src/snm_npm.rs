@@ -35,8 +35,6 @@ pub trait SnmNpmTrait {
 
     async fn install(&self, v: &str) -> Result<(), SnmError>;
 
-    fn list(&self) -> Result<(), SnmError>;
-
     fn set_prefix(&mut self, prefix: String);
 
     fn get_prefix(&self) -> String;
@@ -246,6 +244,28 @@ pub trait SnmNpmTrait {
 
         Ok(())
     }
+
+    fn list(&self) -> Result<(), SnmError> {
+        self.get_node_modules_dir()?
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .filter_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| {
+                        file_name.starts_with(format!("{}@", self.get_prefix()).as_str())
+                    })
+                    .map(|_| item)
+            })
+            .for_each(|item| {
+                item.file_name().into_string().ok().map(|file_name| {
+                    println!("{}", file_name);
+                });
+            });
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -307,28 +327,6 @@ impl SnmNpmTrait for SnmNpm {
         let tar = self.download(v).await?;
         self.decompress(&tar, v)?;
 
-        Ok(())
-    }
-
-    fn list(&self) -> Result<(), SnmError> {
-        self.get_node_modules_dir()?
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|item| item.path().is_dir())
-            .filter_map(|item| {
-                item.file_name()
-                    .into_string()
-                    .ok()
-                    .filter(|file_name| {
-                        file_name.starts_with(format!("{}@", self.get_prefix()).as_str())
-                    })
-                    .map(|_| item)
-            })
-            .for_each(|item| {
-                item.file_name().into_string().ok().map(|file_name| {
-                    println!("{}", file_name);
-                });
-            });
         Ok(())
     }
 }
