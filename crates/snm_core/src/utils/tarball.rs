@@ -4,13 +4,15 @@ use tar::Archive;
 
 use crate::model::SnmError;
 
-pub fn decompress_tgz<F>(
+pub fn decompress_tgz<F, D>(
     input_path: &PathBuf,
     output_path: &PathBuf,
+    get_target_dir: D,
     progress: &mut Option<F>,
 ) -> Result<(), SnmError>
 where
     F: FnMut(&PathBuf, &PathBuf),
+    D: Fn(&PathBuf) -> PathBuf,
 {
     // 打开 tgz 文件
     let tgz_file = File::open(input_path)?;
@@ -18,13 +20,13 @@ where
     let tar = GzDecoder::new(tgz_file);
     // 创建 Archive 对象以便操作 tar 文件
     let mut archive = Archive::new(tar);
+
     // 从 archive 中解压所有文件到指定路径
     archive.unpack(output_path)?;
 
-    let old_base = output_path.join("package");
+    let old_base = get_target_dir(output_path);
 
     let transform = |f: &PathBuf| -> Result<PathBuf, SnmError> {
-        let old_base = output_path.join("package");
         let new_path = f.strip_prefix(&old_base)?;
         Ok(output_path.join(new_path))
     };
