@@ -3,13 +3,13 @@ use clap::{command, Parser, Subcommand};
 use commands::{
     automatic,
     snm::{AddCommandArgs, InstallCommandArgs},
-    yarn::Yarn,
 };
 use snm_core::model::snm_error::handle_snm_error;
 
 use tripartite::{
     node::{handle_node_commands, NodeCommands},
     npm::{handle_npm_commands, NpmCommands},
+    pnpm::{handle_pnpm_commands, PnpmCommands},
     yarn::{handle_yarn_commands, YarnCommands},
 };
 
@@ -41,8 +41,8 @@ enum Commands {
     },
     /// Manager pnpm versions
     Pnpm {
-        // #[command(subcommand)]
-        // command: NpmCommands,
+        #[command(subcommand)]
+        command: PnpmCommands,
     },
     Install(InstallCommandArgs),
     Add(AddCommandArgs),
@@ -60,8 +60,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 handle_snm_error(error)
             }
         }
-        Commands::Pnpm {} => {
-            println!("Pnpm command not implemented yet");
+        Commands::Pnpm { command } => {
+            if let Err(error) = handle_pnpm_commands(command).await {
+                handle_snm_error(error)
+            }
         }
         Commands::Npm { command } => {
             if let Err(error) = handle_npm_commands(command).await {
