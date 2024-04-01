@@ -165,7 +165,7 @@ impl SnmNpm {
                     .filter(|file_name| file_name.ends_with("default"))
             })
             .map(|dir_name| node_modules_dir.join(dir_name))
-            .ok_or(SnmError::UnknownError)?;
+            .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
 
         let bin = parse_package_json_bin_to_hashmap(&default_dir.join("package.json"))
             .await?
