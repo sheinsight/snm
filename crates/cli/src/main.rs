@@ -6,7 +6,7 @@ use commands::{
 };
 use snm_core::model::{snm_error::handle_snm_error, SnmError};
 
-use tripartite::{
+use manager::{
     node::{handle_node_commands, NodeCommands},
     npm::{handle_npm_commands, NpmCommands},
     pnpm::{handle_pnpm_commands, PnpmCommands},
@@ -14,7 +14,7 @@ use tripartite::{
 };
 
 mod commands;
-mod tripartite;
+mod manager;
 
 #[derive(Parser, Debug)]
 struct SnmCli {
