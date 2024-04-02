@@ -2,11 +2,10 @@ use crate::path::{get_node_modules_dir, get_npm_and_version_dir, get_npm_downloa
 use semver::Version;
 use snm_core::{
     config::{SNM_YARN_REGISTRY_HOST_KEY, SNM_YARN_REPO_HOST_KEY},
-    model::{package_json_model::PackageManager, SnmError},
+    model::{package_json_model::PackageManager, PackageJson, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
-        package_manager_parser::parse_package_json_bin_to_hashmap,
         tarball::decompress_tgz,
     },
 };
@@ -89,7 +88,7 @@ impl Yarn {
                 println_success!(stdout, "Decompressed");
             }
 
-            let bin_hashmap = parse_package_json_bin_to_hashmap(&package_json_path).await?;
+            let bin_hashmap = PackageJson::from_file_path(Some(dir))?.bin_to_hashmap()?;
 
             let bin_path =
                 bin_hashmap

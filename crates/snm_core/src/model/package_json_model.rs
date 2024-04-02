@@ -20,6 +20,11 @@ pub struct PackageJson {
     pub package_manager: Option<String>,
 
     pub bin: Option<Bin>,
+
+    #[serde(skip_serializing)]
+    pub _raw_file_path: Option<PathBuf>,
+    #[serde(skip_serializing)]
+    pub _raw_workspace: Option<PathBuf>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,13 +35,19 @@ pub enum Bin {
 }
 
 impl PackageJson {
-    pub fn from_file_path(workspace: Option<&PathBuf>) -> Result<Self, SnmError> {
-        let pkg_file_path = if let Some(wk) = workspace {
-            wk.join("package.json")
+    pub fn from_file_path(workspace: Option<PathBuf>) -> Result<Self, SnmError> {
+        let wk = if let Some(wk) = workspace {
+            wk
         } else {
-            std::env::current_dir()?.join("package.json")
+            std::env::current_dir()?
         };
-        let pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
+
+        let pkg_file_path = wk.join("package.json");
+
+        let mut pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
+
+        pkg._raw_file_path = Some(pkg_file_path);
+        pkg._raw_workspace = Some(wk);
         return Ok(pkg);
     }
 
@@ -61,5 +72,35 @@ impl PackageJson {
                 .ok_or(SnmError::UnknownError)?);
         }
         return Err(SnmError::UnknownError);
+    }
+
+    pub fn bin_to_hashmap(&self) -> Result<HashMap<String, PathBuf>, SnmError> {
+        let raw_workspace = self._raw_workspace.as_ref().unwrap();
+        if let Some(bin) = &self.bin {
+            match bin {
+                Bin::Str(_) => {
+                    unimplemented!("parse_package_json_bin_to_hashmap   if bin value is str")
+                }
+                Bin::Map(map) => {
+                    let new_map = map
+                        .into_iter()
+                        .filter_map(|(k, v)| {
+                            if let Some(absolute_file_path) =
+                                raw_workspace.join(v).canonicalize().ok()
+                            {
+                                return Some((k.to_string(), absolute_file_path));
+                            } else {
+                                return None;
+                            }
+                        })
+                        .collect::<HashMap<String, PathBuf>>();
+                    Ok(new_map)
+                }
+            }
+        } else {
+            return Err(SnmError::PackageJsonBinPropertyNotFound {
+                file_path: raw_workspace.display().to_string(),
+            });
+        }
     }
 }

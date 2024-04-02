@@ -8,11 +8,10 @@ use async_trait::async_trait;
 use dialoguer::Confirm;
 use snm_core::{
     config::{DOWNLOAD_DIR_KEY, NODE_MODULES_DIR_KEY, SNM_NPM_REGISTRY_HOST_KEY},
-    model::SnmError,
+    model::{PackageJson, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
-        package_manager_parser::parse_package_json_bin_to_hashmap,
         tarball::decompress_tgz,
     },
 };
@@ -282,12 +281,10 @@ impl SnmNpmTrait for SnmNpm {
         let node_modules_dir = self.get_node_modules_dir()?;
 
         if let Some(v) = v {
-            let pkg = node_modules_dir
-                .join(format!("{}@{}", self.get_prefix(), v))
-                .join("package.json");
+            let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
 
-            let bin = parse_package_json_bin_to_hashmap(&pkg)
-                .await?
+            let bin = PackageJson::from_file_path(Some(wk))?
+                .bin_to_hashmap()?
                 .get(bin)
                 .map(|bin_file_path| PathBuf::from(bin_file_path))
                 .ok_or(SnmError::UnknownError)?;
@@ -308,8 +305,8 @@ impl SnmNpmTrait for SnmNpm {
             .map(|dir_name| node_modules_dir.join(dir_name))
             .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
 
-        let bin = parse_package_json_bin_to_hashmap(&default_dir.join("package.json"))
-            .await?
+        let bin = PackageJson::from_file_path(Some(default_dir))?
+            .bin_to_hashmap()?
             .get(bin)
             .map(|bin_file_path| PathBuf::from(bin_file_path))
             .ok_or(SnmError::UnknownError)?;
