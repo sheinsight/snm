@@ -60,7 +60,6 @@ impl PackageJson {
                 .map(map_to_struct)
                 .ok_or(SnmError::UnknownError)?);
         }
-
-        todo!()
+        return Err(SnmError::UnknownError);
     }
 }
