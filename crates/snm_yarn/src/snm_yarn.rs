@@ -1,10 +1,8 @@
 use async_trait::async_trait;
 use semver::Version;
 use snm_core::{
-    config::{
-        DOWNLOAD_DIR_KEY, NODE_MODULES_DIR_KEY, SNM_YARN_REGISTRY_HOST_KEY, SNM_YARN_REPO_HOST_KEY,
-    },
-    model::SnmError,
+    config::{SNM_YARN_REGISTRY_HOST_KEY, SNM_YARN_REPO_HOST_KEY},
+    model::{PackageJson, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
@@ -12,12 +10,7 @@ use snm_core::{
     },
 };
 use snm_npm::snm_npm::SnmNpmTrait;
-use std::{
-    fs::{self, create_dir_all, DirEntry},
-    io::stdout,
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{fs, io::stdout, path::PathBuf};
 
 pub struct SnmYarn {
     prefix: String,
@@ -113,7 +106,61 @@ impl SnmNpmTrait for SnmYarn {
     }
 
     async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
-        unimplemented!("use_bin");
+        let node_modules_dir = self.get_node_modules_dir()?;
+        if let Some(v) = v {
+            if self.get_is_less_2(&v)? {
+                let pkg = node_modules_dir
+                    .join(format!("{}@{}", self.get_prefix(), v))
+                    .join("package.json");
+
+                let bin = PackageJson::from_file_path(Some(pkg))?
+                    .bin_to_hashmap()?
+                    .get(bin)
+                    .map(|bin_file_path| PathBuf::from(bin_file_path))
+                    .ok_or(SnmError::UnknownError)?;
+
+                return Ok(bin);
+            } else {
+                let bin = node_modules_dir
+                    .join(format!("{}@{}", self.get_prefix(), v))
+                    .join("yarn.js");
+
+                return Ok(bin);
+            }
+        }
+
+        let default_dir_name = node_modules_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .find_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| file_name.ends_with("default"))
+                    .filter(|file_name| file_name.starts_with(self.get_prefix().as_str()))
+            })
+            .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
+
+        let default_version = default_dir_name
+            .trim_end_matches("-default")
+            .split("@")
+            .last()
+            .ok_or(SnmError::UnknownError)?;
+
+        if self.get_is_less_2(default_version)? {
+            let pkg = node_modules_dir.join(default_dir_name).join("package.json");
+            let bin = PackageJson::from_file_path(Some(pkg))?
+                .bin_to_hashmap()?
+                .get(bin)
+                .map(|bin_file_path| PathBuf::from(bin_file_path))
+                .ok_or(SnmError::UnknownError)?;
+            return Ok(bin);
+        }
+
+        let bin = node_modules_dir.join(default_dir_name).join("yarn.js");
+
+        return Ok(bin);
     }
 
     async fn install(&self, v: &str) -> Result<(), SnmError> {
