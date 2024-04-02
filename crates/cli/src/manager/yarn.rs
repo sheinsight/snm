@@ -1,6 +1,6 @@
 use clap::Subcommand;
 use snm_core::model::SnmError;
-use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
+use snm_npm::snm_npm::SnmNpmTrait;
 use snm_yarn::snm_yarn::SnmYarn;
 
 #[derive(Subcommand, Debug)]
