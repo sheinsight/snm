@@ -4,7 +4,7 @@ use commands::{
     automatic,
     snm::{AddCommandArgs, InstallCommandArgs},
 };
-use snm_core::model::snm_error::handle_snm_error;
+use snm_core::model::{snm_error::handle_snm_error, SnmError};
 
 use tripartite::{
     node::{handle_node_commands, NodeCommands},
@@ -44,44 +44,38 @@ enum Commands {
         #[command(subcommand)]
         command: PnpmCommands,
     },
-    FigSpec,
     Install(InstallCommandArgs),
     Add(AddCommandArgs),
+    FigSpec,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), SnmError> {
     snm_core::config::init_config()?;
 
+    if let Err(error) = execute_cli().await {
+        handle_snm_error(error);
+    }
+
+    Ok(())
+}
+
+async fn execute_cli() -> Result<(), SnmError> {
     let cli = SnmCli::parse();
 
     match cli.command {
         Commands::Yarn { command } => {
-            if let Err(error) = handle_yarn_commands(command).await {
-                handle_snm_error(error)
-            }
+            handle_yarn_commands(command).await?;
         }
         Commands::Pnpm { command } => {
-            if let Err(error) = handle_pnpm_commands(command).await {
-                handle_snm_error(error)
-            }
+            handle_pnpm_commands(command).await?;
         }
         Commands::Npm { command } => {
-            if let Err(error) = handle_npm_commands(command).await {
-                handle_snm_error(error);
-            }
+            handle_npm_commands(command).await?;
         }
         Commands::Node { command } => {
-            if let Err(error) = handle_node_commands(command).await {
-                handle_snm_error(error);
-            };
+            handle_node_commands(command).await?;
         }
-        Commands::FigSpec => clap_complete::generate(
-            clap_complete_fig::Fig,
-            &mut SnmCli::command(),
-            "snm",
-            &mut std::io::stdout(),
-        ),
         Commands::Install(args) => {
             let package_manager = automatic().await?;
             package_manager.install(args)?;
@@ -90,6 +84,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let package_manager = automatic().await?;
             package_manager.add(args)?;
         }
+        Commands::FigSpec => clap_complete::generate(
+            clap_complete_fig::Fig,
+            &mut SnmCli::command(),
+            "snm",
+            &mut std::io::stdout(),
+        ),
     }
     Ok(())
 }
