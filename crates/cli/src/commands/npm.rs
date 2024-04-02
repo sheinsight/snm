@@ -1,20 +1,19 @@
 use super::snm::SnmTrait;
 use snm_core::{
     exec_child_process,
-    model::SnmError,
-    utils::package_manager_parser::{automatic_version_parsed, VersionParsed},
+    model::{package_json_model::PackageManager, PackageJson, SnmError},
 };
 use snm_pm::get_manager_bin_file_path;
 use std::path::PathBuf;
 
 pub struct Npm {
-    version_parsed: VersionParsed,
+    version_parsed: PackageManager,
     bin: PathBuf,
 }
 
 impl Npm {
     pub async fn new() -> Result<Self, SnmError> {
-        let version_parsed = automatic_version_parsed(None)?;
+        let version_parsed = PackageJson::from_file_path(None)?.parse_package_manager()?;
         let bin = get_manager_bin_file_path(&version_parsed.package_manager).await?;
         Ok(Self {
             bin,

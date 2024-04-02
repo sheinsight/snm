@@ -1,7 +1,8 @@
 use colored::Colorize;
 use npm::Npm;
 use snm_core::{
-    model::SnmError, println_success, utils::package_manager_parser::automatic_version_parsed,
+    model::{PackageJson, SnmError},
+    println_success,
 };
 use std::{
     io::{stdout, Write as _},
@@ -14,7 +15,9 @@ pub mod utils;
 pub mod yarn;
 
 pub async fn get_manager_bin_file_path(expect_package_manager: &str) -> Result<PathBuf, SnmError> {
-    let version_parsed = automatic_version_parsed(None)?;
+    let pkg = PackageJson::from_file_path(None)?;
+
+    let version_parsed = pkg.parse_package_manager()?;
 
     if version_parsed.package_manager != expect_package_manager {
         return Err(SnmError::NotMatchPackageManager {

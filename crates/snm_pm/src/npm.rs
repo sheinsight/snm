@@ -1,10 +1,10 @@
 use snm_core::{
     config::SNM_NPM_REGISTRY_HOST_KEY,
-    model::SnmError,
+    model::{package_json_model::PackageManager, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
-        package_manager_parser::{parse_package_json_bin_to_hashmap, VersionParsed},
+        package_manager_parser::parse_package_json_bin_to_hashmap,
         tarball::decompress_tgz,
     },
 };
@@ -13,12 +13,12 @@ use std::{io::stdout, path::PathBuf};
 use crate::path::{get_npm_and_version_dir, get_npm_downloaded_file_path};
 
 pub struct Npm {
-    pub version_parsed: VersionParsed,
+    pub version_parsed: PackageManager,
     pub npm_registry_host_url: String,
 }
 
 impl Npm {
-    pub fn new(version_parsed: VersionParsed) -> Self {
+    pub fn new(version_parsed: PackageManager) -> Self {
         let npm_registry_host_url = std::env::var(SNM_NPM_REGISTRY_HOST_KEY).unwrap();
         Self {
             version_parsed,
@@ -27,7 +27,7 @@ impl Npm {
     }
 
     pub async fn get_bin_path(&self, bin_name: &str) -> Result<PathBuf, SnmError> {
-        let VersionParsed {
+        let PackageManager {
             package_manager,
             version,
             ..
@@ -75,7 +75,7 @@ impl Npm {
     }
 
     pub fn get_download_url(&self) -> String {
-        let VersionParsed {
+        let PackageManager {
             package_manager,
             version,
             ..
@@ -87,7 +87,7 @@ impl Npm {
     }
 
     fn get_downloaded_path(&self) -> Result<PathBuf, SnmError> {
-        let VersionParsed {
+        let PackageManager {
             package_manager,
             version,
             ..

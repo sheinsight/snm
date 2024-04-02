@@ -1,24 +1,23 @@
 use std::path::PathBuf;
 
-use semver::{Version, VersionReq};
+use semver::Version;
 use snm_core::{
     exec_child_process,
-    model::SnmError,
-    utils::package_manager_parser::{automatic_version_parsed, VersionParsed},
+    model::{package_json_model::PackageManager, PackageJson, SnmError},
 };
 use snm_pm::get_manager_bin_file_path;
 
 use super::snm::SnmTrait;
 
 pub struct Yarn {
-    version_parsed: VersionParsed,
+    version_parsed: PackageManager,
     bin: PathBuf,
     is_ge_2: bool,
 }
 
 impl Yarn {
     pub async fn new() -> Result<Self, SnmError> {
-        let version_parsed = automatic_version_parsed(None)?;
+        let version_parsed = PackageJson::from_file_path(None)?.parse_package_manager()?;
         let bin = get_manager_bin_file_path(&version_parsed.package_manager).await?;
         let x = Version::parse("2.0.0")?;
         let y = Version::parse(&version_parsed.version)?;

@@ -2,11 +2,11 @@ use crate::path::{get_node_modules_dir, get_npm_and_version_dir, get_npm_downloa
 use semver::Version;
 use snm_core::{
     config::{SNM_YARN_REGISTRY_HOST_KEY, SNM_YARN_REPO_HOST_KEY},
-    model::SnmError,
+    model::{package_json_model::PackageManager, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
-        package_manager_parser::{parse_package_json_bin_to_hashmap, VersionParsed},
+        package_manager_parser::parse_package_json_bin_to_hashmap,
         tarball::decompress_tgz,
     },
 };
@@ -14,14 +14,14 @@ use std::io::stdout;
 use std::{fs, os::unix::fs::PermissionsExt, path::PathBuf};
 
 pub struct Yarn {
-    pub version_parsed: VersionParsed,
+    pub version_parsed: PackageManager,
     pub yarn_repo_host_url: String,
     pub yarn_registry_host_url: String,
     pub is_less_2: bool,
 }
 
 impl Yarn {
-    pub fn new(version_parsed: VersionParsed) -> Result<Self, SnmError> {
+    pub fn new(version_parsed: PackageManager) -> Result<Self, SnmError> {
         let ver = Version::parse(&version_parsed.version)?;
         let is_less_2 = ver < Version::parse("2.0.0")?;
 
@@ -37,7 +37,7 @@ impl Yarn {
     }
 
     pub fn get_download_url(&self) -> String {
-        let VersionParsed { version, .. } = &self.version_parsed;
+        let PackageManager { version, .. } = &self.version_parsed;
         let url = if self.is_less_2 {
             format!(
                 "{}/yarn/-/yarn-{}.tgz",
@@ -53,7 +53,7 @@ impl Yarn {
     }
 
     pub async fn get_bin_path(&self, bin_name: &str) -> Result<PathBuf, SnmError> {
-        let VersionParsed {
+        let PackageManager {
             package_manager,
             version,
             ..
@@ -124,7 +124,7 @@ impl Yarn {
     }
 
     fn get_downloaded_path(&self) -> Result<PathBuf, SnmError> {
-        let VersionParsed {
+        let PackageManager {
             package_manager,
             version,
             ..

@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use snm_core::utils::package_manager_parser::automatic_version_parsed;
+use snm_core::model::PackageJson;
 
 use self::snm::SnmTrait;
 
@@ -10,7 +10,7 @@ pub mod snm;
 pub mod yarn;
 
 pub async fn automatic() -> Result<Box<dyn SnmTrait>, Box<dyn Error>> {
-    let version_parsed = automatic_version_parsed(None)?;
+    let version_parsed = PackageJson::from_file_path(None)?.parse_package_manager()?;
     let package_manager = match version_parsed.package_manager.as_str() {
         "npm" => Box::new(npm::Npm::new().await?) as Box<dyn SnmTrait>,
         "yarn" => Box::new(yarn::Yarn::new().await?) as Box<dyn SnmTrait>,
