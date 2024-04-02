@@ -301,6 +301,7 @@ impl SnmNpmTrait for SnmNpm {
                     .into_string()
                     .ok()
                     .filter(|file_name| file_name.ends_with("default"))
+                    .filter(|file_name| file_name.starts_with(self.get_prefix().as_str()))
             })
             .map(|dir_name| node_modules_dir.join(dir_name))
             .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
