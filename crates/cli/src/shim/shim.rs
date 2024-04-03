@@ -8,6 +8,7 @@ use snm_core::{
 use snm_node::node_mg::use_node;
 use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
 use snm_pm::get_manager_bin_file_path;
+use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::snm_yarn::SnmYarn;
 
 pub async fn launch(name: &str) -> Result<Output, SnmError> {
@@ -19,21 +20,24 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
 
     let pkg_file_path = current_dir()?.join("package.json");
 
-    let package_json = PackageJson::from_file_path(Some(pkg_file_path))?;
+    if pkg_file_path.exists() {
+        let package_json = PackageJson::from_file_path(None)?;
+        package_json.parse_package_manager()?;
+    }
 
-    // TODO parse_package_manager 可能需要返回 None 不能直接报错
+    // TODO parse_package_manager 可能需要返回 None 不能直接报错  launch
     let package_manager = package_json.parse_package_manager()?;
 
     let res = match name {
         "npm" => {
-            let snm_npm = SnmNpm::new(None);
+            let snm_npm = SnmNpm::new();
             let bin_file_path = snm_npm.use_bin("npm", None).await?;
             let args: Vec<String> = std::env::args().skip(1).collect();
             let output = exec_child_process!(bin_file_path, &args)?;
             output
         }
         "pnpm" => {
-            let snm_npm = SnmNpm::new(None);
+            let snm_npm = SnmPnpm::new();
             let bin_file_path = snm_npm.use_bin("pnpm", None).await?;
             let args: Vec<String> = std::env::args().skip(1).collect();
             let output = exec_child_process!(bin_file_path, &args)?;

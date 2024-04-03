@@ -21,9 +21,9 @@ pub struct SnmNpm {
 }
 
 impl SnmNpm {
-    pub fn new(prefix: Option<String>) -> Self {
+    pub fn new() -> Self {
         Self {
-            prefix: prefix.unwrap_or("npm".to_string()),
+            prefix: "npm".to_string(),
         }
     }
 }
