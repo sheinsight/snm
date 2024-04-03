@@ -24,7 +24,7 @@ pub enum NpmCommands {
 }
 
 pub async fn handle_npm_commands(command: NpmCommands) -> Result<(), SnmError> {
-    let snm_npm = SnmNpm::new(None);
+    let snm_npm = SnmNpm::new();
 
     match command {
         NpmCommands::Default { version } => {
