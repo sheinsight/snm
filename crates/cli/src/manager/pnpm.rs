@@ -1,6 +1,7 @@
 use clap::Subcommand;
 use snm_core::model::SnmError;
 use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
+use snm_pnpm::snm_pnpm::SnmPnpm;
 
 #[derive(Subcommand, Debug)]
 pub enum PnpmCommands {
@@ -24,20 +25,20 @@ pub enum PnpmCommands {
 }
 
 pub async fn handle_pnpm_commands(command: PnpmCommands) -> Result<(), SnmError> {
-    let snm_npm = SnmNpm::new(Some("pnpm".to_string()));
+    let snm_pnpm = SnmPnpm::new();
 
     match command {
         PnpmCommands::Default { version } => {
-            snm_npm.default(&version).await?;
+            snm_pnpm.default(&version).await?;
         }
         PnpmCommands::Install { version } => {
-            snm_npm.install(&version).await?;
+            snm_pnpm.install(&version).await?;
         }
         PnpmCommands::Uninstall { version } => {
-            snm_npm.uninstall(&version)?;
+            snm_pnpm.uninstall(&version)?;
         }
         PnpmCommands::List => {
-            snm_npm.list()?;
+            snm_pnpm.list()?;
         }
     };
     Ok(())

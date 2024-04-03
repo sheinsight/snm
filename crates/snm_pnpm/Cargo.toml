@@ -1,0 +1,10 @@
+[package]
+name = "snm_pnpm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+snm_npm = { path = "../snm_npm" }
+async-trait = "0.1.79"

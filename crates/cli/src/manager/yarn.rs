@@ -25,20 +25,20 @@ pub enum YarnCommands {
 }
 
 pub async fn handle_yarn_commands(command: YarnCommands) -> Result<(), SnmError> {
-    let snm_npm = SnmYarn::new();
+    let snm_yarn = SnmYarn::new();
 
     match command {
         YarnCommands::Default { version } => {
-            snm_npm.default(&version).await?;
+            snm_yarn.default(&version).await?;
         }
         YarnCommands::Install { version } => {
-            snm_npm.install(&version).await?;
+            snm_yarn.install(&version).await?;
         }
         YarnCommands::Uninstall { version } => {
-            snm_npm.uninstall(&version)?;
+            snm_yarn.uninstall(&version)?;
         }
         YarnCommands::List => {
-            snm_npm.list()?;
+            snm_yarn.list()?;
         }
     };
     Ok(())

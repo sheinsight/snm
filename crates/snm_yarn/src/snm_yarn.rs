@@ -34,10 +34,6 @@ impl SnmYarn {
 
 #[async_trait(?Send)]
 impl SnmNpmTrait for SnmYarn {
-    fn set_prefix(&mut self, prefix: String) {
-        self.prefix = prefix;
-    }
-
     fn get_prefix(&self) -> String {
         self.prefix.clone()
     }

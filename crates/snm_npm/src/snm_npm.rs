@@ -30,11 +30,56 @@ impl SnmNpm {
 
 #[async_trait(?Send)]
 pub trait SnmNpmTrait {
-    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError>;
+    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
 
-    async fn install(&self, v: &str) -> Result<(), SnmError>;
+        if let Some(v) = v {
+            let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
 
-    fn set_prefix(&mut self, prefix: String);
+            let bin = PackageJson::from_file_path(Some(wk))?
+                .bin_to_hashmap()?
+                .get(bin)
+                .map(|bin_file_path| PathBuf::from(bin_file_path))
+                .ok_or(SnmError::UnknownError)?;
+
+            return Ok(bin);
+        }
+
+        let default_dir = node_modules_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|item| item.path().is_dir())
+            .find_map(|item| {
+                item.file_name()
+                    .into_string()
+                    .ok()
+                    .filter(|file_name| file_name.ends_with("default"))
+                    .filter(|file_name| file_name.starts_with(self.get_prefix().as_str()))
+            })
+            .map(|dir_name| node_modules_dir.join(dir_name))
+            .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
+
+        let bin = PackageJson::from_file_path(Some(default_dir))?
+            .bin_to_hashmap()?
+            .get(bin)
+            .map(|bin_file_path| PathBuf::from(bin_file_path))
+            .ok_or(SnmError::UnknownError)?;
+
+        return Ok(bin);
+    }
+
+    async fn install(&self, v: &str) -> Result<(), SnmError> {
+        let package_json_file = self.get_npm_package_json_file(v)?;
+
+        if package_json_file.exists() && !self.ask_reinstall(v)? {
+            return Ok(());
+        }
+
+        let tar = self.download(v).await?;
+        self.decompress(&tar, v)?;
+
+        Ok(())
+    }
 
     fn get_prefix(&self) -> String;
 
@@ -269,62 +314,7 @@ pub trait SnmNpmTrait {
 
 #[async_trait(?Send)]
 impl SnmNpmTrait for SnmNpm {
-    fn set_prefix(&mut self, prefix: String) {
-        self.prefix = prefix;
-    }
-
     fn get_prefix(&self) -> String {
         self.prefix.clone()
-    }
-
-    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
-        let node_modules_dir = self.get_node_modules_dir()?;
-
-        if let Some(v) = v {
-            let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
-
-            let bin = PackageJson::from_file_path(Some(wk))?
-                .bin_to_hashmap()?
-                .get(bin)
-                .map(|bin_file_path| PathBuf::from(bin_file_path))
-                .ok_or(SnmError::UnknownError)?;
-
-            return Ok(bin);
-        }
-
-        let default_dir = node_modules_dir
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|item| item.path().is_dir())
-            .find_map(|item| {
-                item.file_name()
-                    .into_string()
-                    .ok()
-                    .filter(|file_name| file_name.ends_with("default"))
-                    .filter(|file_name| file_name.starts_with(self.get_prefix().as_str()))
-            })
-            .map(|dir_name| node_modules_dir.join(dir_name))
-            .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
-
-        let bin = PackageJson::from_file_path(Some(default_dir))?
-            .bin_to_hashmap()?
-            .get(bin)
-            .map(|bin_file_path| PathBuf::from(bin_file_path))
-            .ok_or(SnmError::UnknownError)?;
-
-        return Ok(bin);
-    }
-
-    async fn install(&self, v: &str) -> Result<(), SnmError> {
-        let package_json_file = self.get_npm_package_json_file(v)?;
-
-        if package_json_file.exists() && !self.ask_reinstall(v)? {
-            return Ok(());
-        }
-
-        let tar = self.download(v).await?;
-        self.decompress(&tar, v)?;
-
-        Ok(())
     }
 }
