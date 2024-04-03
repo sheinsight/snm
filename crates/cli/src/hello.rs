@@ -9,7 +9,7 @@ async fn main() {
     env_logger::init();
     init_config().unwrap();
 
-    let snm_npm = SnmNpm::new(None);
+    let snm_npm = SnmNpm::new();
     let snm_yarn = SnmYarn::new();
 
     // snm_yarn.install("1.22.4").await.unwrap();
