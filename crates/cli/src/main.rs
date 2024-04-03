@@ -78,11 +78,13 @@ async fn execute_cli() -> Result<(), SnmError> {
         }
         Commands::Install(args) => {
             let package_manager = automatic().await?;
-            package_manager.install(args)?;
+            let a = package_manager.install(args)?;
+            println!("---> {:?}", a)
         }
         Commands::Add(args) => {
             let package_manager = automatic().await?;
-            package_manager.add(args)?;
+            let a = package_manager.add(args)?;
+            println!("---> {:?}", a)
         }
         Commands::FigSpec => clap_complete::generate(
             clap_complete_fig::Fig,

@@ -28,7 +28,7 @@ pub struct InstallCommandArgs {
 }
 
 pub trait SnmTrait {
-    fn install(&self, args: InstallCommandArgs) -> Result<(), SnmError>;
+    fn install(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
 
-    fn add(&self, args: AddCommandArgs) -> Result<(), SnmError>;
+    fn add<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
 }
