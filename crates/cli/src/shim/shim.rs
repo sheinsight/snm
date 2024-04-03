@@ -7,7 +7,6 @@ use snm_core::{
 };
 use snm_node::node_mg::use_node;
 use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
-use snm_pm::get_manager_bin_file_path;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::snm_yarn::SnmYarn;
 
@@ -20,10 +19,7 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
 
     let pkg_file_path = current_dir()?.join("package.json");
 
-    if pkg_file_path.exists() {
-        let package_json = PackageJson::from_file_path(None)?;
-        package_json.parse_package_manager()?;
-    }
+    let package_json = PackageJson::from_file_path(None)?;
 
     // TODO parse_package_manager 可能需要返回 None 不能直接报错  launch
     let package_manager = package_json.parse_package_manager()?;
