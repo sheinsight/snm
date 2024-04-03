@@ -5,13 +5,8 @@ use snm_core::{
 use std::path::PathBuf;
 
 pub fn get_node_binary_file_path(node_version: &str) -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir)
-            .join(&node_version)
-            .join("bin")
-            .join("node")),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir.join(&node_version).join("bin").join("node"))
 }
 
 pub fn get_node_binary_base_dir() -> Result<PathBuf, SnmError> {
@@ -22,27 +17,21 @@ pub fn get_node_binary_base_dir() -> Result<PathBuf, SnmError> {
 }
 
 pub fn get_node_dir(node_version: &str) -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir).join(&node_version)),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir.join(&node_version))
 }
 
 pub fn get_default_node_dir(node_version: &str) -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir).join(format!("{}-default", node_version))),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir.join(format!("{}-default", node_version)))
 }
 
 pub fn get_default_node_binary_file_path(node_version: &str) -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir)
-            .join(format!("v{}-default", node_version))
-            .join("bin")
-            .join("node")),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir
+        .join(format!("v{}-default", node_version))
+        .join("bin")
+        .join("node"))
 }
 
 pub fn get_node_tar_file_name(node_version: &str) -> String {
@@ -55,34 +44,31 @@ pub fn get_node_tar_file_name(node_version: &str) -> String {
     )
 }
 
-pub fn get_node_tar_file_path(node_version: &str) -> Result<PathBuf, SnmError> {
+pub fn get_download_dir_path() -> Result<PathBuf, SnmError> {
     match std::env::var(snm_core::config::DOWNLOAD_DIR_KEY) {
-        Ok(download_dir) => Ok(PathBuf::from(download_dir)
-            .join(node_version)
-            .join(get_node_tar_file_name(node_version))),
+        Ok(download_dir) => Ok(PathBuf::from(download_dir)),
         Err(_) => Err(SnmError::NotFoundDownloadDirConfig),
     }
+}
+
+pub fn get_node_tar_file_path(node_version: &str) -> Result<PathBuf, SnmError> {
+    let download_dir = get_download_dir_path()?;
+    Ok(download_dir
+        .join(node_version)
+        .join(get_node_tar_file_name(node_version)))
 }
 
 pub fn get_node_tar_sha256_file_path(node_version: &str) -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::DOWNLOAD_DIR_KEY) {
-        Ok(download_dir) => Ok(PathBuf::from(download_dir)
-            .join(node_version)
-            .join("SHASUMS256.txt")),
-        Err(_) => Err(SnmError::NotFoundDownloadDirConfig),
-    }
+    let download_dir = get_download_dir_path()?;
+    Ok(download_dir.join(node_version).join("SHASUMS256.txt"))
 }
 
 pub fn get_node_list_json() -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir).join("list.json")),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir.join("list.json"))
 }
 
 pub fn get_node_schedule_json() -> Result<PathBuf, SnmError> {
-    match std::env::var(snm_core::config::BIN_DIR_KEY) {
-        Ok(bin_dir) => Ok(PathBuf::from(bin_dir).join("schedule.json")),
-        Err(_) => Err(SnmError::NotFoundBinDirConfig),
-    }
+    let bin_dir = get_node_binary_base_dir()?;
+    Ok(bin_dir.join("schedule.json"))
 }
