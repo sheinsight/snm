@@ -2,7 +2,7 @@
 macro_rules! println_error {
     ($out:expr, $($arg:tt)*) => {{
         use std::io::Write; // 导入 Write trait 以使用 write! 宏
-        use crossterm::{
+        use $crate::crossterm::{
             execute,
             cursor::MoveToColumn,
             terminal::{Clear, ClearType},
@@ -18,7 +18,7 @@ macro_rules! println_error {
 macro_rules! println_success {
     ($out:expr, $($arg:tt)*) => {{
         use std::io::Write; // 导入 Write trait 以使用 write! 宏
-        use crossterm::{
+        use $crate::crossterm::{
             execute,
             cursor::MoveToColumn,
             terminal::{Clear, ClearType},
@@ -34,7 +34,7 @@ macro_rules! println_success {
 macro_rules! print_warning {
     ($out:expr, $($arg:tt)*) => {{
         use std::io::Write; // 导入 Write trait 以使用 write! 宏
-        use crossterm::{
+        use $crate::crossterm::{
             execute,
             cursor::MoveToColumn,
             terminal::{Clear, ClearType},

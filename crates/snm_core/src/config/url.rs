@@ -14,7 +14,7 @@ impl SnmUrl {
     }
 
     pub fn use_node_list_url(&self) -> String {
-        format!("{}/dist/index.json", self.node_host_url)
+        format!("{}/dist/index.json", &self.node_host_url)
     }
 
     pub fn get_node_sha256_download_url(&self, node_version: &str) -> String {
@@ -24,14 +24,14 @@ impl SnmUrl {
     pub fn use_node_schedule_url(&self) -> String {
         format!(
             "{}/nodejs/Release/main/schedule.json",
-            self.node_schedule_host_url
+            &self.node_schedule_host_url
         )
     }
 
     pub fn get_node_tar_download_url(&self, node_version: &str) -> String {
         format!(
             "{}/dist/v{}/node-v{}-{}-{}.{}",
-            self.node_host_url,
+            &self.node_host_url,
             node_version,
             node_version,
             get_os(),
