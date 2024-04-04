@@ -165,7 +165,9 @@ impl SnmNpmTrait for SnmYarn {
             return Ok(());
         }
         let tar = self.download(v).await?;
+        let _ = &self.set_exec_permission(&tar)?;
         self.decompress(&tar, v)?;
+
         Ok(())
     }
 }
