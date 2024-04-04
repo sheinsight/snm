@@ -24,36 +24,17 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
     // TODO parse_package_manager 可能需要返回 None 不能直接报错  launch
     let package_manager = package_json.parse_package_manager()?;
 
-    let res = match name {
-        "npm" => {
-            let snm_npm = SnmNpm::new();
-            let bin_file_path = snm_npm.use_bin("npm", None).await?;
-            let args: Vec<String> = std::env::args().skip(1).collect();
-            let output = exec_child_process!(bin_file_path, &args)?;
-            output
-        }
-        "pnpm" => {
-            let snm_npm = SnmPnpm::new();
-            let bin_file_path = snm_npm.use_bin("pnpm", None).await?;
-            let args: Vec<String> = std::env::args().skip(1).collect();
-            let output = exec_child_process!(bin_file_path, &args)?;
-            output
-        }
-        "yarn" => {
-            let snm_yarn = SnmYarn::new();
-            let bin_file_path = snm_yarn.use_bin("yarn", None).await?;
-            let args: Vec<String> = std::env::args().skip(1).collect();
-            let output = exec_child_process!(bin_file_path, &args)?;
-            output
-        }
-        "node" => {
-            let node_binary_abs_path = use_node().await?;
-            let args: Vec<String> = std::env::args().skip(1).collect();
-            let output = exec_child_process!(node_binary_abs_path, &args)?;
-            output
-        }
-        _ => return Err(SnmError::UnknownError),
-    };
+    let args: Vec<String> = std::env::args().skip(1).collect();
 
-    Ok(res)
+    let bin_file_path = match name {
+        "npm" => SnmNpm::new().use_bin("npm", None).await,
+        "pnpm" => SnmPnpm::new().use_bin("pnpm", None).await,
+        "yarn" => SnmYarn::new().use_bin("yarn", None).await,
+        "node" => use_node().await,
+        _ => return Err(SnmError::UnknownError),
+    }?;
+
+    let output = exec_child_process!(bin_file_path, &args)?;
+
+    Ok(output)
 }
