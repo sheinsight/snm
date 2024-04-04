@@ -71,7 +71,14 @@ impl PackageJson {
                 .map(map_to_struct)
                 .ok_or(SnmError::UnknownError)?);
         }
-        return Err(SnmError::UnknownError);
+        return Err(SnmError::NotFoundPackageJsonBinProperty {
+            file_path: self
+                ._raw_file_path
+                .clone()
+                .ok_or(SnmError::UnknownError)?
+                .display()
+                .to_string(),
+        });
     }
 
     pub fn bin_to_hashmap(&self) -> Result<HashMap<String, PathBuf>, SnmError> {
@@ -98,7 +105,7 @@ impl PackageJson {
                 }
             }
         } else {
-            return Err(SnmError::PackageJsonBinPropertyNotFound {
+            return Err(SnmError::NotFoundPackageJsonBinProperty {
                 file_path: raw_workspace.display().to_string(),
             });
         }

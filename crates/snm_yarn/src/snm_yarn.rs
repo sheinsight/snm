@@ -101,30 +101,8 @@ impl SnmNpmTrait for SnmYarn {
         Ok(tar_file_path)
     }
 
-    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
+    async fn use_default_bin(&self, bin: &str) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
-        if let Some(v) = v {
-            if self.get_is_less_2(&v)? {
-                let pkg = node_modules_dir
-                    .join(format!("{}@{}", self.get_prefix(), v))
-                    .join("package.json");
-
-                let bin = PackageJson::from_file_path(Some(pkg))?
-                    .bin_to_hashmap()?
-                    .get(bin)
-                    .map(|bin_file_path| PathBuf::from(bin_file_path))
-                    .ok_or(SnmError::UnknownError)?;
-
-                return Ok(bin);
-            } else {
-                let bin = node_modules_dir
-                    .join(format!("{}@{}", self.get_prefix(), v))
-                    .join("yarn.js");
-
-                return Ok(bin);
-            }
-        }
-
         let default_dir_name = node_modules_dir
             .read_dir()?
             .filter_map(|entry| entry.ok())
@@ -157,6 +135,29 @@ impl SnmNpmTrait for SnmYarn {
         let bin = node_modules_dir.join(default_dir_name).join("yarn.js");
 
         return Ok(bin);
+    }
+
+    async fn use_bin(&self, bin: &str, v: &str) -> Result<PathBuf, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
+        if self.get_is_less_2(&v)? {
+            let pkg = node_modules_dir
+                .join(format!("{}@{}", self.get_prefix(), v))
+                .join("package.json");
+
+            let bin = PackageJson::from_file_path(Some(pkg))?
+                .bin_to_hashmap()?
+                .get(bin)
+                .map(|bin_file_path| PathBuf::from(bin_file_path))
+                .ok_or(SnmError::UnknownError)?;
+
+            return Ok(bin);
+        } else {
+            let bin = node_modules_dir
+                .join(format!("{}@{}", self.get_prefix(), v))
+                .join("yarn.js");
+
+            return Ok(bin);
+        }
     }
 
     async fn install(&self, v: &str) -> Result<(), SnmError> {

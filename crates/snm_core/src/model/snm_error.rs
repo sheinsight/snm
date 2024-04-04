@@ -35,7 +35,10 @@ pub enum SnmError {
     PackageJsonBinPropertyUnknownTypeError { file_path: String },
 
     #[error("Package.json bin property not found , The absolute path {file_path}")]
-    PackageJsonBinPropertyNotFound { file_path: String },
+    NotFoundPackageJsonBinProperty { file_path: String },
+
+    #[error("Not found package.json file here {package_json_file_path}")]
+    NotFoundPackageJsonFileError { package_json_file_path: String },
 
     #[error("Download failed , The URL {download_url}")]
     DownloadFailed { download_url: String },
@@ -144,7 +147,7 @@ pub fn handle_snm_error(error: SnmError) {
                 file_path
             )
         }
-        SnmError::PackageJsonBinPropertyNotFound { file_path } => {
+        SnmError::NotFoundPackageJsonBinProperty { file_path } => {
             crate::println_error!(
                 stdout,
                 "Package.json bin property not found , The absolute path {}",
@@ -246,6 +249,15 @@ pub fn handle_snm_error(error: SnmError) {
                 stdout,
                 "No npm default detected. Please configure package.json -> packageManager or use {} to set the default version.",
                 "snm npm default [version]".bright_green().bold()
+            )
+        }
+        SnmError::NotFoundPackageJsonFileError {
+            package_json_file_path,
+        } => {
+            crate::println_error!(
+                stdout,
+                "{} not found. Please create one and configure the 'packageManager' field.",
+                package_json_file_path
             )
         }
     }

@@ -19,6 +19,12 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
 
     let pkg_file_path = current_dir()?.join("package.json");
 
+    if !pkg_file_path.exists() {
+        return Err(SnmError::NotFoundPackageJsonFileError {
+            package_json_file_path: pkg_file_path.display().to_string(),
+        });
+    }
+
     let package_json = PackageJson::from_file_path(None)?;
 
     // TODO parse_package_manager 可能需要返回 None 不能直接报错  launch
@@ -26,15 +32,20 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
 
     let args: Vec<String> = std::env::args().skip(1).collect();
 
+    let v = package_manager.version;
+
     let bin_file_path = match name {
-        "npm" => SnmNpm::new().use_bin("npm", None).await,
-        "pnpm" => SnmPnpm::new().use_bin("pnpm", None).await,
-        "yarn" => SnmYarn::new().use_bin("yarn", None).await,
+        "npm" => SnmNpm::new().use_bin("npm", &v).await,
+        "pnpm" => SnmPnpm::new().use_bin("pnpm", &v).await,
+        "yarn" => SnmYarn::new().use_bin("yarn", &v).await,
         "node" => use_node().await,
         _ => return Err(SnmError::UnknownError),
     }?;
 
     let output = exec_child_process!(bin_file_path, &args)?;
+    // println!("{:?} {:?}", &output, &v);
+
+    if !output.status.success() {}
 
     Ok(output)
 }

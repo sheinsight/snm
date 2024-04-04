@@ -30,21 +30,8 @@ impl SnmNpm {
 
 #[async_trait(?Send)]
 pub trait SnmNpmTrait {
-    async fn use_bin(&self, bin: &str, v: Option<String>) -> Result<PathBuf, SnmError> {
+    async fn use_default_bin(&self, bin: &str) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
-
-        if let Some(v) = v {
-            let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
-
-            let bin = PackageJson::from_file_path(Some(wk))?
-                .bin_to_hashmap()?
-                .get(bin)
-                .map(|bin_file_path| PathBuf::from(bin_file_path))
-                .ok_or(SnmError::UnknownError)?;
-
-            return Ok(bin);
-        }
-
         let default_dir = node_modules_dir
             .read_dir()?
             .filter_map(|entry| entry.ok())
@@ -60,6 +47,20 @@ pub trait SnmNpmTrait {
             .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
 
         let bin = PackageJson::from_file_path(Some(default_dir))?
+            .bin_to_hashmap()?
+            .get(bin)
+            .map(|bin_file_path| PathBuf::from(bin_file_path))
+            .ok_or(SnmError::UnknownError)?;
+
+        return Ok(bin);
+    }
+
+    async fn use_bin(&self, bin: &str, v: &str) -> Result<PathBuf, SnmError> {
+        let node_modules_dir = self.get_node_modules_dir()?;
+
+        let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
+
+        let bin = PackageJson::from_file_path(Some(wk))?
             .bin_to_hashmap()?
             .get(bin)
             .map(|bin_file_path| PathBuf::from(bin_file_path))
@@ -221,6 +222,25 @@ pub trait SnmNpmTrait {
         // 对于非 Windows 的 Unix 系统，包括 Linux 和 macOS，创建符号链接
         // macOS 基于 Unix，因此这部分代码也适用于 macOS。
         std::os::unix::fs::symlink(original, link)
+    }
+
+    #[cfg(target_family = "unix")]
+    fn set_exec_permission(&self, bin_path: &PathBuf) -> Result<(), SnmError> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let metadata = fs::metadata(&bin_path)?;
+        let mut permissions = metadata.permissions();
+        permissions.set_mode(permissions.mode() | 0o111); // UNIX: 增加所有用户的执行权限
+        fs::set_permissions(&bin_path, permissions)?;
+        Ok(())
+    }
+
+    #[cfg(target_family = "windows")]
+    fn set_exec_permission(&self, bin_path: &PathBuf) -> anyhow::Result<()> {
+        // Windows 上设置执行权限的方法不如 Unix 直接，
+        // 通常是通过文件属性或直接关联到可执行程序去处理，
+        // 暂时不需要复杂实现，因为执行权限通常默认存在
+        Ok(())
     }
 
     async fn default(&self, v: &str) -> Result<bool, SnmError> {
