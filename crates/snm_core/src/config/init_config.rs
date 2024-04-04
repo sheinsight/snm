@@ -10,10 +10,14 @@ pub static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
 pub static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
 pub static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
 
-pub static DISABLE_DEFAULT_VERSION: &str = "false";
+pub static SNM_ENABLE_DEFAULT_VERSION: &str = "SNM_ENABLE_DEFAULT_VERSION";
 
 pub fn init_config() -> Result<(), SnmError> {
     init_dir()?;
+
+    if let Err(_) = env::var(SNM_ENABLE_DEFAULT_VERSION) {
+        env::set_var(SNM_ENABLE_DEFAULT_VERSION, false.to_string());
+    }
 
     init_url_config();
 
