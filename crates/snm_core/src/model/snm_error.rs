@@ -84,6 +84,9 @@ pub enum SnmError {
 
     #[error("Not found default npm binary")]
     NotFoundDefaultNpmBinary,
+
+    #[error("Not found .node-version file")]
+    NotFoundNodeVersionFileError { file_path: String },
 }
 
 impl From<VarError> for SnmError {
@@ -258,6 +261,13 @@ pub fn handle_snm_error(error: SnmError) {
                 stdout,
                 "{} not found. Please create one and configure the 'packageManager' field.",
                 package_json_file_path
+            )
+        }
+        SnmError::NotFoundNodeVersionFileError { file_path } => {
+            crate::println_error!(
+                stdout,
+                "{} not found. Please create .node-version file and write node version into.",
+                file_path
             )
         }
     }
