@@ -1,7 +1,7 @@
-use std::{env::current_dir, process::Output};
+use std::{env::current_dir, ops::Not, process::Output};
 
 use snm_core::{
-    config::init_config::{init_config, SNM_ENABLE_DEFAULT_VERSION},
+    config::init_config::{init_config, SNM_STRICT},
     exec_child_process,
     model::{PackageJson, SnmError},
     utils::health::check_multi_lock_file,
@@ -18,11 +18,11 @@ pub async fn launch(name: &str) -> Result<Output, SnmError> {
 
     check_multi_lock_file()?;
 
-    let enable_default = std::env::var(SNM_ENABLE_DEFAULT_VERSION)?;
+    let strict = std::env::var(SNM_STRICT)?;
     let pkg_file_path = current_dir()?.join("package.json");
     let node_version_file_path = current_dir()?.join(".node-version");
 
-    if enable_default == "false" {
+    if strict == "true" {
         if ["npm", "pnpm", "yarn"].contains(&name) && !pkg_file_path.exists() {
             return Err(SnmError::NotFoundPackageJsonFileError {
                 package_json_file_path: pkg_file_path.display().to_string(),
