@@ -46,6 +46,9 @@ pub enum SnmError {
     #[error("File already exists {file_path}")]
     FileAlreadyExists { file_path: String },
 
+    #[error("File {file_path} not exist")]
+    FileNotExist { file_path: String },
+
     #[error("Unknown error")]
     UnknownError,
 
@@ -269,6 +272,9 @@ pub fn handle_snm_error(error: SnmError) {
                 "{} not found. Please create .node-version file and write node version into.",
                 file_path
             )
+        }
+        SnmError::FileNotExist { file_path } => {
+            crate::println_error!(stdout, "File {} not exist", file_path)
         }
     }
     std::process::exit(1);

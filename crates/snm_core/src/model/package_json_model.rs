@@ -44,11 +44,16 @@ impl PackageJson {
 
         let pkg_file_path = wk.join("package.json");
 
-        let mut pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
+        if pkg_file_path.exists() {
+            let mut pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
 
-        pkg._raw_file_path = Some(pkg_file_path);
-        pkg._raw_workspace = Some(wk);
-        return Ok(pkg);
+            pkg._raw_file_path = Some(pkg_file_path);
+            pkg._raw_workspace = Some(wk);
+            return Ok(pkg);
+        }
+        return Err(SnmError::NotFoundPackageJsonFileError {
+            package_json_file_path: pkg_file_path.display().to_string(),
+        });
     }
 
     pub fn parse_package_manager(&self) -> Result<PackageManager, SnmError> {
@@ -66,10 +71,13 @@ impl PackageJson {
                         .map(|v| (m.as_str().to_string(), v.as_str().to_string()))
                 }),
             };
-            return Ok(regex
+
+            let res = regex
                 .captures(raw_package_manager.as_str())
                 .map(map_to_struct)
-                .ok_or(SnmError::UnknownError)?);
+                .ok_or(SnmError::UnknownError)?;
+
+            return Ok(res);
         }
         return Err(SnmError::NotFoundPackageJsonBinProperty {
             file_path: self
