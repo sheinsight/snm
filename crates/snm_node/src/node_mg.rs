@@ -96,7 +96,7 @@ fn ask_re_install(node_version: &str) -> Result<bool, SnmError> {
     Ok(proceed)
 }
 
-async fn use_default_node() -> Result<(String, PathBuf), SnmError> {
+pub async fn use_default_node() -> Result<(String, PathBuf), SnmError> {
     let (versions, default_version) = read_bin_dir()?;
     if versions.is_empty() {
         return Err(SnmError::EmptyNodeList)?;
