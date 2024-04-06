@@ -28,7 +28,5 @@ async fn execute() -> Result<Output, SnmError> {
 
     let bin_path_buf = SnmPnpm::new().use_bin("pnpm", &v).await?;
 
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let output = exec_child_process!(&bin_path_buf, &args)?;
-    Ok(output)
+    Ok(exec_child_process!(&bin_path_buf)?)
 }
