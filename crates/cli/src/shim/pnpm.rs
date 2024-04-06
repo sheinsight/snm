@@ -2,7 +2,7 @@ use std::{env::current_dir, process::Output};
 
 use snm_core::{
     config::init_config,
-    exec_child_process,
+    exec_proxy_child_process,
     model::{snm_error::handle_snm_error, PackageJson, SnmError},
 };
 use snm_npm::snm_npm::SnmNpmTrait;
@@ -28,5 +28,5 @@ async fn execute() -> Result<Output, SnmError> {
 
     let bin_path_buf = SnmPnpm::new().use_bin("pnpm", &v).await?;
 
-    Ok(exec_child_process!(&bin_path_buf)?)
+    Ok(exec_proxy_child_process!(&bin_path_buf)?)
 }

@@ -1,6 +1,6 @@
 use snm_core::{
     config::init_config::{init_config, SNM_STRICT},
-    exec_child_process,
+    exec_proxy_child_process,
     model::{snm_error::handle_snm_error, SnmError},
 };
 use snm_node::node_mg::{use_bin, use_default_node};
@@ -29,7 +29,7 @@ async fn execute() -> Result<Output, SnmError> {
     if node_version_path_buf.exists().not() {
         let (_, bin_path_buf) = use_default_node().await?;
 
-        Ok(exec_child_process!(&bin_path_buf)?)
+        Ok(exec_proxy_child_process!(&bin_path_buf)?)
     } else {
         Ok(execute_strict().await?)
     }
@@ -45,5 +45,5 @@ async fn execute_strict() -> Result<Output, SnmError> {
     let v = read_to_string(&node_version_path_buf)
         .map(|value| value.trim_start_matches(['v', 'V']).trim().to_string())?;
     let bin_path_buf = use_bin(&v).await?;
-    Ok(exec_child_process!(&bin_path_buf)?)
+    Ok(exec_proxy_child_process!(&bin_path_buf)?)
 }

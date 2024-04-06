@@ -1,5 +1,5 @@
 use super::snm::SnmTrait;
-use snm_core::{exec_child_process, model::SnmError};
+use snm_core::{exec_proxy_child_process, model::SnmError};
 
 pub struct Npm {}
 

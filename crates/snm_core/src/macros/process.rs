@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! exec_child_process {
+macro_rules! exec_proxy_child_process {
     ($path:expr) => {{
         let args: Vec<String> = std::env::args().skip(1).collect();
         std::process::Command::new($path)
