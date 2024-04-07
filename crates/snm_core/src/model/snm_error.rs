@@ -90,6 +90,9 @@ pub enum SnmError {
 
     #[error("Not found .node-version file")]
     NotFoundNodeVersionFileError { file_path: String },
+
+    #[error("Unknown install strategy")]
+    UnknownInstallStrategy,
 }
 
 impl From<VarError> for SnmError {
