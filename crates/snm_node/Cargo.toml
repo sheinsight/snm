@@ -24,3 +24,4 @@ snm_core = { path = "../snm_core" }
 xz2 = "0.1.7"
 tar = "0.4"
 num-format = "0.4.0"
+regex = "1.10.4"

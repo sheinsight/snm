@@ -31,6 +31,8 @@ use std::os::unix::fs as unix_fs;
 use std::os::windows::fs as windows_fs;
 use std::{io::stdout, path::PathBuf};
 
+use crate::check_supported::check_supported;
+
 fn read_bin_dir() -> Result<(Vec<String>, Option<String>), SnmError> {
     let mut default_version = None;
 
@@ -132,11 +134,17 @@ async fn check_node_sha256(node_version: &str, down_path: &PathBuf) -> Result<()
 async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
     let tar_file_path = get_node_tar_file_path(node_version)?;
 
-    let download_url = SnmUrl::new().get_node_tar_download_url(node_version);
+    let snm_url = SnmUrl::new();
+
+    let download_url = snm_url.get_node_tar_download_url(node_version);
+
+    let node_dist_html_url = snm_url.get_node_dist(node_version);
 
     let node_dir = get_node_dir(node_version)?;
 
-    let mut stdout = stdout();
+    let mut stdout: std::io::Stdout = stdout();
+
+    check_supported(node_version, &node_dist_html_url).await?;
 
     // let download_progress = |downloaded_size, total_size| {
     //     let percentage = (downloaded_size as f64 / total_size as f64) * 100.0;
