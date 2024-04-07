@@ -1,5 +1,4 @@
 use crate::model::SnmError;
-use colored::*;
 use std::{env, fs::create_dir_all, path::PathBuf};
 
 static SNM_BASE_DIR_KEY: &str = "SNM_BASE_DIR";
@@ -8,9 +7,9 @@ static BIN_DIR_KEY: &str = "SNM_NODE_BIN_DIR";
 static DOWNLOAD_DIR_KEY: &str = "SNM_DOWNLOAD_DIR";
 static NODE_MODULES_DIR_KEY: &str = "SNM_NODE_MODULES_DIR";
 
-pub static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
-pub static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
-pub static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
+static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
+static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
+static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
 
 static SNM_STRICT: &str = "SNM_STRICT";
 
@@ -66,6 +65,18 @@ impl SnmConfig {
             env::var(NODE_MODULES_DIR_KEY).unwrap_or("node_modules".to_string());
         let node_modules_dir_path_buf = base_dir.join(node_modules_dir_name);
         Ok(node_modules_dir_path_buf)
+    }
+
+    pub fn get_npm_registry_host(&self) -> String {
+        env::var(SNM_NPM_REGISTRY_HOST_KEY).unwrap_or("https://registry.npmjs.org".to_string())
+    }
+
+    pub fn get_yarn_registry_host(&self) -> String {
+        env::var(SNM_YARN_REGISTRY_HOST_KEY).unwrap_or("https://registry.yarnpkg.com".to_string())
+    }
+
+    pub fn get_yarn_repo_host(&self) -> String {
+        env::var(SNM_YARN_REPO_HOST_KEY).unwrap_or("https://repo.yarnpkg.com".to_string())
     }
 
     fn init_strict(&self) {

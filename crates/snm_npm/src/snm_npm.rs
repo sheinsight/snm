@@ -8,7 +8,7 @@ use std::{
 use async_trait::async_trait;
 use dialoguer::Confirm;
 use snm_core::{
-    config::{SnmConfig, SNM_NPM_REGISTRY_HOST_KEY},
+    config::SnmConfig,
     model::{PackageJson, SnmError},
     print_warning, println_success,
     utils::{
@@ -195,7 +195,7 @@ pub trait SnmNpmTrait {
     }
 
     fn get_npm_registry(&self) -> Result<String, SnmError> {
-        let npm_registry_host = std::env::var(SNM_NPM_REGISTRY_HOST_KEY)?;
+        let npm_registry_host = SnmConfig::new().get_npm_registry_host();
         Ok(npm_registry_host)
     }
 

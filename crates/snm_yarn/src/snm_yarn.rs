@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use semver::Version;
 use snm_core::{
-    config::{SNM_YARN_REGISTRY_HOST_KEY, SNM_YARN_REPO_HOST_KEY},
+    config::SnmConfig,
     model::{PackageJson, SnmError},
     print_warning, println_success,
     utils::{
@@ -67,11 +67,12 @@ impl SnmNpmTrait for SnmYarn {
     }
 
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
+        let snm_config = SnmConfig::new();
         if self.get_is_less_2(v)? {
-            let host = std::env::var(SNM_YARN_REGISTRY_HOST_KEY)?;
+            let host = snm_config.get_yarn_registry_host();
             return Ok(format!("{}/yarn/-/yarn-{}.tgz", host, v));
         }
-        let host = std::env::var(SNM_YARN_REPO_HOST_KEY)?;
+        let host = snm_config.get_yarn_repo_host();
         return Ok(format!("{}/{}/packages/yarnpkg-cli/bin/yarn.js", host, v));
     }
 
