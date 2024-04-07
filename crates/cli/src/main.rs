@@ -4,7 +4,10 @@ use commands::{
     automatic,
     snm::{AddCommandArgs, InstallCommandArgs},
 };
-use snm_core::model::{snm_error::handle_snm_error, SnmError};
+use snm_core::{
+    config::SnmConfig,
+    model::{snm_error::handle_snm_error, SnmError},
+};
 
 use manager::{
     node::{handle_node_commands, NodeCommands},
@@ -51,7 +54,9 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), SnmError> {
-    snm_core::config::init_config()?;
+    // snm_core::config::init_config()?;
+
+    SnmConfig::new().init()?;
 
     if let Err(error) = execute_cli().await {
         handle_snm_error(error);

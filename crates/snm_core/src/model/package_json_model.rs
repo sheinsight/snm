@@ -9,7 +9,7 @@ use super::SnmError;
 #[derive(Debug, Deserialize)]
 pub struct PackageManager {
     pub raw: String,
-    pub package_manager: String,
+    pub name: String,
     pub version: String,
     pub hash: Option<(String, String)>,
 }
@@ -35,7 +35,7 @@ pub enum Bin {
 }
 
 impl PackageJson {
-    pub fn from_file_path(workspace: Option<PathBuf>) -> Result<Self, SnmError> {
+    pub fn from_dir_path(workspace: Option<PathBuf>) -> Result<Self, SnmError> {
         let wk = if let Some(wk) = workspace {
             wk
         } else {
@@ -51,6 +51,7 @@ impl PackageJson {
             pkg._raw_workspace = Some(wk);
             return Ok(pkg);
         }
+
         return Err(SnmError::NotFoundPackageJsonFileError {
             package_json_file_path: pkg_file_path.display().to_string(),
         });
@@ -58,13 +59,13 @@ impl PackageJson {
 
     pub fn parse_package_manager(&self) -> Result<PackageManager, SnmError> {
         if let Some(raw_package_manager) = &self.package_manager {
-            let regex_str = r"^(?P<package_manager>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
+            let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
 
             let regex = Regex::new(regex_str)?;
 
             let map_to_struct = |caps: Captures| PackageManager {
                 raw: raw_package_manager.clone(),
-                package_manager: caps["package_manager"].to_string(),
+                name: caps["name"].to_string(),
                 version: caps["version"].to_string(),
                 hash: caps.name("hash_method").and_then(|m| {
                     caps.name("hash_value")

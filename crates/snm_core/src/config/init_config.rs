@@ -2,83 +2,87 @@ use crate::model::SnmError;
 use colored::*;
 use std::{env, fs::create_dir_all, path::PathBuf};
 
-pub static BIN_DIR_KEY: &str = "SNM_NODE_BIN_DIR";
-pub static DOWNLOAD_DIR_KEY: &str = "SNM_DOWNLOAD_DIR";
-pub static NODE_MODULES_DIR_KEY: &str = "SNM_NODE_MODULES_DIR";
+static SNM_BASE_DIR_KEY: &str = "SNM_BASE_DIR";
+
+static BIN_DIR_KEY: &str = "SNM_NODE_BIN_DIR";
+static DOWNLOAD_DIR_KEY: &str = "SNM_DOWNLOAD_DIR";
+static NODE_MODULES_DIR_KEY: &str = "SNM_NODE_MODULES_DIR";
 
 pub static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
 pub static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
 pub static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
 
-pub static SNM_STRICT: &str = "SNM_STRICT";
+static SNM_STRICT: &str = "SNM_STRICT";
 
-pub fn init_config() -> Result<(), SnmError> {
-    init_dir()?;
+pub struct SnmConfig {}
 
-    if let Err(_) = env::var(SNM_STRICT) {
-        env::set_var(SNM_STRICT, false.to_string());
+impl SnmConfig {
+    pub fn new() -> Self {
+        Self {}
     }
 
-    init_url_config();
+    pub fn init(&self) -> Result<(), SnmError> {
+        self.init_strict();
 
-    Ok(())
-}
+        create_dir_all(self.get_base_dir_path_buf()?)?;
+        create_dir_all(self.get_node_bin_dir_path_buf()?)?;
+        create_dir_all(self.get_download_dir_path_buf()?)?;
+        create_dir_all(self.get_node_modules_dir_path_buf()?)?;
 
-fn init_dir() -> Result<(), SnmError> {
-    let home_dir = dirs::home_dir().ok_or(SnmError::GetHomeDirError)?;
+        self.init_url_config();
 
-    let key = "SNM_BASE_DIR";
-
-    let snm_base_dir = env::var(key)
-        .map(|val| home_dir.join(val))
-        .unwrap_or(home_dir.join(".snm"));
-
-    let snm_node_bin_dir = snm_base_dir.join("bin");
-    let snm_download_dir = snm_base_dir.join("download");
-    let snm_node_modules_dir = snm_base_dir.join("node_modules");
-
-    create_dir_all_with_snm_error(BIN_DIR_KEY, snm_node_bin_dir)?;
-    create_dir_all_with_snm_error(DOWNLOAD_DIR_KEY, snm_download_dir)?;
-    create_dir_all_with_snm_error(NODE_MODULES_DIR_KEY, snm_node_modules_dir)?;
-
-    Ok(())
-}
-
-fn init_url_config() {
-    if let Err(_) = env::var(SNM_NPM_REGISTRY_HOST_KEY) {
-        env::set_var(
-            SNM_NPM_REGISTRY_HOST_KEY,
-            "https://registry.npmjs.org".to_string(),
-        );
+        Ok(())
     }
 
-    if let Err(_) = env::var(SNM_YARN_REGISTRY_HOST_KEY) {
-        env::set_var(
-            SNM_YARN_REGISTRY_HOST_KEY,
-            "https://registry.yarnpkg.com".to_string(),
-        )
+    pub fn get_strict(&self) -> bool {
+        let value = env::var(SNM_STRICT).unwrap_or(false.to_string());
+        value.parse::<bool>().unwrap_or(false)
     }
 
-    if let Err(_) = env::var(SNM_YARN_REPO_HOST_KEY) {
-        env::set_var(
-            SNM_YARN_REPO_HOST_KEY,
-            "https://repo.yarnpkg.com".to_string(),
-        )
+    pub fn get_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        let home_dir = dirs::home_dir().ok_or(SnmError::GetHomeDirError)?;
+        let base_dir_name = env::var(SNM_BASE_DIR_KEY).unwrap_or(".snm".to_string());
+        let base_dir_path_buf = home_dir.join(base_dir_name);
+        Ok(base_dir_path_buf)
     }
-}
 
-fn create_dir_all_with_snm_error(
-    env_key: &str,
-    dir_path_buf: PathBuf,
-) -> Result<PathBuf, SnmError> {
-    let dir_str = dir_path_buf.display().to_string();
-    env::set_var(env_key, &dir_str);
-    if !dir_path_buf.exists() {
-        if create_dir_all(&dir_path_buf).is_err() {
-            return Err(SnmError::CreateDirFailed {
-                dir_path: dir_str.bright_red().to_string(),
-            });
+    pub fn get_node_bin_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        let base_dir = self.get_base_dir_path_buf()?;
+        let node_bin_dir_name = env::var(BIN_DIR_KEY).unwrap_or("bin".to_string());
+        let node_bin_dir_path_buf = base_dir.join(node_bin_dir_name);
+        Ok(node_bin_dir_path_buf)
+    }
+
+    pub fn get_download_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        let base_dir = self.get_base_dir_path_buf()?;
+        let download_dir_name = env::var(DOWNLOAD_DIR_KEY).unwrap_or("download".to_string());
+        let download_dir_path_buf = base_dir.join(download_dir_name);
+        Ok(download_dir_path_buf)
+    }
+
+    pub fn get_node_modules_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        let base_dir = self.get_base_dir_path_buf()?;
+        let node_modules_dir_name =
+            env::var(NODE_MODULES_DIR_KEY).unwrap_or("node_modules".to_string());
+        let node_modules_dir_path_buf = base_dir.join(node_modules_dir_name);
+        Ok(node_modules_dir_path_buf)
+    }
+
+    fn init_strict(&self) {
+        if let Err(_) = env::var(SNM_STRICT) {
+            env::set_var(SNM_STRICT, false.to_string());
         }
     }
-    Ok(dir_path_buf)
+
+    fn init_url_config(&self) {
+        self.var(SNM_NPM_REGISTRY_HOST_KEY, "https://registry.npmjs.org");
+        self.var(SNM_YARN_REGISTRY_HOST_KEY, "https://registry.yarnpkg.com");
+        self.var(SNM_YARN_REPO_HOST_KEY, "https://repo.yarnpkg.com");
+    }
+
+    fn var(&self, key: &str, val: &str) {
+        if let Err(_) = env::var(key) {
+            env::set_var(key, val);
+        }
+    }
 }

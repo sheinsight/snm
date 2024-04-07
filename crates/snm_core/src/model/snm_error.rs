@@ -239,8 +239,8 @@ pub fn handle_snm_error(error: SnmError) {
             crate::println_error!(
                 stdout,
                 "No matching package manager found. You input {} but the current project is configured to use {}.",
+                actual.bright_red().bold(),
                 expect.bright_green().bold(),
-                actual.bright_red().bold()
             )
         }
         SnmError::MultiPackageManagerLockFileError { lock_file } => {

@@ -2,12 +2,13 @@ use std::{
     fs::{self, DirEntry},
     io::stdout,
     path::{Path, PathBuf},
+    thread::sleep_ms,
 };
 
 use async_trait::async_trait;
 use dialoguer::Confirm;
 use snm_core::{
-    config::{DOWNLOAD_DIR_KEY, NODE_MODULES_DIR_KEY, SNM_NPM_REGISTRY_HOST_KEY},
+    config::{SnmConfig, SNM_NPM_REGISTRY_HOST_KEY},
     model::{PackageJson, SnmError},
     print_warning, println_success,
     utils::{
@@ -46,7 +47,7 @@ pub trait SnmNpmTrait {
             .map(|dir_name| node_modules_dir.join(dir_name))
             .ok_or(SnmError::NotFoundDefaultNpmBinary)?;
 
-        let bin = PackageJson::from_file_path(Some(default_dir))?
+        let bin = PackageJson::from_dir_path(Some(default_dir))?
             .bin_to_hashmap()?
             .get(bin)
             .map(|bin_file_path| PathBuf::from(bin_file_path))
@@ -55,18 +56,25 @@ pub trait SnmNpmTrait {
         return Ok(bin);
     }
 
-    async fn use_bin(&self, bin: &str, v: &str) -> Result<PathBuf, SnmError> {
+    async fn use_bin(&self, bin: &str, v: &str) -> Result<(String, PathBuf), SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
 
-        let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), v));
+        let wk = node_modules_dir.join(format!("{}@{}", self.get_prefix(), &v));
 
-        let bin = PackageJson::from_file_path(Some(wk))?
+        if !wk.join("package.json").exists() {
+            if self.ask_download(&v)? {
+                let tar = self.download(&v).await?;
+                self.decompress(&tar, &v)?;
+            }
+        }
+
+        let bin = PackageJson::from_dir_path(Some(wk))?
             .bin_to_hashmap()?
             .get(bin)
             .map(|bin_file_path| PathBuf::from(bin_file_path))
             .ok_or(SnmError::UnknownError)?;
 
-        return Ok(bin);
+        return Ok((v.to_string(), bin));
     }
 
     async fn install(&self, v: &str) -> Result<(), SnmError> {
@@ -182,8 +190,8 @@ pub trait SnmNpmTrait {
     }
 
     fn get_node_modules_dir(&self) -> Result<PathBuf, SnmError> {
-        let node_modules_dir = std::env::var(NODE_MODULES_DIR_KEY)?;
-        Ok(PathBuf::from(node_modules_dir))
+        let node_modules_dir = SnmConfig::new().get_node_modules_dir_path_buf()?;
+        Ok(node_modules_dir)
     }
 
     fn get_npm_registry(&self) -> Result<String, SnmError> {
@@ -191,14 +199,13 @@ pub trait SnmNpmTrait {
         Ok(npm_registry_host)
     }
 
-    fn get_download_dir(&self) -> Result<String, SnmError> {
-        let download_dir = std::env::var(DOWNLOAD_DIR_KEY)?;
+    fn get_download_dir(&self) -> Result<PathBuf, SnmError> {
+        let download_dir = SnmConfig::new().get_download_dir_path_buf()?;
         Ok(download_dir)
     }
 
     fn get_tar_file_path(&self, v: &str) -> Result<PathBuf, SnmError> {
-        let download_dir = self.get_download_dir()?;
-        let download_dir_buf = PathBuf::from(download_dir);
+        let download_dir_buf = self.get_download_dir()?;
         let tar_file_path = download_dir_buf.join(format!("{}@{}.tgz", self.get_prefix(), v));
         Ok(tar_file_path)
     }

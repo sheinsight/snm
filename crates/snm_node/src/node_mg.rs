@@ -295,8 +295,8 @@ pub async fn set_default(node_version: &str) -> Result<(), SnmError> {
     Ok(())
 }
 
-pub async fn use_bin(v: &str) -> Result<PathBuf, SnmError> {
-    let mut stdout = stdout();
+pub async fn use_bin(v: &str) -> Result<(String, PathBuf), SnmError> {
+    // let mut stdout = stdout();
     let node_binary_abs_path = get_node_binary_file_path(&v)?;
 
     if !node_binary_abs_path.exists() {
@@ -305,9 +305,9 @@ pub async fn use_bin(v: &str) -> Result<PathBuf, SnmError> {
         }
     }
 
-    println_success!(stdout, "Use Node {} .", format!("{}", v.green()));
+    // println_success!(stdout, "Use Node {} .", format!("{}", v.green()));
 
-    Ok(node_binary_abs_path)
+    Ok((v.to_string(), node_binary_abs_path))
 
     // let node_version_file = find_up(".node-version", None)?;
 

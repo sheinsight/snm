@@ -47,7 +47,7 @@ impl SnmNpmTrait for SnmYarn {
             decompress_tgz(
                 &tar,
                 &npm_dir,
-                |output| output.join(format!("yarn-v{}", v)),
+                |output| output.join("package"),
                 &mut progress,
             )?;
         } else {
@@ -124,7 +124,7 @@ impl SnmNpmTrait for SnmYarn {
 
         if self.get_is_less_2(default_version)? {
             let pkg = node_modules_dir.join(default_dir_name).join("package.json");
-            let bin = PackageJson::from_file_path(Some(pkg))?
+            let bin = PackageJson::from_dir_path(Some(pkg))?
                 .bin_to_hashmap()?
                 .get(bin)
                 .map(|bin_file_path| PathBuf::from(bin_file_path))
@@ -137,26 +137,41 @@ impl SnmNpmTrait for SnmYarn {
         return Ok(bin);
     }
 
-    async fn use_bin(&self, bin: &str, v: &str) -> Result<PathBuf, SnmError> {
+    async fn use_bin(&self, bin: &str, v: &str) -> Result<(String, PathBuf), SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
         if self.get_is_less_2(&v)? {
-            let pkg = node_modules_dir
-                .join(format!("{}@{}", self.get_prefix(), v))
-                .join("package.json");
+            let workspace = node_modules_dir.join(format!("{}@{}", self.get_prefix(), &v));
 
-            let bin = PackageJson::from_file_path(Some(pkg))?
+            let pkg = workspace.join("package.json");
+
+            if !pkg.exists() {
+                if self.ask_download(&v)? {
+                    let tar = self.download(&v).await?;
+                    self.decompress(&tar, v)?;
+                }
+            }
+
+            let bin = PackageJson::from_dir_path(Some(workspace))?
                 .bin_to_hashmap()?
                 .get(bin)
                 .map(|bin_file_path| PathBuf::from(bin_file_path))
                 .ok_or(SnmError::UnknownError)?;
 
-            return Ok(bin);
+            return Ok((v.to_string(), bin));
         } else {
             let bin = node_modules_dir
-                .join(format!("{}@{}", self.get_prefix(), v))
+                .join(format!("{}@{}", self.get_prefix(), &v))
                 .join("yarn.js");
 
-            return Ok(bin);
+            if !bin.exists() {
+                if self.ask_download(&v)? {
+                    let tar = self.download(&v).await?;
+                    self.decompress(&tar, &v)?;
+                    self.set_exec_permission(&bin)?;
+                }
+            }
+
+            return Ok((v.to_string(), bin));
         }
     }
 

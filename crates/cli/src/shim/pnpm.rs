@@ -1,9 +1,11 @@
 use std::{env::current_dir, process::Output};
 
+use colored::*;
 use snm_core::{
-    config::init_config,
+    config::SnmConfig,
     exec_proxy_child_process,
     model::{snm_error::handle_snm_error, PackageJson, SnmError},
+    println_success,
 };
 use snm_npm::snm_npm::SnmNpmTrait;
 use snm_pnpm::snm_pnpm::SnmPnpm;
@@ -16,17 +18,28 @@ async fn main() {
 }
 
 async fn execute() -> Result<Output, SnmError> {
-    init_config()?;
+    SnmConfig::new().init()?;
 
     let workspace = current_dir()?;
 
-    let package_json = PackageJson::from_file_path(Some(workspace))?;
+    let package_json = PackageJson::from_dir_path(Some(workspace))?;
 
     let package_manager = package_json.parse_package_manager()?;
 
+    if package_manager.name != "pnpm" {
+        return Err(SnmError::NotMatchPackageManager {
+            expect: package_manager.name,
+            actual: "pnpm".to_string(),
+        });
+    }
+
     let v = package_manager.version;
 
-    let bin_path_buf = SnmPnpm::new().use_bin("pnpm", &v).await?;
+    let mut stdout = std::io::stdout();
+
+    let (v, bin_path_buf) = SnmPnpm::new().use_bin("pnpm", &v).await?;
+
+    println_success!(stdout, "Use Pnpm {} .", format!("{}", v.green()));
 
     Ok(exec_proxy_child_process!(&bin_path_buf)?)
 }

@@ -1,4 +1,4 @@
-use snm_core::{config::init_config, model::snm_error::handle_snm_error};
+use snm_core::{config::SnmConfig, model::snm_error::handle_snm_error};
 use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
 use snm_yarn::snm_yarn::SnmYarn;
 
@@ -7,7 +7,11 @@ mod commands;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    init_config().unwrap();
+    // init_config().unwrap();
+
+    let snm_config = SnmConfig::new();
+
+    snm_config.init();
 
     let snm_npm = SnmNpm::new();
     let snm_yarn = SnmYarn::new();
