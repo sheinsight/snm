@@ -279,6 +279,9 @@ pub fn handle_snm_error(error: SnmError) {
         SnmError::FileNotExist { file_path } => {
             crate::println_error!(stdout, "File {} not exist", file_path)
         }
+        SnmError::UnknownInstallStrategy => {
+            crate::println_error!(stdout, "Unknown install strategy")
+        }
     }
     std::process::exit(1);
 }
