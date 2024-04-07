@@ -93,6 +93,9 @@ pub enum SnmError {
 
     #[error("Unknown install strategy")]
     UnknownInstallStrategy,
+
+    #[error("UnSupportNodeVersion {version}")]
+    UnSupportNodeVersion { version: String },
 }
 
 impl From<VarError> for SnmError {
@@ -281,6 +284,9 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::UnknownInstallStrategy => {
             crate::println_error!(stdout, "Unknown install strategy")
+        }
+        SnmError::UnSupportNodeVersion { version } => {
+            crate::println_error!(stdout, "UnSupport node version {}", version.bright_red())
         }
     }
     std::process::exit(1);
