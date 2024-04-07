@@ -3,15 +3,26 @@ use std::{env, fs::create_dir_all, path::PathBuf};
 
 static SNM_BASE_DIR_KEY: &str = "SNM_BASE_DIR";
 
-static BIN_DIR_KEY: &str = "SNM_NODE_BIN_DIR";
-static DOWNLOAD_DIR_KEY: &str = "SNM_DOWNLOAD_DIR";
-static NODE_MODULES_DIR_KEY: &str = "SNM_NODE_MODULES_DIR";
+static SNM_NODE_BIN_DIR: &str = "SNM_NODE_BIN_DIR";
+static SNM_DOWNLOAD_DIR: &str = "SNM_DOWNLOAD_DIR";
+static SNM_NODE_MODULES_DIR: &str = "SNM_NODE_MODULES_DIR";
 
 static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
 static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
 static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
 
 static SNM_STRICT: &str = "SNM_STRICT";
+
+// strategy  ask | panic | install
+static SNM_NODE_INSTALL_STRATEGY: &str = "SNM_NODE_INSTALL_STRATEGY";
+
+static SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: &str = "SNM_PACKAGE_MANAGER_INSTALL_STRATEGY";
+
+pub enum NodeInstallStrategy {
+    Ask,
+    Panic,
+    Install,
+}
 
 pub struct SnmConfig {}
 
@@ -47,14 +58,14 @@ impl SnmConfig {
 
     pub fn get_node_bin_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
         let base_dir = self.get_base_dir_path_buf()?;
-        let node_bin_dir_name = env::var(BIN_DIR_KEY).unwrap_or("bin".to_string());
+        let node_bin_dir_name = env::var(SNM_NODE_BIN_DIR).unwrap_or("bin".to_string());
         let node_bin_dir_path_buf = base_dir.join(node_bin_dir_name);
         Ok(node_bin_dir_path_buf)
     }
 
     pub fn get_download_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
         let base_dir = self.get_base_dir_path_buf()?;
-        let download_dir_name = env::var(DOWNLOAD_DIR_KEY).unwrap_or("download".to_string());
+        let download_dir_name = env::var(SNM_DOWNLOAD_DIR).unwrap_or("download".to_string());
         let download_dir_path_buf = base_dir.join(download_dir_name);
         Ok(download_dir_path_buf)
     }
@@ -62,7 +73,7 @@ impl SnmConfig {
     pub fn get_node_modules_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
         let base_dir = self.get_base_dir_path_buf()?;
         let node_modules_dir_name =
-            env::var(NODE_MODULES_DIR_KEY).unwrap_or("node_modules".to_string());
+            env::var(SNM_NODE_MODULES_DIR).unwrap_or("node_modules".to_string());
         let node_modules_dir_path_buf = base_dir.join(node_modules_dir_name);
         Ok(node_modules_dir_path_buf)
     }
@@ -77,6 +88,26 @@ impl SnmConfig {
 
     pub fn get_yarn_repo_host(&self) -> String {
         env::var(SNM_YARN_REPO_HOST_KEY).unwrap_or("https://repo.yarnpkg.com".to_string())
+    }
+
+    pub fn get_node_install_strategy(&self) -> NodeInstallStrategy {
+        let value = env::var(SNM_NODE_INSTALL_STRATEGY).unwrap_or("ask".to_string());
+        match value.as_str() {
+            "ask" => NodeInstallStrategy::Ask,
+            "panic" => NodeInstallStrategy::Panic,
+            "install" => NodeInstallStrategy::Install,
+            _ => NodeInstallStrategy::Ask,
+        }
+    }
+
+    pub fn get_package_manager_install_strategy(&self) -> NodeInstallStrategy {
+        let value = env::var(SNM_PACKAGE_MANAGER_INSTALL_STRATEGY).unwrap_or("ask".to_string());
+        match value.as_str() {
+            "ask" => NodeInstallStrategy::Ask,
+            "panic" => NodeInstallStrategy::Panic,
+            "install" => NodeInstallStrategy::Install,
+            _ => NodeInstallStrategy::Ask,
+        }
     }
 
     fn init_strict(&self) {
