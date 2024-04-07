@@ -27,18 +27,18 @@ pub enum InstallStrategy {
 impl InstallStrategy {
     pub fn from_str(s: &str) -> Result<Self, SnmError> {
         match s {
-            "Ask" => Ok(InstallStrategy::Ask),
-            "Panic" => Ok(InstallStrategy::Panic),
-            "Install" => Ok(InstallStrategy::Install),
+            "ask" => Ok(InstallStrategy::Ask),
+            "panic" => Ok(InstallStrategy::Panic),
+            "install" => Ok(InstallStrategy::Install),
             _ => Err(SnmError::UnknownInstallStrategy),
         }
     }
 
     pub fn as_str(&self) -> &'static str {
         match self {
-            InstallStrategy::Ask => "Ask",
-            InstallStrategy::Panic => "Panic",
-            InstallStrategy::Install => "Install",
+            InstallStrategy::Ask => "ask",
+            InstallStrategy::Panic => "panic",
+            InstallStrategy::Install => "install",
         }
     }
 }
