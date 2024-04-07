@@ -296,7 +296,6 @@ pub async fn set_default(node_version: &str) -> Result<(), SnmError> {
 }
 
 pub async fn use_bin(v: &str) -> Result<(String, PathBuf), SnmError> {
-    // let mut stdout = stdout();
     let node_binary_abs_path = get_node_binary_file_path(&v)?;
 
     if !node_binary_abs_path.exists() {
@@ -305,45 +304,7 @@ pub async fn use_bin(v: &str) -> Result<(String, PathBuf), SnmError> {
         }
     }
 
-    // println_success!(stdout, "Use Node {} .", format!("{}", v.green()));
-
     Ok((v.to_string(), node_binary_abs_path))
-
-    // let node_version_file = find_up(".node-version", None)?;
-
-    // if let Some(node_version_file_abs_path) = node_version_file {
-    //     let node_version_str = tokio::fs::read_to_string(&node_version_file_abs_path)
-    //         .await?
-    //         .trim()
-    //         .trim_start_matches("v")
-    //         .to_string();
-
-    //     let node_binary_abs_path = get_node_binary_file_path(&node_version_str)?;
-
-    //     if !node_binary_abs_path.exists() {
-    //         if ask_download(&node_version_str)? {
-    //             install_node(&node_version_str).await?;
-    //         }
-    //     }
-
-    //     println_success!(
-    //         stdout,
-    //         "Use Node {} .",
-    //         format!("{}", node_version_str.green())
-    //     );
-
-    //     Ok(node_binary_abs_path)
-    // } else {
-    //     let (node_version_str, node_binary_abs_path) = use_default_node().await?;
-    //     println_success!(
-    //         stdout,
-    //         "Use Node {} . {}",
-    //         node_version_str.green(),
-    //         "by default".bright_black()
-    //     );
-
-    //     Ok(node_binary_abs_path)
-    // }
 }
 
 pub async fn install_node(node_version: &str) -> Result<PathBuf, SnmError> {
