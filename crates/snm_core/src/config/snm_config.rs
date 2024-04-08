@@ -13,7 +13,7 @@ static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
 
 static SNM_STRICT: &str = "SNM_STRICT";
 
-// strategy  ask | panic | install
+// strategy  ask | panic | auto
 static SNM_NODE_INSTALL_STRATEGY: &str = "SNM_NODE_INSTALL_STRATEGY";
 
 static SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: &str = "SNM_PACKAGE_MANAGER_INSTALL_STRATEGY";
@@ -21,7 +21,7 @@ static SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: &str = "SNM_PACKAGE_MANAGER_INSTALL
 pub enum InstallStrategy {
     Ask,
     Panic,
-    Install,
+    Auto,
 }
 
 impl InstallStrategy {
@@ -29,7 +29,7 @@ impl InstallStrategy {
         match s {
             "ask" => Ok(InstallStrategy::Ask),
             "panic" => Ok(InstallStrategy::Panic),
-            "install" => Ok(InstallStrategy::Install),
+            "auto" => Ok(InstallStrategy::Auto),
             _ => Err(SnmError::UnknownInstallStrategy),
         }
     }
@@ -38,7 +38,7 @@ impl InstallStrategy {
         match self {
             InstallStrategy::Ask => "ask",
             InstallStrategy::Panic => "panic",
-            InstallStrategy::Install => "install",
+            InstallStrategy::Auto => "auto",
         }
     }
 }
