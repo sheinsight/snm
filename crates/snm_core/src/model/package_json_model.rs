@@ -57,6 +57,14 @@ impl PackageJson {
         });
     }
 
+    pub fn from_file_path(file_path: &PathBuf) -> Result<Self, SnmError> {
+        let mut pkg = read_to_json::<PackageJson>(&file_path)?;
+        pkg._raw_file_path = Some(file_path.to_path_buf());
+
+        pkg._raw_workspace = file_path.parent().map(|x| x.to_path_buf());
+        Ok(pkg)
+    }
+
     pub fn parse_package_manager(&self) -> Result<PackageManager, SnmError> {
         if let Some(raw_package_manager) = &self.package_manager {
             let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
