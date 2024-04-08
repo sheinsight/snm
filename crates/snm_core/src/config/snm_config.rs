@@ -18,10 +18,29 @@ static SNM_NODE_INSTALL_STRATEGY: &str = "SNM_NODE_INSTALL_STRATEGY";
 
 static SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: &str = "SNM_PACKAGE_MANAGER_INSTALL_STRATEGY";
 
-pub enum NodeInstallStrategy {
+pub enum InstallStrategy {
     Ask,
     Panic,
     Install,
+}
+
+impl InstallStrategy {
+    pub fn from_str(s: &str) -> Result<Self, SnmError> {
+        match s {
+            "ask" => Ok(InstallStrategy::Ask),
+            "panic" => Ok(InstallStrategy::Panic),
+            "install" => Ok(InstallStrategy::Install),
+            _ => Err(SnmError::UnknownInstallStrategy),
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            InstallStrategy::Ask => "ask",
+            InstallStrategy::Panic => "panic",
+            InstallStrategy::Install => "install",
+        }
+    }
 }
 
 pub struct SnmConfig {}
@@ -90,24 +109,14 @@ impl SnmConfig {
         env::var(SNM_YARN_REPO_HOST_KEY).unwrap_or("https://repo.yarnpkg.com".to_string())
     }
 
-    pub fn get_node_install_strategy(&self) -> NodeInstallStrategy {
+    pub fn get_node_install_strategy(&self) -> Result<InstallStrategy, SnmError> {
         let value = env::var(SNM_NODE_INSTALL_STRATEGY).unwrap_or("ask".to_string());
-        match value.as_str() {
-            "ask" => NodeInstallStrategy::Ask,
-            "panic" => NodeInstallStrategy::Panic,
-            "install" => NodeInstallStrategy::Install,
-            _ => NodeInstallStrategy::Ask,
-        }
+        InstallStrategy::from_str(&value)
     }
 
-    pub fn get_package_manager_install_strategy(&self) -> NodeInstallStrategy {
+    pub fn get_package_manager_install_strategy(&self) -> Result<InstallStrategy, SnmError> {
         let value = env::var(SNM_PACKAGE_MANAGER_INSTALL_STRATEGY).unwrap_or("ask".to_string());
-        match value.as_str() {
-            "ask" => NodeInstallStrategy::Ask,
-            "panic" => NodeInstallStrategy::Panic,
-            "install" => NodeInstallStrategy::Install,
-            _ => NodeInstallStrategy::Ask,
-        }
+        InstallStrategy::from_str(&value)
     }
 
     fn init_strict(&self) {

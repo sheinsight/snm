@@ -12,6 +12,8 @@ use colored::*;
 use dialoguer::Confirm;
 use futures::*;
 use semver::{Version, VersionReq};
+use snm_core::config::snm_config::InstallStrategy;
+use snm_core::config::SnmConfig;
 use snm_core::{
     config::url::SnmUrl,
     model::{Lts, NodeModel, NodeScheduleModel, SnmError},
@@ -78,7 +80,7 @@ fn is_default_fn(node_version: &str) -> Result<(bool, PathBuf), SnmError> {
     return Ok((defaulted, default_binary_dir));
 }
 
-fn ask_download(node_version: &str) -> Result<bool, SnmError> {
+pub fn ask_download(node_version: &str) -> Result<bool, SnmError> {
     let proceed = Confirm::new()
         .with_prompt(format!(
             "🤔 Node {} does not exist, do you want to download it ?",
@@ -131,7 +133,7 @@ async fn check_node_sha256(node_version: &str, down_path: &PathBuf) -> Result<()
     }
 }
 
-async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
+pub async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
     let tar_file_path = get_node_tar_file_path(node_version)?;
 
     let snm_url = SnmUrl::new();
@@ -146,25 +148,6 @@ async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
 
     check_supported(node_version, &node_dist_html_url).await?;
 
-    // let download_progress = |downloaded_size, total_size| {
-    //     let percentage = (downloaded_size as f64 / total_size as f64) * 100.0;
-    //     // execute!(&stdout, Clear(ClearType::CurrentLine), MoveToColumn(0)).ok();
-    //     // warning!(
-    //     //     "Downloading: {:.2}% {}/{}",
-    //     //     percentage,
-    //     //     downloaded_size,
-    //     //     total_size
-    //     // );
-    //     print_warning!(
-    //         stdout,
-    //         "Downloading: {:.2}% {}/{}",
-    //         percentage,
-    //         downloaded_size,
-    //         total_size
-    //     );
-    //     // stdout.flush().ok();
-    // };
-
     print_warning!(stdout, "Waiting Download...");
 
     DownloadBuilder::new()
@@ -174,27 +157,11 @@ async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
         .download(&download_url, &tar_file_path)
         .await?;
 
-    // execute!(stdout(), Clear(ClearType::CurrentLine), MoveToColumn(0)).ok();
-    // success!("Downloaded\n");
-    // let mut stdout = stdout();
-
     println_success!(stdout, "Downloaded");
 
     check_node_sha256(&node_version, &tar_file_path).await?;
 
-    // let mut stdout = stdout();
-
-    let mut decompress_progress = Some(|_from: &PathBuf, to: &PathBuf| {
-        // execute!(&stdout, Clear(ClearType::CurrentLine), MoveToColumn(0)).ok();
-
-        // let mut lock = stdout.lock();
-
-        // print_warning!(lock, "Decompressing: {}", to.display());
-
-        // stdout.flush().ok();
-        // todo!("终端刷的太慢了")
-        // std::thread::sleep(std::time::Duration::from_millis(1000));
-    });
+    let mut decompress_progress = Some(|_from: &PathBuf, to: &PathBuf| {});
 
     print_warning!(stdout, "Waiting Decompress...");
 
@@ -304,54 +271,25 @@ pub async fn set_default(node_version: &str) -> Result<(), SnmError> {
 }
 
 pub async fn use_bin(v: &str) -> Result<(String, PathBuf), SnmError> {
-    // let mut stdout = stdout();
     let node_binary_abs_path = get_node_binary_file_path(&v)?;
 
     if !node_binary_abs_path.exists() {
-        if ask_download(&v)? {
-            install_node(&v).await?;
+        match SnmConfig::new().get_node_install_strategy()? {
+            InstallStrategy::Ask => {
+                if ask_download(&v)? {
+                    install_node(&v).await?;
+                }
+            }
+            InstallStrategy::Install => {
+                install_node(&v).await?;
+            }
+            InstallStrategy::Panic => Err(SnmError::UnSupportNodeVersion {
+                version: v.to_string(),
+            })?,
         }
     }
 
-    // println_success!(stdout, "Use Node {} .", format!("{}", v.green()));
-
     Ok((v.to_string(), node_binary_abs_path))
-
-    // let node_version_file = find_up(".node-version", None)?;
-
-    // if let Some(node_version_file_abs_path) = node_version_file {
-    //     let node_version_str = tokio::fs::read_to_string(&node_version_file_abs_path)
-    //         .await?
-    //         .trim()
-    //         .trim_start_matches("v")
-    //         .to_string();
-
-    //     let node_binary_abs_path = get_node_binary_file_path(&node_version_str)?;
-
-    //     if !node_binary_abs_path.exists() {
-    //         if ask_download(&node_version_str)? {
-    //             install_node(&node_version_str).await?;
-    //         }
-    //     }
-
-    //     println_success!(
-    //         stdout,
-    //         "Use Node {} .",
-    //         format!("{}", node_version_str.green())
-    //     );
-
-    //     Ok(node_binary_abs_path)
-    // } else {
-    //     let (node_version_str, node_binary_abs_path) = use_default_node().await?;
-    //     println_success!(
-    //         stdout,
-    //         "Use Node {} . {}",
-    //         node_version_str.green(),
-    //         "by default".bright_black()
-    //     );
-
-    //     Ok(node_binary_abs_path)
-    // }
 }
 
 pub async fn install_node(node_version: &str) -> Result<PathBuf, SnmError> {

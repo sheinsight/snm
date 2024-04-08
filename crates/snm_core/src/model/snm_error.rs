@@ -91,8 +91,16 @@ pub enum SnmError {
     #[error("Not found .node-version file")]
     NotFoundNodeVersionFileError { file_path: String },
 
+
     #[error("Unsupported platform {os} {arch}")]
     UnsupportedPlatform { os: String, arch: String },
+
+    #[error("Unknown install strategy")]
+    UnknownInstallStrategy,
+
+    #[error("UnSupportNodeVersion {version}")]
+    UnSupportNodeVersion { version: String },
+
 }
 
 impl From<VarError> for SnmError {
@@ -281,6 +289,12 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::UnsupportedPlatform { os, arch } => {
             crate::println_error!(stdout, "{}-{} not supported", os, arch)
+        }
+        SnmError::UnknownInstallStrategy => {
+            crate::println_error!(stdout, "Unknown install strategy")
+        }
+        SnmError::UnSupportNodeVersion { version } => {
+            crate::println_error!(stdout, "UnSupport node version {}", version.bright_red())
         }
     }
     std::process::exit(1);
