@@ -88,9 +88,11 @@ pub enum SnmError {
     #[error("Not found default npm binary")]
     NotFoundDefaultNpmBinary,
 
+    #[error("Not found default package manager {name}")]
+    NotFoundDefaultPackageManager { name: String },
+
     #[error("Not found .node-version file")]
     NotFoundNodeVersionFileError { file_path: String },
-
 
     #[error("Unsupported platform {os} {arch}")]
     UnsupportedPlatform { os: String, arch: String },
@@ -101,6 +103,11 @@ pub enum SnmError {
     #[error("UnSupportNodeVersion {version}")]
     UnSupportNodeVersion { version: String },
 
+    #[error("Unsupported {name}@{version}")]
+    UnsupportedPackageManager { name: String, version: String },
+
+    #[error("Not found valid package manager {name}")]
+    EmptyPackageManagerList { name: String },
 }
 
 impl From<VarError> for SnmError {
@@ -187,6 +194,7 @@ pub fn handle_snm_error(error: SnmError) {
                 "snm node list-remote".bright_green().bold()
             )
         }
+
         SnmError::NotFoundSha256ForNode(_) => {
             crate::println_error!(stdout, "NotFoundSha256ForNode")
         }
@@ -295,6 +303,29 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::UnSupportNodeVersion { version } => {
             crate::println_error!(stdout, "UnSupport node version {}", version.bright_red())
+        }
+        SnmError::UnsupportedPackageManager { name, version } => {
+            crate::println_error!(
+                stdout,
+                "Unsupported package manager {}@{}",
+                name.bright_red(),
+                version.bright_red()
+            )
+        }
+        SnmError::EmptyPackageManagerList { name } => {
+            crate::println_error!(
+                stdout,
+                "No package manager found. Please use {} to get the latest version.",
+                "snm npm list-remote".bright_green().bold()
+            )
+        }
+        SnmError::NotFoundDefaultPackageManager { name } => {
+            crate::println_error!(
+                stdout,
+                "No {} default detected. Please configure package.json -> packageManager or use {} to set the default version.",
+                name.bright_green().bold(),
+                format!("snm {} default [version]", name).bright_green().bold()
+            )
         }
     }
     std::process::exit(1);
