@@ -1,6 +1,7 @@
 use std::{env::current_dir, ops::Not, path::PathBuf};
 
 use colored::*;
+use shim::{dispatch_shim, NpmShim};
 use snm_core::{
     config::SnmConfig,
     exec_proxy_child_process,
@@ -13,10 +14,21 @@ use snm_pnpm::snm_pnpm::SnmPnpm;
 const PACKAGE_JSON_FILE: &str = "package.json";
 
 const PREFIX: &str = "pnpm";
+mod shim;
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
+
+    // match dispatch_shim(NpmShim::new(PREFIX)).await {
+    //     Ok((v, bin_path_buf)) => {
+    //         println_success!(std::io::stdout(), "Use {} {}. ", PREFIX, v.green());
+    //         exec_proxy_child_process!(&bin_path_buf);
+    //     }
+    //     Err(error) => {
+    //         handle_snm_error(error);
+    //     }
+    // }
 
     match execute().await {
         Ok((v, bin_path_buf)) => {
@@ -102,7 +114,7 @@ async fn execute() -> Result<(String, PathBuf), SnmError> {
                     version: package_manager.version.clone(),
                 })?
             }
-            snm_core::config::snm_config::InstallStrategy::Install => {
+            snm_core::config::snm_config::InstallStrategy::Auto => {
                 let tar = snm_pnpm.download(&package_manager.version).await?;
                 snm_pnpm.decompress(&tar, &package_manager.version)?;
             }

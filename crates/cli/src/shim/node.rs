@@ -47,7 +47,7 @@ async fn ensure_node_binary_exists_or_panic(
                     download(&v).await?;
                 }
             }
-            InstallStrategy::Install => {
+            InstallStrategy::Auto => {
                 download(&v).await?;
             }
             InstallStrategy::Panic => {
