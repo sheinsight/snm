@@ -28,11 +28,14 @@ impl SnmUrl {
         )
     }
 
+    pub fn get_node_dist(&self, node_version: &str) -> String {
+        format!("{}/dist/v{}", &self.node_host_url, node_version)
+    }
+
     pub fn get_node_tar_download_url(&self, node_version: &str) -> String {
         format!(
-            "{}/dist/v{}/node-v{}-{}-{}.{}",
-            &self.node_host_url,
-            node_version,
+            "{}/node-v{}-{}-{}.{}",
+            &self.get_node_dist(node_version),
             node_version,
             get_os(),
             get_arch(),
