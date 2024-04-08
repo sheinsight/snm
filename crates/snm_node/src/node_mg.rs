@@ -35,7 +35,7 @@ use std::{io::stdout, path::PathBuf};
 
 use crate::check_supported::check_supported;
 
-fn read_bin_dir() -> Result<(Vec<String>, Option<String>), SnmError> {
+pub fn read_bin_dir() -> Result<(Vec<String>, Option<String>), SnmError> {
     let mut default_version = None;
 
     let dir_path = get_node_binary_base_dir()?;
