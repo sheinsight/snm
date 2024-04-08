@@ -98,7 +98,7 @@ async fn execute() -> Result<(String, PathBuf), SnmError> {
             }
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::UnsupportedPackageManager {
-                    name: "npm".to_string(),
+                    name: PREFIX.to_string(),
                     version: package_manager.version.clone(),
                 })?
             }

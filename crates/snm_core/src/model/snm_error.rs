@@ -307,9 +307,8 @@ pub fn handle_snm_error(error: SnmError) {
         SnmError::UnsupportedPackageManager { name, version } => {
             crate::println_error!(
                 stdout,
-                "Unsupported package manager {}@{}",
-                name.bright_red(),
-                version.bright_red()
+                "Unsupported package manager {}",
+                format!("{}@{}", name, version).bright_red(),
             )
         }
         SnmError::EmptyPackageManagerList { name } => {
