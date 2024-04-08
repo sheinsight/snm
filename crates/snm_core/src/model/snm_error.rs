@@ -108,6 +108,9 @@ pub enum SnmError {
 
     #[error("Not found valid package manager {name}")]
     EmptyPackageManagerList { name: String },
+
+    #[error("Not found package manager {name}@{version}")]
+    NotFoundPackageManager { name: String, version: String },
 }
 
 impl From<VarError> for SnmError {
@@ -324,6 +327,15 @@ pub fn handle_snm_error(error: SnmError) {
                 "No {} default detected. Please configure package.json -> packageManager or use {} to set the default version.",
                 name.bright_green().bold(),
                 format!("snm {} default [version]", name).bright_green().bold()
+            )
+        }
+        SnmError::NotFoundPackageManager { name, version } => {
+            crate::println_error!(
+                stdout,
+                "No {}@{} found. Please use {} to get the latest version.",
+                name.bright_green().bold(),
+                version.bright_green().bold(),
+                format!("snm {} list-remote", name).bright_green().bold()
             )
         }
     }
