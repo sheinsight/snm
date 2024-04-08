@@ -2,7 +2,6 @@ use std::{
     fs::{self, DirEntry},
     io::stdout,
     path::{Path, PathBuf},
-    thread::sleep_ms,
 };
 
 use async_trait::async_trait;
