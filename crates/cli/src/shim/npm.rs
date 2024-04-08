@@ -11,13 +11,15 @@ use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
 
 const PACKAGE_JSON_FILE: &str = "package.json";
 
+const PREFIX: &str = "npm";
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
 
     match execute().await {
         Ok((v, bin_path_buf)) => {
-            println_success!(std::io::stdout(), "Use npm {}. ", v.green());
+            println_success!(std::io::stdout(), "Use {} {}. ", PREFIX, v.green());
             exec_proxy_child_process!(&bin_path_buf);
         }
         Err(error) => {
@@ -30,7 +32,7 @@ fn get_npm_binary_path(npm_package_json_path_buf: &PathBuf) -> Result<PathBuf, S
     let npm_package_json = PackageJson::from_file_path(&npm_package_json_path_buf)?;
     let npm_bin_path_buf = npm_package_json
         .bin_to_hashmap()?
-        .remove("npm")
+        .remove(PREFIX)
         .ok_or(SnmError::UnknownError)?;
     Ok(npm_bin_path_buf)
 }
@@ -52,16 +54,16 @@ async fn execute() -> Result<(String, PathBuf), SnmError> {
             let (npm_vec, default_version) = snm_npm.read_bin_dir()?;
             if npm_vec.is_empty() {
                 Err(SnmError::EmptyPackageManagerList {
-                    name: "npm".to_string(),
+                    name: PREFIX.to_string(),
                 })?;
             }
 
             let version = default_version.ok_or(SnmError::NotFoundDefaultPackageManager {
-                name: "npm".to_string(),
+                name: PREFIX.to_string(),
             })?;
 
             let npm_package_json_path_buf = node_modules_dir_path_buf
-                .join(format!("npm@{}", version))
+                .join(format!("{}@{}", PREFIX, version))
                 .join(PACKAGE_JSON_FILE);
 
             let npm_bin_path_buf = get_npm_binary_path(&npm_package_json_path_buf)?;
@@ -74,15 +76,15 @@ async fn execute() -> Result<(String, PathBuf), SnmError> {
 
     let package_manager = package_json.parse_package_manager()?;
 
-    if package_manager.name != "npm" {
+    if package_manager.name != PREFIX {
         Err(SnmError::NotMatchPackageManager {
             expect: package_manager.name,
-            actual: "npm".to_string(),
+            actual: PREFIX.to_string(),
         })?;
     }
 
     let npm_package_json_path_buf = node_modules_dir_path_buf
-        .join(format!("npm@{}", &package_manager.version))
+        .join(format!("{}@{}", PREFIX, &package_manager.version))
         .join(PACKAGE_JSON_FILE);
 
     if npm_package_json_path_buf.exists().not() {
