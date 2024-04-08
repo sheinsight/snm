@@ -283,7 +283,7 @@ pub async fn use_bin(v: &str) -> Result<(String, PathBuf), SnmError> {
             InstallStrategy::Install => {
                 install_node(&v).await?;
             }
-            InstallStrategy::Panic => Err(SnmError::UnSupportNodeVersion {
+            InstallStrategy::Panic => Err(SnmError::UnsupportedNodeVersion {
                 version: v.to_string(),
             })?,
         }

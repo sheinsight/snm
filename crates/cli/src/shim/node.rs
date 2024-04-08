@@ -51,7 +51,7 @@ async fn ensure_node_binary_exists_or_panic(
                 download(&v).await?;
             }
             InstallStrategy::Panic => {
-                return Err(SnmError::UnSupportNodeVersion {
+                return Err(SnmError::UnsupportedNodeVersion {
                     version: v.to_string(),
                 });
             }

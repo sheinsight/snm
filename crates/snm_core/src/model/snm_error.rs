@@ -101,7 +101,7 @@ pub enum SnmError {
     UnknownInstallStrategy,
 
     #[error("UnSupportNodeVersion {version}")]
-    UnSupportNodeVersion { version: String },
+    UnsupportedNodeVersion { version: String },
 
     #[error("Unsupported {name}@{version}")]
     UnsupportedPackageManager { name: String, version: String },
@@ -301,7 +301,7 @@ pub fn handle_snm_error(error: SnmError) {
         SnmError::UnknownInstallStrategy => {
             crate::println_error!(stdout, "Unknown install strategy")
         }
-        SnmError::UnSupportNodeVersion { version } => {
+        SnmError::UnsupportedNodeVersion { version } => {
             crate::println_error!(stdout, "UnSupport node version {}", version.bright_red())
         }
         SnmError::UnsupportedPackageManager { name, version } => {
