@@ -31,6 +31,42 @@ impl SnmNpm {
 
 #[async_trait(?Send)]
 pub trait SnmNpmTrait {
+    fn read_bin_dir(&self) -> Result<(Vec<String>, Option<String>), SnmError> {
+        let mut default_version = None;
+
+        let node_modules_path_buf = self.get_node_modules_dir()?;
+
+        return match node_modules_path_buf.read_dir() {
+            Ok(dir_reader) => {
+                let dir_vec: Vec<String> = dir_reader
+                    .filter_map(Result::ok)
+                    .filter(|dir_entry| dir_entry.path().is_dir())
+                    .filter(|dir_entry| {
+                        dir_entry
+                            .file_name()
+                            .into_string()
+                            .ok()
+                            .map_or(false, |file_name| {
+                                file_name.starts_with(self.get_prefix().as_str())
+                            })
+                    })
+                    .filter_map(|x| {
+                        let version = x.file_name().into_string().ok()?;
+                        if version.ends_with("default") {
+                            default_version =
+                                Some(version.trim_end_matches("-default").to_string());
+                        }
+                        Some(version)
+                    })
+                    .collect();
+                Ok((dir_vec, default_version))
+            }
+            Err(_) => Err(SnmError::ReadDirFailed {
+                dir_path: node_modules_path_buf.display().to_string(),
+            }),
+        };
+    }
+
     async fn use_default_bin(&self, bin: &str) -> Result<PathBuf, SnmError> {
         let node_modules_dir = self.get_node_modules_dir()?;
         let default_dir = node_modules_dir
