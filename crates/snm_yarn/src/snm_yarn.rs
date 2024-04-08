@@ -39,8 +39,7 @@ impl SnmNpmTrait for SnmYarn {
     }
 
     fn decompress(&self, tar: &PathBuf, v: &str) -> Result<PathBuf, SnmError> {
-        let mut stdout = stdout();
-        print_warning!(stdout, "Waiting Decompress...");
+        print_warning!("Waiting Decompress...");
         let npm_dir = self.get_npm_dir(v)?;
         if self.get_is_less_2(v)? {
             let mut progress = Some(|_from: &PathBuf, _to: &PathBuf| {});
@@ -54,7 +53,7 @@ impl SnmNpmTrait for SnmYarn {
             fs::create_dir_all(&npm_dir)?;
             fs::copy(tar, &npm_dir.join("yarn.js"))?;
         }
-        println_success!(stdout, "Decompressed");
+        println_success!("Decompressed");
         return Ok(npm_dir);
     }
 
@@ -90,14 +89,13 @@ impl SnmNpmTrait for SnmYarn {
         let download_url = self.get_download_url(v)?;
         let tar_file_path = self.get_tar_file_path(v)?;
         {
-            let mut stdout = stdout();
-            print_warning!(stdout, "Waiting Download...");
+            print_warning!("Waiting Download...");
             DownloadBuilder::new()
                 .retries(3)
                 .write_strategy(WriteStrategy::Nothing)
                 .download(&download_url, &tar_file_path)
                 .await?;
-            println_success!(stdout, "Downloaded");
+            println_success!("Downloaded");
         }
         Ok(tar_file_path)
     }

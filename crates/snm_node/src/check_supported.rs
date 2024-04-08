@@ -73,10 +73,9 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
     if is_supported {
         return Ok(());
     } else {
-        let mut out = stdout();
-        print_warning!(out, "not support {}", &temp_su);
-        let mut out = stdout();
-        print_warning!(out, "supported list {:?}", &supported_list);
+        print_warning!("not support {}", &temp_su);
+
+        print_warning!("supported list {:?}", &supported_list);
         return Err(SnmError::UnsupportedPlatform { os, arch });
     }
 }

@@ -130,8 +130,7 @@ pub trait SnmNpmTrait {
     fn decompress(&self, tar: &PathBuf, v: &str) -> Result<PathBuf, SnmError> {
         let npm_dir = self.get_npm_dir(v)?;
 
-        let mut stdout = stdout();
-        print_warning!(stdout, "Waiting Decompress...");
+        print_warning!("Waiting Decompress...");
         let mut progress = Some(|_from: &PathBuf, _to: &PathBuf| {
             // print_warning!(stdout, "Waiting Decompress...")
         });
@@ -141,7 +140,7 @@ pub trait SnmNpmTrait {
             |output| output.join("package"),
             &mut progress,
         )?;
-        println_success!(stdout, "Decompressed");
+        println_success!("Decompressed");
 
         Ok(npm_dir)
     }
@@ -150,14 +149,13 @@ pub trait SnmNpmTrait {
         let download_url = self.get_download_url(v)?;
         let tar_file_path = self.get_tar_file_path(v)?;
         {
-            let mut stdout = stdout();
-            print_warning!(stdout, "Waiting Download...");
+            print_warning!("Waiting Download...");
             DownloadBuilder::new()
                 .retries(3)
                 .write_strategy(WriteStrategy::Nothing)
                 .download(&download_url, &tar_file_path)
                 .await?;
-            println_success!(stdout, "Downloaded");
+            println_success!("Downloaded");
         }
         Ok(tar_file_path)
     }

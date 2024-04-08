@@ -33,11 +33,10 @@ async fn execute() -> Result<Output, SnmError> {
         });
     }
     let v = package_manager.version;
-    let mut stdout = std::io::stdout();
 
     let (v, bin_path_buf) = SnmYarn::new().use_bin("yarn", &v).await?;
 
-    println_success!(stdout, "Use Yarn {} .", format!("{}", v.green()));
+    println_success!("Use Yarn {} .", format!("{}", v.green()));
 
     Ok(exec_proxy_child_process!(&bin_path_buf)?)
 }

@@ -156,54 +156,50 @@ impl From<dialoguer::Error> for SnmError {
 }
 
 pub fn handle_snm_error(error: SnmError) {
-    let mut stdout = stdout();
     match error {
         SnmError::CreateDirFailed { dir_path } => {
-            crate::println_error!(stdout, "Create dir failed {}", dir_path)
+            crate::println_error!("Create dir failed {}", dir_path)
         }
         SnmError::SerdeJsonError { file_path } => {
-            crate::println_error!(stdout, "Parse json error {}", file_path)
+            crate::println_error!("Parse json error {}", file_path)
         }
         SnmError::ReadFileToStringError { file_path } => {
-            crate::println_error!(stdout, "Read file to string error {}", file_path)
+            crate::println_error!("Read file to string error {}", file_path)
         }
         SnmError::PackageJsonBinPropertyUnknownTypeError { file_path } => {
             crate::println_error!(
-                stdout,
                 "Package.json bin property unknown type error , The absolute path {}",
                 file_path
             )
         }
         SnmError::NotFoundPackageJsonBinProperty { file_path } => {
             crate::println_error!(
-                stdout,
                 "Package.json bin property not found , The absolute path {}",
                 file_path
             )
         }
         SnmError::DownloadFailed { download_url } => {
-            crate::println_error!(stdout, "Download failed , The URL {}", download_url)
+            crate::println_error!("Download failed , The URL {}", download_url)
         }
         SnmError::FileAlreadyExists { file_path } => {
-            crate::println_error!(stdout, "File already exists {}", file_path)
+            crate::println_error!("File already exists {}", file_path)
         }
         SnmError::UnknownError => {
-            crate::println_error!(stdout, "Unknown Error")
+            crate::println_error!("Unknown Error")
         }
         SnmError::EmptyNodeList => {
             crate::println_error!(
-                stdout,
                 "Node list is empty, please use {} to get the latest version.",
                 "snm node list-remote".bright_green().bold()
             )
         }
 
         SnmError::NotFoundSha256ForNode(_) => {
-            crate::println_error!(stdout, "NotFoundSha256ForNode")
+            crate::println_error!("NotFoundSha256ForNode")
         }
         SnmError::RefuseToInstallNode => todo!("RefuseToInstallNode"),
         SnmError::ResourceNotFound { download_url } => {
-            crate::println_error!(stdout, "Resource 404: {}", download_url.bright_red())
+            crate::println_error!("Resource 404: {}", download_url.bright_red())
         }
         SnmError::Sha256VerificationFailed {
             file_path,
@@ -211,7 +207,6 @@ pub fn handle_snm_error(error: SnmError) {
             actual,
         } => {
             crate::println_error!(
-                stdout,
                 "File {} verification sha256 failed , expected {} but actual {}",
                 file_path,
                 expect,
@@ -219,47 +214,42 @@ pub fn handle_snm_error(error: SnmError) {
             )
         }
         SnmError::ReadDirFailed { dir_path } => {
-            crate::println_error!(stdout, "Read dir failed {}", dir_path)
+            crate::println_error!("Read dir failed {}", dir_path)
         }
         SnmError::GetHomeDirError => {
-            crate::println_error!(stdout, "Unable to retrieve user directory correctly ! ")
+            crate::println_error!("Unable to retrieve user directory correctly ! ")
         }
         SnmError::NotFoundBinDirConfig => {
             crate::println_error!(
-                stdout,
                 "Unable to get the {} environment variable.",
                 "SNM_NODE_BIN_DIR".bright_red()
             )
         }
         SnmError::NotFoundDownloadDirConfig => {
             crate::println_error!(
-                stdout,
                 "Unable to get the {} environment variable.",
                 "SNM_DOWNLOAD_DIR".bright_red()
             )
         }
         SnmError::NotFoundNodeModulesDirConfig => {
             crate::println_error!(
-                stdout,
                 "Unable to get the {} environment variable.",
                 "SNM_NODE_MODULES_DIR".bright_red()
             )
         }
         SnmError::NotFoundDefaultNodeBinary => {
             crate::println_error!(
-                stdout,
                 "No Node.js default detected. Set it with {} or specify it in `.node-version` file here.","snm node default [version]".bright_green().bold()
             )
         }
         SnmError::ParsePackageManagerConfigError { raw_value } => {
-            crate::println_error!(stdout, "Parse package manager config error: {}", raw_value)
+            crate::println_error!("Parse package manager config error: {}", raw_value)
         }
         SnmError::NoPackageManagerError { file_path } => {
-            crate::println_error!(stdout, "No packageManager config error: {}", file_path)
+            crate::println_error!("No packageManager config error: {}", file_path)
         }
         SnmError::NotMatchPackageManager { expect, actual } => {
             crate::println_error!(
-                stdout,
                 "No matching package manager found. You input {} but the current project is configured to use {}.",
                 actual.bright_red().bold(),
                 expect.bright_green().bold(),
@@ -267,14 +257,12 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::MultiPackageManagerLockFileError { lock_file } => {
             crate::println_error!(
-                stdout,
                 "Multiple package manager lock files found: {} , Please remove the unnecessary ones.",
                 lock_file.join(", ").bright_red()
             )
         }
         SnmError::NotFoundDefaultNpmBinary => {
             crate::println_error!(
-                stdout,
                 "No npm default detected. Please configure package.json -> packageManager or use {} to set the default version.",
                 "snm npm default [version]".bright_green().bold()
             )
@@ -283,47 +271,42 @@ pub fn handle_snm_error(error: SnmError) {
             package_json_file_path,
         } => {
             crate::println_error!(
-                stdout,
                 "{} not found. Please create one and configure the 'packageManager' field.",
                 package_json_file_path
             )
         }
         SnmError::NotFoundNodeVersionFileError { file_path } => {
             crate::println_error!(
-                stdout,
                 "{} not found. Please create .node-version file and write node version into.",
                 file_path
             )
         }
         SnmError::FileNotExist { file_path } => {
-            crate::println_error!(stdout, "File {} not exist", file_path)
+            crate::println_error!("File {} not exist", file_path)
         }
         SnmError::UnsupportedPlatform { os, arch } => {
-            crate::println_error!(stdout, "{}-{} not supported", os, arch)
+            crate::println_error!("{}-{} not supported", os, arch)
         }
         SnmError::UnknownInstallStrategy => {
-            crate::println_error!(stdout, "Unknown install strategy")
+            crate::println_error!("Unknown install strategy")
         }
         SnmError::UnsupportedNodeVersion { version } => {
-            crate::println_error!(stdout, "UnSupport node version {}", version.bright_red())
+            crate::println_error!("UnSupport node version {}", version.bright_red())
         }
         SnmError::UnsupportedPackageManager { name, version } => {
             crate::println_error!(
-                stdout,
                 "Unsupported package manager {}",
                 format!("{}@{}", name, version).bright_red(),
             )
         }
         SnmError::EmptyPackageManagerList { name } => {
             crate::println_error!(
-                stdout,
                 "No package manager found. Please use {} to get the latest version.",
                 "snm npm list-remote".bright_green().bold()
             )
         }
         SnmError::NotFoundDefaultPackageManager { name } => {
             crate::println_error!(
-                stdout,
                 "No {} default detected. Please configure package.json -> packageManager or use {} to set the default version.",
                 name.bright_green().bold(),
                 format!("snm {} default [version]", name).bright_green().bold()
@@ -331,7 +314,6 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::NotFoundPackageManager { name, version } => {
             crate::println_error!(
-                stdout,
                 "No {}@{} found. Please use {} to get the latest version.",
                 name.bright_green().bold(),
                 version.bright_green().bold(),

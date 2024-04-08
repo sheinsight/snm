@@ -1,12 +1,6 @@
 use crate::model::SnmError;
 use colored::*;
-use crossterm::{
-    cursor::MoveToColumn,
-    execute,
-    terminal::{Clear, ClearType},
-};
 use futures_util::StreamExt;
-use std::io::{stdout, Write};
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;
@@ -55,7 +49,6 @@ impl DownloadBuilder {
         abs_path: P,
     ) -> Result<P, SnmError> {
         let mut attempts = 0;
-        let mut stdout = stdout();
         while attempts < (self.retries + 1) {
             match self.original_download(download_url, &abs_path).await {
                 Ok(_) => {
@@ -71,7 +64,6 @@ impl DownloadBuilder {
 
                         if attempts <= self.retries {
                             crate::println_error!(
-                                stdout,
                                 "Download failed, attempting retry {} . The URL is {} .",
                                 attempts.to_string().bright_yellow().bold(),
                                 download_url.bright_red()

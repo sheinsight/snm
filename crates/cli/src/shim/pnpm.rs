@@ -32,7 +32,7 @@ async fn main() {
 
     match execute().await {
         Ok((v, bin_path_buf)) => {
-            println_success!(std::io::stdout(), "Use {} {}. ", PREFIX, v.green());
+            println_success!("Use {} {}. ", PREFIX, v.green());
             exec_proxy_child_process!(&bin_path_buf);
         }
         Err(error) => {

@@ -148,7 +148,7 @@ pub async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
 
     check_supported(node_version, &node_dist_html_url).await?;
 
-    print_warning!(stdout, "Waiting Download...");
+    print_warning!("Waiting Download...");
 
     DownloadBuilder::new()
         .retries(3)
@@ -157,17 +157,17 @@ pub async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
         .download(&download_url, &tar_file_path)
         .await?;
 
-    println_success!(stdout, "Downloaded");
+    println_success!("Downloaded");
 
     check_node_sha256(&node_version, &tar_file_path).await?;
 
     let mut decompress_progress = Some(|_from: &PathBuf, to: &PathBuf| {});
 
-    print_warning!(stdout, "Waiting Decompress...");
+    print_warning!("Waiting Decompress...");
 
     decompress_xz(&tar_file_path, &node_dir, &mut decompress_progress)?;
 
-    println_success!(stdout, "Decompressed");
+    println_success!("Decompressed");
 
     Ok(node_dir)
 }
