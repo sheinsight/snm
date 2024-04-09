@@ -16,7 +16,7 @@ use snm_core::config::snm_config::InstallStrategy;
 use snm_core::config::SnmConfig;
 use snm_core::{
     config::url::SnmUrl,
-    model::{Lts, NodeModel, NodeScheduleModel, SnmError},
+    model::{Lts, NodeModel, NodeSchedule, SnmError},
     utils::{
         calc_sha256,
         download::{DownloadBuilder, WriteStrategy},
@@ -31,7 +31,7 @@ use std::fs::read_to_string;
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
-use std::{io::stdout, path::PathBuf};
+use std::path::PathBuf;
 
 use crate::check_supported::check_supported;
 
@@ -143,8 +143,6 @@ pub async fn download(node_version: &str) -> anyhow::Result<PathBuf, SnmError> {
     let node_dist_html_url = snm_url.get_node_dist(node_version);
 
     let node_dir = get_node_dir(node_version)?;
-
-    let mut stdout: std::io::Stdout = stdout();
 
     check_supported(node_version, &node_dist_html_url).await?;
 
@@ -390,7 +388,7 @@ pub async fn list() -> Result<(), SnmError> {
                 .and_then(|v| VersionReq::parse(v).ok())
                 .map(|vr| (vr, schedule))
         })
-        .collect::<Vec<(VersionReq, NodeScheduleModel)>>();
+        .collect::<Vec<(VersionReq, NodeSchedule)>>();
 
     let (dir_vec, default_version) = read_bin_dir()?;
 
@@ -430,7 +428,7 @@ pub async fn list() -> Result<(), SnmError> {
             }
 
             {
-                let map_deprecated = |schedule: &NodeScheduleModel| {
+                let map_deprecated = |schedule: &NodeSchedule| {
                     NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
                         .map(|end| now > end)
                         .unwrap_or(true)

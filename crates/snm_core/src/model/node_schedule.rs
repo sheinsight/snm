@@ -3,7 +3,7 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct NodeScheduleModel {
+pub struct NodeSchedule {
     pub start: String,
     pub end: String,
     pub maintenance: Option<String>,
@@ -12,7 +12,7 @@ pub struct NodeScheduleModel {
     pub version: Option<String>,
 }
 
-impl fmt::Display for NodeScheduleModel {
+impl fmt::Display for NodeSchedule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let lts = self
             .lts

@@ -1,6 +1,6 @@
 use snm_core::{
     config::url::SnmUrl,
-    model::{NodeModel, NodeScheduleModel, SnmError},
+    model::{NodeModel, NodeSchedule, SnmError},
     utils::{
         download::{DownloadBuilder, WriteStrategy},
         read_to_json,
@@ -24,7 +24,7 @@ pub async fn get_node_list_remote() -> Result<Vec<NodeModel>, SnmError> {
     Ok(node_vec)
 }
 
-pub async fn get_node_schedule() -> Result<Vec<NodeScheduleModel>, SnmError> {
+pub async fn get_node_schedule() -> Result<Vec<NodeSchedule>, SnmError> {
     let node_schedule_json_path = get_node_schedule_json()?;
 
     let node_schedule_url = SnmUrl::new().use_node_schedule_url();
@@ -34,15 +34,14 @@ pub async fn get_node_schedule() -> Result<Vec<NodeScheduleModel>, SnmError> {
         .download(&node_schedule_url, &node_schedule_json_path)
         .await?;
 
-    let node_schedule_vec = read_to_json::<std::collections::HashMap<String, NodeScheduleModel>>(
-        &node_schedule_json_path,
-    )?
-    .into_iter()
-    .map(|(v, mut schedule)| {
-        schedule.version = Some(v[1..].to_string());
-        schedule
-    })
-    .collect();
+    let node_schedule_vec =
+        read_to_json::<std::collections::HashMap<String, NodeSchedule>>(&node_schedule_json_path)?
+            .into_iter()
+            .map(|(v, mut schedule)| {
+                schedule.version = Some(v[1..].to_string());
+                schedule
+            })
+            .collect();
 
     Ok(node_schedule_vec)
 }
