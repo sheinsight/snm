@@ -1,6 +1,5 @@
 use std::{
     fs::{self, DirEntry},
-    io::stdout,
     path::{Path, PathBuf},
 };
 
