@@ -1,7 +1,8 @@
 use clap::Subcommand;
-use snm_core::model::SnmError;
-use snm_node::node_mg::{
-    install_node, list, list_remote, set_default, snm_node_env, un_install_node,
+use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
+use snm_node::{
+    demo::NodeDemo,
+    node_mg::{install_node, list, list_remote, set_default, snm_node_env, un_install_node},
 };
 
 #[derive(Subcommand, Debug)]
@@ -45,20 +46,30 @@ pub enum NodeCommands {
 }
 
 pub async fn handle_node_commands(command: NodeCommands) -> Result<(), SnmError> {
+    let x = NodeDemo::new();
+
+    let m = ManagerTraitDispatcher::new(Box::new(x));
+
     match command {
         NodeCommands::List => list().await?,
         NodeCommands::ListRemote { all } => {
             list_remote(all).await?;
         }
         NodeCommands::Install { package_spec } => {
-            install_node(package_spec.trim_start_matches('v')).await?;
+            m.install(package_spec.trim_start_matches(['v', 'V']))
+                .await?;
+            // install_node(package_spec.trim_start_matches('v')).await?;
         }
         NodeCommands::Default { version } => {
-            set_default(version.trim_start_matches('v')).await?;
+            // set_default(version.trim_start_matches('v')).await?;
+            m.set_default(&version.trim_start_matches(['v', 'V']))
+                .await?;
         }
         NodeCommands::Env => snm_node_env().await?,
         NodeCommands::Uninstall { version } => {
-            un_install_node(&version).await?;
+            m.un_install(&version.trim_start_matches(['v', 'V']))
+                .await?;
+            // un_install_node(&version).await?;
         }
         NodeCommands::Use => todo!(),
         NodeCommands::Alias => todo!(),

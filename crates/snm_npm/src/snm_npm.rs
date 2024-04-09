@@ -1,13 +1,17 @@
 use std::{
-    fs::{self, DirEntry},
+    fs::{self, DirEntry, File},
+    io::{BufReader, Read},
     path::{Path, PathBuf},
 };
 
 use async_trait::async_trait;
 use dialoguer::Confirm;
+use serde_json::Value;
+use sha1::Digest;
+use sha1::Sha1;
 use snm_core::{
     config::SnmConfig,
-    model::{PackageJson, SnmError},
+    model::{manager::ManagerTrait, PackageJson, SnmError},
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
@@ -375,5 +379,150 @@ pub trait SnmNpmTrait {
 impl SnmNpmTrait for SnmNpm {
     fn get_prefix(&self) -> String {
         self.prefix.clone()
+    }
+}
+
+pub struct SnmNextNpm {
+    snm_config: SnmConfig,
+}
+
+impl SnmNextNpm {
+    pub fn new() -> Self {
+        Self {
+            snm_config: SnmConfig::new(),
+        }
+    }
+}
+
+static PREFIX: &str = "npm";
+
+#[async_trait(?Send)]
+impl ManagerTrait for SnmNextNpm {
+    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(PREFIX.to_string())
+            .join(&v)
+            .join("package.json"))
+    }
+
+    fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
+        let npm_registry = self.snm_config.get_npm_registry_host();
+        Ok(format!(
+            "{}/{}/-/{}-{}.tgz",
+            npm_registry,
+            PREFIX.to_string(),
+            PREFIX.to_string(),
+            &v
+        ))
+    }
+
+    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_download_dir_path_buf()?
+            .join(PREFIX)
+            .join(&v)
+            .join(format!("{}@{}.tgz", PREFIX, &v)))
+    }
+
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_download_dir_path_buf()?
+            .join(PREFIX)
+            .join(&v))
+    }
+
+    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(PREFIX)
+            .join(&v))
+    }
+
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(PREFIX)
+            .join(format!("{}-default", &v)))
+    }
+
+    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(PREFIX))
+    }
+
+    async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
+        let npm_registry = self.snm_config.get_npm_registry_host();
+        let download_url = format!("{}/{}/{}", npm_registry, PREFIX, &v);
+
+        let value: Value = reqwest::get(&download_url).await?.json().await?;
+
+        let x = value
+            .get("dist")
+            .and_then(|dist| dist.get("shasum"))
+            .and_then(|shasum| shasum.as_str())
+            .map(|shasum| shasum.to_string())
+            .ok_or(SnmError::NotFoundSha256ForNode(v.to_string()))?;
+
+        Ok(x)
+    }
+
+    async fn get_actual_shasum(
+        &self,
+        downloaded_file_path_buf: &PathBuf,
+    ) -> Result<String, SnmError> {
+        let file = File::open(downloaded_file_path_buf)?;
+        let mut reader = BufReader::new(file);
+        let mut hasher = Sha1::new();
+
+        let mut buffer = [0; 1024];
+        loop {
+            let n = reader.read(&mut buffer)?;
+            if n == 0 {
+                break;
+            }
+            hasher.update(&buffer[..n]);
+        }
+        let result = hasher.finalize();
+        Ok(format!("{:x}", result))
+    }
+
+    fn get_host(&self) -> Option<String> {
+        todo!("get_host")
+    }
+
+    fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
+        // todo!("show_list")
+        let (dir_vec, _) = &dir_tuple;
+        dir_vec.into_iter().for_each(|dir| {
+            println!("{}", dir);
+        });
+        Ok(())
+    }
+
+    fn decompress_download_file(
+        &self,
+        input_file_path_buf: &PathBuf,
+        output_dir_path_buf: &PathBuf,
+    ) -> Result<(), SnmError> {
+        // let mut progress = Some(|_from: &PathBuf, _to: &PathBuf| {
+        //     // print_warning!(stdout, "Waiting Decompress...")
+        // });
+        decompress_tgz(
+            &input_file_path_buf,
+            &output_dir_path_buf,
+            |output| output.join("package"),
+            &mut Some(|_from: &PathBuf, _to: &PathBuf| {
+                // print_warning!(stdout, "Waiting Decompress...")
+            }),
+        )?;
+        Ok(())
     }
 }

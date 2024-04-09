@@ -10,6 +10,7 @@ xz2 = "0.1.7"
 dirs = "5.0.1"
 tar = "0.4.40"
 sha2 = "0.10.2"
+sha1 = "0.10.0"
 regex = "1.10.4"
 colored = "2.1.0"
 semver = "1.0.21"
@@ -19,6 +20,7 @@ dialoguer = "0.11.0"
 crossterm = "0.27.0"
 serde_json = "1.0.114"
 futures-util = "0.3.30"
+async-trait = "0.1.50"
 tokio = { version = "1.36.0", features = ["full"] }
 serde = { version = "1.0.197", features = ["derive"] }
-reqwest = { version = "0.11.24", features = ["stream"] }
+reqwest = { version = "0.12.3", features = ["stream"] }
