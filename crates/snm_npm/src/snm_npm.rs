@@ -1,6 +1,8 @@
 use std::{
+    env::current_dir,
     fs::{self, DirEntry, File},
     io::{BufReader, Read},
+    ops::Not,
     path::{Path, PathBuf},
 };
 
@@ -384,17 +386,19 @@ impl SnmNpmTrait for SnmNpm {
 
 pub struct SnmNextNpm {
     snm_config: SnmConfig,
+    prefix: String,
 }
 
 impl SnmNextNpm {
-    pub fn new() -> Self {
+    pub fn new(prefix: &str) -> Self {
         Self {
             snm_config: SnmConfig::new(),
+            prefix: prefix.to_string(),
         }
     }
 }
 
-static PREFIX: &str = "npm";
+static PACKAGE_JSON_FILE_NAME: &str = "package.json";
 
 #[async_trait(?Send)]
 impl ManagerTrait for SnmNextNpm {
@@ -402,7 +406,7 @@ impl ManagerTrait for SnmNextNpm {
         Ok(self
             .snm_config
             .get_node_modules_dir_path_buf()?
-            .join(PREFIX.to_string())
+            .join(&self.prefix)
             .join(&v)
             .join("package.json"))
     }
@@ -411,10 +415,7 @@ impl ManagerTrait for SnmNextNpm {
         let npm_registry = self.snm_config.get_npm_registry_host();
         Ok(format!(
             "{}/{}/-/{}-{}.tgz",
-            npm_registry,
-            PREFIX.to_string(),
-            PREFIX.to_string(),
-            &v
+            npm_registry, &self.prefix, &self.prefix, &v
         ))
     }
 
@@ -422,16 +423,16 @@ impl ManagerTrait for SnmNextNpm {
         Ok(self
             .snm_config
             .get_download_dir_path_buf()?
-            .join(PREFIX)
+            .join(&self.prefix)
             .join(&v)
-            .join(format!("{}@{}.tgz", PREFIX, &v)))
+            .join(format!("{}@{}.tgz", &self.prefix, &v)))
     }
 
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
             .get_download_dir_path_buf()?
-            .join(PREFIX)
+            .join(&self.prefix)
             .join(&v))
     }
 
@@ -439,7 +440,7 @@ impl ManagerTrait for SnmNextNpm {
         Ok(self
             .snm_config
             .get_node_modules_dir_path_buf()?
-            .join(PREFIX)
+            .join(&self.prefix)
             .join(&v))
     }
 
@@ -447,7 +448,7 @@ impl ManagerTrait for SnmNextNpm {
         Ok(self
             .snm_config
             .get_node_modules_dir_path_buf()?
-            .join(PREFIX)
+            .join(&self.prefix)
             .join(format!("{}-default", &v)))
     }
 
@@ -455,12 +456,12 @@ impl ManagerTrait for SnmNextNpm {
         Ok(self
             .snm_config
             .get_node_modules_dir_path_buf()?
-            .join(PREFIX))
+            .join(&self.prefix))
     }
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
         let npm_registry = self.snm_config.get_npm_registry_host();
-        let download_url = format!("{}/{}/{}", npm_registry, PREFIX, &v);
+        let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
 
         let value: Value = reqwest::get(&download_url).await?.json().await?;
 
@@ -472,6 +473,39 @@ impl ManagerTrait for SnmNextNpm {
             .ok_or(SnmError::NotFoundSha256ForNode(v.to_string()))?;
 
         Ok(x)
+    }
+
+    fn get_strict_shim_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError> {
+        let package_json_path_buf = current_dir()?.join(PACKAGE_JSON_FILE_NAME);
+
+        if package_json_path_buf.exists().not() {
+            Err(SnmError::NotFoundPackageJsonFileError {
+                package_json_file_path: package_json_path_buf.display().to_string(),
+            })?;
+        }
+
+        let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
+
+        let package_manager = package_json.parse_package_manager()?;
+
+        if package_manager.name != self.prefix {
+            Err(SnmError::NotMatchPackageManager {
+                expect: package_manager.name,
+                actual: self.prefix.to_string(),
+            })?;
+        }
+
+        let npm_package_json_path_buf = self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(self.prefix.to_string())
+            .join(&package_manager.version)
+            .join(PACKAGE_JSON_FILE_NAME);
+
+        Ok((
+            package_manager.version.to_string(),
+            npm_package_json_path_buf,
+        ))
     }
 
     async fn get_actual_shasum(
@@ -498,8 +532,7 @@ impl ManagerTrait for SnmNextNpm {
         todo!("get_host")
     }
 
-    fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
-        // todo!("show_list")
+    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
         let (dir_vec, _) = &dir_tuple;
         dir_vec.into_iter().for_each(|dir| {
             println!("{}", dir);
@@ -507,14 +540,23 @@ impl ManagerTrait for SnmNextNpm {
         Ok(())
     }
 
+    async fn show_list_remote(
+        &self,
+        dir_tuple: &(Vec<String>, Option<String>),
+        all: bool,
+    ) -> Result<(), SnmError> {
+        todo!("show_list_remote")
+    }
+
+    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        todo!("get_runtime_binary_file_path_buf")
+    }
+
     fn decompress_download_file(
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        // let mut progress = Some(|_from: &PathBuf, _to: &PathBuf| {
-        //     // print_warning!(stdout, "Waiting Decompress...")
-        // });
         decompress_tgz(
             &input_file_path_buf,
             &output_dir_path_buf,

@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use dialoguer::Confirm;
 
 use crate::{
+    config::SnmConfig,
     print_warning,
     utils::download::{DownloadBuilder, WriteStrategy},
 };
@@ -14,15 +15,29 @@ use std::os::windows::fs as windows_fs;
 
 use super::SnmError;
 
+pub trait ShimTrait {
+    fn get_strict_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+
+    fn get_default_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+}
+
 #[async_trait(?Send)]
 pub trait ManagerTrait {
+    fn get_strict_shim_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+
+    // runtime anchor file path buf , usually a binary file
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
+    // download url
     fn get_download_url(&self, v: &str) -> Result<String, SnmError>;
 
+    // usually a tar.gz file
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
+    // downloaded dir path buf , this is get_downloaded_file_path_buf returning dir parented
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+
+    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
@@ -39,7 +54,13 @@ pub trait ManagerTrait {
 
     fn get_host(&self) -> Option<String>;
 
-    fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError>;
+    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError>;
+
+    async fn show_list_remote(
+        &self,
+        dir_tuple: &(Vec<String>, Option<String>),
+        all: bool,
+    ) -> Result<(), SnmError>;
 
     fn decompress_download_file(
         &self,
@@ -50,19 +71,83 @@ pub trait ManagerTrait {
 
 pub struct ManagerTraitDispatcher {
     manager: Box<dyn ManagerTrait>,
+    snm_config: SnmConfig,
 }
 
 impl ManagerTraitDispatcher {
     pub fn new(manager: Box<dyn ManagerTrait>) -> Self {
-        Self { manager }
+        let snm_config = SnmConfig::new();
+        Self {
+            manager,
+            snm_config,
+        }
     }
 }
 
 impl ManagerTraitDispatcher {
-    pub fn list(&self) -> Result<(), SnmError> {
+    pub async fn list(&self) -> Result<(), SnmError> {
         let dir_tuple = self.read_runtime_dir_name_vec()?;
-        self.manager.show_list(&dir_tuple)?;
+        self.manager.show_list(&dir_tuple).await?;
         Ok(())
+    }
+
+    pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
+        self.manager.show_list_remote(&dir_tuple, all).await?;
+        Ok(())
+    }
+
+    pub async fn launch_proxy(&self) -> Result<(String, PathBuf), SnmError> {
+        if self.snm_config.get_strict() {
+            // get_the_expected_version()
+            let (version, binary_path_buf) = self.manager.get_strict_shim_binary_path_buf()?;
+            if binary_path_buf.exists().not() {
+                match self.snm_config.get_package_manager_install_strategy()? {
+                    crate::config::snm_config::InstallStrategy::Ask => {
+                        if Confirm::new()
+                            .with_prompt(format!(
+                                "🤔 {} is not installed, do you want to install it ?",
+                                &version
+                            ))
+                            .interact()?
+                        {
+                            self.download(&version).await?;
+                        } else {
+                            return Err(SnmError::UnsupportedPackageManager {
+                                name: "todo".to_string(),
+                                version: "todo".to_string(),
+                            });
+                        }
+                    }
+                    crate::config::snm_config::InstallStrategy::Panic => {
+                        // need personalized error
+                        return Err(SnmError::UnsupportedPackageManager {
+                            name: "todo".to_string(),
+                            version: "todo".to_string(),
+                        });
+                    }
+                    crate::config::snm_config::InstallStrategy::Auto => {
+                        self.download(&version).await?;
+                    }
+                }
+            }
+
+            return Ok((version, binary_path_buf));
+        } else {
+            // launch_default_proxy
+            // 寻找默认版本
+            let (dir_vec, default_v_dir) = self.read_runtime_dir_name_vec()?;
+            if dir_vec.is_empty() {
+                // need personalized error
+                return Err(SnmError::EmptyNodeList);
+            }
+
+            let version = default_v_dir.ok_or(SnmError::NotFoundDefaultNodeBinary)?;
+
+            let binary_path_buf = self.manager.get_runtime_binary_file_path_buf(&version)?;
+
+            return Ok((version, binary_path_buf));
+        }
     }
 
     pub async fn install(&self, v: &str) -> Result<(), SnmError> {
@@ -159,6 +244,11 @@ impl ManagerTraitDispatcher {
         let runtime_dir_path_buf = self.manager.get_runtime_base_dir_path_buf()?;
 
         let mut default_dir = None;
+
+        if runtime_dir_path_buf.exists().not() {
+            // TODO here create not suitable , should be find a better way
+            fs::create_dir_all(&runtime_dir_path_buf)?;
+        }
 
         let dir_name_vec = runtime_dir_path_buf
             .read_dir()?
