@@ -24,6 +24,7 @@ use snm_core::{
 use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::read_to_string;
+use std::ops::Not;
 use std::{
     fs::File,
     io::{BufReader, Read},
@@ -320,6 +321,11 @@ impl ManagerTrait for NodeDemo {
 impl ShimTrait for NodeDemo {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
         let node_version_path_buf = current_dir()?.join(".node-version");
+        if node_version_path_buf.exists().not() {
+            return Err(SnmError::NotFoundNodeVersionFileError {
+                file_path: node_version_path_buf.display().to_string(),
+            });
+        }
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
         let version = read_to_string(node_version_path_buf).map(version_processor)?;

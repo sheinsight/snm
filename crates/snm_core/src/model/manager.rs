@@ -104,30 +104,29 @@ impl ManagerTraitDispatcher {
     }
 
     pub async fn launch_proxy(&self) -> Result<(String, PathBuf), SnmError> {
-        let x = self.manager.get_shim_trait();
-
+        let shim_trait = self.manager.get_shim_trait();
         if self.snm_config.get_strict() {
-            let version = x.get_strict_shim_version()?;
+            let version = shim_trait.get_strict_shim_version()?;
 
-            let anchor_file_path_buf = x.get_anchor_file_path_buf(&version)?;
+            let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version)?;
 
             if anchor_file_path_buf.exists().not() {
-                if x.download_condition(&version)? {
+                if shim_trait.download_condition(&version)? {
                     self.download(&version).await?;
                 } else {
                     return Err(SnmError::UnknownError);
                 }
             }
 
-            let binary_path_buf = x.get_strict_shim_binary_path_buf(&version)?;
+            let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version)?;
 
             return Ok((version, binary_path_buf));
         } else {
             let tuple = self.read_runtime_dir_name_vec()?;
 
-            let v = x.check_default_version(&tuple)?;
+            let v = shim_trait.check_default_version(&tuple)?;
 
-            let binary_path_buf = x.get_runtime_binary_file_path_buf(&v)?;
+            let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&v)?;
 
             return Ok((v, binary_path_buf));
         }
@@ -276,7 +275,6 @@ impl ManagerTraitDispatcher {
         }
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
-
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 

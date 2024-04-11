@@ -1,21 +1,9 @@
-use async_trait::async_trait;
-use snm_npm::snm_npm::SnmNpmTrait;
+use snm_npm::snm_npm::SnmNpm;
 
-pub struct SnmPnpm {
-    prefix: String,
-}
+pub struct SnmPnpm;
 
 impl SnmPnpm {
-    pub fn new() -> Self {
-        Self {
-            prefix: "pnpm".to_string(),
-        }
-    }
-}
-
-#[async_trait(?Send)]
-impl SnmNpmTrait for SnmPnpm {
-    fn get_prefix(&self) -> String {
-        self.prefix.clone()
+    pub fn new() -> SnmNpm {
+        SnmNpm::from_prefix("pnpm")
     }
 }

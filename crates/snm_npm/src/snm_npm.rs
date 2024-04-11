@@ -373,7 +373,14 @@ pub struct SnmNpm {
 }
 
 impl SnmNpm {
-    pub fn new(prefix: &str) -> Self {
+    pub fn new() -> Self {
+        Self {
+            snm_config: SnmConfig::new(),
+            prefix: "npm".to_string(),
+        }
+    }
+
+    pub fn from_prefix(prefix: &str) -> Self {
         Self {
             snm_config: SnmConfig::new(),
             prefix: prefix.to_string(),
@@ -499,7 +506,7 @@ impl ManagerTrait for SnmNpm {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmNpm::new(self.prefix.as_str()))
+        Box::new(SnmNpm::from_prefix(&self.prefix))
     }
 
     fn decompress_download_file(

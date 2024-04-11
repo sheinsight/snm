@@ -1,6 +1,7 @@
 use clap::Subcommand;
 use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
 use snm_npm::snm_npm::SnmNpm;
+use snm_pnpm::snm_pnpm::SnmPnpm;
 
 #[derive(Subcommand, Debug)]
 pub enum PnpmCommands {
@@ -24,22 +25,26 @@ pub enum PnpmCommands {
 }
 
 pub async fn handle_pnpm_commands(command: PnpmCommands) -> Result<(), SnmError> {
-    let snm_next_npm = SnmNpm::new("pnpm");
-    let m = ManagerTraitDispatcher::new(Box::new(snm_next_npm));
+    let dispatcher = ManagerTraitDispatcher::new(Box::new(SnmPnpm::new()));
 
     match command {
         PnpmCommands::Default { version } => {
-            m.set_default(version.trim_start_matches(['v', 'V']))
+            dispatcher
+                .set_default(version.trim_start_matches(['v', 'V']))
                 .await?;
         }
         PnpmCommands::Install { version } => {
-            m.install(version.trim_start_matches(['v', 'V'])).await?;
+            dispatcher
+                .install(version.trim_start_matches(['v', 'V']))
+                .await?;
         }
         PnpmCommands::Uninstall { version } => {
-            m.un_install(version.trim_start_matches(['v', 'V'])).await?;
+            dispatcher
+                .un_install(version.trim_start_matches(['v', 'V']))
+                .await?;
         }
         PnpmCommands::List => {
-            m.list().await?;
+            dispatcher.list().await?;
         }
     };
     Ok(())

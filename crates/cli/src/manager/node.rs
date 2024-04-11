@@ -45,28 +45,31 @@ pub enum NodeCommands {
 pub async fn handle_node_commands(command: NodeCommands) -> Result<(), SnmError> {
     let x = NodeDemo::new();
 
-    let m = ManagerTraitDispatcher::new(Box::new(x));
+    let dispatcher = ManagerTraitDispatcher::new(Box::new(x));
 
     match command {
         NodeCommands::List => {
-            m.list().await?;
+            dispatcher.list().await?;
         }
         NodeCommands::ListRemote { all } => {
-            m.list_remote(all).await?;
+            dispatcher.list_remote(all).await?;
         }
         NodeCommands::Install { package_spec } => {
-            m.install(package_spec.trim_start_matches(['v', 'V']))
+            dispatcher
+                .install(package_spec.trim_start_matches(['v', 'V']))
                 .await?;
         }
         NodeCommands::Default { version } => {
-            m.set_default(&version.trim_start_matches(['v', 'V']))
+            dispatcher
+                .set_default(&version.trim_start_matches(['v', 'V']))
                 .await?;
         }
         NodeCommands::Env => {
             // snm_node_env().await?
         }
         NodeCommands::Uninstall { version } => {
-            m.un_install(&version.trim_start_matches(['v', 'V']))
+            dispatcher
+                .un_install(&version.trim_start_matches(['v', 'V']))
                 .await?;
         }
         NodeCommands::Use => todo!(),

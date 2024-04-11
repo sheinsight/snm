@@ -1,42 +1,38 @@
-use std::{env::current_dir, process::Output};
+mod shim;
 
-use colored::*;
-use snm_core::{
-    config::SnmConfig,
-    exec_proxy_child_process,
-    model::{snm_error::handle_snm_error, PackageJson, SnmError},
-    println_success,
+use crate::shim::launch_shim;
+use semver::Version;
+use snm_core::model::{
+    manager::{ManagerTrait, ShimTrait},
+    SnmError,
 };
-use snm_npm::snm_npm::SnmNpmTrait;
-use snm_yarn::snm_yarn::SnmYarn;
+use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 
 #[tokio::main]
 async fn main() {
-    if let Err(error) = execute().await {
-        handle_snm_error(error);
-    }
+    hello().await.unwrap();
 }
 
-async fn execute() -> Result<Output, SnmError> {
-    SnmConfig::new().init()?;
+async fn hello() -> Result<(), SnmError> {
+    let x: Box<dyn ShimTrait> = Box::new(SnmYarn::new());
 
-    let workspace = current_dir()?;
+    let v = x.get_strict_shim_version()?;
 
-    let package_json = PackageJson::from_dir_path(Some(workspace))?;
+    let less = get_is_less_2(v.as_str())?;
 
-    let package_manager = package_json.parse_package_manager()?;
+    let instance: Box<dyn ManagerTrait> = if less {
+        Box::new(SnmYarn::new())
+    } else {
+        Box::new(SnmYarnPkg::new())
+    };
 
-    if package_manager.name != "yarn" {
-        return Err(SnmError::NotMatchPackageManager {
-            expect: package_manager.name,
-            actual: "yarn".to_string(),
-        });
-    }
-    let v = package_manager.version;
+    launch_shim(instance).await;
 
-    let (v, bin_path_buf) = SnmYarn::new().use_bin("yarn", &v).await?;
+    Ok(())
+}
 
-    println_success!("Use Yarn {} .", format!("{}", v.green()));
-
-    Ok(exec_proxy_child_process!(&bin_path_buf)?)
+fn get_is_less_2(v: &str) -> Result<bool, SnmError> {
+    let ver = Version::parse(v)?;
+    let is_less_2 = ver < Version::parse("2.0.0")?;
+    Ok(is_less_2)
 }

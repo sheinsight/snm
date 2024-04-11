@@ -24,22 +24,26 @@ pub enum NpmCommands {
 }
 
 pub async fn handle_npm_commands(command: NpmCommands) -> Result<(), SnmError> {
-    let snm_next_npm = SnmNpm::new("npm");
-    let m = ManagerTraitDispatcher::new(Box::new(snm_next_npm));
+    let dispatcher = ManagerTraitDispatcher::new(Box::new(SnmNpm::new()));
 
     match command {
         NpmCommands::Default { version } => {
-            m.set_default(version.trim_start_matches(['v', 'V']))
+            dispatcher
+                .set_default(version.trim_start_matches(['v', 'V']))
                 .await?;
         }
         NpmCommands::Install { version } => {
-            m.install(version.trim_start_matches(['v', 'V'])).await?;
+            dispatcher
+                .install(version.trim_start_matches(['v', 'V']))
+                .await?;
         }
         NpmCommands::Uninstall { version } => {
-            m.un_install(version.trim_start_matches(['v', 'V'])).await?;
+            dispatcher
+                .un_install(version.trim_start_matches(['v', 'V']))
+                .await?;
         }
         NpmCommands::List => {
-            m.list().await?;
+            dispatcher.list().await?;
         }
     };
     Ok(())
