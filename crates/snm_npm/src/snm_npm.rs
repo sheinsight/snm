@@ -2,7 +2,6 @@ use std::{
     env::current_dir,
     fs::{self, DirEntry, File},
     io::{BufReader, Read},
-    ops::Not,
     path::{Path, PathBuf},
 };
 
@@ -23,18 +22,6 @@ use snm_core::{
         tarball::decompress_tgz,
     },
 };
-
-pub struct SnmNpm {
-    prefix: String,
-}
-
-impl SnmNpm {
-    pub fn new() -> Self {
-        Self {
-            prefix: "npm".to_string(),
-        }
-    }
-}
 
 #[async_trait(?Send)]
 pub trait SnmNpmTrait {
@@ -380,19 +367,12 @@ pub trait SnmNpmTrait {
     }
 }
 
-#[async_trait(?Send)]
-impl SnmNpmTrait for SnmNpm {
-    fn get_prefix(&self) -> String {
-        self.prefix.clone()
-    }
-}
-
-pub struct SnmNextNpm {
+pub struct SnmNpm {
     snm_config: SnmConfig,
     prefix: String,
 }
 
-impl SnmNextNpm {
+impl SnmNpm {
     pub fn new(prefix: &str) -> Self {
         Self {
             snm_config: SnmConfig::new(),
@@ -401,9 +381,7 @@ impl SnmNextNpm {
     }
 }
 
-static PACKAGE_JSON_FILE_NAME: &str = "package.json";
-
-impl SharedBehavior for SnmNextNpm {
+impl SharedBehavior for SnmNpm {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
@@ -415,7 +393,7 @@ impl SharedBehavior for SnmNextNpm {
 }
 
 #[async_trait(?Send)]
-impl ManagerTrait for SnmNextNpm {
+impl ManagerTrait for SnmNpm {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
         let npm_registry = self.snm_config.get_npm_registry_host();
         Ok(format!(
@@ -521,7 +499,7 @@ impl ManagerTrait for SnmNextNpm {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmNextNpm::new(self.prefix.as_str()))
+        Box::new(SnmNpm::new(self.prefix.as_str()))
     }
 
     fn decompress_download_file(
@@ -541,7 +519,7 @@ impl ManagerTrait for SnmNextNpm {
     }
 }
 
-impl ShimTrait for SnmNextNpm {
+impl ShimTrait for SnmNpm {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
         let package_json_path_buf = current_dir()?.join("package.json");
 

@@ -1,24 +1,24 @@
-use snm_core::{config::SnmConfig, model::snm_error::handle_snm_error};
-use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
-use snm_yarn::snm_yarn::SnmYarn;
+// use snm_core::{config::SnmConfig, model::snm_error::handle_snm_error};
+// use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
+// use snm_yarn::snm_yarn::SnmYarn;
 
 mod commands;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    // env_logger::init();
     // init_config().unwrap();
 
-    let snm_config = SnmConfig::new();
+    // let snm_config = SnmConfig::new();
 
-    snm_config.init();
+    // snm_config.init();
 
-    let snm_npm = SnmNpm::new();
-    let snm_yarn = SnmYarn::new();
+    // let snm_npm = SnmNpm::new();
+    // let snm_yarn = SnmYarn::new();
 
     // snm_yarn.install("1.22.4").await.unwrap();
 
-    snm_yarn.install("4.0.2").await.unwrap();
+    // snm_yarn.install("4.0.2").await.unwrap();
 
     // todo!("execute_command")
 

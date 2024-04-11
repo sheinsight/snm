@@ -1,6 +1,6 @@
 use clap::Subcommand;
 use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
-use snm_npm::snm_npm::SnmNextNpm;
+use snm_npm::snm_npm::SnmNpm;
 
 #[derive(Subcommand, Debug)]
 pub enum NpmCommands {
@@ -24,7 +24,7 @@ pub enum NpmCommands {
 }
 
 pub async fn handle_npm_commands(command: NpmCommands) -> Result<(), SnmError> {
-    let snm_next_npm = SnmNextNpm::new("npm");
+    let snm_next_npm = SnmNpm::new("npm");
     let m = ManagerTraitDispatcher::new(Box::new(snm_next_npm));
 
     match command {
