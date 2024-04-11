@@ -291,7 +291,7 @@ pub fn handle_snm_error(error: SnmError) {
             crate::println_error!("Unknown install strategy")
         }
         SnmError::UnsupportedNodeVersion { version } => {
-            crate::println_error!("UnSupport node version {}", version.bright_red())
+            crate::println_error!("Unsupported node version {}", version.bright_red())
         }
         SnmError::UnsupportedPackageManager { name, version } => {
             crate::println_error!(

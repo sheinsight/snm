@@ -13,7 +13,10 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_core::{
     config::SnmConfig,
-    model::{manager::ManagerTrait, PackageJson, SnmError},
+    model::{
+        manager::{ManagerTrait, SharedBehavior, ShimTrait},
+        PackageJson, SnmError,
+    },
     print_warning, println_success,
     utils::{
         download::{DownloadBuilder, WriteStrategy},
@@ -400,8 +403,7 @@ impl SnmNextNpm {
 
 static PACKAGE_JSON_FILE_NAME: &str = "package.json";
 
-#[async_trait(?Send)]
-impl ManagerTrait for SnmNextNpm {
+impl SharedBehavior for SnmNextNpm {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
@@ -410,7 +412,10 @@ impl ManagerTrait for SnmNextNpm {
             .join(&v)
             .join("package.json"))
     }
+}
 
+#[async_trait(?Send)]
+impl ManagerTrait for SnmNextNpm {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
         let npm_registry = self.snm_config.get_npm_registry_host();
         Ok(format!(
@@ -475,39 +480,6 @@ impl ManagerTrait for SnmNextNpm {
         Ok(x)
     }
 
-    fn get_strict_shim_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError> {
-        let package_json_path_buf = current_dir()?.join(PACKAGE_JSON_FILE_NAME);
-
-        if package_json_path_buf.exists().not() {
-            Err(SnmError::NotFoundPackageJsonFileError {
-                package_json_file_path: package_json_path_buf.display().to_string(),
-            })?;
-        }
-
-        let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
-
-        let package_manager = package_json.parse_package_manager()?;
-
-        if package_manager.name != self.prefix {
-            Err(SnmError::NotMatchPackageManager {
-                expect: package_manager.name,
-                actual: self.prefix.to_string(),
-            })?;
-        }
-
-        let npm_package_json_path_buf = self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
-            .join(self.prefix.to_string())
-            .join(&package_manager.version)
-            .join(PACKAGE_JSON_FILE_NAME);
-
-        Ok((
-            package_manager.version.to_string(),
-            npm_package_json_path_buf,
-        ))
-    }
-
     async fn get_actual_shasum(
         &self,
         downloaded_file_path_buf: &PathBuf,
@@ -548,8 +520,8 @@ impl ManagerTrait for SnmNextNpm {
         todo!("show_list_remote")
     }
 
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        todo!("get_runtime_binary_file_path_buf")
+    fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
+        Box::new(SnmNextNpm::new(self.prefix.as_str()))
     }
 
     fn decompress_download_file(
@@ -566,5 +538,73 @@ impl ManagerTrait for SnmNextNpm {
             }),
         )?;
         Ok(())
+    }
+}
+
+impl ShimTrait for SnmNextNpm {
+    fn get_strict_shim_version(&self) -> Result<String, SnmError> {
+        let package_json_path_buf = current_dir()?.join("package.json");
+
+        let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
+
+        let package_manager = package_json.parse_package_manager()?;
+
+        let version = package_manager.version;
+
+        Ok(version)
+    }
+
+    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
+        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
+        Ok(node_binary_path_buf)
+    }
+
+    fn download_condition(&self, version: &str) -> Result<bool, SnmError> {
+        match self.snm_config.get_package_manager_install_strategy()? {
+            snm_core::config::snm_config::InstallStrategy::Ask => Ok(Confirm::new()
+                .with_prompt(format!(
+                    "🤔 {} is not installed, do you want to install it ?",
+                    &version
+                ))
+                .interact()?),
+            snm_core::config::snm_config::InstallStrategy::Panic => {
+                Err(SnmError::UnsupportedPackageManager {
+                    name: self.prefix.to_string(),
+                    version: version.to_string(),
+                })
+            }
+            snm_core::config::snm_config::InstallStrategy::Auto => Ok(true),
+        }
+    }
+
+    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        let package_json_buf_path = self
+            .snm_config
+            .get_node_modules_dir_path_buf()?
+            .join(self.prefix.to_string())
+            .join(&v)
+            .join("package.json");
+
+        let mut hashmap = PackageJson::from_file_path(&package_json_buf_path)?.bin_to_hashmap()?;
+
+        if let Some(bin) = hashmap.remove(&self.prefix) {
+            return Ok(bin);
+        } else {
+            return Err(SnmError::UnknownError);
+        }
+    }
+
+    fn check_default_version(
+        &self,
+        tuple: &(Vec<String>, Option<String>),
+    ) -> Result<String, SnmError> {
+        let (_, default_v_dir) = tuple;
+        if let Some(v) = default_v_dir {
+            return Ok(v.to_string());
+        } else {
+            return Err(SnmError::NotFoundDefaultPackageManager {
+                name: self.prefix.to_string(),
+            });
+        }
     }
 }

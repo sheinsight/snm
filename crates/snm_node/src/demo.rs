@@ -1,11 +1,14 @@
 use async_trait::async_trait;
 use chrono::NaiveDate;
 use chrono::Utc;
+use dialoguer::Confirm;
 use futures::*;
 use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
+use snm_core::model::manager::SharedBehavior;
+use snm_core::model::manager::ShimTrait;
 use snm_core::model::Lts;
 use snm_core::model::NodeModel;
 use snm_core::model::NodeSchedule;
@@ -43,8 +46,8 @@ impl NodeDemo {
         }
     }
 }
-#[async_trait(?Send)]
-impl ManagerTrait for NodeDemo {
+
+impl SharedBehavior for NodeDemo {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
@@ -53,7 +56,10 @@ impl ManagerTrait for NodeDemo {
             .join("bin")
             .join("node"))
     }
+}
 
+#[async_trait(?Send)]
+impl ManagerTrait for NodeDemo {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
         Ok(SnmUrl::new().get_node_tar_download_url(&v))
     }
@@ -305,16 +311,56 @@ impl ManagerTrait for NodeDemo {
         Ok(())
     }
 
-    fn get_strict_shim_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError> {
+    fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
+        Box::new(NodeDemo::new())
+    }
+}
+
+// #[async_trait(?Send)]
+impl ShimTrait for NodeDemo {
+    fn get_strict_shim_version(&self) -> Result<String, SnmError> {
         let node_version_path_buf = current_dir()?.join(".node-version");
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
         let version = read_to_string(node_version_path_buf).map(version_processor)?;
+        Ok(version)
+    }
+
+    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
         let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
-        Ok((version, node_binary_path_buf))
+        Ok(node_binary_path_buf)
+    }
+
+    fn download_condition(&self, version: &str) -> Result<bool, SnmError> {
+        match self.snm_config.get_node_install_strategy()? {
+            snm_core::config::snm_config::InstallStrategy::Ask => Ok(Confirm::new()
+                .with_prompt(format!(
+                    "🤔 {} is not installed, do you want to install it ?",
+                    &version
+                ))
+                .interact()?),
+            snm_core::config::snm_config::InstallStrategy::Panic => {
+                Err(SnmError::UnsupportedNodeVersion {
+                    version: version.to_string(),
+                })
+            }
+            snm_core::config::snm_config::InstallStrategy::Auto => Ok(true),
+        }
     }
 
     fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self.get_runtime_dir_path_buf(v)?.join("bin").join("node"))
+    }
+
+    fn check_default_version(
+        &self,
+        tuple: &(Vec<String>, Option<String>),
+    ) -> Result<String, SnmError> {
+        let (_, default_v_dir) = tuple;
+        if let Some(v) = default_v_dir {
+            return Ok(v.to_string());
+        } else {
+            return Err(SnmError::NotFoundDefaultNodeBinary);
+        }
     }
 }

@@ -15,29 +15,35 @@ use std::os::windows::fs as windows_fs;
 
 use super::SnmError;
 
-pub trait ShimTrait {
-    fn get_strict_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+pub trait SharedBehavior {
+    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+}
 
-    fn get_default_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+// #[async_trait(?Send)]
+pub trait ShimTrait: SharedBehavior {
+    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError>;
+
+    fn get_strict_shim_version(&self) -> Result<String, SnmError>;
+
+    fn download_condition(&self, version: &str) -> Result<bool, SnmError>;
+
+    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+
+    fn check_default_version(
+        &self,
+        tuple: &(Vec<String>, Option<String>),
+    ) -> Result<String, SnmError>;
 }
 
 #[async_trait(?Send)]
-pub trait ManagerTrait {
-    fn get_strict_shim_binary_path_buf(&self) -> Result<(String, PathBuf), SnmError>;
+pub trait ManagerTrait: SharedBehavior {
+    fn get_shim_trait(&self) -> Box<dyn ShimTrait>;
 
-    // runtime anchor file path buf , usually a binary file
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    // download url
     fn get_download_url(&self, v: &str) -> Result<String, SnmError>;
 
-    // usually a tar.gz file
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    // downloaded dir path buf , this is get_downloaded_file_path_buf returning dir parented
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
@@ -98,55 +104,32 @@ impl ManagerTraitDispatcher {
     }
 
     pub async fn launch_proxy(&self) -> Result<(String, PathBuf), SnmError> {
+        let x = self.manager.get_shim_trait();
+
         if self.snm_config.get_strict() {
-            // get_the_expected_version()
-            let (version, binary_path_buf) = self.manager.get_strict_shim_binary_path_buf()?;
-            if binary_path_buf.exists().not() {
-                match self.snm_config.get_package_manager_install_strategy()? {
-                    crate::config::snm_config::InstallStrategy::Ask => {
-                        if Confirm::new()
-                            .with_prompt(format!(
-                                "🤔 {} is not installed, do you want to install it ?",
-                                &version
-                            ))
-                            .interact()?
-                        {
-                            self.download(&version).await?;
-                        } else {
-                            return Err(SnmError::UnsupportedPackageManager {
-                                name: "todo".to_string(),
-                                version: "todo".to_string(),
-                            });
-                        }
-                    }
-                    crate::config::snm_config::InstallStrategy::Panic => {
-                        // need personalized error
-                        return Err(SnmError::UnsupportedPackageManager {
-                            name: "todo".to_string(),
-                            version: "todo".to_string(),
-                        });
-                    }
-                    crate::config::snm_config::InstallStrategy::Auto => {
-                        self.download(&version).await?;
-                    }
+            let version = x.get_strict_shim_version()?;
+
+            let anchor_file_path_buf = x.get_anchor_file_path_buf(&version)?;
+
+            if anchor_file_path_buf.exists().not() {
+                if x.download_condition(&version)? {
+                    self.download(&version).await?;
+                } else {
+                    return Err(SnmError::UnknownError);
                 }
             }
 
+            let binary_path_buf = x.get_strict_shim_binary_path_buf(&version)?;
+
             return Ok((version, binary_path_buf));
         } else {
-            // launch_default_proxy
-            // 寻找默认版本
-            let (dir_vec, default_v_dir) = self.read_runtime_dir_name_vec()?;
-            if dir_vec.is_empty() {
-                // need personalized error
-                return Err(SnmError::EmptyNodeList);
-            }
+            let tuple = self.read_runtime_dir_name_vec()?;
 
-            let version = default_v_dir.ok_or(SnmError::NotFoundDefaultNodeBinary)?;
+            let v = x.check_default_version(&tuple)?;
 
-            let binary_path_buf = self.manager.get_runtime_binary_file_path_buf(&version)?;
+            let binary_path_buf = x.get_runtime_binary_file_path_buf(&v)?;
 
-            return Ok((version, binary_path_buf));
+            return Ok((v, binary_path_buf));
         }
     }
 

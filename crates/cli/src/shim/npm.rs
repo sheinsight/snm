@@ -5,10 +5,10 @@ use shim::{dispatch_shim, NpmShim};
 use snm_core::{
     config::SnmConfig,
     exec_proxy_child_process,
-    model::{snm_error::handle_snm_error, PackageJson, SnmError},
+    model::{manager::ManagerTraitDispatcher, snm_error::handle_snm_error, PackageJson, SnmError},
     println_success,
 };
-use snm_npm::snm_npm::{SnmNpm, SnmNpmTrait};
+use snm_npm::snm_npm::{SnmNextNpm, SnmNpm, SnmNpmTrait};
 
 const PACKAGE_JSON_FILE: &str = "package.json";
 
@@ -19,19 +19,11 @@ mod shim;
 async fn main() {
     env_logger::init();
 
-    // match dispatch_shim(NpmShim::new(PREFIX)).await {
-    //     Ok((v, bin_path_buf)) => {
-    //         println_success!(std::io::stdout(), "Use {} {}. ", PREFIX, v.green());
-    //         exec_proxy_child_process!(&bin_path_buf);
-    //     }
-    //     Err(error) => {
-    //         handle_snm_error(error);
-    //     }
-    // }
+    let m = ManagerTraitDispatcher::new(Box::new(SnmNextNpm::new("npm")));
 
-    match execute().await {
+    match m.launch_proxy().await {
         Ok((v, bin_path_buf)) => {
-            println_success!("Use {} {}. ", PREFIX, v.green());
+            println_success!("Use Node {}. ", v.green());
             exec_proxy_child_process!(&bin_path_buf);
         }
         Err(error) => {
