@@ -94,6 +94,7 @@ impl ManagerTrait for SnmYarnPkg {
         all: bool,
     ) -> Result<(), SnmError> {
         self.snm_npm.show_list_remote(dir_tuple, all).await?;
+        Ok(())
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
