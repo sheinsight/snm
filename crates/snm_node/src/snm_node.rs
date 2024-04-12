@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use chrono::NaiveDate;
 use chrono::Utc;
+use colored::*;
 use dialoguer::Confirm;
 use futures::*;
 use semver::Version;
@@ -15,7 +16,6 @@ use snm_core::model::NodeSchedule;
 use snm_core::{
     config::{
         cfg::{get_arch, get_os, get_tarball_ext},
-        url::SnmUrl,
         SnmConfig,
     },
     model::{manager::ManagerTrait, SnmError},
@@ -31,24 +31,115 @@ use std::{
     path::PathBuf,
 };
 
-use crate::node_list_remote::get_node_list_remote;
-use crate::node_list_remote::get_node_schedule;
-use crate::node_list_remote::get_node_sha256_hashmap;
-use crate::show_node_list::show_node_list;
-
-pub struct NodeDemo {
+pub struct SnmNode {
     snm_config: SnmConfig,
 }
 
-impl NodeDemo {
+impl SnmNode {
     pub fn new() -> Self {
         Self {
             snm_config: SnmConfig::new(),
         }
     }
+
+    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
+        let host = self.snm_config.get_nodejs_host();
+        let node_list_url = format!("{}/dist/index.json", host);
+        let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
+            .await?
+            .json::<Vec<NodeModel>>()
+            .await?;
+        Ok(node_vec)
+    }
+
+    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
+        let host = self.snm_config.get_nodejs_github_resource_host();
+
+        let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
+
+        let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
+            .await?
+            .json::<std::collections::HashMap<String, NodeSchedule>>()
+            .await?
+            .into_iter()
+            .map(|(v, mut schedule)| {
+                schedule.version = Some(v[1..].to_string());
+                schedule
+            })
+            .collect();
+
+        Ok(node_schedule_vec)
+    }
+
+    async fn get_node_sha256_hashmap(
+        &self,
+        node_version: &str,
+    ) -> Result<HashMap<String, String>, SnmError> {
+        let host = self.snm_config.get_nodejs_host();
+        let url = format!("{}/dist/v{}/SHASUMS256.txt", host, node_version);
+
+        let sha256_str = reqwest::get(&url).await?.text().await?;
+
+        let sha256_map: std::collections::HashMap<String, String> = sha256_str
+            .lines()
+            .map(|line| {
+                let mut iter = line.split_whitespace();
+                let sha256 = iter.next().unwrap();
+                let file = iter.next().unwrap();
+                (file.to_string(), sha256.to_string())
+            })
+            .collect();
+
+        Ok(sha256_map)
+    }
+
+    fn show_node_list<F>(&self, node_vec: Vec<snm_core::model::NodeModel>, get_tag_fn: F)
+    where
+        F: Fn(&String) -> &str,
+    {
+        for node in node_vec.iter() {
+            let lts = match &node.lts {
+                snm_core::model::Lts::Str(s) => s,
+                snm_core::model::Lts::Bool(_) => "",
+            };
+
+            let deprecated = node.deprecated.unwrap_or(false);
+
+            let version = if deprecated {
+                format!(
+                    "{:<10} {:<10}",
+                    node.version.bright_black(),
+                    lts.bright_black()
+                )
+            } else {
+                format!(
+                    "{:<10} {:<10}",
+                    node.version.bright_green(),
+                    lts.bright_green()
+                )
+            };
+
+            let died = format!("died on {}", node.end.as_deref().unwrap_or("")).bright_black();
+
+            let npm = format!("npm {}", node.npm.as_deref().unwrap_or("None")).bright_black();
+
+            let openssl =
+                format!("openssl {}", node.openssl.as_deref().unwrap_or("None")).bright_black();
+
+            let desc_width = 22;
+
+            let tag = get_tag_fn(&node.version);
+
+            // 标记
+            println!(
+                "{:<2} {} {:<desc_width$} {:<desc_width$} {:<desc_width$}",
+                tag, version, died, openssl, npm,
+            );
+        }
+    }
 }
 
-impl SharedBehavior for NodeDemo {
+impl SharedBehavior for SnmNode {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
@@ -60,9 +151,19 @@ impl SharedBehavior for NodeDemo {
 }
 
 #[async_trait(?Send)]
-impl ManagerTrait for NodeDemo {
+impl ManagerTrait for SnmNode {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
-        Ok(SnmUrl::new().get_node_tar_download_url(&v))
+        let host = self.snm_config.get_nodejs_host();
+        let download_url = format!(
+            "{}/dist/v{}/node-v{}-{}-{}.{}",
+            &host,
+            &v,
+            &v,
+            get_os(),
+            get_arch(),
+            get_tarball_ext()
+        );
+        Ok(download_url)
     }
 
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
@@ -99,7 +200,7 @@ impl ManagerTrait for NodeDemo {
     }
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
-        let mut hashmap = get_node_sha256_hashmap(&v).await?;
+        let mut hashmap = self.get_node_sha256_hashmap(&v).await?;
         let tar_file_name = format!(
             "node-v{}-{}-{}.{}",
             &v,
@@ -146,7 +247,8 @@ impl ManagerTrait for NodeDemo {
 
         let now = Utc::now().date_naive();
 
-        let (node_vec, node_schedule_vec) = try_join!(get_node_list_remote(), get_node_schedule())?;
+        let (node_vec, node_schedule_vec) =
+            try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
 
         let version_req_vec = node_schedule_vec
             .into_iter()
@@ -205,7 +307,7 @@ impl ManagerTrait for NodeDemo {
         node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
 
         if let Some(v) = default_v {
-            show_node_list(node_vec, |node_v| {
+            self.show_node_list(node_vec, |node_v| {
                 if node_v == v {
                     return "⛳️";
                 } else {
@@ -213,7 +315,7 @@ impl ManagerTrait for NodeDemo {
                 }
             });
         } else {
-            show_node_list(node_vec, |_node_v| {
+            self.show_node_list(node_vec, |_node_v| {
                 return "";
             });
         }
@@ -229,7 +331,7 @@ impl ManagerTrait for NodeDemo {
         let (dir_vec, default_v) = dir_tuple;
 
         let (mut node_vec, node_schedule_vec) =
-            try_join!(get_node_list_remote(), get_node_schedule(),)?;
+            try_join!(self.get_node_list_remote(), self.get_node_schedule(),)?;
 
         let now = Utc::now().date_naive();
 
@@ -266,8 +368,6 @@ impl ManagerTrait for NodeDemo {
 
         node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
 
-        // let (bin_vec, _) = read_bin_dir()?;
-
         let mut marking_version: HashMap<String, String> = HashMap::new();
 
         dir_vec.iter().for_each(|v| {
@@ -287,7 +387,7 @@ impl ManagerTrait for NodeDemo {
             })
             .collect::<Vec<NodeModel>>();
 
-        show_node_list(node_vec, |node_v| {
+        self.show_node_list(node_vec, |node_v| {
             let v = node_v.trim_start_matches("v");
             if marking_version.contains_key(v) {
                 return "🫐";
@@ -313,12 +413,12 @@ impl ManagerTrait for NodeDemo {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(NodeDemo::new())
+        Box::new(SnmNode::new())
     }
 }
 
 // #[async_trait(?Send)]
-impl ShimTrait for NodeDemo {
+impl ShimTrait for SnmNode {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
         let node_version_path_buf = current_dir()?.join(".node-version");
         if node_version_path_buf.exists().not() {

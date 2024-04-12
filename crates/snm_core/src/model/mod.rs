@@ -5,7 +5,6 @@ pub use self::package_json::Bin;
 pub use self::package_json::PackageJson;
 pub use self::snm_error::SnmError;
 
-pub mod common_behavior;
 pub mod manager;
 pub mod node_model;
 pub mod node_schedule;
