@@ -1,10 +1,4 @@
-use std::{
-    env::current_dir,
-    fs::{self, File},
-    io::BufReader,
-    ops::Not,
-    path::PathBuf,
-};
+use std::{env::current_dir, fs, ops::Not, path::PathBuf};
 
 use async_trait::async_trait;
 use dialoguer::Confirm;
@@ -59,50 +53,22 @@ impl ManagerTrait for SnmYarnPkg {
     }
 
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_download_dir_path_buf()?
-            .join(&self.prefix)
-            .join(&v))
+        Ok(self.snm_npm.get_downloaded_dir_path_buf(v)?)
     }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
-            .join(&self.prefix)
-            .join(&v))
+        Ok(self.snm_npm.get_runtime_dir_path_buf(v)?)
     }
 
     fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
-            .join(&self.prefix)
-            .join(format!("{}-default", &v)))
+        Ok(self.snm_npm.get_runtime_dir_for_default_path_buf(v)?)
     }
 
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
-            .join(&self.prefix))
+        Ok(self.snm_npm.get_runtime_base_dir_path_buf()?)
     }
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
-        // let npm_registry = self.snm_config.get_npm_registry_host();
-        // let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
-
-        // let value: Value = reqwest::get(&download_url).await?.json().await?;
-
-        // let x = value
-        //     .get("dist")
-        //     .and_then(|dist| dist.get("shasum"))
-        //     .and_then(|shasum| shasum.as_str())
-        //     .map(|shasum| shasum.to_string())
-        //     .ok_or(SnmError::NotFoundSha256ForNode(v.to_string()))?;
-
-        // Ok(x)
         Ok("TODO".to_string())
     }
 
@@ -110,20 +76,6 @@ impl ManagerTrait for SnmYarnPkg {
         &self,
         downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
-        // let file = File::open(downloaded_file_path_buf)?;
-        // let mut reader = BufReader::new(file);
-        // let mut hasher = Sha1::new();
-
-        // let mut buffer = [0; 1024];
-        // loop {
-        //     let n = reader.read(&mut buffer)?;
-        //     if n == 0 {
-        //         break;
-        //     }
-        //     hasher.update(&buffer[..n]);
-        // }
-        // let result = hasher.finalize();
-        // Ok(format!("{:x}", result))
         Ok("TODO".to_string())
     }
 
@@ -132,10 +84,7 @@ impl ManagerTrait for SnmYarnPkg {
     }
 
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
-        let (dir_vec, _) = &dir_tuple;
-        dir_vec.into_iter().for_each(|dir| {
-            println!("{}", dir);
-        });
+        self.snm_npm.show_list(dir_tuple).await?;
         Ok(())
     }
 
@@ -144,7 +93,7 @@ impl ManagerTrait for SnmYarnPkg {
         dir_tuple: &(Vec<String>, Option<String>),
         all: bool,
     ) -> Result<(), SnmError> {
-        todo!("show_list_remote")
+        self.snm_npm.show_list_remote(dir_tuple, all).await?;
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
