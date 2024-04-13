@@ -6,6 +6,7 @@ use std::{
 };
 
 use async_trait::async_trait;
+use colored::*;
 use dialoguer::Confirm;
 use serde_json::Value;
 use sha1::Digest;
@@ -492,7 +493,7 @@ impl ManagerTrait for SnmNpm {
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
         let (dir_vec, _) = &dir_tuple;
         dir_vec.into_iter().for_each(|dir| {
-            println!("{}", dir);
+            println!("{:<2} {:<10}", "", dir.bright_green());
         });
         Ok(())
     }
