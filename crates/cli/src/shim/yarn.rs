@@ -2,10 +2,7 @@ mod shim;
 
 use crate::shim::launch_shim;
 use semver::Version;
-use snm_core::model::{
-    manager::{ManagerTrait, ShimTrait},
-    SnmError,
-};
+use snm_core::model::{manager_trait::ManagerTrait, shim_trait::ShimTrait, SnmError};
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 
 #[tokio::main]

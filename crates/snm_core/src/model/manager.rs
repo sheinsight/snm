@@ -1,6 +1,5 @@
 use std::{fs, ops::Not, path::PathBuf};
 
-use async_trait::async_trait;
 use dialoguer::Confirm;
 
 use crate::{
@@ -13,74 +12,14 @@ use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
 
-use super::SnmError;
+use super::{manager_trait::ManagerTrait, SnmError};
 
-pub trait SharedBehavior {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-}
-
-// #[async_trait(?Send)]
-pub trait ShimTrait: SharedBehavior {
-    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_strict_shim_version(&self) -> Result<String, SnmError>;
-
-    fn download_condition(&self, version: &str) -> Result<bool, SnmError>;
-
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn check_default_version(
-        &self,
-        tuple: &(Vec<String>, Option<String>),
-    ) -> Result<String, SnmError>;
-}
-
-#[async_trait(?Send)]
-pub trait ManagerTrait: SharedBehavior {
-    fn get_shim_trait(&self) -> Box<dyn ShimTrait>;
-
-    fn get_download_url(&self, v: &str) -> Result<String, SnmError>;
-
-    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
-    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError>;
-
-    async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError>;
-
-    async fn get_actual_shasum(
-        &self,
-        downloaded_file_path_buf: &PathBuf,
-    ) -> Result<String, SnmError>;
-
-    fn get_host(&self) -> Option<String>;
-
-    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError>;
-
-    async fn show_list_remote(
-        &self,
-        dir_tuple: &(Vec<String>, Option<String>),
-        all: bool,
-    ) -> Result<(), SnmError>;
-
-    fn decompress_download_file(
-        &self,
-        input_file_path_buf: &PathBuf,
-        output_dir_path_buf: &PathBuf,
-    ) -> Result<(), SnmError>;
-}
-
-pub struct ManagerTraitDispatcher {
+pub struct ManagerDispatcher {
     manager: Box<dyn ManagerTrait>,
     snm_config: SnmConfig,
 }
 
-impl ManagerTraitDispatcher {
+impl ManagerDispatcher {
     pub fn new(manager: Box<dyn ManagerTrait>) -> Self {
         let snm_config = SnmConfig::new();
         Self {
@@ -90,7 +29,7 @@ impl ManagerTraitDispatcher {
     }
 }
 
-impl ManagerTraitDispatcher {
+impl ManagerDispatcher {
     pub async fn list(&self) -> Result<(), SnmError> {
         let dir_tuple = self.read_runtime_dir_name_vec()?;
         self.manager.show_list(&dir_tuple).await?;

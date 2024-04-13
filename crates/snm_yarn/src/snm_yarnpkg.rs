@@ -5,8 +5,8 @@ use dialoguer::Confirm;
 use snm_core::{
     config::SnmConfig,
     model::{
-        manager::{ManagerTrait, SharedBehavior, ShimTrait},
-        PackageJson, SnmError,
+        manager_trait::ManagerTrait, shared_behavior_trait::SharedBehaviorTrait,
+        shim_trait::ShimTrait, PackageJson, SnmError,
     },
 };
 use snm_npm::snm_npm::SnmNpm;
@@ -27,7 +27,7 @@ impl SnmYarnPkg {
     }
 }
 
-impl SharedBehavior for SnmYarnPkg {
+impl SharedBehaviorTrait for SnmYarnPkg {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config

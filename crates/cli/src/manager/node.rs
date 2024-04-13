@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
+use snm_core::model::{manager::ManagerDispatcher, SnmError};
 use snm_node::snm_node::SnmNode;
 
 #[derive(Subcommand, Debug)]
@@ -45,7 +45,7 @@ pub enum NodeCommands {
 pub async fn handle_node_commands(command: NodeCommands) -> Result<(), SnmError> {
     let x = SnmNode::new();
 
-    let dispatcher = ManagerTraitDispatcher::new(Box::new(x));
+    let dispatcher = ManagerDispatcher::new(Box::new(x));
 
     match command {
         NodeCommands::List => {

@@ -14,8 +14,8 @@ use sha1::Sha1;
 use snm_core::{
     config::SnmConfig,
     model::{
-        manager::{ManagerTrait, SharedBehavior, ShimTrait},
-        PackageJson, SnmError,
+        manager_trait::ManagerTrait, shared_behavior_trait::SharedBehaviorTrait,
+        shim_trait::ShimTrait, PackageJson, SnmError,
     },
     print_warning, println_success,
     utils::{
@@ -389,7 +389,7 @@ impl SnmNpm {
     }
 }
 
-impl SharedBehavior for SnmNpm {
+impl SharedBehaviorTrait for SnmNpm {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config

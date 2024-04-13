@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
+use snm_core::model::{manager::ManagerDispatcher, SnmError};
 use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 
@@ -25,7 +25,7 @@ pub enum PnpmCommands {
 }
 
 pub async fn handle_pnpm_commands(command: PnpmCommands) -> Result<(), SnmError> {
-    let dispatcher = ManagerTraitDispatcher::new(Box::new(SnmPnpm::new()));
+    let dispatcher = ManagerDispatcher::new(Box::new(SnmPnpm::new()));
 
     match command {
         PnpmCommands::Default { version } => {

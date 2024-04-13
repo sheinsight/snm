@@ -8,14 +8,16 @@ use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
-use snm_core::model::manager::SharedBehavior;
-use snm_core::model::manager::ShimTrait;
+
+use snm_core::model::manager_trait::ManagerTrait;
+use snm_core::model::shared_behavior_trait::SharedBehaviorTrait;
+use snm_core::model::shim_trait::ShimTrait;
 use snm_core::{
     config::{
         cfg::{get_arch, get_os, get_tarball_ext},
         SnmConfig,
     },
-    model::{manager::ManagerTrait, SnmError},
+    model::SnmError,
     utils::tarball::decompress_xz,
 };
 use std::collections::HashMap;
@@ -140,7 +142,7 @@ impl SnmNode {
     }
 }
 
-impl SharedBehavior for SnmNode {
+impl SharedBehaviorTrait for SnmNode {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config

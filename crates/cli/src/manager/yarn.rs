@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use snm_core::model::{manager::ManagerTraitDispatcher, SnmError};
+use snm_core::model::{manager::ManagerDispatcher, SnmError};
 use snm_yarn::snm_yarn::SnmYarn;
 
 #[derive(Subcommand, Debug)]
@@ -24,7 +24,7 @@ pub enum YarnCommands {
 }
 
 pub async fn handle_yarn_commands(command: YarnCommands) -> Result<(), SnmError> {
-    let dispatcher = ManagerTraitDispatcher::new(Box::new(SnmYarn::new()));
+    let dispatcher = ManagerDispatcher::new(Box::new(SnmYarn::new()));
     match command {
         YarnCommands::Default { version } => {
             dispatcher
