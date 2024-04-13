@@ -10,9 +10,6 @@ use sha2::Digest;
 use sha2::Sha256;
 use snm_core::model::manager::SharedBehavior;
 use snm_core::model::manager::ShimTrait;
-use snm_core::model::Lts;
-use snm_core::model::NodeModel;
-use snm_core::model::NodeSchedule;
 use snm_core::{
     config::{
         cfg::{get_arch, get_os, get_tarball_ext},
@@ -30,6 +27,10 @@ use std::{
     io::{BufReader, Read},
     path::PathBuf,
 };
+
+use crate::node_model::Lts;
+use crate::node_model::NodeModel;
+use crate::node_schedule::NodeSchedule;
 
 pub struct SnmNode {
     snm_config: SnmConfig,
@@ -93,14 +94,14 @@ impl SnmNode {
         Ok(sha256_map)
     }
 
-    fn show_node_list<F>(&self, node_vec: Vec<snm_core::model::NodeModel>, get_tag_fn: F)
+    fn show_node_list<F>(&self, node_vec: Vec<NodeModel>, get_tag_fn: F)
     where
         F: Fn(&String) -> &str,
     {
         for node in node_vec.iter() {
             let lts = match &node.lts {
-                snm_core::model::Lts::Str(s) => s,
-                snm_core::model::Lts::Bool(_) => "",
+                Lts::Str(s) => s,
+                Lts::Bool(_) => "",
             };
 
             let deprecated = node.deprecated.unwrap_or(false);
