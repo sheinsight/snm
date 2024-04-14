@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 snm_npm = { path = "../snm_npm" }
+snm_core = { path = "../snm_core" }
 async-trait = "0.1.79"

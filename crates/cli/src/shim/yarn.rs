@@ -2,22 +2,22 @@ mod shim;
 
 use crate::shim::launch_shim;
 use semver::Version;
-use snm_core::model::{manager_trait::ManagerTrait, shim_trait::ShimTrait, SnmError};
+use snm_core::model::{trait_manage::ManageTrait, trait_shim::ShimTrait, SnmError};
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 
 #[tokio::main]
 async fn main() {
-    hello().await.unwrap();
+    exec().await.unwrap();
 }
 
-async fn hello() -> Result<(), SnmError> {
+async fn exec() -> Result<(), SnmError> {
     let x: Box<dyn ShimTrait> = Box::new(SnmYarn::new());
 
     let v = x.get_strict_shim_version()?;
 
     let less = get_is_less_2(v.as_str())?;
 
-    let instance: Box<dyn ManagerTrait> = if less {
+    let instance: Box<dyn ManageTrait> = if less {
         Box::new(SnmYarn::new())
     } else {
         Box::new(SnmYarnPkg::new())

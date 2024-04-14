@@ -1,13 +1,9 @@
-use std::io::stdout;
-
 use regex::Regex;
 use reqwest;
-use snm_core::{
-    config::cfg::{get_arch, get_os},
-    model::SnmError,
-    print_warning,
-};
+use snm_core::{model::SnmError, print_warning};
 use std::time::Duration;
+
+use crate::conditional_compiler::{get_arch, get_os};
 
 pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<(), SnmError> {
     let client = reqwest::Client::new();

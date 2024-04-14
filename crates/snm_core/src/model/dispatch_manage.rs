@@ -12,15 +12,15 @@ use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
 
-use super::{manager_trait::ManagerTrait, SnmError};
+use super::{trait_manage::ManageTrait, SnmError};
 
-pub struct ManagerDispatcher {
-    manager: Box<dyn ManagerTrait>,
+pub struct DispatchManage {
+    manager: Box<dyn ManageTrait>,
     snm_config: SnmConfig,
 }
 
-impl ManagerDispatcher {
-    pub fn new(manager: Box<dyn ManagerTrait>) -> Self {
+impl DispatchManage {
+    pub fn new(manager: Box<dyn ManageTrait>) -> Self {
         let snm_config = SnmConfig::new();
         Self {
             manager,
@@ -29,20 +29,28 @@ impl ManagerDispatcher {
     }
 }
 
-impl ManagerDispatcher {
-    pub async fn list(&self) -> Result<(), SnmError> {
-        let dir_tuple = self.read_runtime_dir_name_vec()?;
-        self.manager.show_list(&dir_tuple).await?;
-        Ok(())
+// 分配
+impl DispatchManage {
+    pub async fn ensure_strict_package_manager(&self) -> Result<(String, PathBuf), SnmError> {
+        let shim_trait = self.manager.get_shim_trait();
+        let version = shim_trait.get_strict_shim_version()?;
+
+        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version)?;
+
+        if anchor_file_path_buf.exists().not() {
+            if shim_trait.download_condition(&version)? {
+                self.download(&version).await?;
+            } else {
+                return Err(SnmError::UnknownError);
+            }
+        }
+
+        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version)?;
+
+        return Ok((version.to_string(), binary_path_buf));
     }
 
-    pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
-        let dir_tuple = self.read_runtime_dir_name_vec()?;
-        self.manager.show_list_remote(&dir_tuple, all).await?;
-        Ok(())
-    }
-
-    pub async fn launch_proxy(&self) -> Result<(String, PathBuf), SnmError> {
+    pub async fn proxy_process(&self) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
         if self.snm_config.get_strict() {
             let version = shim_trait.get_strict_shim_version()?;
@@ -71,6 +79,18 @@ impl ManagerDispatcher {
         }
     }
 
+    pub async fn list(&self) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
+        self.manager.show_list(&dir_tuple).await?;
+        Ok(())
+    }
+
+    pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
+        self.manager.show_list_remote(&dir_tuple, all).await?;
+        Ok(())
+    }
+
     pub async fn install(&self, v: &str) -> Result<(), SnmError> {
         let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
 
@@ -91,38 +111,6 @@ impl ManagerDispatcher {
         }
 
         self.download(v).await?;
-
-        Ok(())
-    }
-
-    pub async fn set_default(&self, v: &str) -> Result<(), SnmError> {
-        let (_, default_v) = self.read_runtime_dir_name_vec()?;
-
-        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
-
-        if anchor_file_path_buf.exists().not() {
-            if Confirm::new()
-                .with_prompt(format!(
-                    "🤔 v{} is not installed, do you want to install it ?",
-                    &v
-                ))
-                .interact()?
-            {
-                self.install(&v).await?;
-            } else {
-                return Ok(());
-            }
-        }
-
-        if let Some(d_v) = default_v {
-            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v)?;
-            fs::remove_dir_all(default_dir_path_buf)?;
-        }
-
-        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
-        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
-
-        create_symlink(&from_dir_path_buf, &to_dir_path_buf)?;
 
         Ok(())
     }
@@ -157,6 +145,38 @@ impl ManagerDispatcher {
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
         fs::remove_dir_all(&runtime_dir_path_buf)?;
+
+        Ok(())
+    }
+
+    pub async fn set_default(&self, v: &str) -> Result<(), SnmError> {
+        let (_, default_v) = self.read_runtime_dir_name_vec()?;
+
+        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
+
+        if anchor_file_path_buf.exists().not() {
+            if Confirm::new()
+                .with_prompt(format!(
+                    "🤔 v{} is not installed, do you want to install it ?",
+                    &v
+                ))
+                .interact()?
+            {
+                self.install(&v).await?;
+            } else {
+                return Ok(());
+            }
+        }
+
+        if let Some(d_v) = default_v {
+            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v)?;
+            fs::remove_dir_all(default_dir_path_buf)?;
+        }
+
+        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
+        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
+
+        create_symlink(&from_dir_path_buf, &to_dir_path_buf)?;
 
         Ok(())
     }

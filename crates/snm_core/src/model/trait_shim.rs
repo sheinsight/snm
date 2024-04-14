@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{shared_behavior_trait::SharedBehaviorTrait, SnmError};
+use super::{trait_shared_behavior::SharedBehaviorTrait, SnmError};
 
 pub trait ShimTrait: SharedBehaviorTrait {
     fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError>;

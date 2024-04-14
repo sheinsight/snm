@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 
-use super::{shared_behavior_trait::SharedBehaviorTrait, shim_trait::ShimTrait, SnmError};
+use super::{trait_shared_behavior::SharedBehaviorTrait, trait_shim::ShimTrait, SnmError};
 
 #[async_trait(?Send)]
-pub trait ManagerTrait: SharedBehaviorTrait {
+pub trait ManageTrait: SharedBehaviorTrait {
     fn get_shim_trait(&self) -> Box<dyn ShimTrait>;
 
     fn get_download_url(&self, v: &str) -> Result<String, SnmError>;

@@ -1,15 +1,14 @@
-use std::{env::current_dir, fs, ops::Not, path::PathBuf};
-
 use async_trait::async_trait;
 use dialoguer::Confirm;
 use snm_core::{
     config::SnmConfig,
     model::{
-        manager_trait::ManagerTrait, shared_behavior_trait::SharedBehaviorTrait,
-        shim_trait::ShimTrait, PackageJson, SnmError,
+        trait_manage::ManageTrait, trait_shared_behavior::SharedBehaviorTrait,
+        trait_shim::ShimTrait, PackageJson, SnmError,
     },
 };
 use snm_npm::snm_npm::SnmNpm;
+use std::{env::current_dir, fs, ops::Not, path::PathBuf};
 
 pub struct SnmYarnPkg {
     snm_config: SnmConfig,
@@ -39,7 +38,7 @@ impl SharedBehaviorTrait for SnmYarnPkg {
 }
 
 #[async_trait(?Send)]
-impl ManagerTrait for SnmYarnPkg {
+impl ManageTrait for SnmYarnPkg {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
         let npm_repo = self.snm_config.get_yarn_repo_host();
         return Ok(format!(

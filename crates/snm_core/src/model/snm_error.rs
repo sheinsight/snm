@@ -113,6 +113,12 @@ pub enum SnmError {
     NotFoundPackageManager { name: String, version: String },
 }
 
+impl From<serde_json::Error> for SnmError {
+    fn from(_error: serde_json::Error) -> Self {
+        SnmError::UnknownError
+    }
+}
+
 impl From<VarError> for SnmError {
     fn from(_error: VarError) -> Self {
         SnmError::UnknownError

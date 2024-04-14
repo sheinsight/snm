@@ -1,27 +1,20 @@
-use super::snm::SnmTrait;
-use snm_core::{exec_proxy_child_process, model::SnmError};
+use snm_core::model::SnmError;
 
-pub struct Npm {}
+use super::trait_transform_args::{AddCommandArgs, CommandArgsCreatorTrait, InstallCommandArgs};
 
-impl Npm {
-    pub fn new(v: &str) -> Self {
-        Self {}
-    }
-}
+pub struct NpmArgsTransform;
 
-impl SnmTrait for Npm {
-    fn install(&self, args: super::snm::InstallCommandArgs) -> Result<Vec<String>, SnmError> {
+impl CommandArgsCreatorTrait for NpmArgsTransform {
+    fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError> {
         let process_args = if args.frozen_lockfile {
             vec!["ci".to_string()]
         } else {
             vec!["install".to_string()]
         };
-
-        // exec_child_process!(&self.bin, process_args);
         Ok(process_args)
     }
 
-    fn add(&self, args: super::snm::AddCommandArgs) -> Result<Vec<String>, SnmError> {
+    fn get_add_command(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError> {
         let mut process_args = vec!["add".to_string(), args.package_spec];
         if args.save_prod {
             process_args.push("--save".to_string());
@@ -34,7 +27,6 @@ impl SnmTrait for Npm {
         } else if args.global {
             process_args.push("--global".to_string());
         }
-        // exec_child_process!(&self.bin, process_args);
         Ok(process_args)
     }
 }

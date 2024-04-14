@@ -1,8 +1,6 @@
 use regex::{Captures, Regex};
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
-
-use crate::utils::read_to_json;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
 use super::SnmError;
 
@@ -127,4 +125,10 @@ impl PackageJson {
             });
         }
     }
+}
+
+fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> Result<T, SnmError> {
+    let content = read_to_string(&file_path)?;
+    let object = serde_json::from_str::<T>(&content)?;
+    Ok(object)
 }

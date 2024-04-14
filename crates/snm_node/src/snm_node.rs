@@ -1,3 +1,9 @@
+use crate::conditional_compiler::get_arch;
+use crate::conditional_compiler::get_os;
+use crate::conditional_compiler::get_tarball_ext;
+use crate::node_model::Lts;
+use crate::node_model::NodeModel;
+use crate::node_schedule::NodeSchedule;
 use async_trait::async_trait;
 use chrono::NaiveDate;
 use chrono::Utc;
@@ -8,18 +14,10 @@ use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
-
-use snm_core::model::manager_trait::ManagerTrait;
-use snm_core::model::shared_behavior_trait::SharedBehaviorTrait;
-use snm_core::model::shim_trait::ShimTrait;
-use snm_core::{
-    config::{
-        cfg::{get_arch, get_os, get_tarball_ext},
-        SnmConfig,
-    },
-    model::SnmError,
-    utils::tarball::decompress_xz,
-};
+use snm_core::model::trait_manage::ManageTrait;
+use snm_core::model::trait_shared_behavior::SharedBehaviorTrait;
+use snm_core::model::trait_shim::ShimTrait;
+use snm_core::{config::SnmConfig, model::SnmError, utils::tarball::decompress_xz};
 use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::read_to_string;
@@ -29,10 +27,6 @@ use std::{
     io::{BufReader, Read},
     path::PathBuf,
 };
-
-use crate::node_model::Lts;
-use crate::node_model::NodeModel;
-use crate::node_schedule::NodeSchedule;
 
 pub struct SnmNode {
     snm_config: SnmConfig,
@@ -154,7 +148,7 @@ impl SharedBehaviorTrait for SnmNode {
 }
 
 #[async_trait(?Send)]
-impl ManagerTrait for SnmNode {
+impl ManageTrait for SnmNode {
     fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
         let host = self.snm_config.get_nodejs_host();
         let download_url = format!(
@@ -420,7 +414,6 @@ impl ManagerTrait for SnmNode {
     }
 }
 
-// #[async_trait(?Send)]
 impl ShimTrait for SnmNode {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
         let node_version_path_buf = current_dir()?.join(".node-version");

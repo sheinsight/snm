@@ -1,5 +1,6 @@
 use clap::Parser;
-use snm_core::model::SnmError;
+
+use super::SnmError;
 
 #[derive(Parser, Debug)]
 pub struct AddCommandArgs {
@@ -27,8 +28,8 @@ pub struct InstallCommandArgs {
     pub frozen_lockfile: bool,
 }
 
-pub trait SnmTrait {
-    fn install(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
+pub trait CommandArgsCreatorTrait {
+    fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
 
-    fn add<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
 }
