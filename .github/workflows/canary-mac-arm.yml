@@ -7,15 +7,18 @@ on:
     branches:
       - main 
 jobs:
-  build:
-    name: build
+  checkout:
     runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+  setup:
+    needs: checkout
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -24,25 +27,48 @@ jobs:
           override: true
           target: ${{ env.TARGET }}
 
+  build:
+    needs: setup
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
       - name: Build binary
         run: cargo build --verbose --release --target ${{ env.TARGET }}
         env:
           RUST_BACKTRACE: 1
 
+  strip:
+    needs: build
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
       - name: Strip binary (linux and macos)
         run:  |
           for file in snm node npm pnpm yarn; do
             strip "target/${{ env.TARGET }}/release/$file"
           done
 
+  archive:
+    needs: strip
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
-          cp -t archive LICENSE README.md
-          cp -t archive target/${{ env.TARGET }}/release/{node,npm,pnpm,yarn,snm}
+          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,pnpm,yarn,snm} archive/
           tar -czf "${{ env.TARGET }}" -C archive LICENSE README.md node npm pnpm yarn snm
 
+  upload:
+    needs: archive
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
