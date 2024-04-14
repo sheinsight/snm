@@ -1,4 +1,4 @@
-name: canary
+name: canary-mac-arm
 on:
   push:
     branches:
