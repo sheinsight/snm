@@ -1,0 +1,50 @@
+name: canary
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main 
+jobs:
+  build:
+    name: build
+    runs-on: macos-latest
+    env:
+      TARGET: aarch64-apple-darwin
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          target: ${{ env.TARGET }}
+
+      - name: Build binary
+        run: cargo build --verbose --release --target ${{ env.TARGET }}
+        env:
+          RUST_BACKTRACE: 1
+
+      - name: Strip binary (linux and macos)
+        run:  |
+          for file in snm node npm pnpm yarn; do
+            strip "target/${{ env.TARGET }}/release/$file"
+          done
+
+      - name: Build archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp -t archive LICENSE README.md
+          cp -t archive target/${{ env.TARGET }}/release/{node,npm,pnpm,yarn,snm}
+          tar -czf "${{ env.TARGET }}" -C archive LICENSE README.md node npm pnpm yarn snm
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.TARGET }}
+          path: archive/${{ env.TARGET }}
