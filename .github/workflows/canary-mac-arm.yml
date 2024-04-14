@@ -34,7 +34,9 @@ jobs:
       TARGET: aarch64-apple-darwin
     steps:
       - name: Build binary
-        run: cargo build --verbose --release --target ${{ env.TARGET }}
+        run: |
+          cd snm
+          cargo build --verbose --release --target ${{ env.TARGET }}
         env:
           RUST_BACKTRACE: 1
 
