@@ -1,5 +1,5 @@
 use colored::*;
-use std::{env::VarError, io::stdout, path::StripPrefixError};
+use std::{env::VarError, path::StripPrefixError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -305,7 +305,7 @@ pub fn handle_snm_error(error: SnmError) {
                 format!("{}@{}", name, version).bright_red(),
             )
         }
-        SnmError::EmptyPackageManagerList { name } => {
+        SnmError::EmptyPackageManagerList { name: _ } => {
             crate::println_error!(
                 "No package manager found. Please use {} to get the latest version.",
                 "snm npm list-remote".bright_green().bold()

@@ -73,13 +73,15 @@ jobs:
         run: |
           mkdir archive
           cp LICENSE README.md archive/
-          cd archive
+          cd target/${{ matrix.target }}/release
           if [ "${{ matrix.build }}" = "windows" ]; then
-            cp "../target/${{ matrix.target }}/release/n.exe" ./
-            7z a "${{ matrix.archive-name }}" LICENSE README.md n.exe
+            cp node.exe npm.exe pnpm.exe yarn.exe snm.exe ../../../archive
+            cd ../../../archive
+            7z a "${{ matrix.archive-name }}" LICENSE README.md node.exe npm.exe pnpm.exe yarn.exe snm.exe
           else
-            cp "../target/${{ matrix.target }}/release/n" ./
-            tar -czf "${{ matrix.archive-name }}" LICENSE README.md n
+            cp node npm pnpm yarn snm ../../../archive
+            cd ../../../archive
+            tar -czf "${{ matrix.archive-name }}" LICENSE README.md node npm pnpm yarn snm
           fi
       - name: Upload archive
         uses: actions/upload-artifact@v3

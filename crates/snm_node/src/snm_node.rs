@@ -325,7 +325,7 @@ impl ManageTrait for SnmNode {
         dir_tuple: &(Vec<String>, Option<String>),
         all: bool,
     ) -> Result<(), SnmError> {
-        let (dir_vec, default_v) = dir_tuple;
+        let (dir_vec, _default_v) = dir_tuple;
 
         let (mut node_vec, node_schedule_vec) =
             try_join!(self.get_node_list_remote(), self.get_node_schedule(),)?;

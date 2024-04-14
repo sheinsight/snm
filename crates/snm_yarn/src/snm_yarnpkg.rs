@@ -67,13 +67,13 @@ impl ManageTrait for SnmYarnPkg {
         Ok(self.snm_npm.get_runtime_base_dir_path_buf()?)
     }
 
-    async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
+    async fn get_expect_shasum(&self, _v: &str) -> Result<String, SnmError> {
         Ok("TODO".to_string())
     }
 
     async fn get_actual_shasum(
         &self,
-        downloaded_file_path_buf: &PathBuf,
+        _downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
         Ok("TODO".to_string())
     }

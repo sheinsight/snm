@@ -7,3 +7,4 @@ members = [
     "crates/snm_yarn",
     "crates/snm_pnpm",
 ]
+resolver = "2"

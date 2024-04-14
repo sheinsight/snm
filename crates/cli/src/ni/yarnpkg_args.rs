@@ -14,7 +14,7 @@ impl CommandArgsCreatorTrait for YarnPkgArgsTransform {
         Ok(process_args)
     }
 
-    fn get_add_command(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError> {
+    fn get_add_command(&self, _args: AddCommandArgs) -> Result<Vec<String>, SnmError> {
         todo!("yarnpkg add !!!")
     }
 }
