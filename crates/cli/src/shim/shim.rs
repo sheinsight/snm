@@ -12,7 +12,11 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>) {
     let dispatcher = DispatchManage::new(manager);
     match dispatcher.proxy_process().await {
         Ok((v, bin_path_buf)) => {
-            println_success!("Use Node {}. ", v.green());
+            println_success!(
+                "Use {:<8}. {}",
+                v.bright_green(),
+                format!("by {}", bin_path_buf.display()).bright_black()
+            );
             let args: Vec<String> = std::env::args().skip(1).collect();
             let _ = Command::new(&bin_path_buf)
                 .args(&args)

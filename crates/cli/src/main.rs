@@ -1,8 +1,11 @@
 use clap::{command, CommandFactory, Parser};
+use colored::*;
 use manage_command::ManageCommands;
 use ni::{
-    npm_args::NpmArgsTransform, pnpm_args::PnpmArgsTransform,
-    trait_transform_args::CommandArgsCreatorTrait, yarn_args::YarnArgsTransform,
+    npm_args::NpmArgsTransform,
+    pnpm_args::PnpmArgsTransform,
+    trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs},
+    yarn_args::YarnArgsTransform,
     yarnpkg_args::YarnPkgArgsTransform,
 };
 use semver::Version;
@@ -13,6 +16,7 @@ use snm_core::{
         dispatch_manage::DispatchManage, package_json::PackageManager, snm_error::handle_snm_error,
         trait_manage::ManageTrait, PackageJson, SnmError,
     },
+    println_success,
 };
 use snm_node::snm_node::SnmNode;
 use snm_npm::snm_npm::SnmNpm;
@@ -63,6 +67,14 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Install(args) => {
             execute_command(|creator| creator.get_install_command(args)).await?;
         }
+        SnmCommands::CI(_) => {
+            execute_command(|creator| {
+                creator.get_install_command(InstallCommandArgs {
+                    frozen_lockfile: true,
+                })
+            })
+            .await?;
+        }
         SnmCommands::Add(args) => {
             execute_command(|creator| creator.get_add_command(args)).await?;
         }
@@ -76,8 +88,6 @@ async fn execute_cli() -> Result<(), SnmError> {
             "snm",
             &mut std::io::stdout(),
         ),
-
-        SnmCommands::CI(_) => todo!(),
     }
     Ok(())
 }
@@ -125,7 +135,11 @@ where
     let dispatcher = DispatchManage::new(manager);
     let (_, bin_path_buf) = dispatcher.ensure_strict_package_manager().await?;
 
-    println!("{} {:?}", bin_path_buf.display(), args);
+    println_success!(
+        "Use {}. {}",
+        format!("{:<8}", package_manager.version).bright_green(),
+        format!("by {}", bin_path_buf.display()).bright_black()
+    );
 
     Command::new(bin_path_buf.display().to_string())
         .args(&args)
