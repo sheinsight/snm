@@ -1,22 +1,8 @@
 name: release
-# on:
-#   push:
-#     branches: ["main"]
-#   pull_request:
-#     branches: ["main"]
-
 on:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
-
-# env: # 全局环境变量
-#   linux_x86_archive_name: "n-linux-x86.tar.gz"
-#   macos-x86-archive-name: "n-macos-x86.tar.gz"
-#   macos-arm-archive-name: "n-macos-arm.tar.gz"
-#   windows-archive-name: "n-windows.7z"
-
 jobs:
   build:
     name: build
@@ -29,27 +15,26 @@ jobs:
             os: ubuntu-latest
             rust: nightly
             target: x86_64-unknown-linux-musl
-            archive-name: n-linux-x86.tar.gz
+            archive-name: snm-linux-x86.tar.gz
           - build: macos-x86_64
             os: macos-latest
             rust: nightly
             target: x86_64-apple-darwin
-            archive-name: n-macos-x86.tar.gz
+            archive-name: snm-macos-x86.tar.gz
           - build: macos-arm
             os: macos-latest
             rust: nightly
             target: aarch64-apple-darwin
-            archive-name: n-macos-arm.tar.gz
+            archive-name: snm-macos-arm.tar.gz
           - build: windows
             os: windows-2019
             rust: nightly-x86_64-msvc
             target: x86_64-pc-windows-msvc
-            archive-name: n-windows.7z
+            archive-name: snm-windows.7z
       fail-fast: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -57,30 +42,25 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
-
       - name: Build binary
         run: cargo build --verbose --release --target ${{ matrix.target }}
         env:
-          RUST_BACKTRACE: 1
-
+          RUST_BACKTRACE: full
       - name: Strip binary (linux and macos)
         if: matrix.build == 'linux' || matrix.build == 'macos'
-        run: strip "target/${{ matrix.target }}/release/n"
-
+        run:  |
+          for file in snm snx node npm pnpm yarn; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md archive/
-          cd target/${{ matrix.target }}/release
+          cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,pnpm,yarn,snm,snx} archive/
           if [ "${{ matrix.build }}" = "windows" ]; then
-            cp node.exe npm.exe pnpm.exe yarn.exe snm.exe ../../../archive
-            cd ../../../archive
             7z a "${{ matrix.archive-name }}" LICENSE README.md node.exe npm.exe pnpm.exe yarn.exe snm.exe
           else
-            cp node npm pnpm yarn snm ../../../archive
-            cd ../../../archive
-            tar -czf "${{ matrix.archive-name }}" LICENSE README.md node npm pnpm yarn snm
+            tar -czf ${{ matrix.archive-name }}.tar.gz -C archive  LICENSE README.md node npm pnpm yarn snm snx
           fi
       - name: Upload archive
         uses: actions/upload-artifact@v3
@@ -98,35 +78,13 @@ jobs:
       #     prerelease: false
       #     files: |
       #       archive/${{ matrix.archive-name }}
-  release:
-    name: release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download linux-x86 archive
+      - name: Download
         uses: actions/download-artifact@v2
         with:
-          name: n-linux-x86.tar.gz
+          name: ${{ matrix.archive-name }}
           path: archive
-      - name: Download macos-x86 archive
-        uses: actions/download-artifact@v2
-        with:
-          name: n-macos-x86.tar.gz
-          path: archive
-      - name: Download macos-arm archive
-        uses: actions/download-artifact@v2
-        with:
-          name: n-macos-arm.tar.gz
-          path: archive
-      - name: Download windows archive
-        uses: actions/download-artifact@v2
-        with:
-          name: n-windows.7z
-          path: archive
-
-      - name: Create Release And Upload Release Asset
+      - name: Upload
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ github.ref }}
           name: ${{ github.ref_name }}
@@ -134,7 +92,44 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            archive/n-linux-x86.tar.gz
-            archive/n-macos-x86.tar.gz
-            archive/n-macos-arm.tar.gz
-            archive/n-windows.7z
+            ${{ matrix.archive-name }}
+  # release:
+  #   name: release
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download linux-x86 archive
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: n-linux-x86.tar.gz
+  #         path: archive
+  #     - name: Download macos-x86 archive
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: n-macos-x86.tar.gz
+  #         path: archive
+  #     - name: Download macos-arm archive
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: n-macos-arm.tar.gz
+  #         path: archive
+  #     - name: Download windows archive
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: n-windows.7z
+  #         path: archive
+
+  #     - name: Create Release And Upload Release Asset
+  #       uses: softprops/action-gh-release@v1
+  #       if: startsWith(github.ref, 'refs/tags/')
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         name: ${{ github.ref_name }}
+  #         body: TODO New Release.
+  #         draft: false
+  #         prerelease: false
+  #         files: |
+  #           archive/n-linux-x86.tar.gz
+  #           archive/n-macos-x86.tar.gz
+  #           archive/n-macos-arm.tar.gz
+  #           archive/n-windows.7z
