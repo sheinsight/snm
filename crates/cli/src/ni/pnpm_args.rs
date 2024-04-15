@@ -24,6 +24,8 @@ impl CommandArgsCreatorTrait for PnpmArgsTransform {
             process_args.push("--save-optional".to_string());
         } else if args.save_exact {
             process_args.push("--save-exact".to_string());
+        } else if args.save_peer {
+            process_args.push("--save-peer".to_string());
         } else if args.global {
             process_args.push("--global".to_string());
         }

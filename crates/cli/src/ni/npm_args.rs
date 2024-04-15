@@ -24,6 +24,9 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
             process_args.push("--save-optional".to_string());
         } else if args.save_exact {
             process_args.push("--save-exact".to_string());
+        } else if args.save_peer {
+            // process_args.push("--save-peer".to_string());
+            unimplemented!("save-peer is not supported by npm")
         } else if args.global {
             process_args.push("--global".to_string());
         }

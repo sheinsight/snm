@@ -20,12 +20,15 @@ impl CommandArgsCreatorTrait for YarnArgsTransform {
         } else if args.save_dev {
             process_args.push("--dev".to_string());
         } else if args.save_optional {
-            process_args.push("--save-optional".to_string());
+            process_args.push("--optional".to_string());
         } else if args.save_exact {
-            process_args.push("--save-exact".to_string());
+            process_args.push("--exact".to_string());
+        } else if args.save_peer {
+            process_args.push("--peer".to_string());
         } else if args.global {
-            process_args.push("--global".to_string());
+            unimplemented!("global is not supported by yarn")
         }
+
         Ok(process_args)
     }
 }

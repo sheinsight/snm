@@ -7,6 +7,8 @@ pub struct AddCommandArgs {
     pub package_spec: String,
     #[arg(short = 'P', long, help = "Save to dependencies")]
     pub save_prod: bool,
+    #[arg(long, help = "Save to peerDependencies")]
+    pub save_peer: bool,
     #[arg(short = 'D', long, help = "Save to devDependencies")]
     pub save_dev: bool,
     #[arg(short = 'O', long, help = "Save to optionalDependencies")]
