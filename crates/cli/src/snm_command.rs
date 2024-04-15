@@ -7,29 +7,34 @@ use crate::{
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
-    /// Manager node versions
+    #[command(about = "Manage node versions.")]
     Node {
         #[command(subcommand)]
         command: ManageCommands,
     },
-    /// Manager npm versions
+    #[command(about = "Manage npm versions.")]
     Npm {
         #[command(subcommand)]
         command: ManageCommands,
     },
-    /// Manager yarn versions
+    #[command(about = "Manager yarn versions.")]
     Yarn {
         #[command(subcommand)]
         command: ManageCommands,
     },
-    /// Manager pnpm versions
+    #[command(about = "Manage pnpm versions.")]
     Pnpm {
         #[command(subcommand)]
         command: ManageCommands,
     },
+    #[command(alias = "i", about = "Used to install all dependencies for a project.")]
     Install(InstallCommandArgs),
+    #[command(about = "Alias to snm install --frozen-lockfile.")]
+    CI(InstallCommandArgs),
+    #[command(about = "Installs a package and any packages that it depends on.")]
     Add(AddCommandArgs),
-    Del,
+    #[command(about = "Delete packages from node_modules and from the project's package.json.")]
+    Delete,
     Query,
     FigSpec,
 }

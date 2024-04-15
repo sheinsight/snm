@@ -66,6 +66,9 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Add(args) => {
             execute_command(|creator| creator.get_add_command(args)).await?;
         }
+
+        SnmCommands::Query => todo!(),
+        SnmCommands::Delete => todo!(),
         // snm command end
         SnmCommands::FigSpec => clap_complete::generate(
             clap_complete_fig::Fig,
@@ -73,8 +76,8 @@ async fn execute_cli() -> Result<(), SnmError> {
             "snm",
             &mut std::io::stdout(),
         ),
-        SnmCommands::Query => todo!(),
-        SnmCommands::Del => todo!(),
+
+        SnmCommands::CI(_) => todo!(),
     }
     Ok(())
 }
