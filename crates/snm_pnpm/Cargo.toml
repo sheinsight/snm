@@ -9,4 +9,3 @@ edition = "2021"
 snm_npm = { path = "../snm_npm" }
 snm_core = { path = "../snm_core" }
 async-trait = "0.1.79"
-openssl = { version = "0.10", features = ["vendored"] }

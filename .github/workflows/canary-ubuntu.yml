@@ -1,4 +1,4 @@
-name: canary-mac-arm
+name: canary-ubuntu
 on:
   push:
     branches:
@@ -7,7 +7,7 @@ on:
     branches:
       - main 
 jobs:
-  build-canary-mac-arm:
+  build-ubuntu-arm:
     runs-on: ubuntu-latest
     env:
       TARGET: x86_64-unknown-linux-musl
@@ -23,6 +23,7 @@ jobs:
           target: ${{ env.TARGET }}
       - name: Build binary
         run: |
+          sudo apt-get install musl-tools
           cargo build --verbose --release --target ${{ env.TARGET }}
         env:
           RUST_BACKTRACE: full
