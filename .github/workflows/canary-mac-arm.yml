@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir archive
           cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,pnpm,yarn,snm,snx} archive/
-          tar -czf ${{ env.TARGET }}.tar.gz -C archive
+          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm pnpm yarn snm snx
           ls -l
       - name: Upload archive
         uses: actions/upload-artifact@v3
