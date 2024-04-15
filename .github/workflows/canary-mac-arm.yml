@@ -2,23 +2,18 @@ name: canary-mac-arm
 on:
   push:
     branches:
-      - main
+      - dev
   pull_request:
     branches:
       - main 
 jobs:
-  checkout:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-  setup:
-    needs: checkout
+  build-canary-mac-arm:
     runs-on: macos-latest
     env:
       TARGET: aarch64-apple-darwin
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -26,53 +21,28 @@ jobs:
           profile: minimal
           override: true
           target: ${{ env.TARGET }}
-
-  build:
-    needs: setup
-    runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
-    steps:
       - name: Build binary
         run: |
-          cd snm
           cargo build --verbose --release --target ${{ env.TARGET }}
         env:
-          RUST_BACKTRACE: 1
-
-  strip:
-    needs: build
-    runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
-    steps:
+          RUST_BACKTRACE: full
       - name: Strip binary (linux and macos)
         run:  |
           for file in snm node npm pnpm yarn; do
             strip "target/${{ env.TARGET }}/release/$file"
           done
-
-  archive:
-    needs: strip
-    runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
-    steps:
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
           cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,pnpm,yarn,snm} archive/
-          tar -czf "${{ env.TARGET }}" -C archive LICENSE README.md node npm pnpm yarn snm
-
-  upload:
-    needs: archive
-    runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
-    steps:
+          tar -czf ${{ env.TARGET }}.tar.gz -C archive LICENSE README.md node npm pnpm yarn snm
+          ls -l
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.TARGET }}
-          path: archive/${{ env.TARGET }}
+          name: ${{ env.TARGET }}.tar.gz
+          path: ${{ env.TARGET }}.tar.gz
+
+   
+  
