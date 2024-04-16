@@ -9,7 +9,9 @@ use ni::{
     yarn_args::YarnArgsTransform,
     yarnpkg_args::YarnPkgArgsTransform,
 };
+use regex::Regex;
 use semver::{Prerelease, Version};
+use serde_json::Value;
 use snm_command::SnmCommands;
 use snm_core::{
     config::SnmConfig,
@@ -24,6 +26,7 @@ use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
+    env::current_dir,
     fs,
     ops::Not,
     process::{Command, Stdio},
@@ -121,70 +124,101 @@ async fn execute_cli() -> Result<(), SnmError> {
         }
         SnmCommands::Bump => {
             let package_json = PackageJson::from_dir_path(None)?;
-
-            let v: Version =
+            let current_version =
                 Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())?;
+            let prerelease_number = current_version.pre.parse::<u8>().unwrap_or(0) + 1;
 
-            let mut inc_prerelease = v.clone();
+            let major = current_version.major;
+            let minor = current_version.minor;
+            let patch = current_version.patch;
 
-            let x = v.pre.parse::<u8>().unwrap();
-
-            inc_prerelease.pre = Prerelease::new((x + 1).to_string().as_str())?;
-
-            let major = Version::new(v.major + 1, v.minor, v.patch);
-            let minor = Version::new(v.major, v.minor + 1, v.patch);
-            let patch = Version::new(v.major, v.minor, v.patch + 1);
-
-            let prerelease = Prerelease::new("0")?;
-
-            let mut major_prerelease = Version::new(v.major + 1, 0, 0);
-            major_prerelease.pre = prerelease.clone();
-
-            let mut minor_prerelease = Version::new(v.major, v.minor + 1, 0);
-            minor_prerelease.pre = prerelease.clone();
-
-            let mut patch_prerelease = Version::new(v.major, v.minor, v.patch + 1);
-            patch_prerelease.pre = prerelease.clone();
-
-            let selections = &[
-                format!("{:<10} {}", "major", major.to_string().bright_black()),
-                format!("{:<10} {}", "minor", minor.to_string().bright_black()),
-                format!("{:<10} {}", "patch", patch.to_string().bright_black()),
-                format!(
-                    "{:<10} {}",
+            let versions_and_strings = vec![
+                create_version_and_string("major", major + 1, 0, 0, None)?,
+                create_version_and_string("minor", major, minor + 1, 0, None)?,
+                create_version_and_string("patch", major, minor, patch + 1, None)?,
+                create_version_and_string(
                     "premajor",
-                    major_prerelease.to_string().bright_black()
-                ),
-                format!(
-                    "{:<10} {}",
+                    major + 1,
+                    0,
+                    0,
+                    Some(Prerelease::new("0")?),
+                )?,
+                create_version_and_string(
                     "preminor",
-                    minor_prerelease.to_string().bright_black()
-                ),
-                format!(
-                    "{:<10} {}",
+                    major,
+                    minor + 1,
+                    0,
+                    Some(Prerelease::new("0")?),
+                )?,
+                create_version_and_string(
                     "prepatch",
-                    patch_prerelease.to_string().bright_black()
-                ),
-                format!(
-                    "{:<10} {}",
+                    major,
+                    minor,
+                    patch + 1,
+                    Some(Prerelease::new("0")?),
+                )?,
+                create_version_and_string(
                     "prerelease",
-                    inc_prerelease.to_string().bright_black()
-                ),
+                    major,
+                    minor,
+                    patch,
+                    Some(Prerelease::new(prerelease_number.to_string().as_str())?),
+                )?,
             ];
+
+            let selections: Vec<String> = versions_and_strings
+                .iter()
+                .map(|(_, s)| s.clone())
+                .collect();
             let selection = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt(format!(
                     "请选择要升级的版本号: {} ",
-                    v.to_string().bright_purple()
+                    current_version.to_string().bright_purple()
                 ))
-                .default(0) // 默认选中第一个选项
+                .default(0)
                 .items(&selections[..])
-                .interact()
-                .unwrap();
+                .interact()?;
 
-            println!("您选择了: {} , {:?}", selections[selection], v);
+            let dir = current_dir()?;
+
+            let c = fs::read_to_string(dir.join("package.json"))?;
+
+            let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#)?;
+            let replacement = format!(
+                r#""version": "{}""#,
+                versions_and_strings[selection].0.to_string()
+            );
+
+            let x = version_regex.replace(&c, replacement.as_str());
+
+            fs::write(dir.join("package.json"), x.to_string())?;
+
+            println!(
+                "您选择了: {} , {:?}",
+                selections[selection], versions_and_strings[selection].0
+            );
         }
     }
     Ok(())
+}
+
+fn create_version_and_string(
+    version_type: &str,
+    major: u64,
+    minor: u64,
+    patch: u64,
+    pre: Option<Prerelease>,
+) -> Result<(Version, String), SnmError> {
+    let mut new_version = Version::new(major, minor, patch);
+    if let Some(p) = pre {
+        new_version.pre = p.clone();
+    }
+    let version_string = format!(
+        "{:<12} {}",
+        version_type,
+        new_version.to_string().bright_black()
+    );
+    Ok((new_version, version_string))
 }
 
 pub async fn exec_manage(
