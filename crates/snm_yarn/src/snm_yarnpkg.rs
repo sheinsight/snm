@@ -186,7 +186,7 @@ fn set_exec_permission(bin_path: &PathBuf) -> Result<(), SnmError> {
 }
 
 #[cfg(target_family = "windows")]
-fn set_exec_permission(&self, bin_path: &PathBuf) -> anyhow::Result<()> {
+fn set_exec_permission(bin_path: &PathBuf) -> anyhow::Result<()> {
     // Windows 上设置执行权限的方法不如 Unix 直接，
     // 通常是通过文件属性或直接关联到可执行程序去处理，
     // 暂时不需要复杂实现，因为执行权限通常默认存在
