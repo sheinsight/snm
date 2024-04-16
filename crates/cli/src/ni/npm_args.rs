@@ -32,4 +32,12 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
         }
         Ok(process_args)
     }
+
+    fn get_delete_command(
+        &self,
+        args: super::trait_transform_args::DeleteCommandArgs,
+    ) -> Result<Vec<String>, SnmError> {
+        let process_args = vec!["uninstall".to_string(), args.package_spec];
+        Ok(process_args)
+    }
 }

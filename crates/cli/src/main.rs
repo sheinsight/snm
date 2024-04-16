@@ -16,16 +16,14 @@ use snm_core::{
         dispatch_manage::DispatchManage, package_json::PackageManager, snm_error::handle_snm_error,
         trait_manage::ManageTrait, PackageJson, SnmError,
     },
-    println_error, println_success,
+    println_success,
 };
 use snm_node::snm_node::SnmNode;
 use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
-    env::home_dir,
     fs,
-    ops::Not,
     process::{Command, Stdio},
 };
 mod manage_command;
@@ -84,8 +82,10 @@ async fn execute_cli() -> Result<(), SnmError> {
             execute_command(|creator| creator.get_add_command(args)).await?;
         }
 
+        SnmCommands::Delete(args) => {
+            execute_command(|creator| creator.get_delete_command(args)).await?;
+        }
         SnmCommands::Query => todo!(),
-        SnmCommands::Delete => todo!(),
         // snm command end
         SnmCommands::FigSpec => {
             let mut output = Vec::new();
@@ -102,17 +102,13 @@ async fn execute_cli() -> Result<(), SnmError> {
                     .join(".fig")
                     .join("autocomplete")
                     .join("build")
-                    .join("snm.js");
+                    .join("snm.ts");
 
                 if spec_path_buf.exists() {
                     fs::remove_file(&spec_path_buf)?;
                 }
 
-                fs::write(
-                    &spec_path_buf,
-                    &output_string
-                        .replace("const completion: Fig.Spec = {", "const completion = {"),
-                )?;
+                fs::write(&spec_path_buf, &output_string)?;
 
                 println_success!(
                     "Fig spec file has been created at {}",
