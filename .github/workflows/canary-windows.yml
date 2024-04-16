@@ -26,11 +26,6 @@ jobs:
           cargo build --verbose --release --target ${{ env.TARGET }}
         env:
           RUST_BACKTRACE: full
-      - name: Strip binary (linux and macos)
-        run:  |
-          for file in snm snx node npm pnpm yarn; do
-            strip "target/${{ env.TARGET }}/release/$file"
-          done
       - name: Build archive
         shell: bash
         run: |
@@ -41,8 +36,8 @@ jobs:
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.TARGET }}.tar.gz
-          path: ${{ env.TARGET }}.tar.gz
+          name: ${{ env.TARGET }}.7z
+          path: ${{ env.TARGET }}.7z
 
    
   
