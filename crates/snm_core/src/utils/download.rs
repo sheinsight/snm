@@ -1,6 +1,7 @@
 use crate::model::SnmError;
 use colored::*;
 use futures_util::StreamExt;
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;
@@ -15,7 +16,6 @@ pub enum WriteStrategy {
 
 pub struct DownloadBuilder {
     retries: u8,
-    progress: Option<Box<dyn FnMut(u64, u64)>>,
     write_strategy: WriteStrategy,
 }
 
@@ -23,18 +23,12 @@ impl DownloadBuilder {
     pub fn new() -> Self {
         Self {
             retries: 0,
-            progress: None,
             write_strategy: WriteStrategy::WriteAfterDelete,
         }
     }
 
     pub fn retries(mut self, retries: u8) -> Self {
         self.retries = retries;
-        self
-    }
-
-    pub fn progress<F: FnMut(u64, u64) + 'static>(mut self, progress: F) -> Self {
-        self.progress = Some(Box::new(progress));
         self
     }
 
@@ -131,21 +125,32 @@ impl DownloadBuilder {
 
             let mut stream = response.bytes_stream();
 
-            let mut downloaded_size: u64 = Default::default();
+            let progress_bar = ProgressBar::with_draw_target(
+                Some(total_size.unwrap_or(0)),
+                ProgressDrawTarget::stdout(),
+            );
+
+            progress_bar.set_style(
+                indicatif::ProgressStyle::with_template(
+                    "{spinner:.green} [{elapsed_precise}] {bar:25.green/white.dim} {bytes}/{total_bytes} {wide_msg:.dim}",
+                )
+                .unwrap()
+                .progress_chars("━━"),
+            );
+
+            progress_bar.set_message(download_url.to_string());
 
             while let Some(chunk) = stream.next().await {
                 let chunk = chunk?;
 
                 file.write_all(&chunk).await?;
 
-                downloaded_size += chunk.len() as u64;
-
-                if let Some(progress) = &mut self.progress {
-                    progress(downloaded_size, total_size.unwrap_or(0));
-                }
+                progress_bar.inc(chunk.len() as u64);
             }
 
             file.flush().await?;
+
+            progress_bar.finish();
         }
 
         Ok(abs_path)

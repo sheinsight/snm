@@ -2,7 +2,7 @@ use clap::Subcommand;
 
 use crate::{
     manage_command::ManageCommands,
-    ni::trait_transform_args::{AddCommandArgs, InstallCommandArgs},
+    ni::trait_transform_args::{AddCommandArgs, DeleteCommandArgs, InstallCommandArgs},
 };
 
 #[derive(Subcommand, Debug)]
@@ -34,7 +34,10 @@ pub enum SnmCommands {
     #[command(about = "Installs a package and any packages that it depends on.")]
     Add(AddCommandArgs),
     #[command(about = "Delete packages from node_modules and from the project's package.json.")]
-    Delete,
+    Delete(DeleteCommandArgs),
+
+    Bump,
+
     Query,
     FigSpec,
 }

@@ -22,15 +22,24 @@ pub struct AddCommandArgs {
 #[derive(Parser, Debug)]
 pub struct InstallCommandArgs {
     #[arg(
-        short,
         long,
         help = "If true, pnpm skips lockfile generation, failing install if the lockfile is out of sync or missing."
     )]
     pub frozen_lockfile: bool,
 }
 
+#[derive(Parser, Debug)]
+pub struct DeleteCommandArgs {
+    #[arg(
+        help = "If true, pnpm skips lockfile generation, failing install if the lockfile is out of sync or missing."
+    )]
+    pub package_spec: String,
+}
+
 pub trait CommandArgsCreatorTrait {
     fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
 
     fn get_add_command<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
+
+    fn get_delete_command(&self, args: DeleteCommandArgs) -> Result<Vec<String>, SnmError>;
 }
