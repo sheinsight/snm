@@ -16,13 +16,18 @@ use snm_core::{
         dispatch_manage::DispatchManage, package_json::PackageManager, snm_error::handle_snm_error,
         trait_manage::ManageTrait, PackageJson, SnmError,
     },
-    println_success,
+    println_error, println_success,
 };
 use snm_node::snm_node::SnmNode;
 use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
-use std::process::{Command, Stdio};
+use std::{
+    env::home_dir,
+    fs,
+    ops::Not,
+    process::{Command, Stdio},
+};
 mod manage_command;
 mod ni;
 mod snm_command;
@@ -82,12 +87,39 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Query => todo!(),
         SnmCommands::Delete => todo!(),
         // snm command end
-        SnmCommands::FigSpec => clap_complete::generate(
-            clap_complete_fig::Fig,
-            &mut SnmCli::command(),
-            "snm",
-            &mut std::io::stdout(),
-        ),
+        SnmCommands::FigSpec => {
+            let mut output = Vec::new();
+            clap_complete::generate(
+                clap_complete_fig::Fig,
+                &mut SnmCli::command(),
+                "snm",
+                &mut output,
+            );
+            let output_string = String::from_utf8(output).unwrap();
+
+            if let Some(home) = dirs::home_dir() {
+                let spec_path_buf = home
+                    .join(".fig")
+                    .join("autocomplete")
+                    .join("build")
+                    .join("snm.js");
+
+                if spec_path_buf.exists() {
+                    fs::remove_file(&spec_path_buf)?;
+                }
+
+                fs::write(
+                    &spec_path_buf,
+                    &output_string
+                        .replace("const completion: Fig.Spec = {", "const completion = {"),
+                )?;
+
+                println_success!(
+                    "Fig spec file has been created at {}",
+                    spec_path_buf.display()
+                );
+            }
+        }
     }
     Ok(())
 }
