@@ -25,6 +25,7 @@ use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
     fs,
+    ops::Not,
     process::{Command, Stdio},
 };
 mod manage_command;
@@ -98,11 +99,13 @@ async fn execute_cli() -> Result<(), SnmError> {
             let output_string = String::from_utf8(output).unwrap();
 
             if let Some(home) = dirs::home_dir() {
-                let spec_path_buf = home
-                    .join(".fig")
-                    .join("autocomplete")
-                    .join("build")
-                    .join("snm.ts");
+                let dir = home.join(".fig").join("autocomplete").join("build");
+
+                if dir.exists().not() {
+                    fs::create_dir_all(&dir)?;
+                }
+
+                let spec_path_buf = dir.join("snm.ts");
 
                 if spec_path_buf.exists() {
                     fs::remove_file(&spec_path_buf)?;
