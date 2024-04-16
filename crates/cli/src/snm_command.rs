@@ -35,6 +35,9 @@ pub enum SnmCommands {
     Add(AddCommandArgs),
     #[command(about = "Delete packages from node_modules and from the project's package.json.")]
     Delete(DeleteCommandArgs),
+
+    Bump,
+
     Query,
     FigSpec,
 }

@@ -17,6 +17,8 @@ pub struct PackageJson {
     #[serde(rename = "packageManager")]
     pub package_manager: Option<String>,
 
+    pub version: Option<String>,
+
     pub bin: Option<Bin>,
 
     #[serde(skip_serializing)]

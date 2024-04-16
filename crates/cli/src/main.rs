@@ -1,5 +1,6 @@
 use clap::{command, CommandFactory, Parser};
 use colored::*;
+use dialoguer::{theme::ColorfulTheme, Select};
 use manage_command::ManageCommands;
 use ni::{
     npm_args::NpmArgsTransform,
@@ -8,7 +9,7 @@ use ni::{
     yarn_args::YarnArgsTransform,
     yarnpkg_args::YarnPkgArgsTransform,
 };
-use semver::Version;
+use semver::{Prerelease, Version};
 use snm_command::SnmCommands;
 use snm_core::{
     config::SnmConfig,
@@ -81,7 +82,6 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Add(args) => {
             execute_command(|creator| creator.get_add_command(args)).await?;
         }
-
         SnmCommands::Delete(args) => {
             execute_command(|creator| creator.get_delete_command(args)).await?;
         }
@@ -115,6 +115,70 @@ async fn execute_cli() -> Result<(), SnmError> {
                     spec_path_buf.display()
                 );
             }
+        }
+        SnmCommands::Bump => {
+            let package_json = PackageJson::from_dir_path(None)?;
+
+            let v: Version =
+                Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())?;
+
+            let mut inc_prerelease = v.clone();
+
+            let x = v.pre.parse::<u8>().unwrap();
+
+            inc_prerelease.pre = Prerelease::new((x + 1).to_string().as_str())?;
+
+            let major = Version::new(v.major + 1, v.minor, v.patch);
+            let minor = Version::new(v.major, v.minor + 1, v.patch);
+            let patch = Version::new(v.major, v.minor, v.patch + 1);
+
+            let prerelease = Prerelease::new("0")?;
+
+            let mut major_prerelease = Version::new(v.major + 1, 0, 0);
+            major_prerelease.pre = prerelease.clone();
+
+            let mut minor_prerelease = Version::new(v.major, v.minor + 1, 0);
+            minor_prerelease.pre = prerelease.clone();
+
+            let mut patch_prerelease = Version::new(v.major, v.minor, v.patch + 1);
+            patch_prerelease.pre = prerelease.clone();
+
+            let selections = &[
+                format!("{:<10} {}", "major", major.to_string().bright_black()),
+                format!("{:<10} {}", "minor", minor.to_string().bright_black()),
+                format!("{:<10} {}", "patch", patch.to_string().bright_black()),
+                format!(
+                    "{:<10} {}",
+                    "premajor",
+                    major_prerelease.to_string().bright_black()
+                ),
+                format!(
+                    "{:<10} {}",
+                    "preminor",
+                    minor_prerelease.to_string().bright_black()
+                ),
+                format!(
+                    "{:<10} {}",
+                    "prepatch",
+                    patch_prerelease.to_string().bright_black()
+                ),
+                format!(
+                    "{:<10} {}",
+                    "prerelease",
+                    inc_prerelease.to_string().bright_black()
+                ),
+            ];
+            let selection = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt(format!(
+                    "请选择要升级的版本号: {} ",
+                    v.to_string().bright_purple()
+                ))
+                .default(0) // 默认选中第一个选项
+                .items(&selections[..])
+                .interact()
+                .unwrap();
+
+            println!("您选择了: {} , {:?}", selections[selection], v);
         }
     }
     Ok(())
