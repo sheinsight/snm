@@ -23,7 +23,6 @@ jobs:
           target: ${{ env.TARGET }}
       - name: Build binary
         run: |
-          sudo apt-get install musl-tools
           cargo build --verbose --release --target ${{ env.TARGET }}
         env:
           RUST_BACKTRACE: full
