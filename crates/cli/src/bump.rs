@@ -9,32 +9,38 @@ use snm_core::model::{PackageJson, SnmError};
 pub fn bump_impl() -> Result<(), SnmError> {
     let package_json = PackageJson::from_dir_path(None)?;
     let current_version =
-        Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())?;
+        Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())
+            .expect("parse version error");
     let prerelease_number = current_version.pre.parse::<u8>().unwrap_or(0) + 1;
 
     let major = current_version.major;
     let minor = current_version.minor;
     let patch = current_version.patch;
 
+    let zero_pre_release = Prerelease::new("0").expect("create prerelease error 0");
+
     let versions_and_strings = vec![
         create_version_and_string("major", major + 1, 0, 0, None)?,
         create_version_and_string("minor", major, minor + 1, 0, None)?,
         create_version_and_string("patch", major, minor, patch + 1, None)?,
-        create_version_and_string("premajor", major + 1, 0, 0, Some(Prerelease::new("0")?))?,
-        create_version_and_string("preminor", major, minor + 1, 0, Some(Prerelease::new("0")?))?,
+        create_version_and_string("premajor", major + 1, 0, 0, Some(zero_pre_release.clone()))?,
         create_version_and_string(
-            "prepatch",
+            "preminor",
             major,
-            minor,
-            patch + 1,
-            Some(Prerelease::new("0")?),
+            minor + 1,
+            0,
+            Some(zero_pre_release.clone()),
         )?,
+        create_version_and_string("prepatch", major, minor, patch + 1, Some(zero_pre_release))?,
         create_version_and_string(
             "prerelease",
             major,
             minor,
             patch,
-            Some(Prerelease::new(prerelease_number.to_string().as_str())?),
+            Some(
+                Prerelease::new(prerelease_number.to_string().as_str())
+                    .expect(format!("create prerelease error {}", prerelease_number).as_str()),
+            ),
         )?,
     ];
 

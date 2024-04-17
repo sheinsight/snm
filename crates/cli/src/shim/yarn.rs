@@ -41,7 +41,7 @@ async fn exec() -> Result<(), SnmError> {
 }
 
 fn get_is_less_2(v: &str) -> Result<bool, SnmError> {
-    let ver = Version::parse(v)?;
-    let is_less_2 = ver < Version::parse("2.0.0")?;
+    let ver = Version::parse(v).expect(format!("parse version failed {}", &v).as_str());
+    let is_less_2 = ver < Version::parse("2.0.0").expect("parse version failed");
     Ok(is_less_2)
 }

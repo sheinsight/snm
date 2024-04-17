@@ -125,11 +125,11 @@ impl From<serde_json::Error> for SnmError {
 //     }
 // }
 
-impl From<semver::Error> for SnmError {
-    fn from(_error: semver::Error) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<semver::Error> for SnmError {
+//     fn from(_error: semver::Error) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 // impl From<regex::Error> for SnmError {
 //     fn from(_error: regex::Error) -> Self {
