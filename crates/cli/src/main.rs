@@ -25,8 +25,6 @@ use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
-    fs,
-    ops::Not,
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -207,6 +205,8 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Bump => {
             bump_impl()?;
         }
+        SnmCommands::Dlx => todo!(),
+        SnmCommands::Exec => todo!(),
     }
     Ok(())
 }

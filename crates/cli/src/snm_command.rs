@@ -37,6 +37,12 @@ pub enum SnmCommands {
     Delete(DeleteCommandArgs),
     #[command(about = "bump version.")]
     Bump,
+    #[command(
+        about = "Fetches a package from the registry without installing it as a dependency, hotloads it, and runs whatever default command binary it exposes.."
+    )]
+    Dlx,
+    #[command(about = "Run a command from a local package.")]
+    Exec,
 
     Query,
     #[command(about = "write fig spec to autocomplete build directory.")]
