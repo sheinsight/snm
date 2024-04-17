@@ -58,9 +58,15 @@ pub fn bump_impl() -> Result<(), SnmError> {
         .interact()
         .expect("bump_impl Select error");
 
-    let dir = current_dir()?;
+    let dir = current_dir().expect("get current dir failed");
 
-    let c = fs::read_to_string(dir.join("package.json"))?;
+    let c = fs::read_to_string(dir.join("package.json")).expect(
+        format!(
+            "bump_impl read_to_string error {:?}",
+            dir.join("package.json").display()
+        )
+        .as_str(),
+    );
 
     let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#).expect("create regex error");
     let replacement = format!(
@@ -70,7 +76,13 @@ pub fn bump_impl() -> Result<(), SnmError> {
 
     let x = version_regex.replace(&c, replacement.as_str());
 
-    fs::write(dir.join("package.json"), x.to_string())?;
+    fs::write(dir.join("package.json"), x.to_string()).expect(
+        format!(
+            "bump_impl write error {:?}",
+            dir.join("package.json").display()
+        )
+        .as_str(),
+    );
 
     println!(
         "您选择了: {} , {:?}",

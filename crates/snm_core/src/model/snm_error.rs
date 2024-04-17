@@ -1,5 +1,4 @@
 use colored::*;
-use std::{env::VarError, path::StripPrefixError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -137,11 +136,11 @@ pub enum SnmError {
 //     }
 // }
 
-impl From<std::io::Error> for SnmError {
-    fn from(_error: std::io::Error) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<std::io::Error> for SnmError {
+//     fn from(_error: std::io::Error) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 // impl From<StripPrefixError> for SnmError {
 //     fn from(_error: StripPrefixError) -> Self {

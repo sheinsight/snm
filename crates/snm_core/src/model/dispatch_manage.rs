@@ -39,7 +39,7 @@ impl DispatchManage {
 
         let version = shim_trait.get_strict_shim_version()?;
 
-        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version)?;
+        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
 
         if anchor_file_path_buf.exists().not() {
             if shim_trait.download_condition(&version)? {
@@ -60,7 +60,7 @@ impl DispatchManage {
         if self.snm_config.get_strict() {
             let version = shim_trait.get_strict_shim_version()?;
 
-            let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version)?;
+            let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
 
             if anchor_file_path_buf.exists().not() {
                 if shim_trait.download_condition(&version)? {
@@ -97,7 +97,7 @@ impl DispatchManage {
     }
 
     pub async fn install(&self, v: &str) -> Result<(), SnmError> {
-        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
+        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
 
         if anchor_file_path_buf.exists().not() {
             self.download(v).await?;
@@ -141,17 +141,29 @@ impl DispatchManage {
                 {
                     let default_path_buf = self
                         .manager
-                        .get_runtime_dir_path_buf(format!("{}-default", &v).as_str())?;
+                        .get_runtime_dir_path_buf(format!("{}-default", &v).as_str());
 
-                    fs::remove_dir_all(&default_path_buf)?;
+                    fs::remove_dir_all(&default_path_buf).expect(
+                        format!(
+                            "un_install remove_dir_all error {:?}",
+                            &default_path_buf.display()
+                        )
+                        .as_str(),
+                    );
                 } else {
                     return Ok(());
                 }
             }
         }
 
-        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
-        fs::remove_dir_all(&runtime_dir_path_buf)?;
+        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
+        fs::remove_dir_all(&runtime_dir_path_buf).expect(
+            format!(
+                "un_install remove_dir_all error {:?}",
+                &runtime_dir_path_buf.display()
+            )
+            .as_str(),
+        );
 
         Ok(())
     }
@@ -159,7 +171,7 @@ impl DispatchManage {
     pub async fn set_default(&self, v: &str) -> Result<(), SnmError> {
         let (_, default_v) = self.read_runtime_dir_name_vec()?;
 
-        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
+        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
 
         if anchor_file_path_buf.exists().not() {
             if Confirm::new()
@@ -177,30 +189,56 @@ impl DispatchManage {
         }
 
         if let Some(d_v) = default_v {
-            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v)?;
-            fs::remove_dir_all(default_dir_path_buf)?;
+            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v);
+            fs::remove_dir_all(&default_dir_path_buf).expect(
+                format!(
+                    "set_default remove_dir_all error {:?}",
+                    &default_dir_path_buf.display()
+                )
+                .as_str(),
+            );
         }
 
-        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
-        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
+        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
+        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v);
 
-        create_symlink(&from_dir_path_buf, &to_dir_path_buf)?;
+        create_symlink(&from_dir_path_buf, &to_dir_path_buf).expect(
+            format!(
+                "set_default create_symlink error from: {:?} to: {:?}",
+                &from_dir_path_buf.display(),
+                &to_dir_path_buf.display()
+            )
+            .as_str(),
+        );
 
         Ok(())
     }
 
     fn read_runtime_dir_name_vec(&self) -> Result<(Vec<String>, Option<String>), SnmError> {
-        let runtime_dir_path_buf = self.manager.get_runtime_base_dir_path_buf()?;
+        let runtime_dir_path_buf = self.manager.get_runtime_base_dir_path_buf();
 
         let mut default_dir = None;
 
         if runtime_dir_path_buf.exists().not() {
             // TODO here create not suitable , should be find a better way
-            fs::create_dir_all(&runtime_dir_path_buf)?;
+            fs::create_dir_all(&runtime_dir_path_buf).expect(
+                format!(
+                    "read_runtime_dir_name_vec create_dir_all error {:?}",
+                    &runtime_dir_path_buf.display()
+                )
+                .as_str(),
+            );
         }
 
         let dir_name_vec = runtime_dir_path_buf
-            .read_dir()?
+            .read_dir()
+            .expect(
+                format!(
+                    "read_runtime_dir_name_vec read_dir error {:?}",
+                    &runtime_dir_path_buf.display()
+                )
+                .as_str(),
+            )
             .filter_map(|dir_entry| dir_entry.ok())
             .filter(|dir_entry| dir_entry.path().is_dir())
             .filter_map(|dir_entry| {
@@ -218,8 +256,8 @@ impl DispatchManage {
     }
 
     async fn download(&self, v: &str) -> Result<(), SnmError> {
-        let download_url = self.manager.get_download_url(v)?;
-        let downloaded_file_path_buf = self.manager.get_downloaded_file_path_buf(v)?;
+        let download_url = self.manager.get_download_url(v);
+        let downloaded_file_path_buf = self.manager.get_downloaded_file_path_buf(v);
         DownloadBuilder::new()
             .retries(3)
             .write_strategy(WriteStrategy::Nothing)
@@ -241,11 +279,17 @@ impl DispatchManage {
             })?;
         }
 
-        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
+        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v);
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-        fs::remove_file(&downloaded_file_path_buf)?;
+        fs::remove_file(&downloaded_file_path_buf).expect(
+            format!(
+                "download remove_file error {:?}",
+                &downloaded_file_path_buf.display()
+            )
+            .as_str(),
+        );
 
         Ok(())
     }

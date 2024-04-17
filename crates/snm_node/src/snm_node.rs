@@ -5,7 +5,6 @@ use crate::node_model::Lts;
 use crate::node_model::NodeModel;
 use crate::node_schedule::NodeSchedule;
 use async_trait::async_trait;
-use chrono::format;
 use chrono::NaiveDate;
 use chrono::Utc;
 use colored::*;
@@ -147,19 +146,18 @@ impl SnmNode {
 }
 
 impl SharedBehaviorTrait for SnmNode {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_bin_dir_path_buf()?
+    fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_bin_dir_path_buf()
             .join(&v)
             .join("bin")
-            .join("node"))
+            .join("node")
     }
 }
 
 #[async_trait(?Send)]
 impl ManageTrait for SnmNode {
-    fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
+    fn get_download_url(&self, v: &str) -> String {
         let host = self.snm_config.get_nodejs_host();
         let download_url = format!(
             "{}/dist/v{}/node-v{}-{}-{}.{}",
@@ -170,17 +168,16 @@ impl ManageTrait for SnmNode {
             get_arch(),
             get_tarball_ext()
         );
-        Ok(download_url)
+        download_url
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_config.get_download_dir_path_buf()?.join(v))
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config.get_download_dir_path_buf().join(v)
     }
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_download_dir_path_buf()?
+    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_download_dir_path_buf()
             .join(v)
             .join(format!(
                 "node-v{}-{}-{}.{}",
@@ -188,22 +185,21 @@ impl ManageTrait for SnmNode {
                 get_os(),
                 get_arch(),
                 get_tarball_ext()
-            )))
+            ))
     }
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_config.get_node_bin_dir_path_buf()?.join(&v))
+    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config.get_node_bin_dir_path_buf().join(&v)
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_bin_dir_path_buf()?
-            .join(format!("{}-default", &v)))
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_bin_dir_path_buf()
+            .join(format!("{}-default", &v))
     }
 
-    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_config.get_node_bin_dir_path_buf()?)
+    fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
+        self.snm_config.get_node_bin_dir_path_buf()
     }
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
@@ -225,13 +221,19 @@ impl ManageTrait for SnmNode {
         &self,
         downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
-        let file = File::open(downloaded_file_path_buf)?;
+        let file = File::open(downloaded_file_path_buf).expect(
+            format!(
+                "open file {} error",
+                downloaded_file_path_buf.display().to_string()
+            )
+            .as_str(),
+        );
         let mut reader = BufReader::new(file);
         let mut hasher = Sha256::new();
 
         let mut buffer = [0; 1024];
         loop {
-            let n = reader.read(&mut buffer)?;
+            let n = reader.read(&mut buffer).expect("read error");
             if n == 0 {
                 break;
             }
@@ -411,11 +413,13 @@ impl ManageTrait for SnmNode {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress_xz(
-            &input_file_path_buf,
-            &output_dir_path_buf,
-            &mut Some(|_from: &PathBuf, _to: &PathBuf| {}),
-        )?;
+        decompress_xz(&input_file_path_buf, &output_dir_path_buf).expect(
+            format!(
+                "decompress_xz {} error",
+                &input_file_path_buf.display().to_string()
+            )
+            .as_str(),
+        );
         Ok(())
     }
 
@@ -426,7 +430,9 @@ impl ManageTrait for SnmNode {
 
 impl ShimTrait for SnmNode {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
-        let node_version_path_buf = current_dir()?.join(".node-version");
+        let node_version_path_buf = current_dir()
+            .expect("get current dir failed")
+            .join(".node-version");
         if node_version_path_buf.exists().not() {
             return Err(SnmError::NotFoundNodeVersionFileError {
                 file_path: node_version_path_buf.display().to_string(),
@@ -434,7 +440,15 @@ impl ShimTrait for SnmNode {
         }
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
-        let version = read_to_string(node_version_path_buf).map(version_processor)?;
+        let version = read_to_string(&node_version_path_buf)
+            .map(version_processor)
+            .expect(
+                format!(
+                    "read_to_string {} error",
+                    &node_version_path_buf.display().to_string()
+                )
+                .as_str(),
+            );
         Ok(version)
     }
 
@@ -443,8 +457,7 @@ impl ShimTrait for SnmNode {
         bin_name: &str,
         version: &str,
     ) -> Result<PathBuf, SnmError> {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version)?;
-        Ok(node_binary_path_buf)
+        Ok(self.get_runtime_binary_file_path_buf(&bin_name, &version)?)
     }
 
     fn download_condition(&self, version: &str) -> Result<bool, SnmError> {
@@ -471,7 +484,7 @@ impl ShimTrait for SnmNode {
         version: &str,
     ) -> Result<PathBuf, SnmError> {
         Ok(self
-            .get_runtime_dir_path_buf(&version)?
+            .get_runtime_dir_path_buf(&version)
             .join("bin")
             .join(bin_name))
     }

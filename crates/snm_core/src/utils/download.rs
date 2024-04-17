@@ -87,7 +87,10 @@ impl DownloadBuilder {
                     });
                 }
                 WriteStrategy::WriteAfterDelete => {
-                    std::fs::remove_file(&abs_path_ref)?;
+                    std::fs::remove_file(&abs_path_ref).expect(
+                        format!("download remove file error {:?}", &abs_path_ref.display())
+                            .as_str(),
+                    );
                 }
                 WriteStrategy::Nothing => {
                     // 如果选择不覆盖已存在的文件，则直接返回成功
@@ -98,7 +101,8 @@ impl DownloadBuilder {
 
         if let Some(parent) = abs_path_ref.parent() {
             if !parent.exists() {
-                std::fs::create_dir_all(parent)?;
+                std::fs::create_dir_all(parent)
+                    .expect(format!("download create dir error {:?}", &parent.display()).as_str());
             }
 
             let client = reqwest::Client::new();
@@ -125,7 +129,9 @@ impl DownloadBuilder {
 
             let total_size = response.content_length();
 
-            let mut file = tokio::fs::File::create(abs_path_ref).await?;
+            let mut file = tokio::fs::File::create(abs_path_ref).await.expect(
+                format!("download create file error {:?}", &abs_path_ref.display()).as_str(),
+            );
 
             let mut stream = response.bytes_stream();
 
@@ -147,12 +153,16 @@ impl DownloadBuilder {
             while let Some(chunk) = stream.next().await {
                 let chunk = chunk.expect("download stream chunk error");
 
-                file.write_all(&chunk).await?;
+                file.write_all(&chunk).await.expect(
+                    format!("download write file error {:?}", &abs_path_ref.display()).as_str(),
+                );
 
                 progress_bar.inc(chunk.len() as u64);
             }
 
-            file.flush().await?;
+            file.flush().await.expect(
+                format!("download flush file error {:?}", &abs_path_ref.display()).as_str(),
+            );
 
             progress_bar.finish();
         }

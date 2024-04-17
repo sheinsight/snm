@@ -37,7 +37,7 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str) {
 }
 
 pub fn check(actual_package_manager: &str) -> Result<(), SnmError> {
-    let dir = current_dir()?;
+    let dir = current_dir().expect("get current dir failed");
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;

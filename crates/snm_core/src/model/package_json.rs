@@ -39,7 +39,7 @@ impl PackageJson {
         let wk = if let Some(wk) = workspace {
             wk
         } else {
-            std::env::current_dir()?
+            std::env::current_dir().expect("get current dir error.")
         };
 
         let pkg_file_path = wk.join("package.json");

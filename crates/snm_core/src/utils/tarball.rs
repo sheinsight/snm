@@ -1,28 +1,38 @@
 use flate2::read::GzDecoder;
-use std::{fs::File, io::Write as _, path::PathBuf};
+use std::{fs::File, path::PathBuf};
 use tar::Archive;
 
 use crate::model::SnmError;
 
-pub fn decompress_tgz<F, D>(
+pub fn decompress_tgz<D>(
     input_path: &PathBuf,
     output_path: &PathBuf,
     get_target_dir: D,
-    progress: &mut Option<F>,
 ) -> Result<(), SnmError>
 where
-    F: FnMut(&PathBuf, &PathBuf),
     D: Fn(&PathBuf) -> PathBuf,
 {
     // 打开 tgz 文件
-    let tgz_file = File::open(input_path)?;
+    let tgz_file = File::open(input_path).expect(
+        format!(
+            "decompress_tgz File::open error {:?}",
+            &input_path.display()
+        )
+        .as_str(),
+    );
     // 使用 GzDecoder 解压 gzip 文件
     let tar = GzDecoder::new(tgz_file);
     // 创建 Archive 对象以便操作 tar 文件
     let mut archive = Archive::new(tar);
 
     // 从 archive 中解压所有文件到指定路径
-    archive.unpack(output_path)?;
+    archive.unpack(output_path).expect(
+        format!(
+            "decompress_tgz archive.unpack error {:?}",
+            &output_path.display()
+        )
+        .as_str(),
+    );
 
     let old_base = get_target_dir(output_path);
 
@@ -33,20 +43,25 @@ where
         Ok(output_path.join(new_path))
     };
 
-    rename(&old_base, &transform, progress)?;
+    rename(&old_base, &transform)?;
 
-    std::fs::remove_dir_all(&old_base)?;
+    std::fs::remove_dir_all(&old_base).expect(
+        format!(
+            "decompress_tgz remove_dir_all error {:?}",
+            &old_base.display()
+        )
+        .as_str(),
+    );
 
     Ok(())
 }
 
-pub fn rename<T, P>(dir: &PathBuf, transform: &T, progress: &mut Option<P>) -> Result<(), SnmError>
+pub fn rename<T>(dir: &PathBuf, transform: &T) -> Result<(), SnmError>
 where
     T: Fn(&PathBuf) -> Result<PathBuf, SnmError>,
-    P: FnMut(&PathBuf, &PathBuf),
 {
-    let mut stdout = std::io::stdout();
-    let mut entries = std::fs::read_dir(&dir)?;
+    let mut entries = std::fs::read_dir(&dir)
+        .expect(format!("rename std::fs::read_dir error {:?}", &dir.display()).as_str());
 
     while let Some(entry) = entries.next() {
         let entry = entry.unwrap();
@@ -54,7 +69,7 @@ where
         let path = entry.path();
 
         if path.is_dir() {
-            rename(&path, transform, progress)?;
+            rename(&path, transform)?;
         } else {
             let from = &path;
 
@@ -62,37 +77,45 @@ where
 
             if let Some(parent) = to.parent() {
                 if !parent.exists() {
-                    std::fs::create_dir_all(&parent)?;
+                    std::fs::create_dir_all(&parent).expect(
+                        format!(
+                            "rename std::fs::create_dir_all error {:?}",
+                            &parent.display()
+                        )
+                        .as_str(),
+                    );
                 }
             }
 
-            stdout.flush()?;
-
-            if let Some(p) = progress {
-                p(&from, &to);
-            }
-            std::fs::rename(&from, &to)?;
+            std::fs::rename(&from, &to).expect(
+                format!(
+                    "rename std::fs::rename error from: {:?} to: {:?}",
+                    &from.display(),
+                    &to.display()
+                )
+                .as_str(),
+            );
         }
     }
 
     Ok(())
 }
 
-pub fn decompress_xz<F>(
-    input_path: &PathBuf,
-    output_path: &PathBuf,
-    progress: &mut Option<F>,
-) -> Result<(), SnmError>
-where
-    F: FnMut(&PathBuf, &PathBuf),
-{
-    let input_file = File::open(input_path)?;
+pub fn decompress_xz(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), SnmError> {
+    let input_file = File::open(input_path)
+        .expect(format!("decompress_xz File::open error {:?}", &input_path.display()).as_str());
 
     let decoder = xz2::read::XzDecoder::new(input_file);
 
     let mut archive = tar::Archive::new(decoder);
 
-    archive.unpack(&output_path)?;
+    archive.unpack(&output_path).expect(
+        format!(
+            "decompress_xz archive.unpack error {:?}",
+            &output_path.display()
+        )
+        .as_str(),
+    );
 
     let dir = input_path
         .file_name()
@@ -109,9 +132,15 @@ where
         Ok(output_path.join(new_path))
     };
 
-    rename(&old_base, &transform, progress)?;
+    rename(&old_base, &transform)?;
 
-    std::fs::remove_dir_all(&old_base)?;
+    std::fs::remove_dir_all(&old_base).expect(
+        format!(
+            "decompress_xz remove_dir_all error {:?}",
+            &old_base.display()
+        )
+        .as_str(),
+    );
 
     Ok(())
 }

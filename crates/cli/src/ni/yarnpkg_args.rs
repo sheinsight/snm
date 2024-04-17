@@ -1,4 +1,4 @@
-use snm_core::{crossterm::ExecutableCommand, model::SnmError};
+use snm_core::model::SnmError;
 
 use super::trait_transform_args::{
     AddCommandArgs, CommandArgsCreatorTrait, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs,

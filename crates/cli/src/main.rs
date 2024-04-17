@@ -1,5 +1,5 @@
 use bump::bump_impl;
-use clap::{command, CommandFactory, Parser};
+use clap::{command, Parser};
 use colored::*;
 use fig::fig_spec_impl;
 use manage_command::ManageCommands;
@@ -15,11 +15,8 @@ use snm_command::SnmCommands;
 use snm_core::{
     config::SnmConfig,
     model::{
-        dispatch_manage::DispatchManage,
-        package_json::{self, PackageManager},
-        snm_error::handle_snm_error,
-        trait_manage::ManageTrait,
-        PackageJson, SnmError,
+        dispatch_manage::DispatchManage, package_json::PackageManager, snm_error::handle_snm_error,
+        trait_manage::ManageTrait, PackageJson, SnmError,
     },
     println_success,
 };
@@ -220,7 +217,7 @@ async fn execute_cli() -> Result<(), SnmError> {
 }
 
 async fn get_bin() -> Result<((String, String), PathBuf), SnmError> {
-    let dir = current_dir()?;
+    let dir = current_dir().expect("get current dir failed");
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf)?;
@@ -272,7 +269,8 @@ where
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())
         .spawn()
-        .and_then(|process| process.wait_with_output())?;
+        .and_then(|process| process.wait_with_output())
+        .expect("spawn error");
     Ok(())
 }
 

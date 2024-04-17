@@ -41,64 +41,58 @@ impl SnmNpm {
 }
 
 impl SharedBehaviorTrait for SnmNpm {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
+    fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_modules_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
-            .join("package.json"))
+            .join("package.json")
     }
 }
 
 #[async_trait(?Send)]
 impl ManageTrait for SnmNpm {
-    fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
+    fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry_host();
-        Ok(format!(
+        format!(
             "{}/{}/-/{}-{}.tgz",
             npm_registry, &self.prefix, &self.prefix, &v
-        ))
+        )
     }
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_download_dir_path_buf()?
+    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_download_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
-            .join(format!("{}@{}.tgz", &self.prefix, &v)))
+            .join(format!("{}@{}.tgz", &self.prefix, &v))
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_download_dir_path_buf()?
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_download_dir_path_buf()
             .join(&self.prefix)
-            .join(&v))
+            .join(&v)
     }
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
+    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_modules_dir_path_buf()
             .join(&self.prefix)
-            .join(&v))
+            .join(&v)
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_modules_dir_path_buf()
             .join(&self.prefix)
-            .join(format!("{}-default", &v)))
+            .join(format!("{}-default", &v))
     }
 
-    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
-            .join(&self.prefix))
+    fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
+        self.snm_config
+            .get_node_modules_dir_path_buf()
+            .join(&self.prefix)
     }
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
@@ -126,13 +120,21 @@ impl ManageTrait for SnmNpm {
         &self,
         downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
-        let file = File::open(downloaded_file_path_buf)?;
+        let file = File::open(downloaded_file_path_buf).expect(
+            format!(
+                "get_actual_shasum File::open error {:?}",
+                &downloaded_file_path_buf.display()
+            )
+            .as_str(),
+        );
         let mut reader = BufReader::new(file);
         let mut hasher = Sha1::new();
 
         let mut buffer = [0; 1024];
         loop {
-            let n = reader.read(&mut buffer)?;
+            let n = reader
+                .read(&mut buffer)
+                .expect("get_actual_shasum read error");
             if n == 0 {
                 break;
             }
@@ -171,21 +173,18 @@ impl ManageTrait for SnmNpm {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress_tgz(
-            &input_file_path_buf,
-            &output_dir_path_buf,
-            |output| output.join("package"),
-            &mut Some(|_from: &PathBuf, _to: &PathBuf| {
-                // print_warning!(stdout, "Waiting Decompress...")
-            }),
-        )?;
+        decompress_tgz(&input_file_path_buf, &output_dir_path_buf, |output| {
+            output.join("package")
+        })?;
         Ok(())
     }
 }
 
 impl ShimTrait for SnmNpm {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
-        let package_json_path_buf = current_dir()?.join("package.json");
+        let package_json_path_buf = current_dir()
+            .expect("get current dir failed")
+            .join("package.json");
 
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
 
@@ -234,7 +233,7 @@ impl ShimTrait for SnmNpm {
     ) -> Result<PathBuf, SnmError> {
         let package_json_buf_path = self
             .snm_config
-            .get_node_modules_dir_path_buf()?
+            .get_node_modules_dir_path_buf()
             .join(self.prefix.to_string())
             .join(&version)
             .join("package.json");

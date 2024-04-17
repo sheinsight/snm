@@ -6,8 +6,7 @@ use crate::shim::launch_shim;
 use semver::Version;
 use shim::check;
 use snm_core::model::{
-    package_json, snm_error::handle_snm_error, trait_manage::ManageTrait, trait_shim::ShimTrait,
-    PackageJson, SnmError,
+    snm_error::handle_snm_error, trait_manage::ManageTrait, trait_shim::ShimTrait, SnmError,
 };
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 
