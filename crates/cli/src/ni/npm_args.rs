@@ -40,4 +40,17 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
         let process_args = vec!["uninstall".to_string(), args.package_spec];
         Ok(process_args)
     }
+
+    fn get_dlx_command(
+        &self,
+        args: super::trait_transform_args::DlxCommandArgs,
+    ) -> Result<Vec<String>, SnmError> {
+        let mut process_args = vec!["exec".to_string()];
+
+        process_args.append(&mut args.package_spec.clone());
+
+        process_args.append(&mut vec!["-n".to_string()]);
+
+        Ok(process_args)
+    }
 }
