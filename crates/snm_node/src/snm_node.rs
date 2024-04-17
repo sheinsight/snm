@@ -435,7 +435,7 @@ impl ShimTrait for SnmNode {
             .join(".node-version");
         if node_version_path_buf.exists().not() {
             return Err(SnmError::NotFoundNodeVersionFileError {
-                file_path: node_version_path_buf.display().to_string(),
+                file_path: node_version_path_buf,
             });
         }
         let version_processor =

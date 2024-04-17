@@ -198,7 +198,7 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Delete(args) => {
             execute_command(|creator| creator.get_delete_command(args)).await?;
         }
-        SnmCommands::Query => todo!(),
+        SnmCommands::Query => todo!(""),
         // snm command end
         SnmCommands::FigSpec => {
             fig_spec_impl()?;

@@ -7,7 +7,7 @@ use semver::{Prerelease, Version};
 use snm_core::model::{PackageJson, SnmError};
 
 pub fn bump_impl() -> Result<(), SnmError> {
-    let package_json = PackageJson::from_dir_path(None)?;
+    let package_json = PackageJson::from_here()?;
     let current_version =
         Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())
             .expect("parse version error");

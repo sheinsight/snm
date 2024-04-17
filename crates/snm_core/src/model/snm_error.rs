@@ -44,8 +44,8 @@ pub enum SnmError {
     #[error("Package.json bin property not found , The absolute path {file_path}")]
     NotFoundPackageJsonBinProperty { file_path: String },
 
-    #[error("Not found package.json file here {package_json_file_path}")]
-    NotFoundPackageJsonFileError { package_json_file_path: String },
+    #[error("Not found package.json file here {file_path}")]
+    NotFoundPackageJsonFileError { file_path: PathBuf },
 
     #[error("Not found sha256 for node {0}")]
     NotFoundSha256ForNode(String),
@@ -54,7 +54,7 @@ pub enum SnmError {
     NotFoundDefaultPackageManager { name: String },
 
     #[error("Not found .node-version file")]
-    NotFoundNodeVersionFileError { file_path: String },
+    NotFoundNodeVersionFileError { file_path: PathBuf },
 
     #[error("Not found binary {bin_name} {file_path}")]
     NotFoundBinaryFromPackageJsonBinProperty {
@@ -137,18 +137,16 @@ pub fn handle_snm_error(error: SnmError) {
             )
         }
 
-        SnmError::NotFoundPackageJsonFileError {
-            package_json_file_path,
-        } => {
+        SnmError::NotFoundPackageJsonFileError { file_path } => {
             crate::println_error!(
-                "{} not found. Please create one and configure the 'packageManager' field.",
-                package_json_file_path
+                "Not found {}.",
+                file_path.display().to_string().bright_black()
             )
         }
         SnmError::NotFoundNodeVersionFileError { file_path } => {
             crate::println_error!(
-                "{} not found. Please create .node-version file and write node version into.",
-                file_path
+                "Not found {}.",
+                file_path.display().to_string().bright_black()
             )
         }
 

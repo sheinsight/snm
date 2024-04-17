@@ -35,6 +35,23 @@ pub enum Bin {
 }
 
 impl PackageJson {
+    pub fn from_here() -> Result<Self, SnmError> {
+        let workspace = std::env::current_dir().expect("get current dir error.");
+        let package_json_file_path = workspace.join("package.json");
+
+        if package_json_file_path.exists() {
+            let mut pkg = read_to_json::<PackageJson>(&package_json_file_path);
+
+            pkg._raw_file_path = Some(package_json_file_path);
+            pkg._raw_workspace = Some(workspace);
+            Ok(pkg)
+        } else {
+            Err(SnmError::NotFoundPackageJsonFileError {
+                file_path: package_json_file_path,
+            })
+        }
+    }
+
     pub fn from_dir_path(workspace: Option<PathBuf>) -> Result<Self, SnmError> {
         let wk = if let Some(wk) = workspace {
             wk
@@ -53,7 +70,7 @@ impl PackageJson {
         }
 
         return Err(SnmError::NotFoundPackageJsonFileError {
-            package_json_file_path: pkg_file_path.display().to_string(),
+            file_path: pkg_file_path,
         });
     }
 
