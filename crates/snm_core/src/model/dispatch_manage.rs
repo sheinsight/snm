@@ -33,6 +33,7 @@ impl DispatchManage {
 impl DispatchManage {
     pub async fn ensure_strict_package_manager(&self) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
+
         let version = shim_trait.get_strict_shim_version()?;
 
         let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version)?;

@@ -31,13 +31,14 @@ pub enum SnmCommands {
     Install(InstallCommandArgs),
     #[command(about = "Alias to snm install --frozen-lockfile.")]
     CI(InstallCommandArgs),
-    #[command(about = "Installs a package and any packages that it depends on.")]
+    #[command(about = "Add a package and any packages that it depends on.")]
     Add(AddCommandArgs),
     #[command(about = "Delete packages from node_modules and from the project's package.json.")]
     Delete(DeleteCommandArgs),
-
+    #[command(about = "bump version.")]
     Bump,
 
     Query,
+    #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,
 }
