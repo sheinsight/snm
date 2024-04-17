@@ -2,12 +2,24 @@ mod shim;
 
 use crate::shim::launch_shim;
 use semver::Version;
-use snm_core::model::{trait_manage::ManageTrait, trait_shim::ShimTrait, SnmError};
+use shim::check;
+use snm_core::model::{
+    snm_error::handle_snm_error, trait_manage::ManageTrait, trait_shim::ShimTrait, SnmError,
+};
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 
 #[tokio::main]
 async fn main() {
-    exec().await.unwrap();
+    match check("yarn") {
+        Ok(_) => {
+            if let Err(error) = exec().await {
+                handle_snm_error(error);
+            }
+        }
+        Err(error) => {
+            handle_snm_error(error);
+        }
+    }
 }
 
 async fn exec() -> Result<(), SnmError> {

@@ -1,9 +1,13 @@
-use std::process::{Command, Stdio};
+use std::{
+    env::current_dir,
+    process::{Command, Stdio},
+};
 
 use colored::*;
 use snm_core::{
     model::{
         dispatch_manage::DispatchManage, snm_error::handle_snm_error, trait_manage::ManageTrait,
+        PackageJson, SnmError,
     },
     println_success,
 };
@@ -30,4 +34,18 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>) {
             handle_snm_error(error);
         }
     }
+}
+
+pub fn check(actual_package_manager: &str) -> Result<(), SnmError> {
+    let dir = current_dir()?;
+    let package_json_path_buf = dir.join("package.json");
+    let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
+    let package_manager = package_json.parse_package_manager()?;
+    if package_manager.name != actual_package_manager {
+        return Err(SnmError::NotMatchPackageManager {
+            expect: package_manager.name,
+            actual: actual_package_manager.to_string(),
+        });
+    }
+    Ok(())
 }
