@@ -42,6 +42,12 @@ pub struct DlxCommandArgs {
     pub package_spec: Vec<String>,
 }
 
+#[derive(Parser, Debug)]
+pub struct ExecCommandArgs {
+    #[arg(help = "The package spec to install.")]
+    pub package_spec: Vec<String>,
+}
+
 pub trait CommandArgsCreatorTrait {
     fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
 
@@ -50,4 +56,6 @@ pub trait CommandArgsCreatorTrait {
     fn get_delete_command(&self, args: DeleteCommandArgs) -> Result<Vec<String>, SnmError>;
 
     fn get_dlx_command(&self, args: DlxCommandArgs) -> Result<Vec<String>, SnmError>;
+
+    fn get_exec_command(&self, args: ExecCommandArgs) -> Result<Vec<String>, SnmError>;
 }

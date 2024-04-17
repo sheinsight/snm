@@ -3,7 +3,7 @@ use clap::Subcommand;
 use crate::{
     manage_command::ManageCommands,
     ni::trait_transform_args::{
-        AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, InstallCommandArgs,
+        AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
     },
 };
 
@@ -44,7 +44,7 @@ pub enum SnmCommands {
     )]
     Dlx(DlxCommandArgs),
     #[command(about = "Run a command from a local package.")]
-    Exec,
+    Exec(ExecCommandArgs),
 
     Query,
     #[command(about = "write fig spec to autocomplete build directory.")]

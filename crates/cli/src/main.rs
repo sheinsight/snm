@@ -212,7 +212,9 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Dlx(args) => {
             execute_command(|creator| creator.get_dlx_command(args)).await?;
         }
-        SnmCommands::Exec => todo!(),
+        SnmCommands::Exec(args) => {
+            execute_command(|creator| creator.get_exec_command(args)).await?;
+        }
     }
     Ok(())
 }
