@@ -5,6 +5,7 @@ use crate::node_model::Lts;
 use crate::node_model::NodeModel;
 use crate::node_schedule::NodeSchedule;
 use async_trait::async_trait;
+use chrono::format;
 use chrono::NaiveDate;
 use chrono::Utc;
 use colored::*;
@@ -43,9 +44,11 @@ impl SnmNode {
         let host = self.snm_config.get_nodejs_host();
         let node_list_url = format!("{}/dist/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
-            .await?
+            .await
+            .expect(format!("get {} error", &node_list_url).as_str())
             .json::<Vec<NodeModel>>()
-            .await?;
+            .await
+            .expect(format!("{} response transform to json failed", &node_list_url).as_str());
         Ok(node_vec)
     }
 
@@ -55,9 +58,11 @@ impl SnmNode {
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
         let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
-            .await?
+            .await
+            .expect(format!("get {} error", &node_schedule_url).as_str())
             .json::<std::collections::HashMap<String, NodeSchedule>>()
-            .await?
+            .await
+            .expect(format!("{} response transform to json failed", &node_schedule_url).as_str())
             .into_iter()
             .map(|(v, mut schedule)| {
                 schedule.version = Some(v[1..].to_string());
@@ -75,7 +80,12 @@ impl SnmNode {
         let host = self.snm_config.get_nodejs_host();
         let url = format!("{}/dist/v{}/SHASUMS256.txt", host, node_version);
 
-        let sha256_str = reqwest::get(&url).await?.text().await?;
+        let sha256_str = reqwest::get(&url)
+            .await
+            .expect(format!("get {} error", &url).as_str())
+            .text()
+            .await
+            .expect("transform text error");
 
         let sha256_map: std::collections::HashMap<String, String> = sha256_str
             .lines()

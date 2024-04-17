@@ -149,11 +149,11 @@ impl From<std::io::Error> for SnmError {
 //     }
 // }
 
-impl From<reqwest::Error> for SnmError {
-    fn from(_error: reqwest::Error) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<reqwest::Error> for SnmError {
+//     fn from(_error: reqwest::Error) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 // impl From<dialoguer::Error> for SnmError {
 //     fn from(_error: dialoguer::Error) -> Self {

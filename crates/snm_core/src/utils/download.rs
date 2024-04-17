@@ -103,7 +103,11 @@ impl DownloadBuilder {
 
             let client = reqwest::Client::new();
 
-            let response = client.get(download_url).send().await?;
+            let response = client
+                .get(download_url)
+                .send()
+                .await
+                .expect(format!("download error {}", &download_url).as_str());
 
             let response_status = response.status();
 
@@ -141,7 +145,7 @@ impl DownloadBuilder {
             progress_bar.set_message(download_url.to_string());
 
             while let Some(chunk) = stream.next().await {
-                let chunk = chunk?;
+                let chunk = chunk.expect("download stream chunk error");
 
                 file.write_all(&chunk).await?;
 

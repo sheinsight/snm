@@ -105,7 +105,12 @@ impl ManageTrait for SnmNpm {
         let npm_registry = self.snm_config.get_npm_registry_host();
         let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
 
-        let value: Value = reqwest::get(&download_url).await?.json().await?;
+        let value: Value = reqwest::get(&download_url)
+            .await
+            .expect(format!("download error {}", &download_url).as_str())
+            .json()
+            .await
+            .expect(format!("json error {}", &download_url).as_str());
 
         let x = value
             .get("dist")
