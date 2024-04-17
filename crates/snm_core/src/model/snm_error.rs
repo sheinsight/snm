@@ -6,9 +6,6 @@ pub enum SnmError {
     #[error("Can not find valid node binary , Please use `snm node default [version]` or create .node-version file.")]
     NotFoundDefaultNodeBinary,
 
-    #[error("Package.json bin property unknown type error , The absolute path {file_path}")]
-    PackageJsonBinPropertyUnknownTypeError { file_path: String },
-
     #[error("Package.json bin property not found , The absolute path {file_path}")]
     NotFoundPackageJsonBinProperty { file_path: String },
 
@@ -20,9 +17,6 @@ pub enum SnmError {
 
     #[error("File already exists {file_path}")]
     FileAlreadyExists { file_path: String },
-
-    #[error("File {file_path} not exist")]
-    FileNotExist { file_path: String },
 
     #[error("Unknown error")]
     UnknownError,
@@ -45,20 +39,11 @@ pub enum SnmError {
     #[error("Resource 404 {download_url}")]
     ResourceNotFound { download_url: String },
 
-    #[error("parse package manager config error")]
-    ParsePackageManagerConfigError { raw_value: String },
-
-    #[error("No packageManager config error {file_path}")]
-    NoPackageManagerError { file_path: String },
-
     #[error("Not match packageManager expect {expect} but actual {actual}")]
     NotMatchPackageManager { expect: String, actual: String },
 
     #[error("Multi package manager lock file error")]
     MultiPackageManagerLockFileError { lock_file: Vec<String> },
-
-    #[error("Not found default npm binary")]
-    NotFoundDefaultNpmBinary,
 
     #[error("Not found default package manager {name}")]
     NotFoundDefaultPackageManager { name: String },
@@ -77,70 +62,10 @@ pub enum SnmError {
 
     #[error("Unsupported {name}@{version}")]
     UnsupportedPackageManager { name: String, version: String },
-
-    #[error("Not found valid package manager {name}")]
-    EmptyPackageManagerList { name: String },
-
-    #[error("Not found package manager {name}@{version}")]
-    NotFoundPackageManager { name: String, version: String },
 }
-
-// impl From<serde_json::Error> for SnmError {
-//     fn from(_error: serde_json::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<VarError> for SnmError {
-//     fn from(_error: VarError) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<semver::Error> for SnmError {
-//     fn from(_error: semver::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<regex::Error> for SnmError {
-//     fn from(_error: regex::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<std::io::Error> for SnmError {
-//     fn from(_error: std::io::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<StripPrefixError> for SnmError {
-//     fn from(_error: StripPrefixError) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<reqwest::Error> for SnmError {
-//     fn from(_error: reqwest::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
-
-// impl From<dialoguer::Error> for SnmError {
-//     fn from(_error: dialoguer::Error) -> Self {
-//         SnmError::UnknownError
-//     }
-// }
 
 pub fn handle_snm_error(error: SnmError) {
     match error {
-        SnmError::PackageJsonBinPropertyUnknownTypeError { file_path } => {
-            crate::println_error!(
-                "Package.json bin property unknown type error , The absolute path {}",
-                file_path
-            )
-        }
         SnmError::NotFoundPackageJsonBinProperty { file_path } => {
             crate::println_error!(
                 "Package.json bin property not found , The absolute path {}",
@@ -188,12 +113,7 @@ pub fn handle_snm_error(error: SnmError) {
                 "No Node.js default detected. Set it with {} or specify it in `.node-version` file here.","snm node default [version]".bright_green().bold()
             )
         }
-        SnmError::ParsePackageManagerConfigError { raw_value } => {
-            crate::println_error!("Parse package manager config error: {}", raw_value)
-        }
-        SnmError::NoPackageManagerError { file_path } => {
-            crate::println_error!("No packageManager config error: {}", file_path)
-        }
+
         SnmError::NotMatchPackageManager { expect, actual } => {
             crate::println_error!(
                 "No matching package manager found. You input {} but the current project is configured to use {}.",
@@ -207,12 +127,7 @@ pub fn handle_snm_error(error: SnmError) {
                 lock_file.join(", ").bright_red()
             )
         }
-        SnmError::NotFoundDefaultNpmBinary => {
-            crate::println_error!(
-                "No npm default detected. Please configure package.json -> packageManager or use {} to set the default version.",
-                "snm npm default [version]".bright_green().bold()
-            )
-        }
+
         SnmError::NotFoundPackageJsonFileError {
             package_json_file_path,
         } => {
@@ -227,9 +142,7 @@ pub fn handle_snm_error(error: SnmError) {
                 file_path
             )
         }
-        SnmError::FileNotExist { file_path } => {
-            crate::println_error!("File {} not exist", file_path)
-        }
+
         SnmError::UnsupportedPlatform { os, arch } => {
             crate::println_error!("{}-{} not supported", os, arch)
         }
@@ -245,25 +158,12 @@ pub fn handle_snm_error(error: SnmError) {
                 format!("{}@{}", name, version).bright_red(),
             )
         }
-        SnmError::EmptyPackageManagerList { name: _ } => {
-            crate::println_error!(
-                "No package manager found. Please use {} to get the latest version.",
-                "snm npm list-remote".bright_green().bold()
-            )
-        }
+
         SnmError::NotFoundDefaultPackageManager { name } => {
             crate::println_error!(
                 "No {} default detected. Please configure package.json -> packageManager or use {} to set the default version.",
                 name.bright_green().bold(),
                 format!("snm {} default [version]", name).bright_green().bold()
-            )
-        }
-        SnmError::NotFoundPackageManager { name, version } => {
-            crate::println_error!(
-                "No {}@{} found. Please use {} to get the latest version.",
-                name.bright_green().bold(),
-                version.bright_green().bold(),
-                format!("snm {} list-remote", name).bright_green().bold()
             )
         }
     }
