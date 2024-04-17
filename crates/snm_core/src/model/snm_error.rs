@@ -1,31 +1,24 @@
+use std::path::PathBuf;
+
 use colored::*;
 use thiserror::Error;
 
+use crate::println_error;
+
 #[derive(Error, Debug)]
 pub enum SnmError {
-    #[error("Can not find valid node binary , Please use `snm node default [version]` or create .node-version file.")]
-    NotFoundDefaultNodeBinary,
-
-    #[error("Package.json bin property not found , The absolute path {file_path}")]
-    NotFoundPackageJsonBinProperty { file_path: String },
-
-    #[error("Not found package.json file here {package_json_file_path}")]
-    NotFoundPackageJsonFileError { package_json_file_path: String },
-
     #[error("Download failed , The URL {download_url}")]
     DownloadFailed { download_url: String },
 
     #[error("File already exists {file_path}")]
     FileAlreadyExists { file_path: String },
 
-    #[error("Unknown error")]
-    UnknownError,
+    // 静默退出
+    #[error("Silent exit")]
+    SilentExit,
 
     #[error("Not found valid node version")]
     EmptyNodeList,
-
-    #[error("Not found sha256 for node {0}")]
-    NotFoundSha256ForNode(String),
 
     #[error(
         "File {file_path} Sha256 verification failed, expected {expect} but received {actual}."
@@ -45,17 +38,35 @@ pub enum SnmError {
     #[error("Multi package manager lock file error")]
     MultiPackageManagerLockFileError { lock_file: Vec<String> },
 
+    #[error("Can not find valid node binary , Please use `snm node default [version]` or create .node-version file.")]
+    NotFoundDefaultNodeBinary,
+
+    #[error("Package.json bin property not found , The absolute path {file_path}")]
+    NotFoundPackageJsonBinProperty { file_path: String },
+
+    #[error("Not found package.json file here {package_json_file_path}")]
+    NotFoundPackageJsonFileError { package_json_file_path: String },
+
+    #[error("Not found sha256 for node {0}")]
+    NotFoundSha256ForNode(String),
+
     #[error("Not found default package manager {name}")]
     NotFoundDefaultPackageManager { name: String },
 
     #[error("Not found .node-version file")]
     NotFoundNodeVersionFileError { file_path: String },
 
-    #[error("Unsupported platform {os} {arch}")]
-    UnsupportedPlatform { os: String, arch: String },
+    #[error("Not found binary {bin_name} {file_path}")]
+    NotFoundBinaryFromPackageJsonBinProperty {
+        bin_name: String,
+        file_path: PathBuf,
+    },
 
     #[error("Unknown install strategy")]
     UnknownInstallStrategy,
+
+    #[error("Unsupported platform {os} {arch}")]
+    UnsupportedPlatform { os: String, arch: String },
 
     #[error("UnSupportNodeVersion {version}")]
     UnsupportedNodeVersion { version: String },
@@ -78,9 +89,7 @@ pub fn handle_snm_error(error: SnmError) {
         SnmError::FileAlreadyExists { file_path } => {
             crate::println_error!("File already exists {}", file_path)
         }
-        SnmError::UnknownError => {
-            crate::println_error!("Unknown Error")
-        }
+
         SnmError::EmptyNodeList => {
             crate::println_error!(
                 "Node list is empty, please use {} to get the latest version.",
@@ -166,6 +175,13 @@ pub fn handle_snm_error(error: SnmError) {
                 format!("snm {} default [version]", name).bright_green().bold()
             )
         }
+        SnmError::NotFoundBinaryFromPackageJsonBinProperty {
+            bin_name,
+            file_path,
+        } => {
+            println_error!("Not found binary {} {:?}", bin_name, file_path)
+        }
+        SnmError::SilentExit => {}
     }
     std::process::exit(1);
 }

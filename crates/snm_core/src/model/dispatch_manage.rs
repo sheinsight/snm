@@ -45,7 +45,7 @@ impl DispatchManage {
             if shim_trait.download_condition(&version)? {
                 self.download(&version).await?;
             } else {
-                return Err(SnmError::UnknownError);
+                return Err(SnmError::SilentExit);
             }
         }
 
@@ -66,7 +66,7 @@ impl DispatchManage {
                 if shim_trait.download_condition(&version)? {
                     self.download(&version).await?;
                 } else {
-                    return Err(SnmError::UnknownError);
+                    return Err(SnmError::SilentExit);
                 }
             }
 
