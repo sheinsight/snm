@@ -155,11 +155,11 @@ impl From<reqwest::Error> for SnmError {
     }
 }
 
-impl From<dialoguer::Error> for SnmError {
-    fn from(_error: dialoguer::Error) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<dialoguer::Error> for SnmError {
+//     fn from(_error: dialoguer::Error) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 pub fn handle_snm_error(error: SnmError) {
     match error {

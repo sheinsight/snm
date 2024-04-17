@@ -49,7 +49,8 @@ pub fn bump_impl() -> Result<(), SnmError> {
         ))
         .default(0)
         .items(&selections[..])
-        .interact()?;
+        .interact()
+        .expect("bump_impl Select error");
 
     let dir = current_dir()?;
 

@@ -440,7 +440,8 @@ impl ShimTrait for SnmNode {
                     "🤔 {} is not installed, do you want to install it ?",
                     &version
                 ))
-                .interact()?),
+                .interact()
+                .expect("download_condition Confirm error")),
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::UnsupportedNodeVersion {
                     version: version.to_string(),

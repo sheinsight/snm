@@ -105,7 +105,8 @@ impl DispatchManage {
                 "🤔 v{} is already installed, do you want to reinstall it ?",
                 &v
             ))
-            .interact()?
+            .interact()
+            .expect("install Confirm error")
             .not()
         {
             return Ok(());
@@ -131,7 +132,8 @@ impl DispatchManage {
                         "🤔 {} is default instance, do you want to uninstall it ?",
                         &d_v
                     ))
-                    .interact()?
+                    .interact()
+                    .expect("un_install Confirm error")
                 {
                     let default_path_buf = self
                         .manager
@@ -161,7 +163,8 @@ impl DispatchManage {
                     "🤔 v{} is not installed, do you want to install it ?",
                     &v
                 ))
-                .interact()?
+                .interact()
+                .expect("set_default Confirm error")
             {
                 self.install(&v).await?;
             } else {

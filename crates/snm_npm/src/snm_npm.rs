@@ -203,7 +203,11 @@ impl ShimTrait for SnmNpm {
                     "🤔 {} is not installed, do you want to install it ?",
                     &version
                 ))
-                .interact()?),
+                .interact()
+                .expect(
+                    "
+                download Confirm error",
+                )),
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::UnsupportedPackageManager {
                     name: self.prefix.to_string(),
