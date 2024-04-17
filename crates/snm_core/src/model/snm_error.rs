@@ -3,32 +3,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum SnmError {
-    #[error("Read dir failed {dir_path}")]
-    ReadDirFailed { dir_path: String },
-
-    #[error("can not find use home dir")]
-    GetHomeDirError,
-
-    #[error("can not find node binary dir config")]
-    NotFoundBinDirConfig,
-
-    #[error("Can not find download dir config")]
-    NotFoundDownloadDirConfig,
-
-    #[error("can not find node_modules dir config")]
-    NotFoundNodeModulesDirConfig,
-
     #[error("Can not find valid node binary , Please use `snm node default [version]` or create .node-version file.")]
     NotFoundDefaultNodeBinary,
-
-    #[error("Create dir failed {dir_path}")]
-    CreateDirFailed { dir_path: String },
-
-    #[error("Parse json error {file_path}")]
-    SerdeJsonError { file_path: String },
-
-    #[error("Read file to string error {file_path}")]
-    ReadFileToStringError { file_path: String },
 
     #[error("Package.json bin property unknown type error , The absolute path {file_path}")]
     PackageJsonBinPropertyUnknownTypeError { file_path: String },
@@ -65,9 +41,6 @@ pub enum SnmError {
         expect: String,
         actual: String,
     },
-
-    #[error("User refuse to install node")]
-    RefuseToInstallNode,
 
     #[error("Resource 404 {download_url}")]
     ResourceNotFound { download_url: String },
@@ -162,15 +135,6 @@ pub enum SnmError {
 
 pub fn handle_snm_error(error: SnmError) {
     match error {
-        SnmError::CreateDirFailed { dir_path } => {
-            crate::println_error!("Create dir failed {}", dir_path)
-        }
-        SnmError::SerdeJsonError { file_path } => {
-            crate::println_error!("Parse json error {}", file_path)
-        }
-        SnmError::ReadFileToStringError { file_path } => {
-            crate::println_error!("Read file to string error {}", file_path)
-        }
         SnmError::PackageJsonBinPropertyUnknownTypeError { file_path } => {
             crate::println_error!(
                 "Package.json bin property unknown type error , The absolute path {}",
@@ -202,7 +166,7 @@ pub fn handle_snm_error(error: SnmError) {
         SnmError::NotFoundSha256ForNode(_) => {
             crate::println_error!("NotFoundSha256ForNode")
         }
-        SnmError::RefuseToInstallNode => todo!("RefuseToInstallNode"),
+
         SnmError::ResourceNotFound { download_url } => {
             crate::println_error!("Resource 404: {}", download_url.bright_red())
         }
@@ -218,30 +182,7 @@ pub fn handle_snm_error(error: SnmError) {
                 actual
             )
         }
-        SnmError::ReadDirFailed { dir_path } => {
-            crate::println_error!("Read dir failed {}", dir_path)
-        }
-        SnmError::GetHomeDirError => {
-            crate::println_error!("Unable to retrieve user directory correctly ! ")
-        }
-        SnmError::NotFoundBinDirConfig => {
-            crate::println_error!(
-                "Unable to get the {} environment variable.",
-                "SNM_NODE_BIN_DIR".bright_red()
-            )
-        }
-        SnmError::NotFoundDownloadDirConfig => {
-            crate::println_error!(
-                "Unable to get the {} environment variable.",
-                "SNM_DOWNLOAD_DIR".bright_red()
-            )
-        }
-        SnmError::NotFoundNodeModulesDirConfig => {
-            crate::println_error!(
-                "Unable to get the {} environment variable.",
-                "SNM_NODE_MODULES_DIR".bright_red()
-            )
-        }
+
         SnmError::NotFoundDefaultNodeBinary => {
             crate::println_error!(
                 "No Node.js default detected. Set it with {} or specify it in `.node-version` file here.","snm node default [version]".bright_green().bold()
