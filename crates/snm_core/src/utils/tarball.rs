@@ -27,7 +27,9 @@ where
     let old_base = get_target_dir(output_path);
 
     let transform = |f: &PathBuf| -> Result<PathBuf, SnmError> {
-        let new_path = f.strip_prefix(&old_base)?;
+        let new_path = f
+            .strip_prefix(&old_base)
+            .expect("decompress_tgz strip_prefix error");
         Ok(output_path.join(new_path))
     };
 
@@ -101,7 +103,9 @@ where
 
     let transform = |f: &PathBuf| -> Result<PathBuf, SnmError> {
         let old_base = output_path.join(dir.as_ref().unwrap());
-        let new_path = f.strip_prefix(&old_base)?;
+        let new_path = f
+            .strip_prefix(&old_base)
+            .expect("decompress_xz strip_prefix error");
         Ok(output_path.join(new_path))
     };
 

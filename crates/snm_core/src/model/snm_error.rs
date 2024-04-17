@@ -143,11 +143,11 @@ impl From<std::io::Error> for SnmError {
     }
 }
 
-impl From<StripPrefixError> for SnmError {
-    fn from(_error: StripPrefixError) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<StripPrefixError> for SnmError {
+//     fn from(_error: StripPrefixError) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 impl From<reqwest::Error> for SnmError {
     fn from(_error: reqwest::Error) -> Self {
