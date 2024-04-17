@@ -45,7 +45,7 @@ impl PackageJson {
         let pkg_file_path = wk.join("package.json");
 
         if pkg_file_path.exists() {
-            let mut pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
+            let mut pkg = read_to_json::<PackageJson>(&pkg_file_path);
 
             pkg._raw_file_path = Some(pkg_file_path);
             pkg._raw_workspace = Some(wk);
@@ -58,7 +58,7 @@ impl PackageJson {
     }
 
     pub fn from_file_path(file_path: &PathBuf) -> Result<Self, SnmError> {
-        let mut pkg = read_to_json::<PackageJson>(&file_path)?;
+        let mut pkg = read_to_json::<PackageJson>(&file_path);
         pkg._raw_file_path = Some(file_path.to_path_buf());
 
         pkg._raw_workspace = file_path.parent().map(|x| x.to_path_buf());
@@ -124,8 +124,9 @@ impl PackageJson {
     }
 }
 
-fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> Result<T, SnmError> {
-    let content = read_to_string(&file_path)?;
-    let object = serde_json::from_str::<T>(&content)?;
-    Ok(object)
+fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> T {
+    let content =
+        read_to_string(&file_path).expect(format!("read {:?} error", &file_path).as_str());
+    serde_json::from_str::<T>(&content)
+        .expect(format!("parse {:?} json error", &file_path).as_str())
 }
