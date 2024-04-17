@@ -131,11 +131,11 @@ impl From<semver::Error> for SnmError {
     }
 }
 
-impl From<regex::Error> for SnmError {
-    fn from(_error: regex::Error) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<regex::Error> for SnmError {
+//     fn from(_error: regex::Error) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 impl From<std::io::Error> for SnmError {
     fn from(_error: std::io::Error) -> Self {

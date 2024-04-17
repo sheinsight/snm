@@ -69,7 +69,7 @@ impl PackageJson {
         if let Some(raw_package_manager) = &self.package_manager {
             let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
 
-            let regex = Regex::new(regex_str)?;
+            let regex = Regex::new(regex_str).expect("create regex error");
 
             let map_to_struct = |caps: Captures| PackageManager {
                 raw: raw_package_manager.clone(),
@@ -84,17 +84,12 @@ impl PackageJson {
             let res = regex
                 .captures(raw_package_manager.as_str())
                 .map(map_to_struct)
-                .ok_or(SnmError::UnknownError)?;
+                .expect("parse_package_manager error");
 
             return Ok(res);
         }
         return Err(SnmError::NotFoundPackageJsonBinProperty {
-            file_path: self
-                ._raw_file_path
-                .clone()
-                .ok_or(SnmError::UnknownError)?
-                .display()
-                .to_string(),
+            file_path: self._raw_file_path.clone().unwrap().display().to_string(),
         });
     }
 

@@ -56,7 +56,7 @@ pub fn bump_impl() -> Result<(), SnmError> {
 
     let c = fs::read_to_string(dir.join("package.json"))?;
 
-    let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#)?;
+    let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#).expect("create regex error");
     let replacement = format!(
         r#""version": "{}""#,
         versions_and_strings[selection].0.to_string()
