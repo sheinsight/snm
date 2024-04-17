@@ -49,7 +49,7 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
 
         process_args.append(&mut args.package_spec.clone());
 
-        process_args.append(&mut vec!["-n".to_string()]);
+        process_args.append(&mut vec!["-y".to_string()]);
 
         Ok(process_args)
     }
