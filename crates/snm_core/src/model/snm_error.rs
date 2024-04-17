@@ -119,11 +119,11 @@ impl From<serde_json::Error> for SnmError {
     }
 }
 
-impl From<VarError> for SnmError {
-    fn from(_error: VarError) -> Self {
-        SnmError::UnknownError
-    }
-}
+// impl From<VarError> for SnmError {
+//     fn from(_error: VarError) -> Self {
+//         SnmError::UnknownError
+//     }
+// }
 
 impl From<semver::Error> for SnmError {
     fn from(_error: semver::Error) -> Self {
