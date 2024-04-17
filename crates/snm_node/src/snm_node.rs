@@ -438,8 +438,12 @@ impl ShimTrait for SnmNode {
         Ok(version)
     }
 
-    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version)?;
         Ok(node_binary_path_buf)
     }
 
@@ -461,8 +465,15 @@ impl ShimTrait for SnmNode {
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.get_runtime_dir_path_buf(v)?.join("bin").join("node"))
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        Ok(self
+            .get_runtime_dir_path_buf(&version)?
+            .join("bin")
+            .join(bin_name))
     }
 
     fn check_default_version(

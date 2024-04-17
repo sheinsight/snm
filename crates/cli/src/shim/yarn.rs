@@ -1,12 +1,17 @@
 mod shim;
 
+use std::env::current_dir;
+
 use crate::shim::launch_shim;
 use semver::Version;
 use shim::check;
 use snm_core::model::{
-    snm_error::handle_snm_error, trait_manage::ManageTrait, trait_shim::ShimTrait, SnmError,
+    package_json, snm_error::handle_snm_error, trait_manage::ManageTrait, trait_shim::ShimTrait,
+    PackageJson, SnmError,
 };
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
+
+const BIN_NAME: &str = "yarn";
 
 #[tokio::main]
 async fn main() {
@@ -23,19 +28,25 @@ async fn main() {
 }
 
 async fn exec() -> Result<(), SnmError> {
-    let x: Box<dyn ShimTrait> = Box::new(SnmYarn::new());
+    let package_json_path_buf = current_dir()
+        .expect("get current_dir failed")
+        .join("package.json");
+    if package_json_path_buf.exists() {
+        let x: Box<dyn ShimTrait> = Box::new(SnmYarn::new());
+        let v = x.get_strict_shim_version()?;
 
-    let v = x.get_strict_shim_version()?;
+        let less = get_is_less_2(v.as_str())?;
 
-    let less = get_is_less_2(v.as_str())?;
+        let instance: Box<dyn ManageTrait> = if less {
+            Box::new(SnmYarn::new())
+        } else {
+            Box::new(SnmYarnPkg::new())
+        };
 
-    let instance: Box<dyn ManageTrait> = if less {
-        Box::new(SnmYarn::new())
+        launch_shim(instance, BIN_NAME).await;
     } else {
-        Box::new(SnmYarnPkg::new())
-    };
-
-    launch_shim(instance).await;
+        unimplemented!("yarn unimpl")
+    }
 
     Ok(())
 }

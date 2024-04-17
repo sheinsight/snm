@@ -196,8 +196,12 @@ impl ShimTrait for SnmNpm {
         Ok(version)
     }
 
-    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version)?;
         Ok(node_binary_path_buf)
     }
 
@@ -223,17 +227,21 @@ impl ShimTrait for SnmNpm {
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
         let package_json_buf_path = self
             .snm_config
             .get_node_modules_dir_path_buf()?
             .join(self.prefix.to_string())
-            .join(&v)
+            .join(&version)
             .join("package.json");
 
         let mut hashmap = PackageJson::from_file_path(&package_json_buf_path)?.bin_to_hashmap()?;
 
-        if let Some(bin) = hashmap.remove(&self.prefix) {
+        if let Some(bin) = hashmap.remove(bin_name) {
             return Ok(bin);
         } else {
             return Err(SnmError::UnknownError);

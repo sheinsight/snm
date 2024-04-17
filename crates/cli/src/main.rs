@@ -227,14 +227,14 @@ async fn get_bin() -> Result<((String, String), PathBuf), SnmError> {
         let package_manager = package_json.parse_package_manager()?;
         let manager = get_manage(&package_manager).await?;
         let dispatcher = DispatchManage::new(manager);
-        let (_, bin_path_buf) = dispatcher.proxy_process().await?;
+        let (_, bin_path_buf) = dispatcher.proxy_process(&package_manager.name).await?;
         return Ok((
             (package_manager.name, package_manager.version),
             bin_path_buf,
         ));
     } else {
         let dispatcher = DispatchManage::new(Box::new(SnmPnpm::new()));
-        let (version, bin_path_buf) = dispatcher.proxy_process().await?;
+        let (version, bin_path_buf) = dispatcher.proxy_process("pnpm").await?;
         return Ok((("pnpm".to_string(), version), bin_path_buf));
     }
 }

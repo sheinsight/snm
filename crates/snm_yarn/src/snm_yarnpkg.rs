@@ -126,8 +126,12 @@ impl ShimTrait for SnmYarnPkg {
         Ok(version)
     }
 
-    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version)?;
         set_exec_permission(&node_binary_path_buf)?;
         Ok(node_binary_path_buf)
     }
@@ -151,13 +155,17 @@ impl ShimTrait for SnmYarnPkg {
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
             .get_node_modules_dir_path_buf()?
             .join(self.prefix.to_string())
-            .join(&v)
-            .join("yarn.js"))
+            .join(&version)
+            .join(bin_name))
     }
 
     fn check_default_version(

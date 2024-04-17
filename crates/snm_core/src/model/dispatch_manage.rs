@@ -31,7 +31,10 @@ impl DispatchManage {
 
 // 分配
 impl DispatchManage {
-    pub async fn ensure_strict_package_manager(&self) -> Result<(String, PathBuf), SnmError> {
+    pub async fn ensure_strict_package_manager(
+        &self,
+        bin_name: &str,
+    ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
 
         let version = shim_trait.get_strict_shim_version()?;
@@ -46,13 +49,14 @@ impl DispatchManage {
             }
         }
 
-        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version)?;
+        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
 
         return Ok((version.to_string(), binary_path_buf));
     }
 
-    pub async fn proxy_process(&self) -> Result<(String, PathBuf), SnmError> {
+    pub async fn proxy_process(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
+
         if self.snm_config.get_strict() {
             let version = shim_trait.get_strict_shim_version()?;
 
@@ -66,7 +70,7 @@ impl DispatchManage {
                 }
             }
 
-            let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version)?;
+            let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version, bin_name)?;
 
             return Ok((version, binary_path_buf));
         } else {
@@ -74,7 +78,7 @@ impl DispatchManage {
 
             let v = shim_trait.check_default_version(&tuple)?;
 
-            let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&v)?;
+            let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
 
             return Ok((v, binary_path_buf));
         }
