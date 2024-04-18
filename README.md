@@ -1,6 +1,14 @@
 # snm
 
 
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash
+```
+
+
 RUST_BACKTRACE=1 cargo run -p cli --bin main -- node default 21.4.0
 
 RUST_BACKTRACE=1 cargo run -p cli --bin main -- node list
