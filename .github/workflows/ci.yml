@@ -61,7 +61,7 @@ jobs:
         shell: pwsh
         run: |
           mkdir archive
-          cp target/${{ matrix.target }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe,snm.exe} archive/
+          Copy-Item -Path target/${{ matrix.target }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe,snm.exe} -Destination archive/
           Compress-Archive -Path archive/* -DestinationPath ${{ matrix.archive-name }}
         
       - name: Build archive (Linux and macOS)
