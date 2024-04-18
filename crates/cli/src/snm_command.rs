@@ -2,7 +2,9 @@ use clap::Subcommand;
 
 use crate::{
     manage_command::ManageCommands,
-    ni::trait_transform_args::{AddCommandArgs, DeleteCommandArgs, InstallCommandArgs},
+    ni::trait_transform_args::{
+        AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
+    },
 };
 
 #[derive(Subcommand, Debug)]
@@ -37,6 +39,12 @@ pub enum SnmCommands {
     Delete(DeleteCommandArgs),
     #[command(about = "bump version.")]
     Bump,
+    #[command(
+        about = "Fetches a package from the registry without installing it as a dependency, hotloads it, and runs whatever default command binary it exposes.."
+    )]
+    Dlx(DlxCommandArgs),
+    #[command(about = "Run a command from a local package.")]
+    Exec(ExecCommandArgs),
 
     Query,
     #[command(about = "write fig spec to autocomplete build directory.")]

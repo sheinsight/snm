@@ -53,7 +53,7 @@ jobs:
       - name: Strip binary (linux and macos)
         if: matrix.build == 'linux' || matrix.build == 'macos'
         run:  |
-          for file in snm snx node npm pnpm yarn; do
+          for file in snm node npm npx pnpm pnpx yarn; do
             strip "target/${{ matrix.target }}/release/$file"
           done
       - name: Build archive
@@ -61,44 +61,22 @@ jobs:
         run: |
           mkdir archive
           if [ "${{ matrix.build }}" = "windows" ]; then
-            cp LICENSE README.md target/${{ matrix.target }}/release/{node.exe,npm.exe,pnpm.exe,yarn.exe,snm.exe,snx.exe} archive/
+            cp LICENSE README.md target/${{ matrix.target }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe,snm.exe} archive/
             7z a ${{ matrix.archive-name }}.7z archive/*
           else
-            cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,pnpm,yarn,snm,snx} archive/
-            tar -czf ${{ matrix.archive-name }}.tar.gz -C archive  LICENSE README.md node npm pnpm yarn snm snx
+            cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,pnpm,yarn,snm} archive/
+            tar -czf ${{ matrix.archive-name }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx yarn snm
           fi
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.archive-name }}
           path: archive/${{ matrix.archive-name }}
-  release:
-    name: release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all archives
-        uses: actions/download-artifact@v2
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
         with:
-          path: archive
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
+          files: archive/${{ matrix.archive-name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Asset
-        run: |
-          for filename in ./archive/*; do
-            [ -e "$filename" ] || continue
-            echo "Uploading $filename"
-            curl \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type $filename)" \
-              --data-binary @$filename \
-              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $filename)"
-          done
+        if: startsWith(github.ref, 'refs/tags/v')
+   

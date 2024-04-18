@@ -5,7 +5,7 @@ use crate::model::SnmError;
 pub static LOCK_FILE_VEC: [&'static str; 3] = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"];
 
 pub fn check_multi_lock_file() -> Result<Vec<String>, SnmError> {
-    let dir = current_dir()?;
+    let dir = current_dir().expect("get current dir error.");
 
     let exists_vec = LOCK_FILE_VEC
         .iter()

@@ -1,0 +1,362 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'snm'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=snm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "snm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'snm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=snm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "snm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'npm'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=npm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "npm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'npm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=npm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "npm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'npx'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=npx",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "npx",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'npx'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=npx",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "npx",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'pnpm'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=pnpm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "pnpm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'pnpm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=pnpm",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "pnpm",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'pnpx'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=pnpx",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "pnpx",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'pnpx'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=pnpx",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "pnpx",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'yarn'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=yarn",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "yarn",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'yarn'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=yarn",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "yarn",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'node'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=node",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "node",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'node'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=node",
+                    "--package=cli"
+                ],
+                "filter": {
+                    "name": "node",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'snm_core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=snm_core"
+                ],
+                "filter": {
+                    "name": "snm_core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'snm_node'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=snm_node"
+                ],
+                "filter": {
+                    "name": "snm_node",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'snm_npm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=snm_npm"
+                ],
+                "filter": {
+                    "name": "snm_npm",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'snm_pnpm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=snm_pnpm"
+                ],
+                "filter": {
+                    "name": "snm_pnpm",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'snm_yarn'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=snm_yarn"
+                ],
+                "filter": {
+                    "name": "snm_yarn",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

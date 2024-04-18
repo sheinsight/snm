@@ -14,16 +14,20 @@ name = "snm"
 path = "src/main.rs"
 
 [[bin]]
-name = "snx"
-path = "src/shim/snx.rs"
-
-[[bin]]
 name = "npm"
 path = "src/shim/npm.rs"
 
 [[bin]]
+name = "npx"
+path = "src/shim/npx.rs"
+
+[[bin]]
 name = "pnpm"
 path = "src/shim/pnpm.rs"
+
+[[bin]]
+name = "pnpx"
+path = "src/shim/pnpx.rs"
 
 [[bin]]
 name = "yarn"

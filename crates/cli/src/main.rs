@@ -1,5 +1,5 @@
 use bump::bump_impl;
-use clap::{command, CommandFactory, Parser};
+use clap::{command, Parser};
 use colored::*;
 use fig::fig_spec_impl;
 use manage_command::ManageCommands;
@@ -25,8 +25,7 @@ use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
-    fs,
-    ops::Not,
+    env::current_dir,
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -199,7 +198,7 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Delete(args) => {
             execute_command(|creator| creator.get_delete_command(args)).await?;
         }
-        SnmCommands::Query => todo!(),
+        SnmCommands::Query => todo!(""),
         // snm command end
         SnmCommands::FigSpec => {
             fig_spec_impl()?;
@@ -207,30 +206,47 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Bump => {
             bump_impl()?;
         }
+        SnmCommands::Dlx(args) => {
+            execute_command(|creator| creator.get_dlx_command(args)).await?;
+        }
+        SnmCommands::Exec(args) => {
+            execute_command(|creator| creator.get_exec_command(args)).await?;
+        }
     }
     Ok(())
 }
 
-async fn get_bin() -> Result<(PackageManager, PathBuf), SnmError> {
-    let package_manager = PackageJson::from_dir_path(None)?.parse_package_manager()?;
-    let manager = get_manage(&package_manager).await?;
-    let dispatcher = DispatchManage::new(manager);
-    let (_, bin_path_buf) = dispatcher.ensure_strict_package_manager().await?;
-    Ok((package_manager, bin_path_buf))
+async fn get_bin() -> Result<((String, String), PathBuf), SnmError> {
+    let dir = current_dir().expect("get current dir failed");
+    let package_json_path_buf = dir.join("package.json");
+    if package_json_path_buf.exists() {
+        let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf)?;
+        let package_manager = package_json.parse_package_manager()?;
+        let manager = get_manage(&package_manager).await?;
+        let dispatcher = DispatchManage::new(manager);
+        let (_, bin_path_buf) = dispatcher.proxy_process(&package_manager.name).await?;
+        return Ok((
+            (package_manager.name, package_manager.version),
+            bin_path_buf,
+        ));
+    } else {
+        let dispatcher = DispatchManage::new(Box::new(SnmPnpm::new()));
+        let (version, bin_path_buf) = dispatcher.proxy_process("pnpm").await?;
+        return Ok((("pnpm".to_string(), version), bin_path_buf));
+    }
 }
 
 async fn execute_command<F>(get_command_args: F) -> Result<(), SnmError>
 where
     F: FnOnce(&dyn CommandArgsCreatorTrait) -> Result<Vec<String>, SnmError>,
 {
-    let (package_manager, bin_path_buf) = get_bin().await?;
+    let ((name, version), bin_path_buf) = get_bin().await?;
 
-    let command_args_creator: Box<dyn CommandArgsCreatorTrait> = match package_manager.name.as_str()
-    {
+    let command_args_creator: Box<dyn CommandArgsCreatorTrait> = match name.as_str() {
         "npm" => Box::new(NpmArgsTransform {}),
         "pnpm" => Box::new(PnpmArgsTransform {}),
         "yarn" => {
-            if get_is_less_2(&package_manager.version)? {
+            if get_is_less_2(&version)? {
                 Box::new(YarnArgsTransform {})
             } else {
                 Box::new(YarnPkgArgsTransform {})
@@ -243,7 +259,7 @@ where
 
     println_success!(
         "Use {}. {}",
-        format!("{:<8}", package_manager.version).bright_green(),
+        format!("{:<8}", &version).bright_green(),
         format!("by {}", bin_path_buf.display()).bright_black()
     );
 
@@ -253,7 +269,8 @@ where
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())
         .spawn()
-        .and_then(|process| process.wait_with_output())?;
+        .and_then(|process| process.wait_with_output())
+        .expect("spawn error");
     Ok(())
 }
 
@@ -282,7 +299,7 @@ async fn get_manage(package_manager: &PackageManager) -> Result<Box<dyn ManageTr
 }
 
 fn get_is_less_2(v: &str) -> Result<bool, SnmError> {
-    let ver = Version::parse(v)?;
-    let is_less_2 = ver < Version::parse("2.0.0")?;
+    let ver = Version::parse(v).expect(format!("parse version error {}", &v).as_str());
+    let is_less_2 = ver < Version::parse("2.0.0").expect("parse version error 2.0.0");
     Ok(is_less_2)
 }

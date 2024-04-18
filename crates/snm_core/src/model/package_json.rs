@@ -35,17 +35,34 @@ pub enum Bin {
 }
 
 impl PackageJson {
+    pub fn from_here() -> Result<Self, SnmError> {
+        let workspace = std::env::current_dir().expect("get current dir error.");
+        let package_json_file_path = workspace.join("package.json");
+
+        if package_json_file_path.exists() {
+            let mut pkg = read_to_json::<PackageJson>(&package_json_file_path);
+
+            pkg._raw_file_path = Some(package_json_file_path);
+            pkg._raw_workspace = Some(workspace);
+            Ok(pkg)
+        } else {
+            Err(SnmError::NotFoundPackageJsonFileError {
+                file_path: package_json_file_path,
+            })
+        }
+    }
+
     pub fn from_dir_path(workspace: Option<PathBuf>) -> Result<Self, SnmError> {
         let wk = if let Some(wk) = workspace {
             wk
         } else {
-            std::env::current_dir()?
+            std::env::current_dir().expect("get current dir error.")
         };
 
         let pkg_file_path = wk.join("package.json");
 
         if pkg_file_path.exists() {
-            let mut pkg = read_to_json::<PackageJson>(&pkg_file_path)?;
+            let mut pkg = read_to_json::<PackageJson>(&pkg_file_path);
 
             pkg._raw_file_path = Some(pkg_file_path);
             pkg._raw_workspace = Some(wk);
@@ -53,12 +70,12 @@ impl PackageJson {
         }
 
         return Err(SnmError::NotFoundPackageJsonFileError {
-            package_json_file_path: pkg_file_path.display().to_string(),
+            file_path: pkg_file_path,
         });
     }
 
     pub fn from_file_path(file_path: &PathBuf) -> Result<Self, SnmError> {
-        let mut pkg = read_to_json::<PackageJson>(&file_path)?;
+        let mut pkg = read_to_json::<PackageJson>(&file_path);
         pkg._raw_file_path = Some(file_path.to_path_buf());
 
         pkg._raw_workspace = file_path.parent().map(|x| x.to_path_buf());
@@ -69,7 +86,7 @@ impl PackageJson {
         if let Some(raw_package_manager) = &self.package_manager {
             let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
 
-            let regex = Regex::new(regex_str)?;
+            let regex = Regex::new(regex_str).expect("create regex error");
 
             let map_to_struct = |caps: Captures| PackageManager {
                 raw: raw_package_manager.clone(),
@@ -84,17 +101,12 @@ impl PackageJson {
             let res = regex
                 .captures(raw_package_manager.as_str())
                 .map(map_to_struct)
-                .ok_or(SnmError::UnknownError)?;
+                .expect("parse_package_manager error");
 
             return Ok(res);
         }
         return Err(SnmError::NotFoundPackageJsonBinProperty {
-            file_path: self
-                ._raw_file_path
-                .clone()
-                .ok_or(SnmError::UnknownError)?
-                .display()
-                .to_string(),
+            file_path: self._raw_file_path.clone().unwrap().display().to_string(),
         });
     }
 
@@ -129,8 +141,9 @@ impl PackageJson {
     }
 }
 
-fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> Result<T, SnmError> {
-    let content = read_to_string(&file_path)?;
-    let object = serde_json::from_str::<T>(&content)?;
-    Ok(object)
+fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> T {
+    let content =
+        read_to_string(&file_path).expect(format!("read {:?} error", &file_path).as_str());
+    serde_json::from_str::<T>(&content)
+        .expect(format!("parse {:?} json error", &file_path).as_str())
 }

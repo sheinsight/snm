@@ -27,44 +27,40 @@ impl SnmYarnPkg {
 }
 
 impl SharedBehaviorTrait for SnmYarnPkg {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .snm_config
-            .get_node_modules_dir_path_buf()?
+    fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_config
+            .get_node_modules_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
-            .join("yarn.js"))
+            .join("yarn.js")
     }
 }
 
 #[async_trait(?Send)]
 impl ManageTrait for SnmYarnPkg {
-    fn get_download_url(&self, v: &str) -> Result<String, SnmError> {
+    fn get_download_url(&self, v: &str) -> String {
         let npm_repo = self.snm_config.get_yarn_repo_host();
-        return Ok(format!(
-            "{}/{}/packages/yarnpkg-cli/bin/yarn.js",
-            npm_repo, v
-        ));
+        format!("{}/{}/packages/yarnpkg-cli/bin/yarn.js", npm_repo, v)
     }
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.get_downloaded_dir_path_buf(v)?.join("yarn.js"))
+    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
+        self.get_downloaded_dir_path_buf(v).join("yarn.js")
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_npm.get_downloaded_dir_path_buf(v)?)
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_npm.get_downloaded_dir_path_buf(v)
     }
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_npm.get_runtime_dir_path_buf(v)?)
+    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_npm.get_runtime_dir_path_buf(v)
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_npm.get_runtime_dir_for_default_path_buf(v)?)
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
+        self.snm_npm.get_runtime_dir_for_default_path_buf(v)
     }
 
-    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
-        Ok(self.snm_npm.get_runtime_base_dir_path_buf()?)
+    fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
+        self.snm_npm.get_runtime_base_dir_path_buf()
     }
 
     async fn get_expect_shasum(&self, _v: &str) -> Result<String, SnmError> {
@@ -106,16 +102,26 @@ impl ManageTrait for SnmYarnPkg {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
         if output_dir_path_buf.exists().not() {
-            fs::create_dir_all(&output_dir_path_buf)?;
+            fs::create_dir_all(&output_dir_path_buf)
+                .expect(format!("create dir failed: {}", output_dir_path_buf.display()).as_str());
         }
-        fs::copy(&input_file_path_buf, &output_dir_path_buf.join("yarn.js"))?;
+        fs::copy(&input_file_path_buf, &output_dir_path_buf.join("yarn.js")).expect(
+            format!(
+                "copy file failed: {} -> {}",
+                input_file_path_buf.display(),
+                output_dir_path_buf.join("yarn.js").display()
+            )
+            .as_str(),
+        );
         Ok(())
     }
 }
 
 impl ShimTrait for SnmYarnPkg {
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
-        let package_json_path_buf = current_dir()?.join("package.json");
+        let package_json_path_buf = current_dir()
+            .expect("get current dir failed")
+            .join("package.json");
 
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
 
@@ -126,8 +132,12 @@ impl ShimTrait for SnmYarnPkg {
         Ok(version)
     }
 
-    fn get_strict_shim_binary_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&version)?;
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version)?;
         set_exec_permission(&node_binary_path_buf)?;
         Ok(node_binary_path_buf)
     }
@@ -139,7 +149,8 @@ impl ShimTrait for SnmYarnPkg {
                     "🤔 {} is not installed, do you want to install it ?",
                     &version
                 ))
-                .interact()?),
+                .interact()
+                .expect("download Confirm error")),
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::UnsupportedPackageManager {
                     name: self.prefix.to_string(),
@@ -150,13 +161,17 @@ impl ShimTrait for SnmYarnPkg {
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
         Ok(self
             .snm_config
-            .get_node_modules_dir_path_buf()?
+            .get_node_modules_dir_path_buf()
             .join(self.prefix.to_string())
-            .join(&v)
-            .join("yarn.js"))
+            .join(&version)
+            .join(bin_name))
     }
 
     fn check_default_version(
@@ -178,10 +193,11 @@ impl ShimTrait for SnmYarnPkg {
 fn set_exec_permission(bin_path: &PathBuf) -> Result<(), SnmError> {
     use std::os::unix::fs::PermissionsExt;
 
-    let metadata = fs::metadata(&bin_path)?;
+    let metadata = fs::metadata(&bin_path).expect("metadata error");
     let mut permissions = metadata.permissions();
     permissions.set_mode(permissions.mode() | 0o111); // UNIX: 增加所有用户的执行权限
-    fs::set_permissions(&bin_path, permissions)?;
+    fs::set_permissions(&bin_path, permissions)
+        .expect(format!("set permissions failed: {}", bin_path.display()).as_str());
     Ok(())
 }
 

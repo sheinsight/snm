@@ -3,17 +3,17 @@ mod shim;
 use crate::shim::launch_shim;
 use shim::check;
 use snm_core::model::snm_error::handle_snm_error;
-use snm_npm::snm_npm::SnmNpm;
+use snm_pnpm::snm_pnpm::SnmPnpm;
 
-const BIN_NAME: &str = "npm";
+const BIN_NAME: &str = "pnpx";
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
 
-    match check("npm") {
+    match check(BIN_NAME) {
         Ok(_) => {
-            launch_shim(Box::new(SnmNpm::new()), BIN_NAME).await;
+            launch_shim(Box::new(SnmPnpm::new()), BIN_NAME).await;
         }
         Err(error) => handle_snm_error(error),
     }

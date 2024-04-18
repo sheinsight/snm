@@ -1,6 +1,9 @@
 use snm_core::model::SnmError;
 
-use super::trait_transform_args::{AddCommandArgs, CommandArgsCreatorTrait, InstallCommandArgs};
+use super::trait_transform_args::{
+    AddCommandArgs, CommandArgsCreatorTrait, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs,
+    InstallCommandArgs,
+};
 
 pub struct NpmArgsTransform;
 
@@ -25,7 +28,6 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
         } else if args.save_exact {
             process_args.push("--save-exact".to_string());
         } else if args.save_peer {
-            // process_args.push("--save-peer".to_string());
             unimplemented!("save-peer is not supported by npm")
         } else if args.global {
             process_args.push("--global".to_string());
@@ -33,11 +35,28 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
         Ok(process_args)
     }
 
-    fn get_delete_command(
-        &self,
-        args: super::trait_transform_args::DeleteCommandArgs,
-    ) -> Result<Vec<String>, SnmError> {
+    fn get_delete_command(&self, args: DeleteCommandArgs) -> Result<Vec<String>, SnmError> {
         let process_args = vec!["uninstall".to_string(), args.package_spec];
+        Ok(process_args)
+    }
+
+    fn get_dlx_command(&self, args: DlxCommandArgs) -> Result<Vec<String>, SnmError> {
+        let mut process_args = vec!["exec".to_string()];
+
+        process_args.append(&mut args.package_spec.clone());
+
+        process_args.append(&mut vec!["-y".to_string()]);
+
+        Ok(process_args)
+    }
+
+    fn get_exec_command(&self, args: ExecCommandArgs) -> Result<Vec<String>, SnmError> {
+        let mut process_args = vec!["exec".to_string()];
+
+        process_args.append(&mut args.package_spec.clone());
+
+        process_args.append(&mut vec!["-n".to_string()]);
+
         Ok(process_args)
     }
 }

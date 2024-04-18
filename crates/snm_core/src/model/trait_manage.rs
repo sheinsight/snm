@@ -8,17 +8,17 @@ use super::{trait_shared_behavior::SharedBehaviorTrait, trait_shim::ShimTrait, S
 pub trait ManageTrait: SharedBehaviorTrait {
     fn get_shim_trait(&self) -> Box<dyn ShimTrait>;
 
-    fn get_download_url(&self, v: &str) -> Result<String, SnmError>;
+    fn get_download_url(&self, v: &str) -> String;
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf;
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf;
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf;
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf;
 
-    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError>;
+    fn get_runtime_base_dir_path_buf(&self) -> PathBuf;
 
     async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError>;
 
