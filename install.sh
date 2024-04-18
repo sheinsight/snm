@@ -4,6 +4,7 @@
 set -e
 
 RELEASE="latest"
+FORCE_INSTALL="true"
 OS="$(uname -s)"
 
 if [ -d "$HOME/.snm" ]; then
