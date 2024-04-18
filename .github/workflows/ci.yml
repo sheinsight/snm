@@ -27,7 +27,7 @@ jobs:
             target: aarch64-apple-darwin
             archive-name: snm-macos-arm.tar.gz
           - build: windows
-            os: windows-2019
+            os: windows-latest
             rust: nightly-x86_64-msvc
             target: x86_64-pc-windows-msvc
             archive-name: snm-windows.7z
