@@ -68,10 +68,11 @@ jobs:
             tar -czf snm-macos-arm.tar.gz -C archive .
           fi
       - name: Upload archive
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.archive-name }}
-          path: archive/${{ matrix.archive-name }}
+          path: ${{ matrix.archive-name }}
+          if-no-files-found: error
       # - name: Upload to Release
       #   uses: softprops/action-gh-release@v1
       #   with:
@@ -100,18 +101,18 @@ jobs:
       #   uses: actions/download-artifact@v2
       #   with:
       #     name: snm-windows.7z
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     body: |
+      #       Release ${{ github.ref }}
+      #     draft: false
+      #     prerelease: false
       - name: Upload Release Asset
         id: upload-release-asset
         uses: softprops/action-gh-release@v2
