@@ -87,8 +87,9 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
-        # with:
-        #   name: snm-linux-x86.tar.gz
+        with:
+          name: |
+            *
       # - name: Download artifacts
       #   uses: actions/download-artifact@v2
       #   with:
