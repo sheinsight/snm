@@ -65,7 +65,7 @@ jobs:
             7z a ${{ matrix.archive-name }} archive/*
           else
             cp target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,yarn,snm} archive/
-            tar -czf snm-macos-arm.tar.gz -C archive .
+            tar -czf ${{ matrix.archive-name }} -C archive .
           fi
       - name: Upload archive
         uses: actions/upload-artifact@v4
@@ -73,6 +73,7 @@ jobs:
           name: ${{ matrix.archive-name }}
           path: ${{ matrix.archive-name }}
           if-no-files-found: error
+          overwrite: true
       # - name: Upload to Release
       #   uses: softprops/action-gh-release@v1
       #   with:
