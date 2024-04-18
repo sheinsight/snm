@@ -64,8 +64,8 @@ jobs:
             cp LICENSE README.md target/${{ matrix.target }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe,snm.exe} archive/
             7z a ${{ matrix.archive-name }}.7z archive/*
           else
-            cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,pnpm,yarn,snm} archive/
-            tar -czf ${{ matrix.archive-name }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx yarn snm
+            cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,yarn,snm} archive/
+            tar -czf ${{ matrix.archive-name }}.tar.gz -C archive/*
           fi
       - name: Upload archive
         uses: actions/upload-artifact@v3
