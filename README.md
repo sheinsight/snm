@@ -8,6 +8,21 @@
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash
 ```
 
+--install-dir
+
+Set a custom directory for snm to be installed.
+
+--skip-shell
+
+Skip appending shell specific loader to shell config file
+
+--force-install
+
+force use shell installed
+
+```
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.fnm" --skip-shell
+```
 
 RUST_BACKTRACE=1 cargo run -p cli --bin main -- node default 21.4.0
 
