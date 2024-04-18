@@ -15,12 +15,12 @@ jobs:
             os: ubuntu-latest
             rust: nightly
             target: x86_64-unknown-linux-musl
-            archive-name: snm-linux-x86.zip
+            archive-name: snm-linux-x86_64.zip
           - build: macos-x86_64
             os: macos-latest
             rust: nightly
             target: x86_64-apple-darwin
-            archive-name: snm-macos-x86.zip
+            archive-name: snm-macos-x86_64.zip
           - build: macos-arm
             os: macos-latest
             rust: nightly
@@ -30,7 +30,7 @@ jobs:
             os: windows-latest
             rust: nightly-x86_64-msvc
             target: x86_64-pc-windows-msvc
-            archive-name: snm-windows.zip
+            archive-name: snm-windows-x86_64.zip
       fail-fast: false
     steps:
       - name: Checkout repository
