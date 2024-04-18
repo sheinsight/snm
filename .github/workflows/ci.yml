@@ -62,11 +62,10 @@ jobs:
           mkdir archive
           if [ "${{ matrix.build }}" = "windows" ]; then
             cp target/${{ matrix.target }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe,snm.exe} archive/
-            7z a ${{ matrix.archive-name }} archive/*
           else
             cp target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,yarn,snm} archive/
-            tar -czf ${{ matrix.archive-name }} -C archive .
           fi
+          zip -r ${{ matrix.archive-name }} archive/
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
