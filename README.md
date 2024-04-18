@@ -20,6 +20,10 @@ Skip appending shell specific loader to shell config file
 
 force use shell installed
 
+--version 
+
+Install specified version
+
 ```
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.fnm" --skip-shell
 ```
