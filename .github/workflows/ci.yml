@@ -99,7 +99,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: ${{ github.ref_name }}
-          prerelease: true
+          # prerelease: true
           files: |
             **/*.zip
     
