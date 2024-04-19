@@ -110,7 +110,7 @@ impl DownloadBuilder {
 
             let response = reqwest::Client::new()
                 .get(download_url)
-                .timeout(Duration::from_secs(1))
+                .timeout(Duration::from_secs(10))
                 .send()
                 .await
                 .expect(format!("download error {}", &download_url).as_str());
