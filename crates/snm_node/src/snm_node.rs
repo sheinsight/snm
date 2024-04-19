@@ -464,9 +464,10 @@ impl ShimTrait for SnmNode {
             .expect("get current dir failed")
             .join(".node-version");
         if node_version_path_buf.exists().not() {
-            return Err(SnmError::NotFoundNodeVersionFileError {
-                file_path: node_version_path_buf,
-            });
+            return Err(SnmError::Error(format!(
+                "Not found node version file {}",
+                &node_version_path_buf.display()
+            )));
         }
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
@@ -500,9 +501,7 @@ impl ShimTrait for SnmNode {
                 .interact()
                 .expect("download_condition Confirm error")),
             snm_core::config::snm_config::InstallStrategy::Panic => {
-                Err(SnmError::UnsupportedNodeVersion {
-                    version: version.to_string(),
-                })
+                Err(SnmError::Error(format!("Unsupported version: {}", version)))
             }
             snm_core::config::snm_config::InstallStrategy::Auto => Ok(true),
         }
@@ -527,7 +526,10 @@ impl ShimTrait for SnmNode {
         if let Some(v) = default_v_dir {
             return Ok(v.to_string());
         } else {
-            return Err(SnmError::NotFoundDefaultNodeBinary);
+            return Err(SnmError::Error(format!(
+                "Not found default node version, please use {} to set default node version.",
+                "snm node default <version>".bright_green().bold()
+            )));
         }
     }
 }

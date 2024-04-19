@@ -249,10 +249,11 @@ impl ShimTrait for SnmNpm {
         if let Some(bin) = hashmap.remove(bin_name) {
             return Ok(bin);
         } else {
-            return Err(SnmError::NotFoundBinaryFromPackageJsonBinProperty {
-                bin_name: bin_name.to_string(),
-                file_path: package_json_buf_path,
-            });
+            return Err(SnmError::Error(format!(
+                "Not found binary from {} bin property: {}",
+                package_json_buf_path.display(),
+                bin_name
+            )));
         }
     }
 

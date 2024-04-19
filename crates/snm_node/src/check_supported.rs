@@ -1,5 +1,4 @@
 use regex::Regex;
-use reqwest;
 use snm_core::{model::SnmError, print_warning};
 use std::time::Duration;
 
@@ -15,9 +14,10 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
 
     // if request err, like timeout
     if response.is_err() {
-        return Err(SnmError::DownloadFailed {
-            download_url: node_dist_url.to_string(),
-        });
+        return Err(SnmError::Error(format!(
+            "request error {:?}",
+            response.err()
+        )));
     }
 
     let response = response.unwrap();
@@ -34,9 +34,10 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
     let text = response.text().await;
 
     if text.is_err() {
-        return Err(SnmError::DownloadFailed {
-            download_url: node_dist_url.to_string(),
-        });
+        return Err(SnmError::Error(format!(
+            "parse {} response to text failed",
+            node_dist_url
+        )));
     }
 
     let text = text.unwrap();

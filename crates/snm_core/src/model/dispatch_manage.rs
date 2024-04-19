@@ -271,11 +271,12 @@ impl DispatchManage {
             .await?;
 
         if expect_sha256 != actual_sha256 {
-            Err(SnmError::Sha256VerificationFailed {
-                file_path: downloaded_file_path_buf.display().to_string(),
-                expect: expect_sha256,
-                actual: actual_sha256,
-            })?;
+            return Err(SnmError::Error(format!(
+                "File {} Sha256 verification failed, expected {} but received {}.",
+                downloaded_file_path_buf.display(),
+                expect_sha256,
+                actual_sha256
+            )));
         }
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v);
