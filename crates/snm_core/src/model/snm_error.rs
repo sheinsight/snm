@@ -20,9 +20,6 @@ pub enum SnmError {
     #[error("Customer")]
     Error(String),
 
-    #[error("Not found valid node version")]
-    EmptyNodeList,
-
     #[error(
         "File {file_path} Sha256 verification failed, expected {expect} but received {actual}."
     )]
@@ -91,13 +88,6 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::FileAlreadyExists { file_path } => {
             crate::println_error!("File already exists {}", file_path)
-        }
-
-        SnmError::EmptyNodeList => {
-            crate::println_error!(
-                "Node list is empty, please use {} to get the latest version.",
-                "snm node list-remote".bright_green().bold()
-            )
         }
 
         SnmError::NotFoundSha256ForNode(_) => {

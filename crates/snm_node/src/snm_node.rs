@@ -246,13 +246,12 @@ impl ManageTrait for SnmNode {
         &self,
         downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
-        let file = File::open(downloaded_file_path_buf).expect(
-            format!(
+        let file = File::open(downloaded_file_path_buf).map_err(|_| {
+            SnmError::Error(format!(
                 "open file {} error",
-                downloaded_file_path_buf.display().to_string()
-            )
-            .as_str(),
-        );
+                downloaded_file_path_buf.display()
+            ))
+        })?;
         let mut reader = BufReader::new(file);
         let mut hasher = Sha256::new();
 
@@ -275,7 +274,10 @@ impl ManageTrait for SnmNode {
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
         let (dir_vec, default_v) = dir_tuple;
         if dir_vec.is_empty() {
-            return Err(SnmError::EmptyNodeList)?;
+            return Err(SnmError::Error(format!(
+                "Node list is empty, please use {} to get the latest version.",
+                "snm node list-remote".bright_green().bold()
+            )));
         }
 
         let now = Utc::now().date_naive();
