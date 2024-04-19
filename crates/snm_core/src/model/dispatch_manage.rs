@@ -56,7 +56,6 @@ impl DispatchManage {
 
     pub async fn proxy_process(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
-        println!("xx {}", self.snm_config.get_strict());
         if self.snm_config.get_strict() {
             let version = shim_trait.get_strict_shim_version()?;
 
@@ -272,11 +271,12 @@ impl DispatchManage {
             .await?;
 
         if expect_sha256 != actual_sha256 {
-            Err(SnmError::Sha256VerificationFailed {
-                file_path: downloaded_file_path_buf.display().to_string(),
-                expect: expect_sha256,
-                actual: actual_sha256,
-            })?;
+            return Err(SnmError::Error(format!(
+                "File {} Sha256 verification failed, expected {} but received {}.",
+                downloaded_file_path_buf.display(),
+                expect_sha256,
+                actual_sha256
+            )));
         }
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v);

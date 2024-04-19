@@ -46,9 +46,10 @@ impl PackageJson {
             pkg._raw_workspace = Some(workspace);
             Ok(pkg)
         } else {
-            Err(SnmError::NotFoundPackageJsonFileError {
-                file_path: package_json_file_path,
-            })
+            Err(SnmError::Error(format!(
+                "Not found package.json file here {}",
+                package_json_file_path.display()
+            )))
         }
     }
 
@@ -69,9 +70,10 @@ impl PackageJson {
             return Ok(pkg);
         }
 
-        return Err(SnmError::NotFoundPackageJsonFileError {
-            file_path: pkg_file_path,
-        });
+        Err(SnmError::Error(format!(
+            "Not found package.json file here {}",
+            pkg_file_path.display()
+        )))
     }
 
     pub fn from_file_path(file_path: &PathBuf) -> Result<Self, SnmError> {

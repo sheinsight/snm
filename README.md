@@ -106,7 +106,7 @@ curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | ba
 ### Node Manager
 
 - [x] snm node list
-- [ ] snm node list-remote
+- [x] snm node list-remote
 - [x] snm node install 20.11.1
 - [x] snm node uninstall 20.11.1
 - [x] snm node default 20.11.1
@@ -131,7 +131,7 @@ curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | ba
 ### Yarn Manager
 
 - [x] snm yarn list
-- [x] snm yarn list-remote
+- [ ] snm yarn list-remote
 - [x] snm yarn install 1.22.10
 - [x] snm yarn uninstall 1.22.10
 - [x] snm yarn default 1.22.10

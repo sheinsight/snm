@@ -20,9 +20,10 @@ pub fn check_multi_lock_file() -> Result<Vec<String>, SnmError> {
         .collect::<Vec<String>>();
 
     if exists_vec.len() > 1 {
-        return Err(SnmError::MultiPackageManagerLockFileError {
-            lock_file: exists_vec,
-        });
+        return Err(SnmError::Error(format!(
+            "Multiple package manager lock files found: {} , Please remove the unnecessary ones.",
+            exists_vec.join(", ")
+        )));
     }
 
     Ok(exists_vec)

@@ -68,9 +68,10 @@ impl DownloadBuilder {
                 },
             }
         }
-        Err(SnmError::DownloadFailed {
-            download_url: download_url.to_string(),
-        })
+        Err(SnmError::Error(format!(
+            "Download {} failed after {} attempts",
+            download_url, self.retries
+        )))
     }
 
     pub async fn original_download<P: AsRef<Path>>(
@@ -82,9 +83,10 @@ impl DownloadBuilder {
         if abs_path_ref.exists() {
             match self.write_strategy {
                 WriteStrategy::Error => {
-                    return Err(SnmError::FileAlreadyExists {
-                        file_path: abs_path_ref.display().to_string(),
-                    });
+                    return Err(SnmError::Error(format!(
+                        "file already exists {}",
+                        &abs_path_ref.display()
+                    )));
                 }
                 WriteStrategy::WriteAfterDelete => {
                     std::fs::remove_file(&abs_path_ref).expect(
@@ -101,14 +103,14 @@ impl DownloadBuilder {
 
         if let Some(parent) = abs_path_ref.parent() {
             if !parent.exists() {
-                std::fs::create_dir_all(parent)
-                    .expect(format!("download create dir error {:?}", &parent.display()).as_str());
+                std::fs::create_dir_all(parent).map_err(|_| {
+                    SnmError::Error(format!("create dir error {}", &parent.display()))
+                })?;
             }
 
-            let client = reqwest::Client::new();
-
-            let response = client
+            let response = reqwest::Client::new()
                 .get(download_url)
+                .timeout(Duration::from_secs(1))
                 .send()
                 .await
                 .expect(format!("download error {}", &download_url).as_str());
@@ -122,9 +124,10 @@ impl DownloadBuilder {
             }
 
             if !response_status.is_success() {
-                return Err(SnmError::DownloadFailed {
-                    download_url: download_url.to_string(),
-                });
+                return Err(SnmError::Error(format!(
+                    "download error {}",
+                    response_status.as_str()
+                )));
             }
 
             let total_size = response.content_length();

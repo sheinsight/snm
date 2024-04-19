@@ -149,9 +149,15 @@ impl ManageTrait for SnmNpm {
     }
 
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
-        let (dir_vec, _) = &dir_tuple;
+        let (dir_vec, default_v) = &dir_tuple;
+
         dir_vec.into_iter().for_each(|dir| {
-            println!("{:<2} {:<10}", "", dir.bright_green());
+            let prefix = if Some(dir) == default_v.as_ref() {
+                "⛳️"
+            } else {
+                " "
+            };
+            println!("{:<2} {:<10}", prefix, dir.bright_green());
         });
         Ok(())
     }
@@ -243,10 +249,11 @@ impl ShimTrait for SnmNpm {
         if let Some(bin) = hashmap.remove(bin_name) {
             return Ok(bin);
         } else {
-            return Err(SnmError::NotFoundBinaryFromPackageJsonBinProperty {
-                bin_name: bin_name.to_string(),
-                file_path: package_json_buf_path,
-            });
+            return Err(SnmError::Error(format!(
+                "Not found binary from {} bin property: {}",
+                package_json_buf_path.display(),
+                bin_name
+            )));
         }
     }
 
