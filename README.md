@@ -9,6 +9,8 @@ snm = corepack + fnm + ni .
 - ✅ Verify if package manager meets the 'packageManager' configuration
 - 🌟 CodeWhisperer ( Fig ) Friendly
 
+![](./assets/fig.png)
+
 ## ⚙️ How to install
 
 ```bash
