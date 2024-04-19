@@ -2,7 +2,7 @@ use snm_core::model::SnmError;
 
 use super::trait_transform_args::{
     AddCommandArgs, CommandArgsCreatorTrait, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs,
-    InstallCommandArgs,
+    InstallCommandArgs, SetCacheArgs,
 };
 
 pub struct NpmArgsTransform;
@@ -68,6 +68,16 @@ impl CommandArgsCreatorTrait for NpmArgsTransform {
 
         process_args.append(&mut args.args.clone());
 
+        Ok(process_args)
+    }
+
+    fn get_set_cache_command(&self, args: SetCacheArgs) -> Result<Vec<String>, SnmError> {
+        let process_args = vec![
+            "config".to_string(),
+            "set".to_string(),
+            "cache".to_string(),
+            args.cache_path,
+        ];
         Ok(process_args)
     }
 }

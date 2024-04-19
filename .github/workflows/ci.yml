@@ -53,7 +53,7 @@ jobs:
       - name: Strip binary (linux and macos)
         if: matrix.build == 'linux' || matrix.build == 'macos'
         run:  |
-          for file in snm node npm npx pnpm pnpx yarn; do
+          for file in snm node npm npx pnpm pnpx; do
             strip "target/${{ matrix.target }}/release/$file"
           done
       - name: Build archive (Windows)
@@ -66,7 +66,6 @@ jobs:
           Copy-Item -Path target/${{ matrix.target }}/release/npx.exe -Destination archive/
           Copy-Item -Path target/${{ matrix.target }}/release/pnpm.exe -Destination archive/
           Copy-Item -Path target/${{ matrix.target }}/release/pnpx.exe -Destination archive/
-          Copy-Item -Path target/${{ matrix.target }}/release/yarn.exe -Destination archive/
           Copy-Item -Path target/${{ matrix.target }}/release/snm.exe -Destination archive/
           Compress-Archive -Path archive/* -DestinationPath ${{ matrix.archive-name }}
         
@@ -74,7 +73,7 @@ jobs:
         if: matrix.build != 'windows'
         run: |
           mkdir archive
-          cp target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,yarn,snm} archive/
+          cp target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
           zip -r ${{ matrix.archive-name }} archive/
         
       - name: Upload archive
