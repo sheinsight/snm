@@ -8,7 +8,7 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
     let client = reqwest::Client::new();
     let response = client
         .get(node_dist_url)
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(60))
         .send()
         .await;
 
