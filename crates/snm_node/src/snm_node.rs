@@ -40,8 +40,8 @@ impl SnmNode {
     }
 
     async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
-        let host = self.snm_config.get_nodejs_host();
-        let node_list_url = format!("{}/dist/index.json", host);
+        let host = self.snm_config.get_nodejs_dist_url_prefix();
+        let node_list_url = format!("{}/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
             .await
             .map_err(|_| SnmError::Error(format!("fetch {} failed", &node_list_url)))?
@@ -83,8 +83,8 @@ impl SnmNode {
         &self,
         node_version: &str,
     ) -> Result<HashMap<String, String>, SnmError> {
-        let host = self.snm_config.get_nodejs_host();
-        let url = format!("{}/dist/v{}/SHASUMS256.txt", host, node_version);
+        let host = self.snm_config.get_nodejs_dist_url_prefix();
+        let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
 
         let sha256_str = reqwest::get(&url)
             .await
@@ -183,9 +183,9 @@ impl SharedBehaviorTrait for SnmNode {
 #[async_trait(?Send)]
 impl ManageTrait for SnmNode {
     fn get_download_url(&self, v: &str) -> String {
-        let host = self.snm_config.get_nodejs_host();
+        let host = self.snm_config.get_nodejs_dist_url_prefix();
         let download_url = format!(
-            "{}/dist/v{}/node-v{}-{}-{}.{}",
+            "{}/v{}/node-v{}-{}-{}.{}",
             &host,
             &v,
             &v,
