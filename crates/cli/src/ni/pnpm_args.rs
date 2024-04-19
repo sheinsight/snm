@@ -51,4 +51,13 @@ impl CommandArgsCreatorTrait for PnpmArgsTransform {
         process_args.append(&mut args.package_spec.clone());
         Ok(process_args)
     }
+
+    fn get_run_command(
+        &self,
+        args: super::trait_transform_args::RunCommandArgs,
+    ) -> Result<Vec<String>, SnmError> {
+        let mut process_args: Vec<String> = vec!["run".to_string()];
+        process_args.append(&mut args.args.clone());
+        Ok(process_args)
+    }
 }

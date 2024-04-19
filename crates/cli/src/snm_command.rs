@@ -4,6 +4,7 @@ use crate::{
     manage_command::ManageCommands,
     ni::trait_transform_args::{
         AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
+        RunCommandArgs,
     },
 };
 
@@ -45,6 +46,9 @@ pub enum SnmCommands {
     Dlx(DlxCommandArgs),
     #[command(about = "Run a command from a local package.")]
     Exec(ExecCommandArgs),
+
+    #[command(about = "Run some script.")]
+    Run(RunCommandArgs),
 
     Query,
     #[command(about = "write fig spec to autocomplete build directory.")]
