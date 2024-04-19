@@ -144,7 +144,7 @@ impl SnmConfig {
         self.var(SNM_NPM_REGISTRY_HOST_KEY, "https://registry.npmjs.org");
         self.var(SNM_YARN_REGISTRY_HOST_KEY, "https://registry.yarnpkg.com");
         self.var(SNM_YARN_REPO_HOST_KEY, "https://repo.yarnpkg.com");
-        self.var(SNM_NODEJS_DIST_URL_KEY, "https://nodejs.org");
+        self.var(SNM_NODEJS_DIST_URL_KEY, "https://nodejs.org/dist");
         self.var(
             SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY,
             "https://raw.githubusercontent.com",
