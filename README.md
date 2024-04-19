@@ -147,7 +147,7 @@ curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | ba
 - [x] snm ci
 - [x] snm add
 - [ ] snm delete
-- [ ] snm run
+- [x] snm run
 - [ ] snm dlx
 - [ ] snm exec
 

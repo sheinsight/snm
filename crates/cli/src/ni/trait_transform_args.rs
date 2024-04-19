@@ -48,6 +48,18 @@ pub struct ExecCommandArgs {
     pub package_spec: Vec<String>,
 }
 
+#[derive(Parser, Debug)]
+pub struct RunCommandArgs {
+    #[arg(help = "script file path")]
+    pub args: Vec<String>,
+}
+
+#[derive(Parser, Debug)]
+pub struct SetCacheArgs {
+    #[arg(help = "cache dir path")]
+    pub cache_path: String,
+}
+
 pub trait CommandArgsCreatorTrait {
     fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
 
@@ -58,4 +70,8 @@ pub trait CommandArgsCreatorTrait {
     fn get_dlx_command(&self, args: DlxCommandArgs) -> Result<Vec<String>, SnmError>;
 
     fn get_exec_command(&self, args: ExecCommandArgs) -> Result<Vec<String>, SnmError>;
+
+    fn get_run_command(&self, args: RunCommandArgs) -> Result<Vec<String>, SnmError>;
+
+    fn get_set_cache_command(&self, args: SetCacheArgs) -> Result<Vec<String>, SnmError>;
 }

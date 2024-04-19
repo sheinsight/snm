@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md target/${{ env.TARGET }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe,yarn.exe} archive/
+          cp LICENSE README.md target/${{ env.TARGET }}/release/{node.exe,npm.exe,npx.exe,pnpm.exe,pnpx.exe} archive/
           7z a ${{ env.TARGET }}.7z archive/*
           ls -l
       - name: Upload archive

@@ -29,15 +29,15 @@ jobs:
           RUST_BACKTRACE: full
       - name: Strip binary (linux and macos)
         run:  |
-          for file in snm node npm npx pnpm pnpx yarn; do
+          for file in snm node npm npx pnpm pnpx; do
             strip "target/${{ env.TARGET }}/release/$file"
           done
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,yarn,snm} archive/
-          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx yarn snm
+          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
           ls -l
       - name: Upload archive
         uses: actions/upload-artifact@v3

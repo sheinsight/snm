@@ -7,10 +7,7 @@ use ni::{
     npm_args::NpmArgsTransform,
     pnpm_args::PnpmArgsTransform,
     trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs},
-    yarn_args::YarnArgsTransform,
-    yarnpkg_args::YarnPkgArgsTransform,
 };
-use semver::Version;
 use snm_command::SnmCommands;
 use snm_core::{
     config::SnmConfig,
@@ -23,7 +20,6 @@ use snm_core::{
 use snm_node::snm_node::SnmNode;
 use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
-use snm_yarn::{snm_yarn::SnmYarn, snm_yarnpkg::SnmYarnPkg};
 use std::{
     env::current_dir,
     path::PathBuf,
@@ -57,43 +53,6 @@ async fn execute_cli() -> Result<(), SnmError> {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
     match cli.command {
         // manage start
-        SnmCommands::Yarn { command } => match command {
-            ManageCommands::Default { version } => {
-                let v: &String = &trim_version(version);
-                let manager: Box<dyn ManageTrait> = if get_is_less_2(&v)? {
-                    Box::new(SnmYarn::new())
-                } else {
-                    Box::new(SnmYarnPkg::new())
-                };
-                DispatchManage::new(manager).set_default(v).await?;
-            }
-            ManageCommands::Install { version } => {
-                let v: &String = &trim_version(version);
-                let manager: Box<dyn ManageTrait> = if get_is_less_2(&v)? {
-                    Box::new(SnmYarn::new())
-                } else {
-                    Box::new(SnmYarnPkg::new())
-                };
-                DispatchManage::new(manager).install(v).await?;
-            }
-            ManageCommands::Uninstall { version } => {
-                let v: &String = &trim_version(version);
-                let manager: Box<dyn ManageTrait> = if get_is_less_2(&v)? {
-                    Box::new(SnmYarn::new())
-                } else {
-                    Box::new(SnmYarnPkg::new())
-                };
-                DispatchManage::new(manager).un_install(v).await?;
-            }
-            ManageCommands::List => {
-                DispatchManage::new(Box::new(SnmYarn::new())).list().await?;
-            }
-            ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(SnmYarn::new()))
-                    .list_remote(all)
-                    .await?;
-            }
-        },
         SnmCommands::Pnpm { command } => match command {
             ManageCommands::Default { version } => {
                 let v: &String = &trim_version(version);
@@ -212,6 +171,12 @@ async fn execute_cli() -> Result<(), SnmError> {
         SnmCommands::Exec(args) => {
             execute_command(|creator| creator.get_exec_command(args)).await?;
         }
+        SnmCommands::Run(args) => {
+            execute_command(|creator| creator.get_run_command(args)).await?;
+        }
+        SnmCommands::SetCache(args) => {
+            execute_command(|creator| creator.get_set_cache_command(args)).await?;
+        }
     }
     Ok(())
 }
@@ -245,13 +210,6 @@ where
     let command_args_creator: Box<dyn CommandArgsCreatorTrait> = match name.as_str() {
         "npm" => Box::new(NpmArgsTransform {}),
         "pnpm" => Box::new(PnpmArgsTransform {}),
-        "yarn" => {
-            if get_is_less_2(&version)? {
-                Box::new(YarnArgsTransform {})
-            } else {
-                Box::new(YarnPkgArgsTransform {})
-            }
-        }
         _ => panic!("Unsupported package manager"),
     };
 
@@ -281,13 +239,6 @@ async fn get_manage(package_manager: &PackageManager) -> Result<Box<dyn ManageTr
             Box::new(manager)
         }
         "pnpm" => Box::new(SnmPnpm::new()),
-        "yarn" => {
-            if get_is_less_2(&package_manager.version)? {
-                Box::new(SnmYarn::new())
-            } else {
-                Box::new(SnmYarnPkg::new())
-            }
-        }
         _ => {
             return Err(SnmError::UnsupportedPackageManager {
                 name: package_manager.name.to_string(),
@@ -296,10 +247,4 @@ async fn get_manage(package_manager: &PackageManager) -> Result<Box<dyn ManageTr
         }
     };
     Ok(manager)
-}
-
-fn get_is_less_2(v: &str) -> Result<bool, SnmError> {
-    let ver = Version::parse(v).expect(format!("parse version error {}", &v).as_str());
-    let is_less_2 = ver < Version::parse("2.0.0").expect("parse version error 2.0.0");
-    Ok(is_less_2)
 }
