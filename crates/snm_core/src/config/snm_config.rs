@@ -83,7 +83,7 @@ impl SnmConfig {
 
     pub fn get_node_bin_dir_path_buf(&self) -> PathBuf {
         let base_dir = self.get_base_dir_path_buf();
-        let node_bin_dir_name = env::var(SNM_NODE_BIN_DIR).unwrap_or("bin".to_string());
+        let node_bin_dir_name = env::var(SNM_NODE_BIN_DIR).unwrap_or("node_bin".to_string());
         base_dir.join(node_bin_dir_name)
     }
 
