@@ -20,7 +20,6 @@ use snm_core::model::trait_shim::ShimTrait;
 use snm_core::{config::SnmConfig, model::SnmError, utils::tarball::decompress_xz};
 use std::collections::HashMap;
 use std::env::current_dir;
-use std::error::Error;
 use std::fs::read_to_string;
 use std::ops::Not;
 use std::{
@@ -40,25 +39,36 @@ impl SnmNode {
         }
     }
 
-    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, Box<dyn Error>> {
+    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
         let host = self.snm_config.get_nodejs_host();
         let node_list_url = format!("{}/dist/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
-            .await?
+            .await
+            .map_err(|_| SnmError::Error(format!("fetch {} failed", &node_list_url)))?
             .json::<Vec<NodeModel>>()
-            .await?;
+            .await
+            .map_err(|_| {
+                SnmError::Error(format!("parse {} response to json failed", &node_list_url))
+            })?;
         Ok(node_vec)
     }
 
-    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, Box<dyn Error>> {
+    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
         let host = self.snm_config.get_nodejs_github_resource_host();
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
         let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
-            .await?
+            .await
+            .map_err(|_| SnmError::Error(format!("fetch {} failed", node_schedule_url)))?
             .json::<std::collections::HashMap<String, NodeSchedule>>()
-            .await?
+            .await
+            .map_err(|_| {
+                SnmError::Error(format!(
+                    "parse {} response to json failed",
+                    node_schedule_url
+                ))
+            })?
             .into_iter()
             .map(|(v, mut schedule)| {
                 schedule.version = Some(v[1..].to_string());
@@ -78,10 +88,10 @@ impl SnmNode {
 
         let sha256_str = reqwest::get(&url)
             .await
-            .expect(format!("get {} error", &url).as_str())
+            .map_err(|_| SnmError::Error(format!("fetch {} failed", url)))?
             .text()
             .await
-            .expect("transform text error");
+            .map_err(|_| SnmError::Error(format!("parse {} response to text failed", url)))?;
 
         let sha256_map: std::collections::HashMap<String, String> = sha256_str
             .lines()
@@ -358,8 +368,7 @@ impl ManageTrait for SnmNode {
         let (dir_vec, _default_v) = dir_tuple;
 
         let (mut node_vec, node_schedule_vec) =
-            try_join!(self.get_node_list_remote(), self.get_node_schedule())
-                .expect("Network Error");
+            try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
 
         let now = Utc::now().date_naive();
 

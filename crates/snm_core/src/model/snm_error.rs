@@ -17,6 +17,9 @@ pub enum SnmError {
     #[error("Silent exit")]
     SilentExit,
 
+    #[error("Customer")]
+    Error(String),
+
     #[error("Not found valid node version")]
     EmptyNodeList,
 
@@ -180,6 +183,9 @@ pub fn handle_snm_error(error: SnmError) {
             println_error!("Not found binary {} {:?}", bin_name, file_path)
         }
         SnmError::SilentExit => {}
+        SnmError::Error(message) => {
+            crate::println_error!("{}", message)
+        }
     }
     std::process::exit(1);
 }
