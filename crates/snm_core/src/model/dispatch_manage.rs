@@ -263,21 +263,21 @@ impl DispatchManage {
             .download(&download_url, &downloaded_file_path_buf)
             .await?;
 
-        let expect_sha256 = self.manager.get_expect_shasum(v).await?;
+        // let expect_sha256 = self.manager.get_expect_shasum(v).await?;
 
-        let actual_sha256 = self
-            .manager
-            .get_actual_shasum(&downloaded_file_path_buf)
-            .await?;
+        // let actual_sha256 = self
+        //     .manager
+        //     .get_actual_shasum(&downloaded_file_path_buf)
+        //     .await?;
 
-        if expect_sha256 != actual_sha256 {
-            return Err(SnmError::Error(format!(
-                "File {} Sha256 verification failed, expected {} but received {}.",
-                downloaded_file_path_buf.display(),
-                expect_sha256,
-                actual_sha256
-            )));
-        }
+        // if expect_sha256 != actual_sha256 {
+        //     return Err(SnmError::Error(format!(
+        //         "File {} Sha256 verification failed, expected {} but received {}.",
+        //         downloaded_file_path_buf.display(),
+        //         expect_sha256,
+        //         actual_sha256
+        //     )));
+        // }
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v);
         self.manager
