@@ -20,6 +20,7 @@ use snm_core::model::trait_shim::ShimTrait;
 use snm_core::{config::SnmConfig, model::SnmError, utils::tarball::decompress_xz};
 use std::collections::HashMap;
 use std::env::current_dir;
+use std::error::Error;
 use std::fs::read_to_string;
 use std::ops::Not;
 use std::{
@@ -39,29 +40,25 @@ impl SnmNode {
         }
     }
 
-    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
+    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, Box<dyn Error>> {
         let host = self.snm_config.get_nodejs_host();
         let node_list_url = format!("{}/dist/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
-            .await
-            .expect(format!("get {} error", &node_list_url).as_str())
+            .await?
             .json::<Vec<NodeModel>>()
-            .await
-            .expect(format!("{} response transform to json failed", &node_list_url).as_str());
+            .await?;
         Ok(node_vec)
     }
 
-    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
+    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, Box<dyn Error>> {
         let host = self.snm_config.get_nodejs_github_resource_host();
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
         let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
-            .await
-            .expect(format!("get {} error", &node_schedule_url).as_str())
+            .await?
             .json::<std::collections::HashMap<String, NodeSchedule>>()
-            .await
-            .expect(format!("{} response transform to json failed", &node_schedule_url).as_str())
+            .await?
             .into_iter()
             .map(|(v, mut schedule)| {
                 schedule.version = Some(v[1..].to_string());
@@ -97,6 +94,24 @@ impl SnmNode {
             .collect();
 
         Ok(sha256_map)
+    }
+
+    fn show_off_online_node_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
+        let (dir_vec, default_v) = dir_tuple;
+        for v in dir_vec {
+            let prefix = if Some(v) == default_v.as_ref() {
+                "⛳️"
+            } else {
+                " "
+            };
+            // 标记
+            println!(
+                "{:<2} {}  {}",
+                prefix,
+                v,
+                "Network exception, degraded to offline mode.".bright_black()
+            );
+        }
     }
 
     fn show_node_list<F>(&self, node_vec: Vec<NodeModel>, get_tag_fn: F)
@@ -249,84 +264,87 @@ impl ManageTrait for SnmNode {
 
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
         let (dir_vec, default_v) = dir_tuple;
-
         if dir_vec.is_empty() {
             return Err(SnmError::EmptyNodeList)?;
         }
 
         let now = Utc::now().date_naive();
 
-        let (node_vec, node_schedule_vec) =
-            try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
-
-        let version_req_vec = node_schedule_vec
-            .into_iter()
-            .filter_map(|schedule| {
-                schedule
-                    .version
-                    .as_ref()
-                    .and_then(|v| VersionReq::parse(v).ok())
-                    .map(|vr| (vr, schedule))
-            })
-            .collect::<Vec<(VersionReq, NodeSchedule)>>();
-
-        let mut hashmap = node_vec
-            .into_iter()
-            .map(|node| (node.version.as_str().to_string(), node))
-            .collect::<HashMap<String, NodeModel>>();
-
-        let mut node_vec = dir_vec
-            .into_iter()
-            .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
-            .map(|mut node| {
-                node.version = node.version.trim_start_matches("v").to_string();
-
-                let version = Version::parse(&node.version);
-
-                let eq_version = |req: &VersionReq| {
-                    version
+        if let Ok((remote_node_vec, node_schedule_vec)) =
+            try_join!(self.get_node_list_remote(), self.get_node_schedule())
+        {
+            let version_req_vec = node_schedule_vec
+                .into_iter()
+                .filter_map(|schedule| {
+                    schedule
+                        .version
                         .as_ref()
-                        .map_or(false, |version| req.matches(version))
-                };
+                        .and_then(|v| VersionReq::parse(v).ok())
+                        .map(|vr| (vr, schedule))
+                })
+                .collect::<Vec<(VersionReq, NodeSchedule)>>();
 
-                let node_schedule = version_req_vec
-                    .iter()
-                    .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
+            let mut hashmap = remote_node_vec
+                .into_iter()
+                .map(|node| (node.version.as_str().to_string(), node))
+                .collect::<HashMap<String, NodeModel>>();
 
-                {
-                    node.end = node_schedule
-                        .map(|schedule| schedule.end.clone())
-                        .map_or(Some("None".to_string()), Some);
-                }
+            let mut node_vec = dir_vec
+                .into_iter()
+                .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
+                .map(|mut node| {
+                    node.version = node.version.trim_start_matches("v").to_string();
 
-                {
-                    let map_deprecated = |schedule: &NodeSchedule| {
-                        NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
-                            .map(|end| now > end)
-                            .unwrap_or(true)
+                    let version = Version::parse(&node.version);
+
+                    let eq_version = |req: &VersionReq| {
+                        version
+                            .as_ref()
+                            .map_or(false, |version| req.matches(version))
                     };
 
-                    node.deprecated = node_schedule.map(map_deprecated).map_or(Some(true), Some);
-                }
+                    let node_schedule = version_req_vec
+                        .iter()
+                        .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
 
-                node
-            })
-            .collect::<Vec<NodeModel>>();
+                    {
+                        node.end = node_schedule
+                            .map(|schedule| schedule.end.clone())
+                            .map_or(Some("None".to_string()), Some);
+                    }
 
-        node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
+                    {
+                        let map_deprecated = |schedule: &NodeSchedule| {
+                            NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
+                                .map(|end| now > end)
+                                .unwrap_or(true)
+                        };
 
-        if let Some(v) = default_v {
-            self.show_node_list(node_vec, |node_v| {
-                if node_v == v {
-                    return "⛳️";
-                } else {
+                        node.deprecated =
+                            node_schedule.map(map_deprecated).map_or(Some(true), Some);
+                    }
+
+                    node
+                })
+                .collect::<Vec<NodeModel>>();
+
+            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
+
+            if let Some(v) = default_v {
+                self.show_node_list(node_vec, |node_v| {
+                    if node_v == v {
+                        return "⛳️";
+                    } else {
+                        return "";
+                    }
+                });
+            } else {
+                self.show_node_list(node_vec, |_node_v| {
                     return "";
-                }
-            });
+                });
+            }
         } else {
-            self.show_node_list(node_vec, |_node_v| {
-                return "";
-            });
+            self.show_off_online_node_list(dir_tuple)
         }
 
         Ok(())
@@ -340,7 +358,8 @@ impl ManageTrait for SnmNode {
         let (dir_vec, _default_v) = dir_tuple;
 
         let (mut node_vec, node_schedule_vec) =
-            try_join!(self.get_node_list_remote(), self.get_node_schedule(),)?;
+            try_join!(self.get_node_list_remote(), self.get_node_schedule())
+                .expect("Network Error");
 
         let now = Utc::now().date_naive();
 

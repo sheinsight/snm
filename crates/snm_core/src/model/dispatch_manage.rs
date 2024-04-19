@@ -56,7 +56,6 @@ impl DispatchManage {
 
     pub async fn proxy_process(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
-        println!("xx {}", self.snm_config.get_strict());
         if self.snm_config.get_strict() {
             let version = shim_trait.get_strict_shim_version()?;
 
