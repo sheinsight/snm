@@ -89,7 +89,7 @@ curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | ba
 |SNM_NPM_REGISTRY_HOST|https://registry.npmjs.org|Npm host|
 |SNM_YARN_REGISTRY_HOST_KEY|https://registry.yarnpkg.com|Yarn registry , Used by less 2.0.0|
 |SNM_YARN_REPO_HOST_KEY|https://repo.yarnpkg.com|Yarn registry , Used by greater 2.0.0|
-|SNM_NODEJS_HOST_KEY|https://nodejs.org|Nodejs Host|
+|SNM_NODEJS_DIST_URL_KEY|https://nodejs.org/dist|Nodejs Host|
 |SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY|https://raw.githubusercontent.com|Github resource host|
 
 ### Function configuration

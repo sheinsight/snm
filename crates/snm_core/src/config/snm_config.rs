@@ -10,7 +10,7 @@ static SNM_NODE_MODULES_DIR: &str = "SNM_NODE_MODULES_DIR";
 static SNM_NPM_REGISTRY_HOST_KEY: &str = "SNM_NPM_REGISTRY_HOST";
 static SNM_YARN_REGISTRY_HOST_KEY: &str = "SNM_YARN_REGISTRY_HOST_KEY";
 static SNM_YARN_REPO_HOST_KEY: &str = "SNM_YARN_REPO_HOST_KEY";
-static SNM_NODEJS_HOST_KEY: &str = "SNM_NODEJS_HOST_KEY";
+static SNM_NODEJS_DIST_URL_KEY: &str = "SNM_NODEJS_DIST_URL_KEY";
 static SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY: &str = "SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY";
 
 static SNM_STRICT: &str = "SNM_STRICT";
@@ -115,8 +115,8 @@ impl SnmConfig {
         env::var(SNM_YARN_REPO_HOST_KEY).unwrap_or("https://repo.yarnpkg.com".to_string())
     }
 
-    pub fn get_nodejs_host(&self) -> String {
-        env::var(SNM_NODEJS_HOST_KEY).unwrap_or("https://nodejs.org".to_string())
+    pub fn get_nodejs_dist_url_prefix(&self) -> String {
+        env::var(SNM_NODEJS_DIST_URL_KEY).unwrap_or("https://nodejs.org/dist".to_string())
     }
 
     pub fn get_nodejs_github_resource_host(&self) -> String {
@@ -144,7 +144,7 @@ impl SnmConfig {
         self.var(SNM_NPM_REGISTRY_HOST_KEY, "https://registry.npmjs.org");
         self.var(SNM_YARN_REGISTRY_HOST_KEY, "https://registry.yarnpkg.com");
         self.var(SNM_YARN_REPO_HOST_KEY, "https://repo.yarnpkg.com");
-        self.var(SNM_NODEJS_HOST_KEY, "https://nodejs.org");
+        self.var(SNM_NODEJS_DIST_URL_KEY, "https://nodejs.org");
         self.var(
             SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY,
             "https://raw.githubusercontent.com",
