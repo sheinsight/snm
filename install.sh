@@ -1,6 +1,4 @@
-
-
-
+#!/bin/bash
 set -e
 
 RELEASE="latest"
@@ -17,7 +15,38 @@ else
   INSTALL_DIR="$HOME/.local/share/snm"
 fi
 
+# Parse Flags
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    key="$1"
 
+    case $key in
+    -d | --install-dir)
+      INSTALL_DIR="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -s | --skip-shell)
+      SKIP_SHELL="true"
+      shift # past argument
+      ;;
+    --force-install | --force-no-brew)
+      echo "\`--force-install\`: I hope you know what you're doing." >&2
+      FORCE_INSTALL="true"
+      shift
+      ;;
+    -r | --release)
+      RELEASE="$2"
+      shift # past release argument
+      shift # past release value
+      ;;
+    *)
+      echo "Unrecognized argument $key"
+      exit 1
+      ;;
+    esac
+  done
+}
 
 set_filename() {
   if [ "$OS" = "Linux" ]; then
@@ -56,10 +85,15 @@ set_filename() {
   fi
 }
 
-
-
 download_snm(){
-    URL="https://github.com/sheinsight/snm/releases/latest/download/$FILENAME"
+    if [ "$RELEASE" = "latest" ]; then
+      URL="https://github.com/sheinsight/snm/releases/latest/download/$FILENAME"
+    else
+      if [[ $RELEASE != v* ]]; then
+        RELEASE="v$RELEASE"
+      fi
+      URL="https://github.com/sheinsight/snm/releases/download/$RELEASE/$FILENAME"
+    fi
     DOWNLOAD_DIR=$(mktemp -d)
     echo "Downloading $URL..."
     mkdir -p "$INSTALL_DIR" &>/dev/null
@@ -76,7 +110,6 @@ download_snm(){
 
     echo "Downloaded to $DOWNLOAD_DIR"
 }
-
 
 check_dependencies() {
   echo "Checking dependencies for the installation script..."
@@ -164,7 +197,11 @@ setup_shell(){
   echo "  source $CONF_FILE"
 }
 
+
+parse_args "$@"
 set_filename
 check_dependencies
 download_snm
-setup_shell
+if [ "$SKIP_SHELL" != "true" ]; then
+  setup_shell
+fi
