@@ -69,7 +69,8 @@ impl DispatchManage {
                 }
             }
 
-            let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&version, bin_name)?;
+            let binary_path_buf =
+                shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
 
             return Ok((version, binary_path_buf));
         } else {
