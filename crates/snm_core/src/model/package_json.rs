@@ -107,7 +107,7 @@ impl PackageJson {
 
             return Ok(res);
         }
-        return Err(SnmError::NotFoundPackageJsonBinProperty {
+        return Err(SnmError::NotFoundPackageManagerProperty {
             file_path: self._raw_file_path.clone().unwrap().display().to_string(),
         });
     }
@@ -136,7 +136,7 @@ impl PackageJson {
                 }
             }
         } else {
-            return Err(SnmError::NotFoundPackageJsonBinProperty {
+            return Err(SnmError::NotFoundPackageManagerProperty {
                 file_path: raw_workspace.display().to_string(),
             });
         }

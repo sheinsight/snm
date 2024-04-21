@@ -36,11 +36,8 @@ impl DispatchManage {
         bin_name: &str,
     ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
-
         let version = shim_trait.get_strict_shim_version()?;
-
         let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
-
         if anchor_file_path_buf.exists().not() {
             if shim_trait.download_condition(&version)? {
                 self.download(&version).await?;
@@ -48,41 +45,87 @@ impl DispatchManage {
                 return Err(SnmError::SilentExit);
             }
         }
-
         let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
-
         return Ok((version.to_string(), binary_path_buf));
+    }
+
+    async fn proxy_process_by_strict(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
+        let shim_trait = self.manager.get_shim_trait();
+        let v = shim_trait.get_strict_shim_version()?;
+        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&v);
+        if anchor_file_path_buf.exists().not() {
+            if shim_trait.download_condition(&v)? {
+                self.download(&v).await?;
+            } else {
+                return Err(SnmError::SilentExit);
+            }
+        }
+        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &v)?;
+
+        return Ok((v, binary_path_buf));
+    }
+
+    async fn proxy_process_by_default(
+        &self,
+        bin_name: &str,
+    ) -> Result<(String, PathBuf), SnmError> {
+        let shim_trait = self.manager.get_shim_trait();
+        let tuple = self.read_runtime_dir_name_vec()?;
+
+        let v = shim_trait.check_default_version(&tuple)?;
+
+        let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
+
+        return Ok((v, binary_path_buf));
     }
 
     pub async fn proxy_process(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
         if self.snm_config.get_strict() {
-            let version = shim_trait.get_strict_shim_version()?;
-
-            let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
-
-            if anchor_file_path_buf.exists().not() {
-                if shim_trait.download_condition(&version)? {
-                    self.download(&version).await?;
-                } else {
-                    return Err(SnmError::SilentExit);
-                }
-            }
-
-            let binary_path_buf =
-                shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
-
-            return Ok((version, binary_path_buf));
+            shim_trait.check_satisfy_strict_mode(bin_name)?;
+            return self.proxy_process_by_strict(bin_name).await;
         } else {
-            let tuple = self.read_runtime_dir_name_vec()?;
-
-            let v = shim_trait.check_default_version(&tuple)?;
-
-            let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
-
-            return Ok((v, binary_path_buf));
+            match shim_trait.check_satisfy_strict_mode(bin_name) {
+                Ok(_) => {
+                    return self.proxy_process_by_strict(bin_name).await;
+                }
+                Err(error) => match error {
+                    SnmError::NotMatchPackageManager { expect, actual } => {
+                        return Err(SnmError::NotMatchPackageManager { expect, actual });
+                    }
+                    _ => {
+                        return self.proxy_process_by_default(bin_name).await;
+                    }
+                },
+            };
         }
     }
+
+    // pub async fn proxy_process(&self, bin_name: &str) -> Result<(String, PathBuf), SnmError> {
+    //     let shim_trait = self.manager.get_shim_trait();
+    //     if self.snm_config.get_strict() {
+    //         let version = shim_trait.get_strict_shim_version()?;
+    //         let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
+    //         if anchor_file_path_buf.exists().not() {
+    //             if shim_trait.download_condition(&version)? {
+    //                 self.download(&version).await?;
+    //             } else {
+    //                 return Err(SnmError::SilentExit);
+    //             }
+    //         }
+    //         let binary_path_buf =
+    //             shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
+    //         return Ok((version, binary_path_buf));
+    //     } else {
+    //         let tuple = self.read_runtime_dir_name_vec()?;
+
+    //         let v = shim_trait.check_default_version(&tuple)?;
+
+    //         let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
+
+    //         return Ok((v, binary_path_buf));
+    //     }
+    // }
 
     pub async fn list(&self) -> Result<(), SnmError> {
         let dir_tuple = self.read_runtime_dir_name_vec()?;

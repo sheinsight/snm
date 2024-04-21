@@ -33,7 +33,7 @@ impl InstallStrategy {
             "panic" => Ok(InstallStrategy::Panic),
             "auto" => Ok(InstallStrategy::Auto),
             _ => Err(SnmError::Error(format!(
-                "Unsupported install strategy: {}",
+                "Unsupported install strategy: {} , only support ask | panic | auto",
                 s
             ))),
         }

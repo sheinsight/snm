@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-
 use colored::*;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum SnmError {
     // 静默退出
     #[error("Silent exit")]
@@ -19,7 +17,7 @@ pub enum SnmError {
     NotMatchPackageManager { expect: String, actual: String },
 
     #[error("Package.json bin property not found , The absolute path {file_path}")]
-    NotFoundPackageJsonBinProperty { file_path: String },
+    NotFoundPackageManagerProperty { file_path: String },
 
     #[error("Not found sha256 for node {0}")]
     NotFoundSha256ForNode(String),
@@ -36,11 +34,8 @@ pub enum SnmError {
 
 pub fn handle_snm_error(error: SnmError) {
     match error {
-        SnmError::NotFoundPackageJsonBinProperty { file_path } => {
-            crate::println_error!(
-                "Package.json bin property not found , The absolute path {}",
-                file_path
-            )
+        SnmError::NotFoundPackageManagerProperty { file_path } => {
+            crate::println_error!("Not found packageManager property in {}", file_path)
         }
 
         SnmError::NotFoundSha256ForNode(_) => {

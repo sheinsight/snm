@@ -19,6 +19,8 @@ pub trait ShimTrait: SharedBehaviorTrait {
         version: &str,
     ) -> Result<PathBuf, SnmError>;
 
+    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<bool, SnmError>;
+
     fn check_default_version(
         &self,
         tuple: &(Vec<String>, Option<String>),
