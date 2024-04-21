@@ -459,16 +459,18 @@ impl ManageTrait for SnmNode {
 }
 
 impl ShimTrait for SnmNode {
-    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<bool, SnmError> {
+    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<(), SnmError> {
         let node_version_path_buf = current_dir()
             .expect("get current dir failed")
             .join(".node-version");
 
         if node_version_path_buf.exists().not() {
-            return Ok(false);
+            return Err(SnmError::NotFoundNodeVersionFile {
+                file_path: node_version_path_buf.display().to_string(),
+            });
         }
 
-        return Ok(true);
+        return Ok(());
     }
 
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
@@ -476,10 +478,9 @@ impl ShimTrait for SnmNode {
             .expect("get current dir failed")
             .join(".node-version");
         if node_version_path_buf.exists().not() {
-            return Err(SnmError::Error(format!(
-                "Not found node version file {}",
-                &node_version_path_buf.display()
-            )));
+            return Err(SnmError::NotFoundNodeVersionFile {
+                file_path: node_version_path_buf.display().to_string(),
+            });
         }
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();

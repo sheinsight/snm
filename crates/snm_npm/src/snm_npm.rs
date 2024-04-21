@@ -188,7 +188,7 @@ impl ManageTrait for SnmNpm {
 }
 
 impl ShimTrait for SnmNpm {
-    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<bool, SnmError> {
+    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<(), SnmError> {
         let package_json_path_buf = current_dir()
             .expect("get current dir failed")
             .join("package.json");
@@ -203,7 +203,7 @@ impl ShimTrait for SnmNpm {
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
         let package_manager = package_json.parse_package_manager()?;
         if package_manager.name == bin_name {
-            return Ok(true);
+            return Ok(());
         }
         return Err(SnmError::NotMatchPackageManager {
             expect: package_manager.name,
