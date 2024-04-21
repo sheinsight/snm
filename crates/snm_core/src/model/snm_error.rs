@@ -22,6 +22,9 @@ pub enum SnmError {
     #[error("Not found node version file {file_path}")]
     NotFoundNodeVersionFile { file_path: String },
 
+    #[error("Not found package.json file here {file_path}")]
+    NotFoundPackageJsonFile { file_path: String },
+
     #[error("Not found sha256 for node {0}")]
     NotFoundSha256ForNode(String),
 
@@ -82,6 +85,9 @@ pub fn handle_snm_error(error: SnmError) {
         }
         SnmError::NotFoundNodeVersionFile { file_path } => {
             crate::println_error!("Not found node version file {}", file_path)
+        }
+        SnmError::NotFoundPackageJsonFile { file_path } => {
+            crate::println_error!("Not found package.json file here {}", file_path)
         }
     }
     std::process::exit(1);

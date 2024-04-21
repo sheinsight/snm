@@ -194,10 +194,9 @@ impl ShimTrait for SnmNpm {
             .join("package.json");
 
         if package_json_path_buf.exists().not() {
-            return Err(SnmError::Error(format!(
-                "Not found package.json file here {}",
-                package_json_path_buf.display()
-            )));
+            return Err(SnmError::NotFoundPackageJsonFile {
+                file_path: package_json_path_buf.display().to_string(),
+            });
         }
 
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
