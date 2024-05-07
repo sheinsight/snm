@@ -5,7 +5,7 @@ on:
       - dev
   pull_request:
     branches:
-      - main 
+      - main
 jobs:
   build-windows:
     runs-on: windows-2019
@@ -17,7 +17,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           profile: minimal
           override: true
           target: ${{ env.TARGET }}
@@ -39,5 +39,4 @@ jobs:
           name: ${{ env.TARGET }}.7z
           path: ${{ env.TARGET }}.7z
 
-   
-  
+
