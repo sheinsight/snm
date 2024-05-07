@@ -30,7 +30,6 @@ name = "node"
 path = "src/shim/node.rs"
 
 
-
 [dependencies]
 log = "0.4.20"
 anyhow = "1.0"
@@ -40,16 +39,15 @@ semver = "1.0.21"
 serde_json = "1.0"
 dialoguer = "0.11.0"
 env_logger = "0.11.2"
-snm_core ={ path = "../snm_core"}
+snm_core = { path = "../snm_core" }
 snm_node = { path = "../snm_node" }
 snm_npm = { path = "../snm_npm" }
 snm_pnpm = { path = "../snm_pnpm" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }
-clap = { version = "4.5.1" , features = ["derive"] }
+clap = { version = "4.5.1", features = ["derive"] }
 ansi_term = "0.12.1"
 regex = "1.10.4"
 glob = "0.3.1"
 clap_complete = "4.5.1"
 clap_complete_fig = "4.5.0"
-
