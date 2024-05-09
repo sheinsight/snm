@@ -1,4 +1,3 @@
-use clap::Parser;
 use colored::*;
 use manage_command::ManageCommands;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
@@ -27,8 +26,7 @@ use crate::{
     snm_command, SnmCli,
 };
 
-pub async fn execute_cli() -> Result<(), SnmError> {
-    let cli = SnmCli::parse();
+pub async fn execute_cli(cli: SnmCli) -> Result<(), SnmError> {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
     match cli.command {
         // manage start
