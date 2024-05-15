@@ -5,3 +5,4 @@ mod no_package_manager_property_test;
 mod no_package_json_test;
 
 mod snm_cli_test;
+mod snm_install_test;

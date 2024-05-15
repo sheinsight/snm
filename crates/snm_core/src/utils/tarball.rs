@@ -34,25 +34,6 @@ where
         .as_str(),
     );
 
-    let old_base = get_target_dir(output_path);
-
-    let transform = |f: &PathBuf| -> Result<PathBuf, SnmError> {
-        let new_path = f
-            .strip_prefix(&old_base)
-            .expect("decompress_tgz strip_prefix error");
-        Ok(output_path.join(new_path))
-    };
-
-    rename(&old_base, &transform)?;
-
-    std::fs::remove_dir_all(&old_base).expect(
-        format!(
-            "decompress_tgz remove_dir_all error {:?}",
-            &old_base.display()
-        )
-        .as_str(),
-    );
-
     Ok(())
 }
 

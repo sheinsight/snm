@@ -260,12 +260,16 @@ impl ShimTrait for SnmNpm {
         bin_name: &str,
         version: &str,
     ) -> Result<PathBuf, SnmError> {
-        let package_json_buf_path = self
+        let mut package_json_buf_path = self
             .snm_config
             .get_node_modules_dir_path_buf()
             .join(self.prefix.to_string())
-            .join(&version)
-            .join("package.json");
+            .join(&version);
+
+        if !(&package_json_buf_path.join("package.json").exists()) {
+            package_json_buf_path = package_json_buf_path.join("package")
+        }
+        package_json_buf_path = package_json_buf_path.join("package.json");
 
         let mut hashmap = PackageJson::from_file_path(&package_json_buf_path)?.bin_to_hashmap()?;
 
