@@ -297,13 +297,14 @@ impl DispatchManage {
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-        fs::remove_file(&downloaded_file_path_buf).expect(
-            format!(
+        let remove_result = fs::remove_file(&downloaded_file_path_buf);
+
+        if remove_result.is_err() {
+            print_warning!(
                 "download remove_file error {:?}",
                 &downloaded_file_path_buf.display()
-            )
-            .as_str(),
-        );
+            );
+        }
 
         Ok(())
     }
