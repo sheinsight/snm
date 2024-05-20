@@ -3,7 +3,7 @@ use std::env;
 use snm_core::config::SnmConfig;
 
 #[test]
-fn no_env_init_test() {
+fn test_init_without_env() {
     let snm_config = SnmConfig::new();
     snm_config.init().expect("snm_config_init_success");
     assert_eq!(env::var("SNM_STRICT"), Ok("false".to_string()));
