@@ -2,6 +2,8 @@ use regex::{Captures, Regex};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
+use crate::utils::get_current_dir::get_current_dir;
+
 use super::SnmError;
 
 #[derive(Debug, Deserialize)]
@@ -36,7 +38,7 @@ pub enum Bin {
 
 impl PackageJson {
     pub fn from_here() -> Result<Self, SnmError> {
-        let workspace = std::env::current_dir().expect("get current dir error.");
+        let workspace = get_current_dir()?;
         let package_json_file_path = workspace.join("package.json");
 
         if package_json_file_path.exists() {
@@ -57,7 +59,7 @@ impl PackageJson {
         let wk = if let Some(wk) = workspace {
             wk
         } else {
-            std::env::current_dir().expect("get current dir error.")
+            get_current_dir()?
         };
 
         let pkg_file_path = wk.join("package.json");

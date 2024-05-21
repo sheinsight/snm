@@ -1,11 +1,11 @@
-use std::env::current_dir;
-
 use crate::model::SnmError;
+
+use super::get_current_dir::get_current_dir;
 
 pub static LOCK_FILE_VEC: [&'static str; 3] = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"];
 
 pub fn check_multi_lock_file() -> Result<Vec<String>, SnmError> {
-    let dir = current_dir().expect("get current dir error.");
+    let dir = get_current_dir()?;
 
     let exists_vec = LOCK_FILE_VEC
         .iter()

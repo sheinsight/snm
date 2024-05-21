@@ -4,6 +4,7 @@ use dialoguer::Confirm;
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
+use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
     config::SnmConfig,
     model::{
@@ -14,7 +15,6 @@ use snm_core::{
 };
 use std::ops::Not;
 use std::{
-    env::current_dir,
     fs::File,
     io::{BufReader, Read},
     path::PathBuf,
@@ -189,9 +189,7 @@ impl ManageTrait for SnmNpm {
 
 impl ShimTrait for SnmNpm {
     fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<(), SnmError> {
-        let package_json_path_buf = current_dir()
-            .expect("get current dir failed")
-            .join("package.json");
+        let package_json_path_buf = get_current_dir()?.join("package.json");
 
         if package_json_path_buf.exists().not() {
             return Err(SnmError::NotFoundPackageJsonFile {
@@ -211,9 +209,7 @@ impl ShimTrait for SnmNpm {
     }
 
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
-        let package_json_path_buf = current_dir()
-            .expect("get current dir failed")
-            .join("package.json");
+        let package_json_path_buf = get_current_dir()?.join("package.json");
 
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
 

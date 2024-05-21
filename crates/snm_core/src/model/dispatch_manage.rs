@@ -187,18 +187,19 @@ impl DispatchManage {
         let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
 
         if anchor_file_path_buf.exists().not() {
-            if Confirm::new()
+            let install_confirm = Confirm::new()
                 .with_prompt(format!(
                     "🤔 v{} is not installed, do you want to install it ?",
                     &v
                 ))
-                .interact()
-                .expect("set_default Confirm error")
-            {
-                self.install(&v).await?;
-            } else {
-                return Ok(());
+                .interact();
+
+            if let Err(_) = install_confirm {
+                return Err(SnmError::Error("set_default Confirm error".to_string()));
             }
+            self.install(&v).await?;
+
+            return Ok(());
         }
 
         if let Some(d_v) = default_v {

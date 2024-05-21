@@ -1,10 +1,13 @@
-use std::{env::current_dir, fs};
+use std::fs;
 
 use colored::*;
 use dialoguer::{theme::ColorfulTheme, Select};
 use regex::Regex;
 use semver::{Prerelease, Version};
-use snm_core::model::{PackageJson, SnmError};
+use snm_core::{
+    model::{PackageJson, SnmError},
+    utils::get_current_dir::get_current_dir,
+};
 
 pub fn bump_impl() -> Result<(), SnmError> {
     let package_json = PackageJson::from_here()?;
@@ -58,7 +61,7 @@ pub fn bump_impl() -> Result<(), SnmError> {
         .interact()
         .expect("bump_impl Select error");
 
-    let dir = current_dir().expect("get current dir failed");
+    let dir = get_current_dir()?;
 
     let c = fs::read_to_string(dir.join("package.json")).expect(
         format!(

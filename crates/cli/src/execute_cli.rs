@@ -2,6 +2,7 @@ use colored::*;
 use manage_command::ManageCommands;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
 use snm_command::SnmCommands;
+use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
     model::{
         dispatch_manage::DispatchManage, package_json::PackageManager, trait_manage::ManageTrait,
@@ -13,7 +14,6 @@ use snm_node::snm_node::SnmNode;
 use snm_npm::snm_npm::SnmNpm;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use std::{
-    env::current_dir,
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -159,7 +159,7 @@ pub async fn execute_cli(cli: SnmCli) -> Result<(), SnmError> {
 }
 
 pub async fn get_bin() -> Result<((String, String), PathBuf), SnmError> {
-    let dir = current_dir().expect("get current dir failed");
+    let dir = get_current_dir()?;
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf)?;
@@ -198,14 +198,18 @@ where
         format!("by {}", bin_path_buf.display()).bright_black()
     );
 
-    Command::new(bin_path_buf.display().to_string())
+    let output = Command::new(bin_path_buf.display().to_string())
         .args(&args)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())
         .spawn()
-        .and_then(|process| process.wait_with_output())
-        .expect("spawn error");
+        .and_then(|process| process.wait_with_output());
+
+    if let Err(_) = output {
+        return Err(SnmError::Error("spawn error".to_string()));
+    }
+
     Ok(())
 }
 

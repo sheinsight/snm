@@ -1,7 +1,4 @@
-use std::{
-    env::current_dir,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 use colored::*;
 use snm_core::{
@@ -10,6 +7,7 @@ use snm_core::{
         PackageJson, SnmError,
     },
     println_success,
+    utils::get_current_dir::get_current_dir,
 };
 
 pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str) {
@@ -36,8 +34,8 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str) {
     }
 }
 
-pub fn check(actual_package_manager: &str) -> Result<(), SnmError> {
-    let dir = current_dir().expect("get current dir failed");
+pub fn _check(actual_package_manager: &str) -> Result<(), SnmError> {
+    let dir = get_current_dir()?;
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json = PackageJson::from_file_path(&package_json_path_buf)?;
