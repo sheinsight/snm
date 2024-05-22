@@ -58,19 +58,25 @@ impl SnmConfig {
     pub fn init(&self) -> Result<(), SnmError> {
         self.init_strict();
 
-        self.create_dir_all(self.get_base_dir_path_buf());
-        self.create_dir_all(self.get_node_bin_dir_path_buf());
-        self.create_dir_all(self.get_download_dir_path_buf());
-        self.create_dir_all(self.get_node_modules_dir_path_buf());
+        self.create_dir_all(self.get_base_dir_path_buf())?;
+        self.create_dir_all(self.get_node_bin_dir_path_buf())?;
+        self.create_dir_all(self.get_download_dir_path_buf())?;
+        self.create_dir_all(self.get_node_modules_dir_path_buf())?;
 
         self.init_url_config();
 
         Ok(())
     }
 
-    fn create_dir_all(&self, path_buf: PathBuf) {
-        create_dir_all(&path_buf)
-            .expect(format!("create dir error {:?}", path_buf.display().to_string()).as_str())
+    fn create_dir_all(&self, path_buf: PathBuf) -> Result<(), SnmError> {
+        create_dir_all(&path_buf).map_err(|_| {
+            SnmError::Error(format!(
+                "create dir error {:?}",
+                path_buf.display().to_string()
+            ))
+        })?;
+
+        Ok(())
     }
 
     pub fn get_strict(&self) -> bool {

@@ -13,14 +13,15 @@ pub fn bump_impl() -> Result<(), SnmError> {
     let package_json = PackageJson::from_here()?;
     let current_version =
         Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())
-            .expect("parse version error");
+            .map_err(|_| SnmError::Error("parse version error".to_string()))?;
     let prerelease_number = current_version.pre.parse::<u8>().unwrap_or(0) + 1;
 
     let major = current_version.major;
     let minor = current_version.minor;
     let patch = current_version.patch;
 
-    let zero_pre_release = Prerelease::new("0").expect("create prerelease error 0");
+    let zero_pre_release = Prerelease::new("0")
+        .map_err(|_| SnmError::Error("create prerelease error 0".to_string()))?;
 
     let versions_and_strings = vec![
         create_version_and_string("major", major + 1, 0, 0, None)?,
@@ -41,8 +42,9 @@ pub fn bump_impl() -> Result<(), SnmError> {
             minor,
             patch,
             Some(
-                Prerelease::new(prerelease_number.to_string().as_str())
-                    .expect(format!("create prerelease error {}", prerelease_number).as_str()),
+                Prerelease::new(prerelease_number.to_string().as_str()).map_err(|_| {
+                    SnmError::Error(format!("create prerelease error {}", prerelease_number))
+                })?,
             ),
         )?,
     ];
@@ -59,19 +61,19 @@ pub fn bump_impl() -> Result<(), SnmError> {
         .default(0)
         .items(&selections[..])
         .interact()
-        .expect("bump_impl Select error");
+        .map_err(|_| SnmError::Error("bump_impl Select error".to_string()))?;
 
     let dir = get_current_dir()?;
 
-    let c = fs::read_to_string(dir.join("package.json")).expect(
-        format!(
+    let c = fs::read_to_string(dir.join("package.json")).map_err(|_| {
+        SnmError::Error(format!(
             "bump_impl read_to_string error {:?}",
             dir.join("package.json").display()
-        )
-        .as_str(),
-    );
+        ))
+    })?;
 
-    let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#).expect("create regex error");
+    let version_regex = Regex::new(r#""version"\s*:\s*"[^"]*""#)
+        .map_err(|_| SnmError::Error("create regex error".to_string()))?;
     let replacement = format!(
         r#""version": "{}""#,
         versions_and_strings[selection].0.to_string()
@@ -79,13 +81,12 @@ pub fn bump_impl() -> Result<(), SnmError> {
 
     let x = version_regex.replace(&c, replacement.as_str());
 
-    fs::write(dir.join("package.json"), x.to_string()).expect(
-        format!(
+    fs::write(dir.join("package.json"), x.to_string()).map_err(|_| {
+        SnmError::Error(format!(
             "bump_impl write error {:?}",
             dir.join("package.json").display()
-        )
-        .as_str(),
-    );
+        ))
+    })?;
 
     println!(
         "您选择了: {} , {:?}",

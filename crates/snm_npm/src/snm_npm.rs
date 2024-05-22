@@ -102,10 +102,10 @@ impl ManageTrait for SnmNpm {
 
         let value: Value = reqwest::get(&download_url)
             .await
-            .expect(format!("download error {}", &download_url).as_str())
+            .map_err(|_| SnmError::Error(format!("download error {}", &download_url)))?
             .json()
             .await
-            .expect(format!("json error {}", &download_url).as_str());
+            .map_err(|_| SnmError::Error(format!("json error {}", &download_url)))?;
 
         let x = value
             .get("dist")
@@ -121,13 +121,12 @@ impl ManageTrait for SnmNpm {
         &self,
         downloaded_file_path_buf: &PathBuf,
     ) -> Result<String, SnmError> {
-        let file = File::open(downloaded_file_path_buf).expect(
-            format!(
+        let file = File::open(downloaded_file_path_buf).map_err(|_| {
+            SnmError::Error(format!(
                 "get_actual_shasum File::open error {:?}",
                 &downloaded_file_path_buf.display()
-            )
-            .as_str(),
-        );
+            ))
+        })?;
         let mut reader = BufReader::new(file);
         let mut hasher = Sha1::new();
 
@@ -135,7 +134,7 @@ impl ManageTrait for SnmNpm {
         loop {
             let n = reader
                 .read(&mut buffer)
-                .expect("get_actual_shasum read error");
+                .map_err(|_| SnmError::Error("get_actual_shasum read error".to_string()))?;
             if n == 0 {
                 break;
             }
@@ -237,10 +236,7 @@ impl ShimTrait for SnmNpm {
                     &version
                 ))
                 .interact()
-                .expect(
-                    "
-                download Confirm error",
-                )),
+                .map_err(|_| SnmError::Error("download Confirm error".to_string())))?,
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::UnsupportedPackageManager {
                     name: self.prefix.to_string(),

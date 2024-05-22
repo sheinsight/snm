@@ -89,10 +89,12 @@ impl DownloadBuilder {
                     )));
                 }
                 WriteStrategy::WriteAfterDelete => {
-                    std::fs::remove_file(&abs_path_ref).expect(
-                        format!("download remove file error {:?}", &abs_path_ref.display())
-                            .as_str(),
-                    );
+                    std::fs::remove_file(&abs_path_ref).map_err(|_| {
+                        SnmError::Error(format!(
+                            "download remove file error {:?}",
+                            &abs_path_ref.display()
+                        ))
+                    })?;
                 }
                 WriteStrategy::Nothing => {
                     // 如果选择不覆盖已存在的文件，则直接返回成功
@@ -113,7 +115,7 @@ impl DownloadBuilder {
                 .timeout(Duration::from_secs(60))
                 .send()
                 .await
-                .expect(format!("download error {}", &download_url).as_str());
+                .map_err(|_| SnmError::Error(format!("download error {}", &download_url)))?;
 
             let response_status = response.status();
 
@@ -132,9 +134,12 @@ impl DownloadBuilder {
 
             let total_size = response.content_length();
 
-            let mut file = tokio::fs::File::create(abs_path_ref).await.expect(
-                format!("download create file error {:?}", &abs_path_ref.display()).as_str(),
-            );
+            let mut file = tokio::fs::File::create(abs_path_ref).await.map_err(|_| {
+                SnmError::Error(format!(
+                    "download create file error {:?}",
+                    &abs_path_ref.display()
+                ))
+            })?;
 
             let mut stream = response.bytes_stream();
 
@@ -154,18 +159,25 @@ impl DownloadBuilder {
             progress_bar.set_message(download_url.to_string());
 
             while let Some(chunk) = stream.next().await {
-                let chunk = chunk.expect("download stream chunk error");
+                let chunk = chunk
+                    .map_err(|_| SnmError::Error("download stream chunk error".to_string()))?;
 
-                file.write_all(&chunk).await.expect(
-                    format!("download write file error {:?}", &abs_path_ref.display()).as_str(),
-                );
+                file.write_all(&chunk).await.map_err(|_| {
+                    SnmError::Error(format!(
+                        "download write file error {:?}",
+                        &abs_path_ref.display()
+                    ))
+                })?;
 
                 progress_bar.inc(chunk.len() as u64);
             }
 
-            file.flush().await.expect(
-                format!("download flush file error {:?}", &abs_path_ref.display()).as_str(),
-            );
+            file.flush().await.map_err(|_| {
+                SnmError::Error(format!(
+                    "download flush file error {:?}",
+                    &abs_path_ref.display()
+                ))
+            })?;
 
             progress_bar.finish();
         }

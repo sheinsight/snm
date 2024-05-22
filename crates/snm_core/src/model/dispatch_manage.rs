@@ -123,7 +123,7 @@ impl DispatchManage {
                 &v
             ))
             .interact()
-            .expect("install Confirm error")
+            .map_err(|_| SnmError::Error("install Confirm error".to_string()))?
             .not()
         {
             return Ok(());
@@ -150,19 +150,18 @@ impl DispatchManage {
                         &d_v
                     ))
                     .interact()
-                    .expect("un_install Confirm error")
+                    .map_err(|_| SnmError::Error("un_install Confirm error".to_string()))?
                 {
                     let default_path_buf = self
                         .manager
                         .get_runtime_dir_path_buf(format!("{}-default", &v).as_str());
 
-                    fs::remove_dir_all(&default_path_buf).expect(
-                        format!(
+                    fs::remove_dir_all(&default_path_buf).map_err(|_| {
+                        SnmError::Error(format!(
                             "un_install remove_dir_all error {:?}",
                             &default_path_buf.display()
-                        )
-                        .as_str(),
-                    );
+                        ))
+                    })?;
                 } else {
                     return Ok(());
                 }
@@ -170,13 +169,12 @@ impl DispatchManage {
         }
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
-        fs::remove_dir_all(&runtime_dir_path_buf).expect(
-            format!(
+        fs::remove_dir_all(&runtime_dir_path_buf).map_err(|_| {
+            SnmError::Error(format!(
                 "un_install remove_dir_all error {:?}",
                 &runtime_dir_path_buf.display()
-            )
-            .as_str(),
-        );
+            ))
+        })?;
 
         Ok(())
     }
@@ -187,16 +185,14 @@ impl DispatchManage {
         let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
 
         if anchor_file_path_buf.exists().not() {
-            let install_confirm = Confirm::new()
+            Confirm::new()
                 .with_prompt(format!(
                     "🤔 v{} is not installed, do you want to install it ?",
                     &v
                 ))
-                .interact();
+                .interact()
+                .map_err(|_| SnmError::Error("set_default Confirm error".to_string()))?;
 
-            if let Err(_) = install_confirm {
-                return Err(SnmError::Error("set_default Confirm error".to_string()));
-            }
             self.install(&v).await?;
 
             return Ok(());
@@ -204,26 +200,24 @@ impl DispatchManage {
 
         if let Some(d_v) = default_v {
             let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v);
-            fs::remove_dir_all(&default_dir_path_buf).expect(
-                format!(
+            fs::remove_dir_all(&default_dir_path_buf).map_err(|_| {
+                SnmError::Error(format!(
                     "set_default remove_dir_all error {:?}",
                     &default_dir_path_buf.display()
-                )
-                .as_str(),
-            );
+                ))
+            })?;
         }
 
         let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
         let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v);
 
-        create_symlink(&from_dir_path_buf, &to_dir_path_buf).expect(
-            format!(
+        create_symlink(&from_dir_path_buf, &to_dir_path_buf).map_err(|_| {
+            SnmError::Error(format!(
                 "set_default create_symlink error from: {:?} to: {:?}",
                 &from_dir_path_buf.display(),
                 &to_dir_path_buf.display()
-            )
-            .as_str(),
-        );
+            ))
+        })?;
 
         Ok(())
     }
@@ -246,13 +240,12 @@ impl DispatchManage {
 
         let dir_name_vec = runtime_dir_path_buf
             .read_dir()
-            .expect(
-                format!(
+            .map_err(|_| {
+                SnmError::Error(format!(
                     "read_runtime_dir_name_vec read_dir error {:?}",
                     &runtime_dir_path_buf.display()
-                )
-                .as_str(),
-            )
+                ))
+            })?
             .filter_map(|dir_entry| dir_entry.ok())
             .filter(|dir_entry| dir_entry.path().is_dir())
             .filter_map(|dir_entry| {

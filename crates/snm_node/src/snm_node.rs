@@ -257,7 +257,9 @@ impl ManageTrait for SnmNode {
 
         let mut buffer = [0; 1024];
         loop {
-            let n = reader.read(&mut buffer).expect("read error");
+            let n = reader
+                .read(&mut buffer)
+                .map_err(|_| SnmError::Error("read error".to_string()))?;
             if n == 0 {
                 break;
             }
@@ -443,13 +445,12 @@ impl ManageTrait for SnmNode {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress_xz(&input_file_path_buf, &output_dir_path_buf).expect(
-            format!(
+        decompress_xz(&input_file_path_buf, &output_dir_path_buf).map_err(|_| {
+            SnmError::Error(format!(
                 "decompress_xz {} error",
                 &input_file_path_buf.display().to_string()
-            )
-            .as_str(),
-        );
+            ))
+        })?;
         Ok(())
     }
 
@@ -482,13 +483,12 @@ impl ShimTrait for SnmNode {
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
         let version = read_to_string(&node_version_path_buf)
             .map(version_processor)
-            .expect(
-                format!(
+            .map_err(|_| {
+                SnmError::Error(format!(
                     "read_to_string {} error",
                     &node_version_path_buf.display().to_string()
-                )
-                .as_str(),
-            );
+                ))
+            })?;
         Ok(version)
     }
 
@@ -508,7 +508,7 @@ impl ShimTrait for SnmNode {
                     &version
                 ))
                 .interact()
-                .expect("download_condition Confirm error")),
+                .map_err(|_| SnmError::Error("download_condition Confirm error".to_string()))?),
             snm_core::config::snm_config::InstallStrategy::Panic => {
                 Err(SnmError::Error(format!("Unsupported version: {}", version)))
             }
