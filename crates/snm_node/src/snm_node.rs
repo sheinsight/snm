@@ -14,6 +14,7 @@ use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
+use snm_core::model::current_dir::cwd;
 use snm_core::model::trait_manage::ManageTrait;
 use snm_core::model::trait_shared_behavior::SharedBehaviorTrait;
 use snm_core::model::trait_shim::ShimTrait;
@@ -22,6 +23,7 @@ use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::read_to_string;
 use std::ops::Not;
+use std::path::Path;
 use std::{
     fs::File,
     io::{BufReader, Read},
@@ -460,9 +462,9 @@ impl ManageTrait for SnmNode {
 
 impl ShimTrait for SnmNode {
     fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<(), SnmError> {
-        let node_version_path_buf = current_dir()
-            .expect("get current dir failed")
-            .join(".node-version");
+        let wk = cwd();
+
+        let node_version_path_buf = Path::new(&wk).join(".node-version");
 
         if node_version_path_buf.exists().not() {
             return Err(SnmError::NotFoundNodeVersionFile {
@@ -474,9 +476,10 @@ impl ShimTrait for SnmNode {
     }
 
     fn get_strict_shim_version(&self) -> Result<String, SnmError> {
-        let node_version_path_buf = current_dir()
-            .expect("get current dir failed")
-            .join(".node-version");
+        let wk = cwd();
+
+        let node_version_path_buf = Path::new(&wk).join(".node-version");
+
         if node_version_path_buf.exists().not() {
             return Err(SnmError::NotFoundNodeVersionFile {
                 file_path: node_version_path_buf.display().to_string(),
