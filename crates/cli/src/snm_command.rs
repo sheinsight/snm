@@ -6,6 +6,7 @@ use crate::{
         AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
         RunCommandArgs, SetCacheArgs,
     },
+    semver_manage_command::SemverManageCommands,
 };
 
 #[derive(Subcommand, Debug)]
@@ -28,31 +29,32 @@ pub enum SnmCommands {
         command: ManageCommands,
     },
 
-    #[command(alias = "i", about = "Used to install all dependencies for a project.")]
-    Install(InstallCommandArgs),
+    #[command(about = "Manage cwd package.json.")]
+    Semver {
+        #[command(subcommand)]
+        command: SemverManageCommands,
+    },
+
+    #[command(about = "Used to install all dependencies for a project.")]
+    I(InstallCommandArgs),
 
     #[command(about = "Alias to snm install --frozen-lockfile.")]
-    CI(InstallCommandArgs),
+    C(InstallCommandArgs),
 
     #[command(about = "Add a package and any packages that it depends on.")]
-    Add(AddCommandArgs),
+    A(AddCommandArgs),
 
     #[command(about = "Delete packages from node_modules and from the project's package.json.")]
-    Delete(DeleteCommandArgs),
+    D(DeleteCommandArgs),
 
-    #[command(about = "bump version.")]
-    Bump,
-
-    #[command(
-        about = "Fetches a package from the registry without installing it as a dependency, hotloads it, and runs whatever default command binary it exposes.."
-    )]
-    Dlx(DlxCommandArgs),
+    #[command(about = "Hot load a package, and runs whatever default command binary it exposes..")]
+    X(DlxCommandArgs),
 
     #[command(about = "Run a command from a local package.")]
-    Exec(ExecCommandArgs),
+    E(ExecCommandArgs),
 
     #[command(about = "Run some script.")]
-    Run(RunCommandArgs),
+    R(RunCommandArgs),
 
     SetCache(SetCacheArgs),
 

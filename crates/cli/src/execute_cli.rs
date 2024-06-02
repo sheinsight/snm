@@ -114,13 +114,15 @@ pub async fn execute_cli(cli: SnmCli) -> Result<(), SnmError> {
                     .await?;
             }
         },
+
+        SnmCommands::Semver { command } => todo!(),
         // manage end
 
         // snm command start
-        SnmCommands::Install(args) => {
+        SnmCommands::I(args) => {
             execute_command(|creator| creator.get_install_command(args)).await?;
         }
-        SnmCommands::CI(_) => {
+        SnmCommands::C(_) => {
             execute_command(|creator| {
                 creator.get_install_command(InstallCommandArgs {
                     frozen_lockfile: true,
@@ -128,31 +130,28 @@ pub async fn execute_cli(cli: SnmCli) -> Result<(), SnmError> {
             })
             .await?;
         }
-        SnmCommands::Add(args) => {
+        SnmCommands::A(args) => {
             execute_command(|creator| creator.get_add_command(args)).await?;
         }
-        SnmCommands::Delete(args) => {
+        SnmCommands::D(args) => {
             execute_command(|creator| creator.get_delete_command(args)).await?;
         }
         SnmCommands::Query => todo!(""),
-        // snm command end
-        SnmCommands::FigSpec => {
-            fig_spec_impl()?;
-        }
-        SnmCommands::Bump => {
-            bump_impl()?;
-        }
-        SnmCommands::Dlx(args) => {
+        SnmCommands::X(args) => {
             execute_command(|creator| creator.get_dlx_command(args)).await?;
         }
-        SnmCommands::Exec(args) => {
+        SnmCommands::E(args) => {
             execute_command(|creator| creator.get_exec_command(args)).await?;
         }
-        SnmCommands::Run(args) => {
+        SnmCommands::R(args) => {
             execute_command(|creator| creator.get_run_command(args)).await?;
         }
         SnmCommands::SetCache(args) => {
             execute_command(|creator| creator.get_set_cache_command(args)).await?;
+        }
+        // snm command end
+        SnmCommands::FigSpec => {
+            fig_spec_impl()?;
         }
     }
     Ok(())
