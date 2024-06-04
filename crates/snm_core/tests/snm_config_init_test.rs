@@ -5,7 +5,7 @@ use snm_core::config::SnmConfig;
 #[test]
 fn test_init_without_env() {
     let snm_config = SnmConfig::new();
-    snm_config.init().expect("snm_config_init_success");
+    snm_config.init();
     assert_eq!(env::var("SNM_STRICT"), Ok("false".to_string()));
 
     let home_dir = dirs::home_dir().expect("get home dir error.");

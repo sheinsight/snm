@@ -51,3 +51,4 @@ regex = "1.10.4"
 glob = "0.3.1"
 clap_complete = "4.5.1"
 clap_complete_fig = "4.5.0"
+

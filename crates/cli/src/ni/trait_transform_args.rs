@@ -1,5 +1,4 @@
 use clap::Parser;
-use snm_core::model::SnmError;
 
 #[derive(Parser, Debug)]
 pub struct AddCommandArgs {
@@ -61,17 +60,17 @@ pub struct SetCacheArgs {
 }
 
 pub trait CommandArgsCreatorTrait {
-    fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_install_command(&self, args: InstallCommandArgs) -> Vec<String>;
 
-    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Vec<String>;
 
-    fn get_delete_command(&self, args: DeleteCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_delete_command(&self, args: DeleteCommandArgs) -> Vec<String>;
 
-    fn get_dlx_command(&self, args: DlxCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_dlx_command(&self, args: DlxCommandArgs) -> Vec<String>;
 
-    fn get_exec_command(&self, args: ExecCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_exec_command(&self, args: ExecCommandArgs) -> Vec<String>;
 
-    fn get_run_command(&self, args: RunCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_run_command(&self, args: RunCommandArgs) -> Vec<String>;
 
-    fn get_set_cache_command(&self, args: SetCacheArgs) -> Result<Vec<String>, SnmError>;
+    fn get_set_cache_command(&self, args: SetCacheArgs) -> Vec<String>;
 }

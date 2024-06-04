@@ -1,10 +1,10 @@
 use regex::Regex;
-use snm_core::{model::SnmError, print_warning};
+use snm_core::print_warning;
 use std::time::Duration;
 
 use crate::conditional_compiler::{get_arch, get_os};
 
-pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<(), SnmError> {
+pub async fn _check_supported(node_version: &str, node_dist_url: &str) {
     let client = reqwest::Client::new();
     let response = client
         .get(node_dist_url)
@@ -14,10 +14,8 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
 
     // if request err, like timeout
     if response.is_err() {
-        return Err(SnmError::Error(format!(
-            "request error {:?}",
-            response.err()
-        )));
+        let msg = format!("request error {:?}", response.err());
+        panic!("{msg}");
     }
 
     let response = response.unwrap();
@@ -28,16 +26,14 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
 
     // response is not 200-299
     if !response_status.is_success() {
-        return Err(SnmError::UnsupportedPlatform { os, arch });
+        panic!("UnsupportedPlatform {os} {arch}");
     }
 
     let text = response.text().await;
 
     if text.is_err() {
-        return Err(SnmError::Error(format!(
-            "parse {} response to text failed",
-            node_dist_url
-        )));
+        let msg = format!("parse {} response to text failed", node_dist_url);
+        panic!("{msg}");
     }
 
     let text = text.unwrap();
@@ -67,12 +63,10 @@ pub async fn check_supported(node_version: &str, node_dist_url: &str) -> Result<
         }
     }
 
-    if is_supported {
-        return Ok(());
-    } else {
+    if !is_supported {
         print_warning!("not support {}", &temp_su);
 
         print_warning!("supported list {:?}", &supported_list);
-        return Err(SnmError::UnsupportedPlatform { os, arch });
+        panic!("UnsupportedPlatform {os} {arch}")
     }
 }

@@ -2,16 +2,7 @@ use flate2::read::GzDecoder;
 use std::{fs::File, path::PathBuf};
 use tar::Archive;
 
-use crate::model::SnmError;
-
-pub fn decompress_tgz<D>(
-    input_path: &PathBuf,
-    output_path: &PathBuf,
-    get_target_dir: D,
-) -> Result<(), SnmError>
-where
-    D: Fn(&PathBuf) -> PathBuf,
-{
+pub fn decompress_tgz(input_path: &PathBuf, output_path: &PathBuf) {
     // 打开 tgz 文件
     let tgz_file = File::open(input_path).expect(
         format!(
@@ -20,6 +11,7 @@ where
         )
         .as_str(),
     );
+
     // 使用 GzDecoder 解压 gzip 文件
     let tar = GzDecoder::new(tgz_file);
     // 创建 Archive 对象以便操作 tar 文件
@@ -33,13 +25,11 @@ where
         )
         .as_str(),
     );
-
-    Ok(())
 }
 
-pub fn rename<T>(dir: &PathBuf, transform: &T) -> Result<(), SnmError>
+pub fn rename<T>(dir: &PathBuf, transform: &T) -> ()
 where
-    T: Fn(&PathBuf) -> Result<PathBuf, SnmError>,
+    T: Fn(&PathBuf) -> PathBuf,
 {
     let mut entries = std::fs::read_dir(&dir)
         .expect(format!("rename std::fs::read_dir error {:?}", &dir.display()).as_str());
@@ -50,11 +40,11 @@ where
         let path = entry.path();
 
         if path.is_dir() {
-            rename(&path, transform)?;
+            rename(&path, transform);
         } else {
             let from = &path;
 
-            let to = &transform(&from)?;
+            let to = &transform(&from);
 
             if let Some(parent) = to.parent() {
                 if !parent.exists() {
@@ -78,11 +68,9 @@ where
             );
         }
     }
-
-    Ok(())
 }
 
-pub fn decompress_xz(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), SnmError> {
+pub fn decompress_xz(input_path: &PathBuf, output_path: &PathBuf) {
     let input_file = File::open(input_path)
         .expect(format!("decompress_xz File::open error {:?}", &input_path.display()).as_str());
 
@@ -105,15 +93,15 @@ pub fn decompress_xz(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), 
 
     let old_base = output_path.join(dir.as_ref().unwrap());
 
-    let transform = |f: &PathBuf| -> Result<PathBuf, SnmError> {
+    let transform = |f: &PathBuf| -> PathBuf {
         let old_base = output_path.join(dir.as_ref().unwrap());
         let new_path = f
             .strip_prefix(&old_base)
             .expect("decompress_xz strip_prefix error");
-        Ok(output_path.join(new_path))
+        return output_path.join(new_path);
     };
 
-    rename(&old_base, &transform)?;
+    rename(&old_base, &transform);
 
     std::fs::remove_dir_all(&old_base).expect(
         format!(
@@ -122,6 +110,4 @@ pub fn decompress_xz(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), 
         )
         .as_str(),
     );
-
-    Ok(())
 }
