@@ -18,9 +18,8 @@ use snm_core::model::current_dir::cwd;
 use snm_core::model::trait_manage::ManageTrait;
 use snm_core::model::trait_shared_behavior::SharedBehaviorTrait;
 use snm_core::model::trait_shim::ShimTrait;
-use snm_core::{config::SnmConfig, model::SnmError, utils::tarball::decompress_xz};
+use snm_core::{config::SnmConfig, utils::tarball::decompress_xz};
 use std::collections::HashMap;
-use std::env::current_dir;
 use std::fs::read_to_string;
 use std::ops::Not;
 use std::path::Path;
@@ -41,36 +40,29 @@ impl SnmNode {
         }
     }
 
-    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
+    async fn get_node_list_remote(&self) -> Vec<NodeModel> {
         let host = self.snm_config.get_nodejs_dist_url_prefix();
         let node_list_url = format!("{}/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
             .await
-            .map_err(|_| SnmError::Error(format!("fetch {} failed", &node_list_url)))?
+            .expect(format!("fetch {} failed", &node_list_url).as_str())
             .json::<Vec<NodeModel>>()
             .await
-            .map_err(|_| {
-                SnmError::Error(format!("parse {} response to json failed", &node_list_url))
-            })?;
-        Ok(node_vec)
+            .expect(format!("parse {} response to json failed", &node_list_url).as_str());
+        node_vec
     }
 
-    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
+    async fn get_node_schedule(&self) -> Vec<NodeSchedule> {
         let host = self.snm_config.get_nodejs_github_resource_host();
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
         let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
             .await
-            .map_err(|_| SnmError::Error(format!("fetch {} failed", node_schedule_url)))?
+            .expect(format!("fetch {} failed", node_schedule_url).as_str())
             .json::<std::collections::HashMap<String, NodeSchedule>>()
             .await
-            .map_err(|_| {
-                SnmError::Error(format!(
-                    "parse {} response to json failed",
-                    node_schedule_url
-                ))
-            })?
+            .expect(format!("parse {} response to json failed", node_schedule_url).as_str())
             .into_iter()
             .map(|(v, mut schedule)| {
                 schedule.version = Some(v[1..].to_string());
@@ -78,22 +70,19 @@ impl SnmNode {
             })
             .collect();
 
-        Ok(node_schedule_vec)
+        node_schedule_vec
     }
 
-    async fn get_node_sha256_hashmap(
-        &self,
-        node_version: &str,
-    ) -> Result<HashMap<String, String>, SnmError> {
+    async fn get_node_sha256_hashmap(&self, node_version: &str) -> HashMap<String, String> {
         let host = self.snm_config.get_nodejs_dist_url_prefix();
         let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
 
         let sha256_str = reqwest::get(&url)
             .await
-            .map_err(|_| SnmError::Error(format!("fetch {} failed", url)))?
+            .expect(format!("fetch {} failed", url).as_str())
             .text()
             .await
-            .map_err(|_| SnmError::Error(format!("parse {} response to text failed", url)))?;
+            .expect(format!("parse {} response to text failed", url).as_str());
 
         let sha256_map: std::collections::HashMap<String, String> = sha256_str
             .lines()
@@ -105,10 +94,10 @@ impl SnmNode {
             })
             .collect();
 
-        Ok(sha256_map)
+        sha256_map
     }
 
-    fn show_off_online_node_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
+    fn _show_off_online_node_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
         let (dir_vec, default_v) = dir_tuple;
         for v in dir_vec {
             let prefix = if Some(v) == default_v.as_ref() {
@@ -229,8 +218,8 @@ impl ManageTrait for SnmNode {
         self.snm_config.get_node_bin_dir_path_buf()
     }
 
-    async fn get_expect_shasum(&self, v: &str) -> Result<String, SnmError> {
-        let mut hashmap = self.get_node_sha256_hashmap(&v).await?;
+    async fn get_expect_shasum(&self, v: &str) -> String {
+        let mut hashmap = self.get_node_sha256_hashmap(&v).await;
         let tar_file_name = format!(
             "node-v{}-{}-{}.{}",
             &v,
@@ -238,22 +227,19 @@ impl ManageTrait for SnmNode {
             get_arch(),
             get_tarball_ext()
         );
-        let expect_sha256 = hashmap
-            .remove(&tar_file_name)
-            .ok_or(SnmError::NotFoundSha256ForNode(tar_file_name.to_string()))?;
-        Ok(expect_sha256)
+
+        let expect_sha256 = hashmap.remove(&tar_file_name);
+        if expect_sha256.is_none() {
+            let msg = format!("NotFoundSha256ForNode {}", tar_file_name.to_string());
+            panic!("{msg}");
+        }
+
+        expect_sha256.unwrap()
     }
 
-    async fn get_actual_shasum(
-        &self,
-        downloaded_file_path_buf: &PathBuf,
-    ) -> Result<String, SnmError> {
-        let file = File::open(downloaded_file_path_buf).map_err(|_| {
-            SnmError::Error(format!(
-                "open file {} error",
-                downloaded_file_path_buf.display()
-            ))
-        })?;
+    async fn get_actual_shasum(&self, downloaded_file_path_buf: &PathBuf) -> String {
+        let file = File::open(downloaded_file_path_buf)
+            .expect(format!("open file {} error", downloaded_file_path_buf.display()).as_str());
         let mut reader = BufReader::new(file);
         let mut hasher = Sha256::new();
 
@@ -266,113 +252,103 @@ impl ManageTrait for SnmNode {
             hasher.update(&buffer[..n]);
         }
         let result = hasher.finalize();
-        Ok(format!("{:x}", result))
+        format!("{:x}", result)
     }
 
     fn get_host(&self) -> Option<String> {
         None
     }
 
-    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> Result<(), SnmError> {
+    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
         let (dir_vec, default_v) = dir_tuple;
         if dir_vec.is_empty() {
-            return Err(SnmError::Error(format!(
+            let msg = format!(
                 "Node list is empty, please use {} to get the latest version.",
                 "snm node list-remote".bright_green().bold()
-            )));
+            );
+            panic!("{msg}");
         }
 
         let now = Utc::now().date_naive();
+        let (remote_node_vec, node_schedule_vec) =
+            join!(self.get_node_list_remote(), self.get_node_schedule());
 
-        if let Ok((remote_node_vec, node_schedule_vec)) =
-            try_join!(self.get_node_list_remote(), self.get_node_schedule())
-        {
-            let version_req_vec = node_schedule_vec
-                .into_iter()
-                .filter_map(|schedule| {
-                    schedule
-                        .version
+        let version_req_vec = node_schedule_vec
+            .into_iter()
+            .filter_map(|schedule| {
+                schedule
+                    .version
+                    .as_ref()
+                    .and_then(|v| VersionReq::parse(v).ok())
+                    .map(|vr| (vr, schedule))
+            })
+            .collect::<Vec<(VersionReq, NodeSchedule)>>();
+
+        let mut hashmap = remote_node_vec
+            .into_iter()
+            .map(|node| (node.version.as_str().to_string(), node))
+            .collect::<HashMap<String, NodeModel>>();
+
+        let mut node_vec = dir_vec
+            .into_iter()
+            .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
+            .map(|mut node| {
+                node.version = node.version.trim_start_matches("v").to_string();
+
+                let version = Version::parse(&node.version);
+
+                let eq_version = |req: &VersionReq| {
+                    version
                         .as_ref()
-                        .and_then(|v| VersionReq::parse(v).ok())
-                        .map(|vr| (vr, schedule))
-                })
-                .collect::<Vec<(VersionReq, NodeSchedule)>>();
+                        .map_or(false, |version| req.matches(version))
+                };
 
-            let mut hashmap = remote_node_vec
-                .into_iter()
-                .map(|node| (node.version.as_str().to_string(), node))
-                .collect::<HashMap<String, NodeModel>>();
+                let node_schedule = version_req_vec
+                    .iter()
+                    .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
 
-            let mut node_vec = dir_vec
-                .into_iter()
-                .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
-                .map(|mut node| {
-                    node.version = node.version.trim_start_matches("v").to_string();
+                {
+                    node.end = node_schedule
+                        .map(|schedule| schedule.end.clone())
+                        .map_or(Some("None".to_string()), Some);
+                }
 
-                    let version = Version::parse(&node.version);
-
-                    let eq_version = |req: &VersionReq| {
-                        version
-                            .as_ref()
-                            .map_or(false, |version| req.matches(version))
+                {
+                    let map_deprecated = |schedule: &NodeSchedule| {
+                        NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
+                            .map(|end| now > end)
+                            .unwrap_or(true)
                     };
 
-                    let node_schedule = version_req_vec
-                        .iter()
-                        .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
+                    node.deprecated = node_schedule.map(map_deprecated).map_or(Some(true), Some);
+                }
 
-                    {
-                        node.end = node_schedule
-                            .map(|schedule| schedule.end.clone())
-                            .map_or(Some("None".to_string()), Some);
-                    }
+                node
+            })
+            .collect::<Vec<NodeModel>>();
 
-                    {
-                        let map_deprecated = |schedule: &NodeSchedule| {
-                            NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
-                                .map(|end| now > end)
-                                .unwrap_or(true)
-                        };
+        node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
 
-                        node.deprecated =
-                            node_schedule.map(map_deprecated).map_or(Some(true), Some);
-                    }
-
-                    node
-                })
-                .collect::<Vec<NodeModel>>();
-
-            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
-
-            if let Some(v) = default_v {
-                self.show_node_list(node_vec, |node_v| {
-                    if node_v == v {
-                        return "⛳️";
-                    } else {
-                        return "";
-                    }
-                });
-            } else {
-                self.show_node_list(node_vec, |_node_v| {
+        if let Some(v) = default_v {
+            self.show_node_list(node_vec, |node_v| {
+                if node_v == v {
+                    return "⛳️";
+                } else {
                     return "";
-                });
-            }
+                }
+            });
         } else {
-            self.show_off_online_node_list(dir_tuple)
+            self.show_node_list(node_vec, |_node_v| {
+                return "";
+            });
         }
-
-        Ok(())
     }
 
-    async fn show_list_remote(
-        &self,
-        dir_tuple: &(Vec<String>, Option<String>),
-        all: bool,
-    ) -> Result<(), SnmError> {
+    async fn show_list_remote(&self, dir_tuple: &(Vec<String>, Option<String>), all: bool) {
         let (dir_vec, _default_v) = dir_tuple;
 
         let (mut node_vec, node_schedule_vec) =
-            try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
+            join!(self.get_node_list_remote(), self.get_node_schedule());
 
         let now = Utc::now().date_naive();
 
@@ -436,23 +412,14 @@ impl ManageTrait for SnmNode {
                 return "";
             }
         });
-
-        Ok(())
     }
 
     fn decompress_download_file(
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
-    ) -> Result<(), SnmError> {
-        decompress_xz(&input_file_path_buf, &output_dir_path_buf).expect(
-            format!(
-                "decompress_xz {} error",
-                &input_file_path_buf.display().to_string()
-            )
-            .as_str(),
-        );
-        Ok(())
+    ) {
+        decompress_xz(&input_file_path_buf, &output_dir_path_buf);
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
@@ -461,29 +428,31 @@ impl ManageTrait for SnmNode {
 }
 
 impl ShimTrait for SnmNode {
-    fn check_satisfy_strict_mode(&self, bin_name: &str) -> Result<(), SnmError> {
+    fn check_satisfy_strict_mode(&self, _bin_name: &str) {
         let wk = cwd();
 
         let node_version_path_buf = Path::new(&wk).join(".node-version");
 
         if node_version_path_buf.exists().not() {
-            return Err(SnmError::NotFoundNodeVersionFile {
-                file_path: node_version_path_buf.display().to_string(),
-            });
+            let msg = format!(
+                "NotFoundNodeVersionFile {}",
+                node_version_path_buf.display().to_string()
+            );
+            panic!("{msg}");
         }
-
-        return Ok(());
     }
 
-    fn get_strict_shim_version(&self) -> Result<String, SnmError> {
+    fn get_strict_shim_version(&self) -> String {
         let wk = cwd();
 
         let node_version_path_buf = Path::new(&wk).join(".node-version");
 
         if node_version_path_buf.exists().not() {
-            return Err(SnmError::NotFoundNodeVersionFile {
-                file_path: node_version_path_buf.display().to_string(),
-            });
+            let msg = format!(
+                "NotFoundNodeVersionFile {}",
+                node_version_path_buf.display().to_string()
+            );
+            panic!("{msg}")
         }
         let version_processor =
             |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
@@ -496,56 +465,46 @@ impl ShimTrait for SnmNode {
                 )
                 .as_str(),
             );
-        Ok(version)
+        version
     }
 
-    fn get_strict_shim_binary_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        Ok(self.get_runtime_binary_file_path_buf(&bin_name, &version)?)
+    fn get_strict_shim_binary_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
+        self.get_runtime_binary_file_path_buf(&bin_name, &version)
     }
 
-    fn download_condition(&self, version: &str) -> Result<bool, SnmError> {
-        match self.snm_config.get_node_install_strategy()? {
-            snm_core::config::snm_config::InstallStrategy::Ask => Ok(Confirm::new()
+    fn download_condition(&self, version: &str) -> bool {
+        match self.snm_config.get_node_install_strategy() {
+            snm_core::config::snm_config::InstallStrategy::Ask => Confirm::new()
                 .with_prompt(format!(
                     "🤔 {} is not installed, do you want to install it ?",
                     &version
                 ))
                 .interact()
-                .expect("download_condition Confirm error")),
+                .expect("download_condition Confirm error"),
             snm_core::config::snm_config::InstallStrategy::Panic => {
-                Err(SnmError::Error(format!("Unsupported version: {}", version)))
+                let msg = format!("Unsupported version: {}", version);
+                panic!("{msg}");
             }
-            snm_core::config::snm_config::InstallStrategy::Auto => Ok(true),
+            snm_core::config::snm_config::InstallStrategy::Auto => true,
         }
     }
 
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        Ok(self
-            .get_runtime_dir_path_buf(&version)
+    fn get_runtime_binary_file_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
+        self.get_runtime_dir_path_buf(&version)
             .join("bin")
-            .join(bin_name))
+            .join(bin_name)
     }
 
-    fn check_default_version(
-        &self,
-        tuple: &(Vec<String>, Option<String>),
-    ) -> Result<String, SnmError> {
+    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
         let (_, default_v_dir) = tuple;
         if let Some(v) = default_v_dir {
-            return Ok(v.to_string());
+            return v.to_string();
         } else {
-            return Err(SnmError::Error(format!(
+            let msg = format!(
                 "Not found default node version, please use {} to set default node version.",
                 "snm node default <version>".bright_green().bold()
-            )));
+            );
+            panic!("{msg}");
         }
     }
 }

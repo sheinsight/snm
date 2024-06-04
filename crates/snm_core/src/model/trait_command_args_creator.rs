@@ -1,7 +1,5 @@
 use clap::Parser;
 
-use super::SnmError;
-
 #[derive(Parser, Debug)]
 pub struct AddCommandArgs {
     #[arg(help = "The package spec to install.")]
@@ -29,7 +27,7 @@ pub struct InstallCommandArgs {
 }
 
 pub trait CommandArgsCreatorTrait {
-    fn get_install_command(&self, args: InstallCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_install_command(&self, args: InstallCommandArgs) -> Vec<String>;
 
-    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Result<Vec<String>, SnmError>;
+    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Vec<String>;
 }

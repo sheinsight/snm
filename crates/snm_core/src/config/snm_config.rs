@@ -1,4 +1,3 @@
-use crate::model::SnmError;
 use std::{env, fs::create_dir_all, path::PathBuf};
 
 static SNM_BASE_DIR_KEY: &str = "SNM_BASE_DIR";
@@ -27,15 +26,18 @@ pub enum InstallStrategy {
 }
 
 impl InstallStrategy {
-    pub fn from_str(s: &str) -> Result<Self, SnmError> {
+    pub fn from_str(s: &str) -> Self {
         match s {
-            "ask" => Ok(InstallStrategy::Ask),
-            "panic" => Ok(InstallStrategy::Panic),
-            "auto" => Ok(InstallStrategy::Auto),
-            _ => Err(SnmError::Error(format!(
-                "Unsupported install strategy: {} , only support ask | panic | auto",
-                s
-            ))),
+            "ask" => InstallStrategy::Ask,
+            "panic" => InstallStrategy::Panic,
+            "auto" => InstallStrategy::Auto,
+            _ => {
+                let msg = format!(
+                    "Unsupported install strategy: {} , only support ask | panic | auto",
+                    s
+                );
+                panic!("{msg}");
+            }
         }
     }
 
@@ -55,7 +57,7 @@ impl SnmConfig {
         Self {}
     }
 
-    pub fn init(&self) -> Result<(), SnmError> {
+    pub fn init(&self) {
         self.init_strict();
 
         self.create_dir_all(self.get_base_dir_path_buf());
@@ -64,13 +66,11 @@ impl SnmConfig {
         self.create_dir_all(self.get_node_modules_dir_path_buf());
 
         self.init_url_config();
-
-        Ok(())
     }
 
     fn create_dir_all(&self, path_buf: PathBuf) {
         create_dir_all(&path_buf)
-            .expect(format!("create dir error {:?}", path_buf.display().to_string()).as_str())
+            .expect(format!("create dir error {:?}", path_buf.display().to_string()).as_str());
     }
 
     pub fn get_strict(&self) -> bool {
@@ -124,12 +124,12 @@ impl SnmConfig {
             .unwrap_or("https://raw.githubusercontent.com".to_string())
     }
 
-    pub fn get_node_install_strategy(&self) -> Result<InstallStrategy, SnmError> {
+    pub fn get_node_install_strategy(&self) -> InstallStrategy {
         let value = env::var(SNM_NODE_INSTALL_STRATEGY).unwrap_or("ask".to_string());
         InstallStrategy::from_str(&value)
     }
 
-    pub fn get_package_manager_install_strategy(&self) -> Result<InstallStrategy, SnmError> {
+    pub fn get_package_manager_install_strategy(&self) -> InstallStrategy {
         let value = env::var(SNM_PACKAGE_MANAGER_INSTALL_STRATEGY).unwrap_or("ask".to_string());
         InstallStrategy::from_str(&value)
     }

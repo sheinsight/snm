@@ -1,11 +1,11 @@
 use std::{fs, ops::Not};
 
 use clap::CommandFactory;
-use snm_core::{model::SnmError, println_success};
+use snm_core::println_success;
 
 use crate::SnmCli;
 
-pub fn fig_spec_impl() -> Result<(), SnmError> {
+pub fn fig_spec_impl() {
     let mut output = Vec::new();
     clap_complete::generate(
         clap_complete_fig::Fig,
@@ -46,5 +46,4 @@ pub fn fig_spec_impl() -> Result<(), SnmError> {
             spec_path_buf.display()
         );
     }
-    Ok(())
 }

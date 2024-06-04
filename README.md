@@ -174,8 +174,9 @@ use [cargo-nextest](https://nexte.st/book/pre-built-binaries) to run tests
 
 for Mac:
 
- ```
+ ```bash
  curl -LsSf https://get.nexte.st/latest/mac | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
 
- cargo nextest run
+ # Without --test-threads=1, test will fail
+ cargo nextest run --test-threads=1
  ```
