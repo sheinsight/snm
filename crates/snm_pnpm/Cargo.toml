@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-snm_npm = { path = "../snm_npm" }
+snm_package_manager = { path = "../snm_package_manager" }
 snm_core = { path = "../snm_core" }
 async-trait = "0.1.79"

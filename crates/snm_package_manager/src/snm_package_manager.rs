@@ -20,12 +20,12 @@ use std::{
     path::PathBuf,
 };
 
-pub struct SnmNpm {
+pub struct SnmPackageManager {
     snm_config: SnmConfig,
     prefix: String,
 }
 
-impl SnmNpm {
+impl SnmPackageManager {
     pub fn new() -> Self {
         Self {
             snm_config: SnmConfig::new(),
@@ -41,7 +41,7 @@ impl SnmNpm {
     }
 }
 
-impl SharedBehaviorTrait for SnmNpm {
+impl SharedBehaviorTrait for SnmPackageManager {
     fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
         self.snm_config
             .get_node_modules_dir_path_buf()
@@ -52,7 +52,7 @@ impl SharedBehaviorTrait for SnmNpm {
 }
 
 #[async_trait(?Send)]
-impl ManageTrait for SnmNpm {
+impl ManageTrait for SnmPackageManager {
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry_host();
         format!(
@@ -164,7 +164,7 @@ impl ManageTrait for SnmNpm {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmNpm::from_prefix(&self.prefix))
+        Box::new(SnmPackageManager::from_prefix(&self.prefix))
     }
 
     fn decompress_download_file(
@@ -176,7 +176,7 @@ impl ManageTrait for SnmNpm {
     }
 }
 
-impl ShimTrait for SnmNpm {
+impl ShimTrait for SnmPackageManager {
     fn check_satisfy_strict_mode(&self, bin_name: &str) {
         let package_json_path_buf = get_current_dir().join("package.json");
 

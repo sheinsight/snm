@@ -41,7 +41,7 @@ dialoguer = "0.11.0"
 env_logger = "0.11.2"
 snm_core = { path = "../snm_core" }
 snm_node = { path = "../snm_node" }
-snm_npm = { path = "../snm_npm" }
+snm_package_manager = { path = "../snm_package_manager" }
 snm_pnpm = { path = "../snm_pnpm" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }

@@ -1,5 +1,5 @@
 [package]
-name = "snm_npm"
+name = "snm_package_manager"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,9 +1,9 @@
-use snm_npm::snm_npm::SnmNpm;
+use snm_package_manager::snm_package_manager::SnmPackageManager;
 
 pub struct SnmPnpm;
 
 impl SnmPnpm {
-    pub fn new() -> SnmNpm {
-        SnmNpm::from_prefix("pnpm")
+    pub fn new() -> SnmPackageManager {
+        SnmPackageManager::from_prefix("pnpm")
     }
 }

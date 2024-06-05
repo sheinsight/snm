@@ -3,7 +3,7 @@ members = [
     "crates/cli",
     "crates/snm_node",
     "crates/snm_core",
-    "crates/snm_npm",
+    "crates/snm_package_manager",
     "crates/snm_pnpm",
 ]
 resolver = "2"

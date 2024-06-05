@@ -11,7 +11,7 @@ use snm_core::{
     println_success,
 };
 use snm_node::snm_node::SnmNode;
-use snm_npm::snm_npm::SnmNpm;
+use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_pnpm::snm_pnpm::SnmPnpm;
 use std::{
     path::PathBuf,
@@ -60,27 +60,29 @@ pub async fn execute_cli(cli: SnmCli) -> () {
         SnmCommands::Npm { command } => match command {
             ManageCommands::Default { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNpm::new()))
+                DispatchManage::new(Box::new(SnmPackageManager::new()))
                     .set_default(v)
                     .await;
             }
             ManageCommands::Install { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNpm::new()))
+                DispatchManage::new(Box::new(SnmPackageManager::new()))
                     .install(v)
                     .await;
             }
             ManageCommands::Uninstall { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNpm::new()))
+                DispatchManage::new(Box::new(SnmPackageManager::new()))
                     .un_install(v)
                     .await;
             }
             ManageCommands::List => {
-                DispatchManage::new(Box::new(SnmNpm::new())).list().await;
+                DispatchManage::new(Box::new(SnmPackageManager::new()))
+                    .list()
+                    .await;
             }
             ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(SnmNpm::new()))
+                DispatchManage::new(Box::new(SnmPackageManager::new()))
                     .list_remote(all)
                     .await;
             }
@@ -211,7 +213,7 @@ where
 pub async fn get_manage(package_manager: &PackageManager) -> Box<dyn ManageTrait> {
     let manager: Box<dyn ManageTrait> = match package_manager.name.as_str() {
         "npm" => {
-            let manager = SnmNpm::new();
+            let manager = SnmPackageManager::new();
             Box::new(manager)
         }
         "pnpm" => Box::new(SnmPnpm::new()),
