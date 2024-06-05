@@ -9,5 +9,5 @@ const BIN_NAME: &str = "npm";
 async fn main() {
     env_logger::init();
 
-    launch_shim(Box::new(SnmPackageManager::new()), BIN_NAME).await;
+    launch_shim(Box::new(SnmPackageManager::from_prefix("npm")), BIN_NAME).await;
 }

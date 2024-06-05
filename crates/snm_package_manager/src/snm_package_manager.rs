@@ -26,12 +26,6 @@ pub struct SnmPackageManager {
 }
 
 impl SnmPackageManager {
-    pub fn new() -> Self {
-        Self {
-            snm_config: SnmConfig::new(),
-            prefix: "npm".to_string(),
-        }
-    }
 
     pub fn from_prefix(prefix: &str) -> Self {
         Self {

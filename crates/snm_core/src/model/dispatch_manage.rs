@@ -227,7 +227,6 @@ impl DispatchManage {
             .filter_map(|dir_entry| {
                 let file_name = dir_entry.file_name().into_string().ok()?;
 
-                println!("file_name  {}", &file_name);
                 if file_name.ends_with("-default") {
                     default_dir = Some(file_name.trim_end_matches("-default").to_string());
                     return None;
