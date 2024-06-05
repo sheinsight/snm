@@ -19,6 +19,7 @@ static SNM_NODE_INSTALL_STRATEGY: &str = "SNM_NODE_INSTALL_STRATEGY";
 
 static SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: &str = "SNM_PACKAGE_MANAGER_INSTALL_STRATEGY";
 
+#[derive(Debug, Clone)]
 pub enum InstallStrategy {
     Ask,
     Panic,

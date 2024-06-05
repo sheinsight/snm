@@ -11,6 +11,7 @@ use snm_core::{
         trait_manage::ManageTrait, trait_shared_behavior::SharedBehaviorTrait,
         trait_shim::ShimTrait, PackageJson,
     },
+    snm_content::SnmContentHandler,
     utils::tarball::decompress_tgz,
 };
 use std::ops::Not;
@@ -21,23 +22,22 @@ use std::{
 };
 
 pub struct SnmPackageManager {
-    snm_config: SnmConfig,
+    snm_content_handler: SnmContentHandler,
     prefix: String,
 }
 
 impl SnmPackageManager {
-
-    pub fn from_prefix(prefix: &str) -> Self {
+    pub fn from_prefix(prefix: &str, snm_content_handler: SnmContentHandler) -> Self {
         Self {
-            snm_config: SnmConfig::new(),
             prefix: prefix.to_string(),
+            snm_content_handler,
         }
     }
 }
 
 impl SharedBehaviorTrait for SnmPackageManager {
     fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_node_modules_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
@@ -48,7 +48,7 @@ impl SharedBehaviorTrait for SnmPackageManager {
 #[async_trait(?Send)]
 impl ManageTrait for SnmPackageManager {
     fn get_download_url(&self, v: &str) -> String {
-        let npm_registry = self.snm_config.get_npm_registry_host();
+        let npm_registry = self.snm_content_handler.get_npm_registry();
         format!(
             "{}/{}/-/{}-{}.tgz",
             npm_registry, &self.prefix, &self.prefix, &v
@@ -56,7 +56,7 @@ impl ManageTrait for SnmPackageManager {
     }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_download_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
@@ -64,34 +64,34 @@ impl ManageTrait for SnmPackageManager {
     }
 
     fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_download_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
     }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_node_modules_dir_path_buf()
             .join(&self.prefix)
             .join(&v)
     }
 
     fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_node_modules_dir_path_buf()
             .join(&self.prefix)
             .join(format!("{}-default", &v))
     }
 
     fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
-        self.snm_config
+        self.snm_content_handler
             .get_node_modules_dir_path_buf()
             .join(&self.prefix)
     }
 
     async fn get_expect_shasum(&self, v: &str) -> String {
-        let npm_registry = self.snm_config.get_npm_registry_host();
+        let npm_registry = self.snm_content_handler.get_npm_registry();
         let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
 
         let value: Value = reqwest::get(&download_url)
@@ -162,7 +162,10 @@ impl ManageTrait for SnmPackageManager {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmPackageManager::from_prefix(&self.prefix))
+        Box::new(SnmPackageManager::from_prefix(
+            &self.prefix,
+            self.snm_content_handler.clone(),
+        ))
     }
 
     fn decompress_download_file(
@@ -217,7 +220,10 @@ impl ShimTrait for SnmPackageManager {
     }
 
     fn download_condition(&self, version: &str) -> bool {
-        match self.snm_config.get_package_manager_install_strategy() {
+        match self
+            .snm_content_handler
+            .get_package_manager_install_strategy()
+        {
             snm_core::config::snm_config::InstallStrategy::Ask => {
                 return Confirm::new()
                     .with_prompt(format!(
@@ -241,7 +247,7 @@ impl ShimTrait for SnmPackageManager {
 
     fn get_runtime_binary_file_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
         let mut package_json_buf_path = self
-            .snm_config
+            .snm_content_handler
             .get_node_modules_dir_path_buf()
             .join(self.prefix.to_string())
             .join(&version);

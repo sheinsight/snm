@@ -2,6 +2,7 @@ use colored::*;
 use manage_command::ManageCommands;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
 use snm_command::SnmCommands;
+use snm_core::snm_content::SnmContentHandler;
 use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
     model::{
@@ -24,78 +25,56 @@ use crate::{
     snm_command, SnmCli,
 };
 
-pub async fn execute_cli(cli: SnmCli) -> () {
+pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) -> () {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
+    let pnpm = SnmPackageManager::from_prefix("pnpm", snm_content_handler.clone());
+    let npm = SnmPackageManager::from_prefix("npm", snm_content_handler.clone());
     match cli.command {
         // manage start
         SnmCommands::Pnpm { command } => match command {
             ManageCommands::Default { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .set_default(v)
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).set_default(v).await;
             }
             ManageCommands::Install { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .install(v)
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).install(v).await;
             }
             ManageCommands::Uninstall { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .un_install(v)
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).un_install(v).await;
             }
             ManageCommands::List => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .list()
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).list().await;
             }
             ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .list_remote(all)
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).list_remote(all).await;
             }
             ManageCommands::ListOffline => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
-                    .list_offline()
-                    .await;
+                DispatchManage::new(Box::new(pnpm)).list_offline().await;
             }
         },
         SnmCommands::Npm { command } => match command {
             ManageCommands::Default { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .set_default(v)
-                    .await;
+                DispatchManage::new(Box::new(npm)).set_default(v).await;
             }
             ManageCommands::Install { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .install(v)
-                    .await;
+                DispatchManage::new(Box::new(npm)).install(v).await;
             }
             ManageCommands::Uninstall { version } => {
                 let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .un_install(v)
-                    .await;
+                DispatchManage::new(Box::new(npm)).un_install(v).await;
             }
             ManageCommands::List => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .list()
-                    .await;
+                DispatchManage::new(Box::new(npm)).list().await;
             }
             ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .list_remote(all)
-                    .await;
+                DispatchManage::new(Box::new(npm)).list_remote(all).await;
             }
             ManageCommands::ListOffline => {
-                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
-                    .list_offline()
-                    .await;
+                DispatchManage::new(Box::new(npm)).list_offline().await;
             }
         },
         SnmCommands::Node { command } => match command {
@@ -137,34 +116,53 @@ pub async fn execute_cli(cli: SnmCli) -> () {
 
         // snm command start
         SnmCommands::I(args) => {
-            execute_command(|creator| creator.get_install_command(args)).await;
+            execute_command(
+                |creator| creator.get_install_command(args),
+                snm_content_handler,
+            )
+            .await;
         }
         SnmCommands::C(_) => {
-            execute_command(|creator| {
-                creator.get_install_command(InstallCommandArgs {
-                    frozen_lockfile: true,
-                })
-            })
+            execute_command(
+                |creator| {
+                    creator.get_install_command(InstallCommandArgs {
+                        frozen_lockfile: true,
+                    })
+                },
+                snm_content_handler,
+            )
             .await;
         }
         SnmCommands::A(args) => {
-            execute_command(|creator| creator.get_add_command(args)).await;
+            execute_command(|creator| creator.get_add_command(args), snm_content_handler).await;
         }
         SnmCommands::D(args) => {
-            execute_command(|creator| creator.get_delete_command(args)).await;
+            execute_command(
+                |creator| creator.get_delete_command(args),
+                snm_content_handler,
+            )
+            .await;
         }
         SnmCommands::Query => todo!(""),
         SnmCommands::X(args) => {
-            execute_command(|creator| creator.get_dlx_command(args)).await;
+            execute_command(|creator| creator.get_dlx_command(args), snm_content_handler).await;
         }
         SnmCommands::E(args) => {
-            execute_command(|creator| creator.get_exec_command(args)).await;
+            execute_command(
+                |creator| creator.get_exec_command(args),
+                snm_content_handler,
+            )
+            .await;
         }
         SnmCommands::R(args) => {
-            execute_command(|creator| creator.get_run_command(args)).await;
+            execute_command(|creator| creator.get_run_command(args), snm_content_handler).await;
         }
         SnmCommands::SetCache(args) => {
-            execute_command(|creator| creator.get_set_cache_command(args)).await;
+            execute_command(
+                |creator| creator.get_set_cache_command(args),
+                snm_content_handler,
+            )
+            .await;
         }
         // snm command end
         SnmCommands::FigSpec => {
@@ -173,13 +171,13 @@ pub async fn execute_cli(cli: SnmCli) -> () {
     }
 }
 
-pub async fn get_bin() -> ((String, String), PathBuf) {
+pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String), PathBuf) {
     let dir = get_current_dir();
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf);
         let package_manager = package_json.parse_package_manager();
-        let manager = get_manage(&package_manager).await;
+        let manager = get_manage(&package_manager, snm_content_handler).await;
         let dispatcher = DispatchManage::new(manager);
         let (_, bin_path_buf) = dispatcher.proxy_process(&package_manager.name).await;
         return (
@@ -187,17 +185,20 @@ pub async fn get_bin() -> ((String, String), PathBuf) {
             bin_path_buf,
         );
     } else {
-        let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")));
+        let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix(
+            "pnpm",
+            snm_content_handler,
+        )));
         let (version, bin_path_buf) = dispatcher.proxy_process("pnpm").await;
         return (("pnpm".to_string(), version), bin_path_buf);
     }
 }
 
-async fn execute_command<F>(get_command_args: F) -> ()
+async fn execute_command<F>(get_command_args: F, snm_content_handler: SnmContentHandler) -> ()
 where
     F: FnOnce(&dyn CommandArgsCreatorTrait) -> Vec<String>,
 {
-    let ((name, version), bin_path_buf) = get_bin().await;
+    let ((name, version), bin_path_buf) = get_bin(snm_content_handler).await;
 
     let command_args_creator: Box<dyn CommandArgsCreatorTrait> = match name.as_str() {
         "npm" => Box::new(NpmArgsTransform {}),
@@ -226,13 +227,20 @@ where
     }
 }
 
-pub async fn get_manage(package_manager: &PackageManager) -> Box<dyn ManageTrait> {
+pub async fn get_manage(
+    package_manager: &PackageManager,
+    snm_content_handler: SnmContentHandler,
+) -> Box<dyn ManageTrait> {
     let manager: Box<dyn ManageTrait> = match package_manager.name.as_str() {
         "npm" => {
-            let manager = SnmPackageManager::from_prefix(&package_manager.name);
+            let manager =
+                SnmPackageManager::from_prefix(&package_manager.name, snm_content_handler);
             Box::new(manager)
         }
-        "pnpm" => Box::new(SnmPackageManager::from_prefix(&package_manager.name)),
+        "pnpm" => Box::new(SnmPackageManager::from_prefix(
+            &package_manager.name,
+            snm_content_handler,
+        )),
         _ => {
             let msg = format!(
                 "UnsupportedPackageManager {}@{}",
