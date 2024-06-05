@@ -89,6 +89,11 @@ impl DispatchManage {
         self.manager.show_list(&dir_tuple).await;
     }
 
+    pub async fn list_offline(&self) {
+        let dir_tuple = self.read_runtime_dir_name_vec();
+        self.manager.show_list_offline(&dir_tuple).await;
+    }
+
     pub async fn list_remote(&self, all: bool) {
         let dir_tuple = self.read_runtime_dir_name_vec();
         self.manager.show_list_remote(&dir_tuple, all).await;

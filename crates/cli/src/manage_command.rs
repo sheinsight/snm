@@ -18,6 +18,8 @@ pub enum ManageCommands {
         version: String,
     },
     /// List installed npm versions
+    ListOffline,
+    /// List installed npm versions
     List,
     /// List remote npm versions
     ListRemote {

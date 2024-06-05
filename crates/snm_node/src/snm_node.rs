@@ -344,6 +344,26 @@ impl ManageTrait for SnmNode {
         }
     }
 
+    async fn show_list_offline(&self, dir_tuple: &(Vec<String>, Option<String>)) {
+        let (dir_vec, default_v) = dir_tuple;
+        if dir_vec.is_empty() {
+            let msg = format!(
+                "Node list is empty, please use {} to get the latest version.",
+                "snm node list-remote".bright_green().bold()
+            );
+            panic!("{msg}");
+        }
+
+        dir_vec.iter().for_each(|item| {
+            let prefix = if Some(item) == default_v.as_ref() {
+                "⛳️"
+            } else {
+                " "
+            };
+            println!("{:<2} {}", prefix, item);
+        })
+    }
+
     async fn show_list_remote(&self, dir_tuple: &(Vec<String>, Option<String>), all: bool) {
         let (dir_vec, _default_v) = dir_tuple;
 

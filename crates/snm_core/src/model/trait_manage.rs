@@ -28,6 +28,8 @@ pub trait ManageTrait: SharedBehaviorTrait {
 
     async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) -> ();
 
+    async fn show_list_offline(&self, dir_tuple: &(Vec<String>, Option<String>)) -> ();
+
     async fn show_list_remote(&self, dir_tuple: &(Vec<String>, Option<String>), all: bool) -> ();
 
     fn decompress_download_file(

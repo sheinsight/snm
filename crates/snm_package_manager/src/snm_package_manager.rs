@@ -153,6 +153,10 @@ impl ManageTrait for SnmPackageManager {
         });
     }
 
+    async fn show_list_offline(&self, dir_tuple: &(Vec<String>, Option<String>)) {
+        todo!("show_list_remote")
+    }
+
     async fn show_list_remote(&self, _dir_tuple: &(Vec<String>, Option<String>), _all: bool) {
         todo!("show_list_remote")
     }

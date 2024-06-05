@@ -57,6 +57,11 @@ pub async fn execute_cli(cli: SnmCli) -> () {
                     .list_remote(all)
                     .await;
             }
+            ManageCommands::ListOffline => {
+                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("pnpm")))
+                    .list_offline()
+                    .await;
+            }
         },
         SnmCommands::Npm { command } => match command {
             ManageCommands::Default { version } => {
@@ -87,6 +92,11 @@ pub async fn execute_cli(cli: SnmCli) -> () {
                     .list_remote(all)
                     .await;
             }
+            ManageCommands::ListOffline => {
+                DispatchManage::new(Box::new(SnmPackageManager::from_prefix("npm")))
+                    .list_offline()
+                    .await;
+            }
         },
         SnmCommands::Node { command } => match command {
             ManageCommands::Default { version } => {
@@ -113,6 +123,11 @@ pub async fn execute_cli(cli: SnmCli) -> () {
             ManageCommands::ListRemote { all } => {
                 DispatchManage::new(Box::new(SnmNode::new()))
                     .list_remote(all)
+                    .await;
+            }
+            ManageCommands::ListOffline => {
+                DispatchManage::new(Box::new(SnmNode::new()))
+                    .list_offline()
                     .await;
             }
         },
