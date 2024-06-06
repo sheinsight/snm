@@ -23,8 +23,12 @@ async fn main() {
     });
 
     launch_shim(
-        Box::new(SnmPackageManager::from_prefix("npm", snm_content_handler)),
+        Box::new(SnmPackageManager::from_prefix(
+            "npm",
+            snm_content_handler.clone(),
+        )),
         BIN_NAME,
+        snm_content_handler.get_strict(),
     )
     .await;
 }

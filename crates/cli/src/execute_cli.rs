@@ -27,8 +27,10 @@ use crate::{
 
 pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) -> () {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
+
     let pnpm = SnmPackageManager::from_prefix("pnpm", snm_content_handler.clone());
     let npm = SnmPackageManager::from_prefix("npm", snm_content_handler.clone());
+
     match cli.command {
         // manage start
         SnmCommands::Pnpm { command } => match command {
@@ -177,9 +179,11 @@ pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String
     if package_json_path_buf.exists() {
         let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf);
         let package_manager = package_json.parse_package_manager();
-        let manager = get_manage(&package_manager, snm_content_handler).await;
+        let manager = get_manage(&package_manager, snm_content_handler.clone()).await;
         let dispatcher = DispatchManage::new(manager);
-        let (_, bin_path_buf) = dispatcher.proxy_process(&package_manager.name).await;
+        let (_, bin_path_buf) = dispatcher
+            .proxy_process(&package_manager.name, snm_content_handler.get_strict())
+            .await;
         return (
             (package_manager.name, package_manager.version),
             bin_path_buf,
@@ -187,9 +191,11 @@ pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String
     } else {
         let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix(
             "pnpm",
-            snm_content_handler,
+            snm_content_handler.clone(),
         )));
-        let (version, bin_path_buf) = dispatcher.proxy_process("pnpm").await;
+        let (version, bin_path_buf) = dispatcher
+            .proxy_process("pnpm", snm_content_handler.get_strict())
+            .await;
         return (("pnpm".to_string(), version), bin_path_buf);
     }
 }

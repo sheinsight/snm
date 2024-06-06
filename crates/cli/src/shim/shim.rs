@@ -7,9 +7,9 @@ use snm_core::{
     utils::get_current_dir::get_current_dir,
 };
 
-pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str) {
+pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str, strict: bool) {
     let dispatcher = DispatchManage::new(manager);
-    let (v, bin_path_buf) = dispatcher.proxy_process(bin_name).await;
+    let (v, bin_path_buf) = dispatcher.proxy_process(bin_name, strict).await;
     println_success!(
         "Use {:<8}. {}",
         v.bright_green(),

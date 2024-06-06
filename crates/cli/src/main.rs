@@ -1,3 +1,5 @@
+use std::env;
+
 use clap::Parser;
 use snm_core::{
     color_backtrace,
@@ -20,6 +22,8 @@ async fn main() {
         npm_registry: SnmConfig::new().get_npm_registry_host(),
         package_manager_install_strategy: InstallStrategy::Auto,
     });
+
+    println!("registry: {}", registry);
 
     let cli = SnmCli::parse();
 

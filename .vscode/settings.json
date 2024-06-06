@@ -18,6 +18,8 @@
         "premajor",
         "reqwest",
         "SHASUMS",
+        "tempdir",
+        "tempfile",
         "thiserror",
         "Unalias",
         "yarnpkg"

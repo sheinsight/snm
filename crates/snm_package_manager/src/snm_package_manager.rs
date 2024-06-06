@@ -6,7 +6,6 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
-    config::SnmConfig,
     model::{
         trait_manage::ManageTrait, trait_shared_behavior::SharedBehaviorTrait,
         trait_shim::ShimTrait, PackageJson,

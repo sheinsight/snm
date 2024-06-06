@@ -17,6 +17,12 @@ pub struct SnmContent {
     pub package_manager_install_strategy: InstallStrategy,
 }
 
+impl SnmContent {
+    pub fn get_strict(&self) -> bool {
+        self.strict
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SnmContentHandler {
     snm_content: SnmContent,

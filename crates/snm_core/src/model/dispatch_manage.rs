@@ -2,10 +2,7 @@ use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
 
-use crate::{
-    config::SnmConfig,
-    utils::download::{DownloadBuilder, WriteStrategy},
-};
+use crate::utils::download::{DownloadBuilder, WriteStrategy};
 #[cfg(unix)]
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
@@ -15,16 +12,11 @@ use super::trait_manage::ManageTrait;
 
 pub struct DispatchManage {
     manager: Box<dyn ManageTrait>,
-    snm_config: SnmConfig,
 }
 
 impl DispatchManage {
     pub fn new(manager: Box<dyn ManageTrait>) -> Self {
-        let snm_config = SnmConfig::new();
-        Self {
-            manager,
-            snm_config,
-        }
+        Self { manager }
     }
 }
 
@@ -73,11 +65,11 @@ impl DispatchManage {
         return (v, binary_path_buf);
     }
 
-    pub async fn proxy_process(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn proxy_process(&self, bin_name: &str, strict: bool) -> (String, PathBuf) {
         let shim_trait = self.manager.get_shim_trait();
         shim_trait.check_satisfy_strict_mode(bin_name);
 
-        if self.snm_config.get_strict() {
+        if strict {
             self.proxy_process_by_strict(bin_name).await
         } else {
             self.proxy_process_by_default(bin_name).await

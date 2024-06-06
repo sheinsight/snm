@@ -4,6 +4,7 @@ members = [
     "crates/snm_node",
     "crates/snm_core",
     "crates/snm_package_manager",
+    "crates/snm_read_npmrc"
 ]
 resolver = "2"
 
