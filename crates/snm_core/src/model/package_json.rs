@@ -1,8 +1,6 @@
 use regex::{Captures, Regex};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{collections::HashMap, fs::read_to_string, ops::Not, path::PathBuf};
-
-use crate::utils::get_current_dir::get_current_dir;
+use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct PackageManager {
@@ -35,36 +33,10 @@ pub enum Bin {
 }
 
 impl PackageJson {
-    pub fn from_here() -> Self {
-        let workspace = get_current_dir();
-        let package_json_file_path = workspace.join("package.json");
+    pub fn from_dir_path(workspace: &PathBuf) -> Self {
+        let pkg_file_path = workspace.join("package.json");
 
-        if package_json_file_path.exists().not() {
-            let msg = format!(
-                "Not found package.json file here {}",
-                package_json_file_path.display()
-            );
-
-            panic!("{msg}")
-        }
-
-        let mut pkg = read_to_json::<PackageJson>(&package_json_file_path);
-
-        pkg._raw_file_path = Some(package_json_file_path);
-        pkg._raw_workspace = Some(workspace);
-        pkg
-    }
-
-    pub fn from_dir_path(workspace: Option<PathBuf>) -> Self {
-        let wk = if let Some(wk) = workspace {
-            wk
-        } else {
-            get_current_dir()
-        };
-
-        let pkg_file_path = wk.join("package.json");
-
-        if pkg_file_path.exists().not() {
+        if !pkg_file_path.exists() {
             let msg = format!(
                 "Not found package.json file here {}",
                 pkg_file_path.display()
@@ -73,7 +45,7 @@ impl PackageJson {
         }
         let mut pkg = read_to_json::<PackageJson>(&pkg_file_path);
         pkg._raw_file_path = Some(pkg_file_path);
-        pkg._raw_workspace = Some(wk);
+        pkg._raw_workspace = Some(workspace.to_path_buf());
         pkg
     }
 
@@ -148,8 +120,6 @@ impl PackageJson {
 }
 
 fn read_to_json<T: DeserializeOwned>(file_path: &PathBuf) -> T {
-    let content =
-        read_to_string(&file_path).expect(format!("read json error {:?}", &file_path).as_str());
-    serde_json::from_str::<T>(&content)
-        .expect(format!("parse json error  {:?}", &file_path).as_str())
+    let content = read_to_string(&file_path).unwrap();
+    serde_json::from_str::<T>(&content).unwrap()
 }

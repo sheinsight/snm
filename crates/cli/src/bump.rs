@@ -4,10 +4,14 @@ use colored::*;
 use dialoguer::{theme::ColorfulTheme, Select};
 use regex::Regex;
 use semver::{Prerelease, Version};
-use snm_core::{model::PackageJson, utils::get_current_dir::get_current_dir};
+use snm_core::{
+    model::{current_dir::cwd, PackageJson},
+    utils::get_current_dir::get_current_dir,
+};
 
 pub fn bump_impl() -> () {
-    let package_json = PackageJson::from_here();
+    let wk: std::path::PathBuf = cwd();
+    let package_json = PackageJson::from_dir_path(&wk);
     let current_version =
         Version::parse(package_json.version.unwrap_or("0.0.0".to_string()).as_str())
             .expect("parse version error");
