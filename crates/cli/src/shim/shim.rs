@@ -2,8 +2,9 @@ use std::process::{Command, Stdio};
 
 use colored::*;
 use snm_core::{
-    model::{dispatch_manage::DispatchManage, trait_manage::ManageTrait, PackageJson},
+    model::{dispatch_manage::DispatchManage, PackageJson},
     println_success,
+    traits::manage::ManageTrait,
     utils::get_current_dir::get_current_dir,
 };
 

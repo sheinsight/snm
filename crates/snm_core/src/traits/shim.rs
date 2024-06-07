@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::trait_shared_behavior::SharedBehaviorTrait;
+use super::shared_behavior::SharedBehaviorTrait;
 
 pub trait ShimTrait: SharedBehaviorTrait {
     fn get_strict_shim_binary_path_buf(&self, bin_name: &str, version: &str) -> PathBuf;

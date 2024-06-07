@@ -2,13 +2,14 @@ use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
 
-use crate::utils::download::{DownloadBuilder, WriteStrategy};
+use crate::{
+    traits::manage::ManageTrait,
+    utils::download::{DownloadBuilder, WriteStrategy},
+};
 #[cfg(unix)]
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
-
-use super::trait_manage::ManageTrait;
 
 pub struct DispatchManage {
     manager: Box<dyn ManageTrait>,

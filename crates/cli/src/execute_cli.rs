@@ -3,12 +3,10 @@ use manage_command::ManageCommands;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
 use snm_command::SnmCommands;
 use snm_core::snm_content::SnmContentHandler;
+use snm_core::traits::manage::ManageTrait;
 use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
-    model::{
-        dispatch_manage::DispatchManage, package_json::PackageManager, trait_manage::ManageTrait,
-        PackageJson,
-    },
+    model::{dispatch_manage::DispatchManage, package_json::PackageManager, PackageJson},
     println_success,
 };
 use snm_node::snm_node::SnmNode;

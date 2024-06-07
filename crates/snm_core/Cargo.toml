@@ -20,7 +20,6 @@ dialoguer = "0.11.0"
 crossterm = "0.27.0"
 serde_json = "1.0.114"
 futures-util = "0.3.30"
-async-trait = "0.1.50"
 tokio = { version = "1.36.0", features = ["full"] }
 serde = { version = "1.0.197", features = ["derive"] }
 reqwest = { version = "0.12.3", features = ["stream","native-tls-vendored"] }

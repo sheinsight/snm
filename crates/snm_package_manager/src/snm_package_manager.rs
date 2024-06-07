@@ -1,19 +1,17 @@
-use async_trait::async_trait;
 use colored::*;
 use dialoguer::Confirm;
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
-use snm_core::utils::get_current_dir::get_current_dir;
 use snm_core::{
-    model::{
-        trait_manage::ManageTrait, trait_shared_behavior::SharedBehaviorTrait,
-        trait_shim::ShimTrait, PackageJson,
-    },
+    model::PackageJson,
     snm_content::SnmContentHandler,
-    utils::tarball::decompress_tgz,
+    traits::{manage::ManageTrait, shared_behavior::SharedBehaviorTrait, shim::ShimTrait},
+    utils::{get_current_dir::get_current_dir, tarball::decompress_tgz},
 };
+use std::future::Future;
 use std::ops::Not;
+use std::pin::Pin;
 use std::{
     fs::File,
     io::{BufReader, Read},
@@ -44,7 +42,6 @@ impl SharedBehaviorTrait for SnmPackageManager {
     }
 }
 
-#[async_trait(?Send)]
 impl ManageTrait for SnmPackageManager {
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_content_handler.get_npm_registry();
@@ -89,74 +86,96 @@ impl ManageTrait for SnmPackageManager {
             .join(&self.prefix)
     }
 
-    async fn get_expect_shasum(&self, v: &str) -> String {
-        let npm_registry = self.snm_content_handler.get_npm_registry();
-        let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
+    fn get_expect_shasum<'a>(
+        &'a self,
+        v: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+        Box::pin(async move {
+            let npm_registry = self.snm_content_handler.get_npm_registry();
+            let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
 
-        let value: Value = reqwest::get(&download_url)
-            .await
-            .expect(format!("download error {}", &download_url).as_str())
-            .json()
-            .await
-            .expect(format!("json error {}", &download_url).as_str());
+            let value: Value = reqwest::get(&download_url)
+                .await
+                .expect(format!("download error {}", &download_url).as_str())
+                .json()
+                .await
+                .expect(format!("json error {}", &download_url).as_str());
 
-        let x = value
-            .get("dist")
-            .and_then(|dist| dist.get("shasum"))
-            .and_then(|shasum| shasum.as_str())
-            .map(|shasum| shasum.to_string())
-            .expect(format!("NotFoundSha256ForNode {}", v.to_string()).as_str());
+            let x = value
+                .get("dist")
+                .and_then(|dist| dist.get("shasum"))
+                .and_then(|shasum| shasum.as_str())
+                .map(|shasum| shasum.to_string())
+                .expect(format!("NotFoundSha256ForNode {}", v.to_string()).as_str());
 
-        x
+            Some(x)
+        })
     }
 
-    async fn get_actual_shasum(&self, downloaded_file_path_buf: &PathBuf) -> String {
-        let file = File::open(downloaded_file_path_buf).expect(
-            format!(
-                "get_actual_shasum File::open error {:?}",
-                &downloaded_file_path_buf.display()
-            )
-            .as_str(),
-        );
-        let mut reader = BufReader::new(file);
-        let mut hasher = Sha1::new();
+    fn get_actual_shasum<'a>(
+        &'a self,
+        downloaded_file_path_buf: &'a PathBuf,
+    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+        Box::pin(async move {
+            let file = File::open(downloaded_file_path_buf).expect(
+                format!(
+                    "get_actual_shasum File::open error {:?}",
+                    &downloaded_file_path_buf.display()
+                )
+                .as_str(),
+            );
+            let mut reader = BufReader::new(file);
+            let mut hasher = Sha1::new();
 
-        let mut buffer = [0; 1024];
-        loop {
-            let n = reader
-                .read(&mut buffer)
-                .expect("get_actual_shasum read error");
-            if n == 0 {
-                break;
+            let mut buffer = [0; 1024];
+            loop {
+                let n = reader
+                    .read(&mut buffer)
+                    .expect("get_actual_shasum read error");
+                if n == 0 {
+                    break;
+                }
+                hasher.update(&buffer[..n]);
             }
-            hasher.update(&buffer[..n]);
-        }
-        let result = hasher.finalize();
-        format!("{:x}", result)
+            let result = hasher.finalize();
+            Some(format!("{:x}", result))
+        })
     }
 
     fn get_host(&self) -> Option<String> {
         todo!("get_host")
     }
 
-    async fn show_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
-        let (dir_vec, default_v) = &dir_tuple;
+    fn show_list<'a>(
+        &'a self,
+        dir_tuple: &'a (Vec<String>, Option<String>),
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        Box::pin(async move {
+            let (dir_vec, default_v) = &dir_tuple;
 
-        dir_vec.into_iter().for_each(|dir| {
-            let prefix = if Some(dir) == default_v.as_ref() {
-                "⛳️"
-            } else {
-                " "
-            };
-            println!("{:<2} {:<10}", prefix, dir.bright_green());
-        });
+            dir_vec.into_iter().for_each(|dir| {
+                let prefix = if Some(dir) == default_v.as_ref() {
+                    "⛳️"
+                } else {
+                    " "
+                };
+                println!("{:<2} {:<10}", prefix, dir.bright_green());
+            });
+        })
     }
 
-    async fn show_list_offline(&self, dir_tuple: &(Vec<String>, Option<String>)) {
+    fn show_list_offline<'a>(
+        &'a self,
+        _dir_tuple: &'a (Vec<String>, Option<String>),
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
         todo!("show_list_remote")
     }
 
-    async fn show_list_remote(&self, _dir_tuple: &(Vec<String>, Option<String>), _all: bool) {
+    fn show_list_remote<'a>(
+        &'a self,
+        _dir_tuple: &'a (Vec<String>, Option<String>),
+        _all: bool,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
         todo!("show_list_remote")
     }
 

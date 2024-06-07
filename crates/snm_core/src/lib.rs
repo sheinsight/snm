@@ -5,3 +5,4 @@ pub mod utils;
 pub use crossterm;
 pub mod color_backtrace;
 pub mod snm_content;
+pub mod traits;
