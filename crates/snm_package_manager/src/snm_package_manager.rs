@@ -3,11 +3,12 @@ use dialoguer::Confirm;
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
+use snm_core::model::current_dir::cwd;
 use snm_core::{
     model::PackageJson,
     snm_content::SnmContentHandler,
     traits::{manage::ManageTrait, shared_behavior::SharedBehaviorTrait, shim::ShimTrait},
-    utils::{get_current_dir::get_current_dir, tarball::decompress_tgz},
+    utils::tarball::decompress_tgz,
 };
 use std::future::Future;
 use std::ops::Not;
@@ -197,7 +198,7 @@ impl ManageTrait for SnmPackageManager {
 
 impl ShimTrait for SnmPackageManager {
     fn check_satisfy_strict_mode(&self, bin_name: &str) {
-        let package_json_path_buf = get_current_dir().join("package.json");
+        let package_json_path_buf = cwd().join("package.json");
 
         if package_json_path_buf.exists().not() {
             let msg = format!(
@@ -221,7 +222,7 @@ impl ShimTrait for SnmPackageManager {
     }
 
     fn get_strict_shim_version(&self) -> String {
-        let package_json_path_buf = get_current_dir().join("package.json");
+        let package_json_path_buf = cwd().join("package.json");
 
         let package_json = PackageJson::from_file_path(&package_json_path_buf);
 

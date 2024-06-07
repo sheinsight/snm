@@ -1,8 +1,9 @@
 use colored::*;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
+use snm_core::model::current_dir::cwd;
 use snm_core::snm_content::SnmContentHandler;
 use snm_core::traits::manage::ManageTrait;
-use snm_core::utils::get_current_dir::get_current_dir;
+
 use snm_core::{
     model::{dispatch_manage::DispatchManage, package_json::PackageManager, PackageJson},
     println_success,
@@ -122,7 +123,7 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
 }
 
 pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String), PathBuf) {
-    let dir = get_current_dir();
+    let dir = cwd();
     let package_json_path_buf = dir.join("package.json");
     if package_json_path_buf.exists() {
         let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf);
