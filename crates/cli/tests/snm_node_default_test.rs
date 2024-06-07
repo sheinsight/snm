@@ -1,5 +1,8 @@
 use clap::Parser;
-use cli::{manage_command::ManageCommands, snm_command::SnmCommands, SnmCli};
+use cli::{
+    commands::{manage_command::ManageCommands, snm_command::SnmCommands},
+    SnmCli,
+};
 
 #[tokio::test]
 async fn test_node_default_v18() {

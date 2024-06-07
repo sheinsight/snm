@@ -1,7 +1,5 @@
 use colored::*;
-use manage_command::ManageCommands;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
-use snm_command::SnmCommands;
 use snm_core::snm_content::SnmContentHandler;
 use snm_core::traits::manage::ManageTrait;
 use snm_core::utils::get_current_dir::get_current_dir;
@@ -9,6 +7,7 @@ use snm_core::{
     model::{dispatch_manage::DispatchManage, package_json::PackageManager, PackageJson},
     println_success,
 };
+
 use snm_node::snm_node::SnmNode;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use std::{
@@ -16,11 +15,12 @@ use std::{
     process::{Command, Stdio},
 };
 
+use crate::commands::manage_command::ManageCommands;
+use crate::commands::snm_command::SnmCommands;
 use crate::{
     fig::fig_spec_impl,
-    manage_command,
     ni::{self, npm_args::NpmArgsTransform, pnpm_args::PnpmArgsTransform},
-    snm_command, SnmCli,
+    SnmCli,
 };
 
 pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) -> () {

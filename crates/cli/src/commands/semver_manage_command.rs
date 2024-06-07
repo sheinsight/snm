@@ -2,7 +2,7 @@ use clap::Subcommand;
 
 #[derive(Subcommand, Debug)]
 pub enum SemverManageCommands {
-    Prelease {
+    Prerelease {
         #[arg(help = "Need to set the npm version number as the default version.")]
         version: String,
     },

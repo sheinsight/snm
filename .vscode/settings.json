@@ -3,6 +3,7 @@
         "./crates/cli/Cargo.toml",
         "./crates/snm_core/Cargo.toml",
         "./crates/snm_node/Cargo.toml",
+        "./crates/snm_package_manager/Cargo.toml",
     ],
     "cSpell.words": [
         "canonicalize",

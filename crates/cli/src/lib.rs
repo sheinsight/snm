@@ -1,13 +1,10 @@
 use clap::{command, Parser};
-use snm_command::SnmCommands;
+use commands::snm_command::SnmCommands;
 
 pub mod bump;
+pub mod commands;
 pub mod fig;
-
-pub mod manage_command;
 pub mod ni;
-pub mod semver_manage_command;
-pub mod snm_command;
 
 pub mod execute_cli;
 

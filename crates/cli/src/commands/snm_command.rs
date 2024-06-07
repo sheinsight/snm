@@ -1,13 +1,11 @@
 use clap::Subcommand;
 
-use crate::{
-    manage_command::ManageCommands,
-    ni::trait_transform_args::{
-        AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
-        RunCommandArgs, SetCacheArgs,
-    },
-    semver_manage_command::SemverManageCommands,
+use crate::ni::trait_transform_args::{
+    AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
+    RunCommandArgs, SetCacheArgs,
 };
+
+use super::{manage_command::ManageCommands, semver_manage_command::SemverManageCommands};
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
