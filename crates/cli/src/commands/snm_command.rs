@@ -2,10 +2,10 @@ use clap::Subcommand;
 
 use crate::ni::trait_transform_args::{
     AddCommandArgs, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs, InstallCommandArgs,
-    RunCommandArgs, SetCacheArgs,
+    RunCommandArgs,
 };
 
-use super::{manage_command::ManageCommands, semver_manage_command::SemverManageCommands};
+use super::manage_command::ManageCommands;
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
@@ -25,12 +25,6 @@ pub enum SnmCommands {
     Pnpm {
         #[command(subcommand)]
         command: ManageCommands,
-    },
-
-    #[command(about = "Manage cwd package.json.")]
-    Semver {
-        #[command(subcommand)]
-        command: SemverManageCommands,
     },
 
     #[command(about = "Used to install all dependencies for a project.")]
@@ -53,10 +47,6 @@ pub enum SnmCommands {
 
     #[command(about = "Run some script.")]
     R(RunCommandArgs),
-
-    SetCache(SetCacheArgs),
-
-    Query,
 
     #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,

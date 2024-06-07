@@ -1,7 +1,6 @@
 use clap::{command, Parser};
 use commands::snm_command::SnmCommands;
 
-pub mod bump;
 pub mod commands;
 pub mod fig;
 pub mod ni;

@@ -23,95 +23,53 @@ use crate::{
     SnmCli,
 };
 
-pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) -> () {
+async fn exec_manage_trait(command: ManageCommands, manage: Box<dyn ManageTrait>) {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
+    let dispatch = DispatchManage::new(manage);
+    match command {
+        ManageCommands::Default { version } => {
+            dispatch.set_default(trim_version(version).as_str()).await;
+        }
+        ManageCommands::Install { version } => {
+            dispatch.install(trim_version(version).as_str()).await;
+        }
+        ManageCommands::Uninstall { version } => {
+            dispatch.un_install(trim_version(version).as_str()).await;
+        }
+        ManageCommands::ListOffline => {
+            dispatch.list_offline().await;
+        }
+        ManageCommands::List => {
+            dispatch.list().await;
+        }
+        ManageCommands::ListRemote { all } => {
+            dispatch.list_remote(all).await;
+        }
+    }
+}
 
-    let pnpm = SnmPackageManager::from_prefix("pnpm", snm_content_handler.clone());
-    let npm = SnmPackageManager::from_prefix("npm", snm_content_handler.clone());
-
+pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) -> () {
     match cli.command {
         // manage start
-        SnmCommands::Pnpm { command } => match command {
-            ManageCommands::Default { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(pnpm)).set_default(v).await;
-            }
-            ManageCommands::Install { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(pnpm)).install(v).await;
-            }
-            ManageCommands::Uninstall { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(pnpm)).un_install(v).await;
-            }
-            ManageCommands::List => {
-                DispatchManage::new(Box::new(pnpm)).list().await;
-            }
-            ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(pnpm)).list_remote(all).await;
-            }
-            ManageCommands::ListOffline => {
-                DispatchManage::new(Box::new(pnpm)).list_offline().await;
-            }
-        },
-        SnmCommands::Npm { command } => match command {
-            ManageCommands::Default { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(npm)).set_default(v).await;
-            }
-            ManageCommands::Install { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(npm)).install(v).await;
-            }
-            ManageCommands::Uninstall { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(npm)).un_install(v).await;
-            }
-            ManageCommands::List => {
-                DispatchManage::new(Box::new(npm)).list().await;
-            }
-            ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(npm)).list_remote(all).await;
-            }
-            ManageCommands::ListOffline => {
-                DispatchManage::new(Box::new(npm)).list_offline().await;
-            }
-        },
-        SnmCommands::Node { command } => match command {
-            ManageCommands::Default { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNode::new()))
-                    .set_default(v)
-                    .await;
-            }
-            ManageCommands::Install { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNode::new()))
-                    .install(v)
-                    .await;
-            }
-            ManageCommands::Uninstall { version } => {
-                let v: &String = &trim_version(version);
-                DispatchManage::new(Box::new(SnmNode::new()))
-                    .un_install(v)
-                    .await;
-            }
-            ManageCommands::List => {
-                DispatchManage::new(Box::new(SnmNode::new())).list().await;
-            }
-            ManageCommands::ListRemote { all } => {
-                DispatchManage::new(Box::new(SnmNode::new()))
-                    .list_remote(all)
-                    .await;
-            }
-            ManageCommands::ListOffline => {
-                DispatchManage::new(Box::new(SnmNode::new()))
-                    .list_offline()
-                    .await;
-            }
-        },
+        SnmCommands::Pnpm { command } => {
+            let pnpm = Box::new(SnmPackageManager::from_prefix(
+                "pnpm",
+                snm_content_handler.clone(),
+            ));
+            exec_manage_trait(command, pnpm).await;
+        }
+        SnmCommands::Npm { command } => {
+            let npm = Box::new(SnmPackageManager::from_prefix(
+                "npm",
+                snm_content_handler.clone(),
+            ));
+            exec_manage_trait(command, npm).await;
+        }
+        SnmCommands::Node { command } => {
+            let node = Box::new(SnmNode::new());
+            exec_manage_trait(command, node).await;
+        }
 
-        SnmCommands::Semver { command: _ } => todo!(),
         // manage end
 
         // snm command start
@@ -143,7 +101,6 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
             )
             .await;
         }
-        SnmCommands::Query => todo!(""),
         SnmCommands::X(args) => {
             execute_command(|creator| creator.get_dlx_command(args), snm_content_handler).await;
         }
@@ -156,13 +113,6 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
         }
         SnmCommands::R(args) => {
             execute_command(|creator| creator.get_run_command(args), snm_content_handler).await;
-        }
-        SnmCommands::SetCache(args) => {
-            execute_command(
-                |creator| creator.get_set_cache_command(args),
-                snm_content_handler,
-            )
-            .await;
         }
         // snm command end
         SnmCommands::FigSpec => {
