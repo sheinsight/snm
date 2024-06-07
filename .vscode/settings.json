@@ -3,8 +3,6 @@
         "./crates/cli/Cargo.toml",
         "./crates/snm_core/Cargo.toml",
         "./crates/snm_node/Cargo.toml",
-        "./crates/snm_npm/Cargo.toml",
-        "./crates/snm_core/Cargo.toml",
         "./crates/cli/Cargo.toml"
     ],
     "cSpell.words": [
