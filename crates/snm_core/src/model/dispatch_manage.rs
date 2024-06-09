@@ -38,7 +38,7 @@ impl DispatchManage {
         return (version.to_string(), binary_path_buf);
     }
 
-    async fn proxy_process_by_strict(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn proxy_process_by_strict(&self, bin_name: &str) -> (String, PathBuf) {
         let shim_trait = self.manager.get_shim_trait();
         let v = shim_trait.get_strict_shim_version();
         let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&v);
@@ -55,7 +55,7 @@ impl DispatchManage {
         return (v, binary_path_buf);
     }
 
-    async fn proxy_process_by_default(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn proxy_process_by_default(&self, bin_name: &str) -> (String, PathBuf) {
         let shim_trait = self.manager.get_shim_trait();
         let tuple = self.read_runtime_dir_name_vec();
 
