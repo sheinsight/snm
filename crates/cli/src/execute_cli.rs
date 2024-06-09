@@ -72,49 +72,64 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
         }
 
         // manage end
+        SnmCommands::I(_)
+        | SnmCommands::C(_)
+        | SnmCommands::A(_)
+        | SnmCommands::D(_)
+        | SnmCommands::X(_)
+        | SnmCommands::E(_)
+        | SnmCommands::R(_) => {
+            // execute_snm_command(cli.command, snm_content_handler).await;
+            match cli.command {
+                // snm command start
+                SnmCommands::I(args) => {
+                    execute_command(
+                        |creator| creator.get_install_command(args),
+                        snm_content_handler,
+                    )
+                    .await;
+                }
+                SnmCommands::C(_) => {
+                    execute_command(
+                        |creator| {
+                            creator.get_install_command(InstallCommandArgs {
+                                frozen_lockfile: true,
+                            })
+                        },
+                        snm_content_handler,
+                    )
+                    .await;
+                }
+                SnmCommands::A(args) => {
+                    execute_command(|creator| creator.get_add_command(args), snm_content_handler)
+                        .await;
+                }
+                SnmCommands::D(args) => {
+                    execute_command(
+                        |creator| creator.get_delete_command(args),
+                        snm_content_handler,
+                    )
+                    .await;
+                }
+                SnmCommands::X(args) => {
+                    execute_command(|creator| creator.get_dlx_command(args), snm_content_handler)
+                        .await;
+                }
+                SnmCommands::E(args) => {
+                    execute_command(
+                        |creator| creator.get_exec_command(args),
+                        snm_content_handler,
+                    )
+                    .await;
+                }
+                SnmCommands::R(args) => {
+                    execute_command(|creator| creator.get_run_command(args), snm_content_handler)
+                        .await;
+                }
+                _ => unreachable!("unreachable"),
+            }
+        }
 
-        // snm command start
-        SnmCommands::I(args) => {
-            execute_command(
-                |creator| creator.get_install_command(args),
-                snm_content_handler,
-            )
-            .await;
-        }
-        SnmCommands::C(_) => {
-            execute_command(
-                |creator| {
-                    creator.get_install_command(InstallCommandArgs {
-                        frozen_lockfile: true,
-                    })
-                },
-                snm_content_handler,
-            )
-            .await;
-        }
-        SnmCommands::A(args) => {
-            execute_command(|creator| creator.get_add_command(args), snm_content_handler).await;
-        }
-        SnmCommands::D(args) => {
-            execute_command(
-                |creator| creator.get_delete_command(args),
-                snm_content_handler,
-            )
-            .await;
-        }
-        SnmCommands::X(args) => {
-            execute_command(|creator| creator.get_dlx_command(args), snm_content_handler).await;
-        }
-        SnmCommands::E(args) => {
-            execute_command(
-                |creator| creator.get_exec_command(args),
-                snm_content_handler,
-            )
-            .await;
-        }
-        SnmCommands::R(args) => {
-            execute_command(|creator| creator.get_run_command(args), snm_content_handler).await;
-        }
         // snm command end
         SnmCommands::FigSpec => {
             fig_spec_impl();
@@ -130,22 +145,24 @@ pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String
         let package_manager = package_json.parse_package_manager();
         let manager = get_manage(&package_manager, snm_content_handler.clone()).await;
         let dispatcher = DispatchManage::new(manager);
+
         let (_, bin_path_buf) = dispatcher
-            .proxy_process(&package_manager.name, snm_content_handler.get_strict())
+            .proxy_process_by_strict(&package_manager.name)
             .await;
         return (
             (package_manager.name, package_manager.version),
             bin_path_buf,
         );
     } else {
-        let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix(
-            "pnpm",
-            snm_content_handler.clone(),
-        )));
-        let (version, bin_path_buf) = dispatcher
-            .proxy_process("pnpm", snm_content_handler.get_strict())
-            .await;
-        return (("pnpm".to_string(), version), bin_path_buf);
+        // let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix(
+        //     "pnpm",
+        //     snm_content_handler.clone(),
+        // )));
+        // let (version, bin_path_buf) = dispatcher
+        //     .proxy_process("pnpm", snm_content_handler.get_strict())
+        //     .await;
+        // return (("pnpm".to_string(), version), bin_path_buf);
+        panic!("NotFoundPackageJsonFile")
     }
 }
 
