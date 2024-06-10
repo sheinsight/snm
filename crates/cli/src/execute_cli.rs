@@ -4,12 +4,10 @@ use snm_core::model::current_dir::cwd;
 use snm_core::snm_content::SnmContentHandler;
 use snm_core::traits::manage::ManageTrait;
 
-use snm_core::{
-    model::{dispatch_manage::DispatchManage, package_json::PackageManager, PackageJson},
-    println_success,
-};
+use snm_core::{model::dispatch_manage::DispatchManage, println_success};
 
 use snm_node::snm_node::SnmNode;
+use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use std::{
     path::PathBuf,
@@ -139,31 +137,36 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
 
 pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String), PathBuf) {
     let dir = cwd();
-    let package_json_path_buf = dir.join("package.json");
-    if package_json_path_buf.exists() {
-        let package_json: PackageJson = PackageJson::from_file_path(&package_json_path_buf);
-        let package_manager = package_json.parse_package_manager();
-        let manager = get_manage(&package_manager, snm_content_handler.clone()).await;
-        let dispatcher = DispatchManage::new(manager);
 
-        let (_, bin_path_buf) = dispatcher
-            .proxy_process_by_strict(&package_manager.name)
-            .await;
-        return (
-            (package_manager.name, package_manager.version),
-            bin_path_buf,
-        );
-    } else {
-        // let dispatcher = DispatchManage::new(Box::new(SnmPackageManager::from_prefix(
-        //     "pnpm",
-        //     snm_content_handler.clone(),
-        // )));
-        // let (version, bin_path_buf) = dispatcher
-        //     .proxy_process("pnpm", snm_content_handler.get_strict())
-        //     .await;
-        // return (("pnpm".to_string(), version), bin_path_buf);
-        panic!("NotFoundPackageJsonFile")
-    }
+    let package_json = match parse_package_json(dir) {
+        Some(pkg) => pkg,
+        None => panic!("NoPackageManager"),
+    };
+
+    let package_manager = match package_json.package_manager {
+        Some(pm) => pm,
+        None => panic!("NoPackageManager"),
+    };
+
+    let name = match package_manager.name {
+        Some(n) => n,
+        None => panic!("NoPackageManager"),
+    };
+
+    let version = match package_manager.version {
+        Some(v) => v,
+        None => panic!("NoPackageManager"),
+    };
+
+    let manager = match name.as_str() {
+        "npm" => SnmPackageManager::from_prefix(&name, snm_content_handler.clone()),
+        "pnpm" => SnmPackageManager::from_prefix(&name, snm_content_handler.clone()),
+        _ => panic!("UnsupportedPackageManager"),
+    };
+
+    let dispatcher = DispatchManage::new(Box::new(manager));
+    let (_, bin_path_buf) = dispatcher.proxy_process_by_strict(&name).await;
+    return ((name, version), bin_path_buf);
 }
 
 async fn execute_command<F>(get_command_args: F, snm_content_handler: SnmContentHandler) -> ()
@@ -197,29 +200,4 @@ where
     if let Err(_) = output {
         panic!("spawn error");
     }
-}
-
-pub async fn get_manage(
-    package_manager: &PackageManager,
-    snm_content_handler: SnmContentHandler,
-) -> Box<dyn ManageTrait> {
-    let manager: Box<dyn ManageTrait> = match package_manager.name.as_str() {
-        "npm" => {
-            let manager =
-                SnmPackageManager::from_prefix(&package_manager.name, snm_content_handler);
-            Box::new(manager)
-        }
-        "pnpm" => Box::new(SnmPackageManager::from_prefix(
-            &package_manager.name,
-            snm_content_handler,
-        )),
-        _ => {
-            let msg = format!(
-                "UnsupportedPackageManager {}@{}",
-                package_manager.name, package_manager.version
-            );
-            panic!("{msg}");
-        }
-    };
-    manager
 }

@@ -2,10 +2,11 @@ use std::process::{Command, Stdio};
 
 use colored::*;
 use snm_core::{
-    model::{current_dir::cwd, dispatch_manage::DispatchManage, PackageJson},
+    model::{current_dir::cwd, dispatch_manage::DispatchManage},
     println_success,
     traits::manage::ManageTrait,
 };
+use snm_package_json::parse_package_json;
 
 pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str, strict: bool) {
     let dispatcher = DispatchManage::new(manager);
@@ -27,17 +28,29 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str, strict: 
 
 pub fn _check(actual_package_manager: &str) {
     let dir = cwd();
-    let package_json_path_buf = dir.join("package.json");
-    if package_json_path_buf.exists() {
-        let package_json = PackageJson::from_file_path(&package_json_path_buf);
-        let package_manager = package_json.parse_package_manager();
-        if package_manager.name != actual_package_manager {
-            let msg = format!(
-                "NotMatchPackageManager {} {}",
-                package_manager.name,
-                actual_package_manager.to_string()
-            );
-            panic!("{msg}");
-        }
+
+    let package_json = match parse_package_json(dir) {
+        Some(pkg) => pkg,
+        None => panic!("NoPackageManager"),
+    };
+
+    println!("dir: {:?}", package_json);
+    let package_manager = match package_json.package_manager {
+        Some(pm) => pm,
+        None => panic!("NoPackageManager"),
+    };
+
+    let name = match package_manager.name {
+        Some(n) => n,
+        None => panic!("NoPackageManager"),
+    };
+
+    if name != actual_package_manager {
+        let msg = format!(
+            "NotMatchPackageManager {} {}",
+            name,
+            actual_package_manager.to_string()
+        );
+        panic!("{msg}");
     }
 }

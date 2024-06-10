@@ -4,7 +4,7 @@ members = [
     "crates/snm_node",
     "crates/snm_core",
     "crates/snm_package_manager"
-]
+, "crates/snm_package_json"]
 resolver = "2"
 
 [profile.release]

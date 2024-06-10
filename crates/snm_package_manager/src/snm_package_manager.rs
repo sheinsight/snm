@@ -5,13 +5,12 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_core::model::current_dir::cwd;
 use snm_core::{
-    model::PackageJson,
     snm_content::SnmContentHandler,
     traits::{manage::ManageTrait, shared_behavior::SharedBehaviorTrait, shim::ShimTrait},
     utils::tarball::decompress_tgz,
 };
+use snm_package_json::parse_package_json;
 use std::future::Future;
-use std::ops::Not;
 use std::pin::Pin;
 use std::{
     fs::File,
@@ -198,39 +197,46 @@ impl ManageTrait for SnmPackageManager {
 
 impl ShimTrait for SnmPackageManager {
     fn check_satisfy_strict_mode(&self, bin_name: &str) {
-        let package_json_path_buf = cwd().join("package.json");
+        let workspace = cwd();
 
-        if package_json_path_buf.exists().not() {
-            let msg = format!(
-                "NotFoundPackageJsonFile {}",
-                package_json_path_buf.display().to_string()
-            );
+        let package_json = match parse_package_json(workspace) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
+
+        let package_manager = match package_json.package_manager {
+            Some(pm) => pm,
+            None => panic!("NoPackageManager"),
+        };
+
+        let name = match package_manager.name {
+            Some(n) => n,
+            None => panic!("NoPackageManager"),
+        };
+
+        if name != bin_name {
+            let msg = format!("NotMatchPackageManager {} {}", name, bin_name.to_string());
             panic!("{msg}");
         }
-
-        let package_json = PackageJson::from_file_path(&package_json_path_buf);
-        let package_manager = package_json.parse_package_manager();
-        if package_manager.name == bin_name {
-            return;
-        }
-        let msg = format!(
-            "NotMatchPackageManager {} {}",
-            package_manager.name,
-            bin_name.to_string()
-        );
-        panic!("{msg}");
     }
 
     fn get_strict_shim_version(&self) -> String {
-        let package_json_path_buf = cwd().join("package.json");
+        let workspace = cwd();
 
-        let package_json = PackageJson::from_file_path(&package_json_path_buf);
+        let package_json = match parse_package_json(workspace) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
 
-        let package_manager = package_json.parse_package_manager();
+        let package_manager = match package_json.package_manager {
+            Some(pm) => pm,
+            None => panic!("NoPackageManager"),
+        };
 
-        let version = package_manager.version;
-
-        version
+        match package_manager.version {
+            Some(v) => v,
+            None => panic!("NoPackageManager"),
+        }
     }
 
     fn get_strict_shim_binary_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
@@ -274,11 +280,13 @@ impl ShimTrait for SnmPackageManager {
         if !(&package_json_buf_path.join("package.json").exists()) {
             package_json_buf_path = package_json_buf_path.join("package")
         }
-        package_json_buf_path = package_json_buf_path.join("package.json");
 
-        let mut hashmap = PackageJson::from_file_path(&package_json_buf_path).bin_to_hashmap();
+        let mut package_json = match parse_package_json(package_json_buf_path.clone()) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
 
-        if let Some(bin) = hashmap.remove(bin_name) {
+        if let Some(bin) = package_json.bin.remove(bin_name) {
             return bin;
         } else {
             let msg = format!(

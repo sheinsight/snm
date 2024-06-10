@@ -58,11 +58,8 @@ impl DispatchManage {
     pub async fn proxy_process_by_default(&self, bin_name: &str) -> (String, PathBuf) {
         let shim_trait = self.manager.get_shim_trait();
         let tuple = self.read_runtime_dir_name_vec();
-
         let v = shim_trait.check_default_version(&tuple);
-
         let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v);
-
         return (v, binary_path_buf);
     }
 
