@@ -19,6 +19,10 @@ pub struct PackageJson {
     pub bin: HashMap<String, PathBuf>,
 
     pub raw: PackageJsonRaw,
+
+    pub raw_file_path: PathBuf,
+
+    pub raw_workspace: PathBuf,
 }
 
 pub fn parse_package_json(workspace: PathBuf) -> Option<PackageJson> {
@@ -47,6 +51,8 @@ pub fn parse_package_json(workspace: PathBuf) -> Option<PackageJson> {
             version: raw.version.clone(),
             package_manager,
             raw,
+            raw_workspace: workspace,
+            raw_file_path,
         });
     }
 

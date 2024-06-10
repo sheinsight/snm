@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(untagged)]
@@ -18,9 +18,4 @@ pub struct PackageJsonRaw {
     pub package_manager: Option<String>,
 
     pub bin: Option<Bin>,
-
-    #[serde(skip_serializing)]
-    pub raw_file_path: Option<PathBuf>,
-    #[serde(skip_serializing)]
-    pub raw_workspace: Option<PathBuf>,
 }
