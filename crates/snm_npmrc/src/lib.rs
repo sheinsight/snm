@@ -5,7 +5,9 @@ use config::{Config, File, FileFormat};
 pub fn parse_npmrc(workspace: &PathBuf) -> Option<Config> {
     let home_dir = match env::var("HOME") {
         Ok(home_dir) => home_dir,
-        Err(_) => panic!("HOME environment variable not found"),
+        Err(_) => {
+            return None;
+        }
     };
 
     let prefix = match env::var("PREFIX") {
