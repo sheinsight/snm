@@ -1,4 +1,4 @@
-use std::{env::current_dir as std_current_dir, path::PathBuf};
+use std::{env::current_dir as std_current_dir, io::Error, path::PathBuf};
 
 fn truncate_before_node_modules(path: PathBuf) -> PathBuf {
     let mut truncated_path = PathBuf::new();
@@ -13,16 +13,13 @@ fn truncate_before_node_modules(path: PathBuf) -> PathBuf {
     truncated_path
 }
 
-pub fn current_dir() -> PathBuf {
-    let current_dir_path_buf = match std_current_dir() {
-        Ok(current_dir_path_buf) => current_dir_path_buf,
-        Err(_) => todo!(),
-    };
+pub fn current_dir() -> Result<PathBuf, Error> {
+    let current_dir_path_buf = std_current_dir()?;
 
     if !contains(&current_dir_path_buf, "node_modules") {
-        return current_dir_path_buf;
+        return Ok(current_dir_path_buf);
     } else {
-        return truncate_before_node_modules(current_dir_path_buf);
+        return Ok(truncate_before_node_modules(current_dir_path_buf));
     }
 }
 
@@ -72,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_current_dir() {
-        assert_eq!(current_dir(), std_current_dir().unwrap());
+        assert_eq!(current_dir().unwrap(), std_current_dir().unwrap());
     }
 
     #[test]
@@ -81,7 +78,7 @@ mod tests {
         let mut node_modules_path_buf = current_dir_path_buf.clone();
         node_modules_path_buf.push("node_modules");
         assert_eq!(
-            current_dir(),
+            current_dir().unwrap(),
             truncate_before_node_modules(node_modules_path_buf)
         );
     }
