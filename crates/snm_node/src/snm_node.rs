@@ -13,11 +13,11 @@ use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
-use snm_core::model::current_dir::cwd;
 use snm_core::traits::manage::ManageTrait;
 use snm_core::traits::shared_behavior::SharedBehaviorTrait;
 use snm_core::traits::shim::ShimTrait;
 use snm_core::{config::SnmConfig, utils::tarball::decompress_xz};
+use snm_current_dir::current_dir;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::ops::Not;
@@ -470,7 +470,10 @@ impl ManageTrait for SnmNode {
 
 impl ShimTrait for SnmNode {
     fn check_satisfy_strict_mode(&self, _bin_name: &str) {
-        let wk = cwd();
+        let wk = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
 
         let node_version_path_buf = Path::new(&wk).join(".node-version");
 
@@ -484,7 +487,10 @@ impl ShimTrait for SnmNode {
     }
 
     fn get_strict_shim_version(&self) -> String {
-        let wk = cwd();
+        let wk = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
 
         let node_version_path_buf = Path::new(&wk).join(".node-version");
 

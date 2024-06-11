@@ -14,3 +14,4 @@ serde_json = "1.0"
 sha1 = "0.10.0"
 colored = "2.1.0"
 snm_package_json = { path = "../snm_package_json" }
+snm_current_dir = { path = "../snm_current_dir" }

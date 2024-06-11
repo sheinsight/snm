@@ -2,10 +2,9 @@ use std::process::{Command, Stdio};
 
 use colored::*;
 use snm_core::{
-    model::{current_dir::cwd, dispatch_manage::DispatchManage},
-    println_success,
-    traits::manage::ManageTrait,
+    model::dispatch_manage::DispatchManage, println_success, traits::manage::ManageTrait,
 };
+use snm_current_dir::current_dir;
 use snm_package_json::parse_package_json;
 
 pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str, strict: bool) {
@@ -27,7 +26,10 @@ pub async fn launch_shim(manager: Box<dyn ManageTrait>, bin_name: &str, strict: 
 }
 
 pub fn _check(actual_package_manager: &str) {
-    let dir = cwd();
+    let dir = match current_dir() {
+        Ok(dir) => dir,
+        Err(_) => panic!("NoCurrentDir"),
+    };
 
     let package_json = match parse_package_json(dir) {
         Some(pkg) => pkg,

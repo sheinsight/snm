@@ -1,11 +1,11 @@
 use colored::*;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
-use snm_core::model::current_dir::cwd;
 use snm_core::snm_content::SnmContentHandler;
 use snm_core::traits::manage::ManageTrait;
 
 use snm_core::{model::dispatch_manage::DispatchManage, println_success};
 
+use snm_current_dir::current_dir;
 use snm_node::snm_node::SnmNode;
 use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
@@ -136,7 +136,10 @@ pub async fn execute_cli(cli: SnmCli, snm_content_handler: SnmContentHandler) ->
 }
 
 pub async fn get_bin(snm_content_handler: SnmContentHandler) -> ((String, String), PathBuf) {
-    let dir = cwd();
+    let dir = match current_dir() {
+        Ok(dir) => dir,
+        Err(_) => panic!("NoCurrentDir"),
+    };
 
     let package_json = match parse_package_json(dir) {
         Some(pkg) => pkg,

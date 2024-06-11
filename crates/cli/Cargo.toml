@@ -43,6 +43,7 @@ snm_core = { path = "../snm_core" }
 snm_node = { path = "../snm_node" }
 snm_package_manager = { path = "../snm_package_manager" }
 snm_package_json = { path = "../snm_package_json" }
+snm_current_dir = { path = "../snm_current_dir" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }
 clap = { version = "4.5.1", features = ["derive"] }
