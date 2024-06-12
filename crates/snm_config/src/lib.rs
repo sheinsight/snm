@@ -48,7 +48,7 @@ impl SnmConfig {
     }
 }
 
-pub fn parse_config() -> Result<SnmConfig, Box<dyn Error>> {
+pub fn parse_snm_config() -> Result<SnmConfig, Box<dyn Error>> {
     let config = Config::builder()
         .add_source(Environment::with_prefix("SNM"))
         .build()?;
@@ -69,7 +69,7 @@ mod tests {
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
 
-        let config = parse_config().unwrap();
+        let config = parse_snm_config().unwrap();
 
         assert_eq!(
             config,
