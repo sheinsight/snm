@@ -2,6 +2,38 @@ use config::{Config, Environment};
 use serde::Deserialize;
 use std::{error::Error, path::PathBuf};
 
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+pub enum InstallStrategy {
+    Ask,
+    Panic,
+    Auto,
+}
+
+impl InstallStrategy {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "ask" => InstallStrategy::Ask,
+            "panic" => InstallStrategy::Panic,
+            "auto" => InstallStrategy::Auto,
+            _ => {
+                let msg = format!(
+                    "Unsupported install strategy: {} , only support ask | panic | auto",
+                    s
+                );
+                panic!("{msg}");
+            }
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            InstallStrategy::Ask => "ask",
+            InstallStrategy::Panic => "panic",
+            InstallStrategy::Auto => "auto",
+        }
+    }
+}
+
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
     strict: Option<bool>,
@@ -11,6 +43,14 @@ pub struct SnmConfig {
     download_dir: Option<String>,
 
     node_modules_dir: Option<String>,
+
+    node_dist_url: Option<String>,
+
+    node_github_resource_host: Option<String>,
+
+    node_install_strategy: Option<InstallStrategy>,
+
+    package_manager_install_strategy: Option<InstallStrategy>,
 }
 
 impl SnmConfig {
@@ -46,6 +86,20 @@ impl SnmConfig {
     pub fn get_node_modules_dir(&self) -> Result<PathBuf, std::string::String> {
         self.get_dir(&self.node_modules_dir, "node_modules")
     }
+
+    pub fn get_node_dist_url(&self) -> String {
+        match &self.node_dist_url {
+            Some(node_dist_url) => node_dist_url.clone(),
+            None => "https://nodejs.org/dist".to_string(),
+        }
+    }
+
+    pub fn get_node_github_resource_host(&self) -> String {
+        match &self.node_github_resource_host {
+            Some(node_github_resource_host) => node_github_resource_host.clone(),
+            None => "https://raw.githubusercontent.com".to_string(),
+        }
+    }
 }
 
 pub fn parse_snm_config() -> Result<SnmConfig, Box<dyn Error>> {
@@ -68,6 +122,13 @@ mod tests {
         env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
+        env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
+        env::set_var(
+            "SNM_NODE_GITHUB_RESOURCE_HOST",
+            "https://raw.githubusercontent.com",
+        );
+        env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
+        env::set_var("SNM_PACKAGE_MANAGER_INSTALL_STRATEGY", "auto");
 
         let config = parse_snm_config().unwrap();
 
@@ -77,7 +138,11 @@ mod tests {
                 strict: Some(true),
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
-                node_modules_dir: Some("node_modules_demo".to_string())
+                node_modules_dir: Some("node_modules_demo".to_string()),
+                node_dist_url: Some("https://nodejs.org/dist".to_string()),
+                node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
+                node_install_strategy: Some(InstallStrategy::Auto),
+                package_manager_install_strategy: Some(InstallStrategy::Auto),
             }
         );
 
