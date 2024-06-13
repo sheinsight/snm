@@ -13,11 +13,15 @@ use semver::Version;
 use semver::VersionReq;
 use sha2::Digest;
 use sha2::Sha256;
+use snm_config::InstallStrategy;
+use snm_config::SnmConfig;
 use snm_core::traits::manage::ManageTrait;
 use snm_core::traits::shared_behavior::SharedBehaviorTrait;
 use snm_core::traits::shim::ShimTrait;
-use snm_core::{config::SnmConfig, utils::tarball::decompress_xz};
+use snm_core::utils::tarball::decompress_xz;
 use snm_current_dir::current_dir;
+use snm_utils::snm_error::SnmError;
+use snm_utils::to_ok::ToOk;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::ops::Not;
@@ -34,14 +38,12 @@ pub struct SnmNode {
 }
 
 impl SnmNode {
-    pub fn new() -> Self {
-        Self {
-            snm_config: SnmConfig::new(),
-        }
+    pub fn new(snm_config: SnmConfig) -> Self {
+        Self { snm_config }
     }
 
     async fn get_node_list_remote(&self) -> Vec<NodeModel> {
-        let host = self.snm_config.get_nodejs_dist_url_prefix();
+        let host = self.snm_config.get_node_dist_url();
         let node_list_url = format!("{}/index.json", host);
         let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
             .await
@@ -53,7 +55,7 @@ impl SnmNode {
     }
 
     async fn get_node_schedule(&self) -> Vec<NodeSchedule> {
-        let host = self.snm_config.get_nodejs_github_resource_host();
+        let host = self.snm_config.get_node_github_resource_host();
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
@@ -74,7 +76,7 @@ impl SnmNode {
     }
 
     async fn get_node_sha256_hashmap(&self, node_version: &str) -> HashMap<String, String> {
-        let host = self.snm_config.get_nodejs_dist_url_prefix();
+        let host = self.snm_config.get_node_dist_url();
         let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
 
         let sha256_str = reqwest::get(&url)
@@ -162,18 +164,19 @@ impl SnmNode {
 }
 
 impl SharedBehaviorTrait for SnmNode {
-    fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
+    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_bin_dir_path_buf()
+            .get_node_bin_dir()?
             .join(&v)
             .join("bin")
             .join("node")
+            .to_ok()
     }
 }
 
 impl ManageTrait for SnmNode {
     fn get_download_url(&self, v: &str) -> String {
-        let host = self.snm_config.get_nodejs_dist_url_prefix();
+        let host = self.snm_config.get_node_dist_url();
         let download_url = format!(
             "{}/v{}/node-v{}-{}-{}.{}",
             &host,
@@ -186,13 +189,13 @@ impl ManageTrait for SnmNode {
         download_url
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config.get_download_dir_path_buf().join(v)
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config.get_download_dir()?.join(v).to_ok()
     }
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
+    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_download_dir_path_buf()
+            .get_download_dir()?
             .join(v)
             .join(format!(
                 "node-v{}-{}-{}.{}",
@@ -201,20 +204,22 @@ impl ManageTrait for SnmNode {
                 get_arch(),
                 get_tarball_ext()
             ))
+            .to_ok()
     }
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_config.get_node_bin_dir_path_buf().join(&v)
+    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config.get_node_bin_dir()?.join(&v).to_ok()
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_bin_dir_path_buf()
+            .get_node_bin_dir()?
             .join(format!("{}-default", &v))
+            .to_ok()
     }
 
-    fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
-        self.snm_config.get_node_bin_dir_path_buf()
+    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        self.snm_config.get_node_bin_dir()
     }
 
     fn get_expect_shasum<'a>(
@@ -464,7 +469,7 @@ impl ManageTrait for SnmNode {
     }
 
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmNode::new())
+        Box::new(SnmNode::new(self.snm_config.clone()))
     }
 }
 
@@ -515,31 +520,40 @@ impl ShimTrait for SnmNode {
         version
     }
 
-    fn get_strict_shim_binary_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
         self.get_runtime_binary_file_path_buf(&bin_name, &version)
     }
 
     fn download_condition(&self, version: &str) -> bool {
         match self.snm_config.get_node_install_strategy() {
-            snm_core::config::snm_config::InstallStrategy::Ask => Confirm::new()
+            InstallStrategy::Ask => Confirm::new()
                 .with_prompt(format!(
                     "🤔 {} is not installed, do you want to install it ?",
                     &version
                 ))
                 .interact()
                 .expect("download_condition Confirm error"),
-            snm_core::config::snm_config::InstallStrategy::Panic => {
+            InstallStrategy::Panic => {
                 let msg = format!("Unsupported version: {}", version);
                 panic!("{msg}");
             }
-            snm_core::config::snm_config::InstallStrategy::Auto => true,
+            InstallStrategy::Auto => true,
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
-        self.get_runtime_dir_path_buf(&version)
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        self.get_runtime_dir_path_buf(&version)?
             .join("bin")
             .join(bin_name)
+            .to_ok()
     }
 
     fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {

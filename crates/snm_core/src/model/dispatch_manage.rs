@@ -1,6 +1,7 @@
 use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
+use snm_utils::snm_error::SnmError;
 
 use crate::{
     traits::manage::ManageTrait,
@@ -23,10 +24,18 @@ impl DispatchManage {
 
 // 分配
 impl DispatchManage {
-    pub async fn ensure_strict_package_manager(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn ensure_strict_package_manager(
+        &self,
+        bin_name: &str,
+    ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
         let version = shim_trait.get_strict_shim_version();
-        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&version);
+
+        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&version) {
+            Ok(anchor_file_path_buf) => anchor_file_path_buf,
+            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
+        };
+
         if anchor_file_path_buf.exists().not() {
             if shim_trait.download_condition(&version) {
                 self.download(&version).await;
@@ -34,14 +43,22 @@ impl DispatchManage {
                 panic!("SilentExit");
             }
         }
-        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version);
-        return (version.to_string(), binary_path_buf);
+        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
+        return Ok((version.to_string(), binary_path_buf));
     }
 
-    pub async fn proxy_process_by_strict(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn proxy_process_by_strict(
+        &self,
+        bin_name: &str,
+    ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
         let v = shim_trait.get_strict_shim_version();
-        let anchor_file_path_buf = shim_trait.get_anchor_file_path_buf(&v);
+
+        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
+            Ok(anchor_file_path_buf) => anchor_file_path_buf,
+            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
+        };
+
         if anchor_file_path_buf.exists().not() {
             if shim_trait.download_condition(&v) {
                 self.download(&v).await;
@@ -50,20 +67,27 @@ impl DispatchManage {
                 panic!("{msg}");
             }
         }
-        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &v);
+        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &v)?;
 
-        return (v, binary_path_buf);
+        return Ok((v, binary_path_buf));
     }
 
-    pub async fn proxy_process_by_default(&self, bin_name: &str) -> (String, PathBuf) {
+    pub async fn proxy_process_by_default(
+        &self,
+        bin_name: &str,
+    ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
-        let tuple = self.read_runtime_dir_name_vec();
+        let tuple = self.read_runtime_dir_name_vec()?;
         let v = shim_trait.check_default_version(&tuple);
-        let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v);
-        return (v, binary_path_buf);
+        let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
+        Ok((v, binary_path_buf))
     }
 
-    pub async fn proxy_process(&self, bin_name: &str, strict: bool) -> (String, PathBuf) {
+    pub async fn proxy_process(
+        &self,
+        bin_name: &str,
+        strict: bool,
+    ) -> Result<(String, PathBuf), SnmError> {
         let shim_trait = self.manager.get_shim_trait();
         shim_trait.check_satisfy_strict_mode(bin_name);
 
@@ -74,23 +98,29 @@ impl DispatchManage {
         }
     }
 
-    pub async fn list(&self) {
-        let dir_tuple = self.read_runtime_dir_name_vec();
+    pub async fn list(&self) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
         self.manager.show_list(&dir_tuple).await;
+        Ok(())
     }
 
-    pub async fn list_offline(&self) {
-        let dir_tuple = self.read_runtime_dir_name_vec();
+    pub async fn list_offline(&self) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
         self.manager.show_list_offline(&dir_tuple).await;
+        Ok(())
     }
 
-    pub async fn list_remote(&self, all: bool) {
-        let dir_tuple = self.read_runtime_dir_name_vec();
+    pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
+        let dir_tuple = self.read_runtime_dir_name_vec()?;
         self.manager.show_list_remote(&dir_tuple, all).await;
+        Ok(())
     }
 
     pub async fn install(&self, v: &str) {
-        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
+        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
+            Ok(anchor_file_path_buf) => anchor_file_path_buf,
+            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
+        };
 
         if anchor_file_path_buf.exists().not() {
             self.download(v).await;
@@ -110,8 +140,8 @@ impl DispatchManage {
         }
     }
 
-    pub async fn un_install(&self, v: &str) {
-        let (dir_name_vec, default_v) = self.read_runtime_dir_name_vec();
+    pub async fn un_install(&self, v: &str) -> Result<(), SnmError> {
+        let (dir_name_vec, default_v) = self.read_runtime_dir_name_vec()?;
 
         if dir_name_vec.is_empty() || dir_name_vec.iter().any(|item| item == &v).not() {
             let msg = format!("Not found {}", &v);
@@ -130,7 +160,7 @@ impl DispatchManage {
                 if result {
                     let default_path_buf = self
                         .manager
-                        .get_runtime_dir_path_buf(format!("{}-default", &v).as_str());
+                        .get_runtime_dir_path_buf(format!("{}-default", &v).as_str())?;
 
                     fs::remove_dir_all(&default_path_buf).expect(
                         format!(
@@ -143,18 +173,23 @@ impl DispatchManage {
             }
         }
 
-        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
+        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
         let msg = format!(
             "un_install remove_dir_all error {:?}",
             &runtime_dir_path_buf.display()
         );
         fs::remove_dir_all(&runtime_dir_path_buf).expect(&msg);
+
+        Ok(())
     }
 
-    pub async fn set_default(&self, v: &str) {
-        let (_, default_v) = self.read_runtime_dir_name_vec();
+    pub async fn set_default(&self, v: &str) -> Result<(), SnmError> {
+        let (_, default_v) = self.read_runtime_dir_name_vec()?;
 
-        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v);
+        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
+            Ok(anchor_file_path_buf) => anchor_file_path_buf,
+            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
+        };
 
         if anchor_file_path_buf.exists().not() {
             Confirm::new()
@@ -169,7 +204,7 @@ impl DispatchManage {
         }
 
         if let Some(d_v) = default_v {
-            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v);
+            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v)?;
             fs::remove_dir_all(&default_dir_path_buf).expect(
                 format!(
                     "set_default remove_dir_all error {:?}",
@@ -179,8 +214,8 @@ impl DispatchManage {
             );
         }
 
-        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v);
-        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v);
+        let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
+        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
 
         create_symlink(&from_dir_path_buf, &to_dir_path_buf).expect(
             format!(
@@ -190,10 +225,12 @@ impl DispatchManage {
             )
             .as_str(),
         );
+
+        Ok(())
     }
 
-    fn read_runtime_dir_name_vec(&self) -> (Vec<String>, Option<String>) {
-        let runtime_dir_path_buf = self.manager.get_runtime_base_dir_path_buf();
+    fn read_runtime_dir_name_vec(&self) -> Result<(Vec<String>, Option<String>), SnmError> {
+        let runtime_dir_path_buf = self.manager.get_runtime_base_dir_path_buf()?;
 
         let mut default_dir = None;
 
@@ -231,19 +268,22 @@ impl DispatchManage {
             })
             .collect::<Vec<String>>();
 
-        (dir_name_vec, default_dir)
+        Ok((dir_name_vec, default_dir))
     }
 
-    async fn download(&self, v: &str) {
+    async fn download(&self, v: &str) -> Result<(), SnmError> {
         let download_url = self.manager.get_download_url(v);
-        let downloaded_file_path_buf = self.manager.get_downloaded_file_path_buf(v);
+        let downloaded_file_path_buf = match self.manager.get_downloaded_file_path_buf(v) {
+            Ok(downloaded_file_path_buf) => downloaded_file_path_buf,
+            Err(_) => panic!("download get_downloaded_file_path_buf error"),
+        };
         DownloadBuilder::new()
             .retries(3)
             .write_strategy(WriteStrategy::Nothing)
             .download(&download_url, &downloaded_file_path_buf)
             .await;
 
-        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v);
+        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf);
 
@@ -256,6 +296,8 @@ impl DispatchManage {
             );
             panic!("{msg}");
         }
+
+        Ok(())
     }
 }
 

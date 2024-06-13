@@ -1,6 +1,7 @@
 use std::{path::PathBuf, pin::Pin};
 
 use futures_util::Future;
+use snm_utils::snm_error::SnmError;
 
 use super::{shared_behavior::SharedBehaviorTrait, shim::ShimTrait};
 
@@ -9,15 +10,15 @@ pub trait ManageTrait: SharedBehaviorTrait {
 
     fn get_download_url(&self, v: &str) -> String;
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf;
+    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf;
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf;
+    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf;
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_runtime_base_dir_path_buf(&self) -> PathBuf;
+    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError>;
 
     fn get_expect_shasum<'a>(
         &'a self,

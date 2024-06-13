@@ -1,7 +1,8 @@
 use config::{Config, Environment};
 use serde::Deserialize;
 use snm_npmrc::parse_npmrc;
-use std::{error::Error, path::PathBuf};
+use snm_utils::snm_error::SnmError;
+use std::path::PathBuf;
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
@@ -54,19 +55,21 @@ pub struct SnmConfig {
     package_manager_install_strategy: Option<InstallStrategy>,
 
     npm_registry: Option<String>,
+
+    workspace: Option<String>,
 }
 
 impl SnmConfig {
-    fn get_base_dir(&self) -> Result<PathBuf, String> {
+    fn get_base_dir(&self) -> Result<PathBuf, SnmError> {
         match dirs::home_dir() {
             Some(home_dir) => Ok(home_dir.join(".snm")),
             None => {
-                return Err("Could not get home directory".to_string());
+                return Err(SnmError::GetHomeDirError);
             }
         }
     }
 
-    fn get_dir(&self, dir: &Option<String>, default: &str) -> Result<PathBuf, String> {
+    fn get_dir(&self, dir: &Option<String>, default: &str) -> Result<PathBuf, SnmError> {
         let base_dir = self.get_base_dir()?;
         Ok(match dir {
             Some(dir) => base_dir.join(dir),
@@ -74,19 +77,26 @@ impl SnmConfig {
         })
     }
 
+    pub fn get_workspace(&self) -> Result<PathBuf, SnmError> {
+        match &self.workspace {
+            Some(workspace) => Ok(PathBuf::from(workspace)),
+            None => Err(SnmError::GetWorkspaceError),
+        }
+    }
+
     pub fn get_strict(&self) -> bool {
         self.strict.unwrap_or(false)
     }
 
-    pub fn get_node_bin_dir(&self) -> Result<PathBuf, std::string::String> {
+    pub fn get_node_bin_dir(&self) -> Result<PathBuf, SnmError> {
         self.get_dir(&self.node_bin_dir, "node_bin")
     }
 
-    pub fn get_download_dir(&self) -> Result<PathBuf, std::string::String> {
+    pub fn get_download_dir(&self) -> Result<PathBuf, SnmError> {
         self.get_dir(&self.download_dir, "downloads")
     }
 
-    pub fn get_node_modules_dir(&self) -> Result<PathBuf, std::string::String> {
+    pub fn get_node_modules_dir(&self) -> Result<PathBuf, SnmError> {
         self.get_dir(&self.node_modules_dir, "node_modules")
     }
 
@@ -124,7 +134,7 @@ impl SnmConfig {
     }
 }
 
-pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, Box<dyn Error>> {
+pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
     let config = Config::builder()
         .add_source(Environment::with_prefix("SNM"))
         .build()?;
@@ -137,6 +147,7 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, Box<dyn Error>
     };
 
     config.npm_registry = registry;
+    config.workspace = Some(workspace.to_string_lossy().to_string());
 
     Ok(config)
 }
@@ -173,6 +184,7 @@ mod tests {
                 node_install_strategy: Some(InstallStrategy::Auto),
                 package_manager_install_strategy: Some(InstallStrategy::Auto),
                 npm_registry: None,
+                workspace: Some(current_dir().unwrap().to_string_lossy().to_string())
             }
         );
 

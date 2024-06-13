@@ -1,30 +1,25 @@
 mod shim;
 
 use crate::shim::launch_shim;
-use snm_core::{
-    config::{snm_config::InstallStrategy, SnmConfig},
-    snm_content::{SnmContent, SnmContentHandler},
-};
+use snm_config::parse_snm_config;
+use snm_current_dir::current_dir;
 use snm_node::snm_node::SnmNode;
 const BIN_NAME: &str = "node";
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
-    let snm_content_handler: SnmContentHandler = SnmContentHandler::new(SnmContent {
-        strict: SnmConfig::new().get_strict(),
-        base_dir_path_buf: SnmConfig::new().get_base_dir_path_buf(),
-        download_dir_path_buf: SnmConfig::new().get_download_dir_path_buf(),
-        node_modules_dir_path_buf: SnmConfig::new().get_node_modules_dir_path_buf(),
-        npm_registry: SnmConfig::new().get_npm_registry_host(),
-        package_manager_install_strategy: InstallStrategy::Auto,
-    });
+    let dir = current_dir()?;
+
+    let snm_config = parse_snm_config(&dir)?;
 
     launch_shim(
-        Box::new(SnmNode::new()),
+        Box::new(SnmNode::new(snm_config.clone())),
         BIN_NAME,
-        snm_content_handler.get_strict(),
+        snm_config.get_strict(),
     )
     .await;
+
+    Ok(())
 }

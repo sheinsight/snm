@@ -30,3 +30,4 @@ backtrace = "0.3.71"
 rust-ini = "0.21.0"
 ordered-multimap = "0.7.3"
 directories = "5.0.1"
+snm_utils = { path = "../snm_utils" }

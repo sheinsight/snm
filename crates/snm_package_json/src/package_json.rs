@@ -25,7 +25,7 @@ pub struct PackageJson {
     pub raw_workspace: PathBuf,
 }
 
-pub fn parse_package_json(workspace: PathBuf) -> Option<PackageJson> {
+pub fn parse_package_json(workspace: &PathBuf) -> Option<PackageJson> {
     let raw_file_path = workspace.join("package.json");
 
     let file = File::open(&raw_file_path).unwrap();
@@ -51,7 +51,7 @@ pub fn parse_package_json(workspace: PathBuf) -> Option<PackageJson> {
             version: raw.version.clone(),
             package_manager,
             raw,
-            raw_workspace: workspace,
+            raw_workspace: workspace.clone(),
             raw_file_path,
         });
     }

@@ -1,28 +1,21 @@
 use clap::Parser;
-use snm_core::{
-    color_backtrace,
-    config::{snm_config::InstallStrategy, SnmConfig},
-    snm_content::{SnmContent, SnmContentHandler},
-};
+use snm_config::parse_snm_config;
+use snm_core::color_backtrace;
 
 use cli::{execute_cli::execute_cli, SnmCli};
+use snm_current_dir::current_dir;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     color_backtrace::install();
 
-    SnmConfig::new().init();
+    let dir = current_dir()?;
 
-    let snm_content_handler: SnmContentHandler = SnmContentHandler::new(SnmContent {
-        strict: SnmConfig::new().get_strict(),
-        base_dir_path_buf: SnmConfig::new().get_base_dir_path_buf(),
-        download_dir_path_buf: SnmConfig::new().get_download_dir_path_buf(),
-        node_modules_dir_path_buf: SnmConfig::new().get_node_modules_dir_path_buf(),
-        npm_registry: SnmConfig::new().get_npm_registry_host(),
-        package_manager_install_strategy: InstallStrategy::Auto,
-    });
+    let snm_config = parse_snm_config(&dir)?;
 
     let cli = SnmCli::parse();
 
-    execute_cli(cli, snm_content_handler).await;
+    execute_cli(cli, snm_config).await;
+
+    Ok(())
 }

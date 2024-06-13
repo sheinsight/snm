@@ -3,13 +3,16 @@ use dialoguer::Confirm;
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
+use snm_config::InstallStrategy;
+use snm_config::SnmConfig;
 use snm_core::{
-    snm_content::SnmContentHandler,
     traits::{manage::ManageTrait, shared_behavior::SharedBehaviorTrait, shim::ShimTrait},
     utils::tarball::decompress_tgz,
 };
 use snm_current_dir::current_dir;
 use snm_package_json::parse_package_json;
+use snm_utils::snm_error::SnmError;
+use snm_utils::to_ok::ToOk;
 use std::future::Future;
 use std::pin::Pin;
 use std::{
@@ -19,71 +22,77 @@ use std::{
 };
 
 pub struct SnmPackageManager {
-    snm_content_handler: SnmContentHandler,
+    snm_config: SnmConfig,
     prefix: String,
 }
 
 impl SnmPackageManager {
-    pub fn from_prefix(prefix: &str, snm_content_handler: SnmContentHandler) -> Self {
+    pub fn from_prefix(prefix: &str, snm_config: SnmConfig) -> Self {
         Self {
             prefix: prefix.to_string(),
-            snm_content_handler,
+            snm_config,
         }
     }
 }
 
 impl SharedBehaviorTrait for SnmPackageManager {
-    fn get_anchor_file_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_content_handler
-            .get_node_modules_dir_path_buf()
+    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_node_modules_dir()?
             .join(&self.prefix)
-            .join(&v)
+            .join(v)
             .join("package.json")
+            .to_ok()
     }
 }
 
 impl ManageTrait for SnmPackageManager {
     fn get_download_url(&self, v: &str) -> String {
-        let npm_registry = self.snm_content_handler.get_npm_registry();
+        let npm_registry = self.snm_config.get_npm_registry();
         format!(
             "{}/{}/-/{}-{}.tgz",
             npm_registry, &self.prefix, &self.prefix, &v
         )
     }
 
-    fn get_downloaded_file_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_content_handler
-            .get_download_dir_path_buf()
+    fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_download_dir()?
             .join(&self.prefix)
             .join(&v)
             .join(format!("{}@{}.tgz", &self.prefix, &v))
+            .to_ok()
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_content_handler
-            .get_download_dir_path_buf()
+    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_download_dir()?
             .join(&self.prefix)
             .join(&v)
+            .to_ok()
     }
 
-    fn get_runtime_dir_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_content_handler
-            .get_node_modules_dir_path_buf()
+    fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_node_bin_dir()?
             .join(&self.prefix)
             .join(&v)
+            .to_ok()
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> PathBuf {
-        self.snm_content_handler
-            .get_node_modules_dir_path_buf()
+    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_node_modules_dir()?
             .join(&self.prefix)
             .join(format!("{}-default", &v))
+            .to_ok()
     }
 
-    fn get_runtime_base_dir_path_buf(&self) -> PathBuf {
-        self.snm_content_handler
-            .get_node_modules_dir_path_buf()
+    fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
+        self.snm_config
+            .get_node_modules_dir()?
             .join(&self.prefix)
+            .to_ok()
     }
 
     fn get_expect_shasum<'a>(
@@ -91,7 +100,7 @@ impl ManageTrait for SnmPackageManager {
         v: &'a str,
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
         Box::pin(async move {
-            let npm_registry = self.snm_content_handler.get_npm_registry();
+            let npm_registry = self.snm_config.get_npm_registry();
             let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
 
             let value: Value = reqwest::get(&download_url)
@@ -182,7 +191,7 @@ impl ManageTrait for SnmPackageManager {
     fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
         Box::new(SnmPackageManager::from_prefix(
             &self.prefix,
-            self.snm_content_handler.clone(),
+            self.snm_config.clone(),
         ))
     }
 
@@ -202,7 +211,7 @@ impl ShimTrait for SnmPackageManager {
             Err(_) => panic!("NoCurrentDir"),
         };
 
-        let package_json = match parse_package_json(workspace) {
+        let package_json = match parse_package_json(&workspace) {
             Some(package_json) => package_json,
             None => panic!("NoPackageManager"),
         };
@@ -229,7 +238,7 @@ impl ShimTrait for SnmPackageManager {
             Err(_) => panic!("NoCurrentDir"),
         };
 
-        let package_json = match parse_package_json(workspace) {
+        let package_json = match parse_package_json(&workspace) {
             Some(package_json) => package_json,
             None => panic!("NoPackageManager"),
         };
@@ -245,17 +254,18 @@ impl ShimTrait for SnmPackageManager {
         }
     }
 
-    fn get_strict_shim_binary_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
-        let node_binary_path_buf = self.get_runtime_binary_file_path_buf(&bin_name, &version);
-        node_binary_path_buf
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        self.get_runtime_binary_file_path_buf(&bin_name, &version)?
+            .to_ok()
     }
 
     fn download_condition(&self, version: &str) -> bool {
-        match self
-            .snm_content_handler
-            .get_package_manager_install_strategy()
-        {
-            snm_core::config::snm_config::InstallStrategy::Ask => {
+        match self.snm_config.get_package_manager_install_strategy() {
+            InstallStrategy::Ask => {
                 return Confirm::new()
                     .with_prompt(format!(
                         "🤔 {} is not installed, do you want to install it ?",
@@ -264,7 +274,7 @@ impl ShimTrait for SnmPackageManager {
                     .interact()
                     .expect("download Confirm error")
             }
-            snm_core::config::snm_config::InstallStrategy::Panic => {
+            InstallStrategy::Panic => {
                 let msg = format!(
                     "UnsupportedPackageManager {} {}",
                     self.prefix.to_string(),
@@ -272,14 +282,18 @@ impl ShimTrait for SnmPackageManager {
                 );
                 panic!("{msg}");
             }
-            snm_core::config::snm_config::InstallStrategy::Auto => true,
+            InstallStrategy::Auto => true,
         }
     }
 
-    fn get_runtime_binary_file_path_buf(&self, bin_name: &str, version: &str) -> PathBuf {
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
         let mut package_json_buf_path = self
-            .snm_content_handler
-            .get_node_modules_dir_path_buf()
+            .snm_config
+            .get_node_modules_dir()?
             .join(self.prefix.to_string())
             .join(&version);
 
@@ -287,13 +301,13 @@ impl ShimTrait for SnmPackageManager {
             package_json_buf_path = package_json_buf_path.join("package")
         }
 
-        let mut package_json = match parse_package_json(package_json_buf_path.clone()) {
+        let mut package_json = match parse_package_json(&package_json_buf_path) {
             Some(package_json) => package_json,
             None => panic!("NoPackageManager"),
         };
 
         if let Some(bin) = package_json.bin.remove(bin_name) {
-            return bin;
+            return Ok(bin);
         } else {
             let msg = format!(
                 "Not found binary from {} bin property: {}",

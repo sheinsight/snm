@@ -22,6 +22,8 @@ anyhow = "1.0"
 dialoguer = "0.11.0"
 snm_core = { path = "../snm_core" }
 snm_current_dir = { path = "../snm_current_dir" }
+snm_utils = { path = "../snm_utils" }
+snm_config = { path = "../snm_config" }
 xz2 = "0.1.7"
 tar = "0.4"
 num-format = "0.4.0"
