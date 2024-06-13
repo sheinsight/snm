@@ -1,5 +1,6 @@
 use config::{Config, Environment};
 use serde::Deserialize;
+use snm_npmrc::parse_npmrc;
 use std::{error::Error, path::PathBuf};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
@@ -51,6 +52,8 @@ pub struct SnmConfig {
     node_install_strategy: Option<InstallStrategy>,
 
     package_manager_install_strategy: Option<InstallStrategy>,
+
+    npm_registry: Option<String>,
 }
 
 impl SnmConfig {
@@ -87,6 +90,13 @@ impl SnmConfig {
         self.get_dir(&self.node_modules_dir, "node_modules")
     }
 
+    pub fn get_npm_registry(&self) -> String {
+        match &self.npm_registry {
+            Some(npm_registry) => npm_registry.clone(),
+            None => "https://registry.npmjs.org/".to_string(),
+        }
+    }
+
     pub fn get_node_dist_url(&self) -> String {
         match &self.node_dist_url {
             Some(node_dist_url) => node_dist_url.clone(),
@@ -100,14 +110,33 @@ impl SnmConfig {
             None => "https://raw.githubusercontent.com".to_string(),
         }
     }
+
+    pub fn get_node_install_strategy(&self) -> InstallStrategy {
+        self.node_install_strategy
+            .clone()
+            .unwrap_or(InstallStrategy::Auto)
+    }
+
+    pub fn get_package_manager_install_strategy(&self) -> InstallStrategy {
+        self.package_manager_install_strategy
+            .clone()
+            .unwrap_or(InstallStrategy::Auto)
+    }
 }
 
-pub fn parse_snm_config() -> Result<SnmConfig, Box<dyn Error>> {
+pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, Box<dyn Error>> {
     let config = Config::builder()
         .add_source(Environment::with_prefix("SNM"))
         .build()?;
 
-    let config: SnmConfig = config.try_deserialize()?;
+    let mut config: SnmConfig = config.try_deserialize()?;
+
+    let registry = match parse_npmrc(workspace) {
+        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
+        None => None,
+    };
+
+    config.npm_registry = registry;
 
     Ok(config)
 }
@@ -115,7 +144,7 @@ pub fn parse_snm_config() -> Result<SnmConfig, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
+    use std::env::{self, current_dir};
     #[test]
     fn test_parse_config() {
         env::set_var("SNM_STRICT", "true");
@@ -130,7 +159,7 @@ mod tests {
         env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
         env::set_var("SNM_PACKAGE_MANAGER_INSTALL_STRATEGY", "auto");
 
-        let config = parse_snm_config().unwrap();
+        let config = parse_snm_config(&current_dir().unwrap()).unwrap();
 
         assert_eq!(
             config,
@@ -143,6 +172,7 @@ mod tests {
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
                 node_install_strategy: Some(InstallStrategy::Auto),
                 package_manager_install_strategy: Some(InstallStrategy::Auto),
+                npm_registry: None,
             }
         );
 
