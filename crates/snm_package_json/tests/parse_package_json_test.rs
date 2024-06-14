@@ -10,7 +10,7 @@ fn test_parse_for_bin() {
         .join("features")
         .join("has_bin");
 
-    let package_json = match parse_package_json(workspace_path_buf.clone()) {
+    let package_json = match parse_package_json(&workspace_path_buf) {
         Some(package_json) => package_json,
         None => unreachable!("Failed to parse package.json"),
     };
@@ -35,7 +35,7 @@ fn test_parse_package_manager() {
     let workspace_path_buf = current_dir().unwrap();
 
     let package_json = match parse_package_json(
-        workspace_path_buf
+        &workspace_path_buf
             .join("tests")
             .join("features")
             .join("package_manager"),

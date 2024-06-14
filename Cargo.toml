@@ -3,8 +3,15 @@ members = [
     "crates/cli",
     "crates/snm_node",
     "crates/snm_core",
-    "crates/snm_package_manager"
-, "crates/snm_package_json", "crates/snm_npmrc", "crates/snm_current_dir", "crates/snm_config", "crates/snm_utils"]
+    "crates/snm_package_manager", 
+    "crates/snm_package_json", 
+    "crates/snm_npmrc", 
+    "crates/snm_current_dir", 
+    "crates/snm_config", 
+    "crates/snm_utils", 
+    "crates/snm_node_version"
+]
+
 resolver = "2"
 
 [profile.release]

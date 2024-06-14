@@ -1,5 +1,6 @@
 use core::panic;
 use std::{
+    fs,
     ops::Not,
     path::PathBuf,
     process::{Command, Stdio},
@@ -10,97 +11,120 @@ use snm_config::SnmConfig;
 use snm_core::{
     model::dispatch_manage::DispatchManage,
     println_success,
-    traits::{manage::ManageTrait, shim::ShimTrait},
+    traits::manage::ManageTrait,
+    utils::download::{DownloadBuilder, WriteStrategy},
 };
-use snm_current_dir::current_dir;
-use snm_package_json::parse_package_json;
 use snm_utils::snm_error::SnmError;
 
-pub fn exec_strict(manager: Box<dyn ShimTrait>, snm_config: SnmConfig) -> Result<(), SnmError> {
-    let workspace = snm_config.get_workspace()?;
-    let package_json = parse_package_json(&workspace);
-    let node_version_path_buf = workspace.join(".node-version");
-    if node_version_path_buf.exists().not() {
-        panic!("Not found .node-version file")
-    }
-    if package_json.is_none() {
-        panic!("Not found package.json file")
-    }
-    let package_json = package_json.unwrap();
-    match package_json.package_manager {
-        Some(package_manager) => {
-            package_manager.name;
+async fn download<'a>(shim: &Box<dyn ManageTrait + 'a>, v: &str) -> Result<(), SnmError> {
+    let download_url = shim.get_download_url(v);
+    let downloaded_file_path_buf = match shim.get_downloaded_file_path_buf(v) {
+        Ok(downloaded_file_path_buf) => downloaded_file_path_buf,
+        Err(_) => panic!("download get_downloaded_file_path_buf error"),
+    };
+    DownloadBuilder::new()
+        .retries(3)
+        .write_strategy(WriteStrategy::Nothing)
+        .download(&download_url, &downloaded_file_path_buf)
+        .await;
 
-            let x = manager
-                .get_runtime_binary_file_path_buf("bin_name", &package_manager.version.unwrap())?;
-        }
-        None => panic!("Not found package manager"),
+    let runtime_dir_path_buf = shim.get_runtime_dir_path_buf(v)?;
+
+    shim.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf);
+
+    let remove_result = fs::remove_file(&downloaded_file_path_buf);
+
+    if remove_result.is_err() {
+        let msg = format!(
+            "download remove_file error {:?}",
+            &downloaded_file_path_buf.display()
+        );
+        panic!("{msg}");
     }
 
     Ok(())
 }
 
-pub async fn hello(
-    workspace: &PathBuf,
-    manager: Box<dyn ShimTrait>,
+pub async fn node_exec_strict<'a>(
+    shim: &Box<dyn ManageTrait + 'a>,
     snm_config: SnmConfig,
-) -> Result<(), String> {
-    let package_json = parse_package_json(&workspace);
-    // let y = parse_node_version(workspace)
-
-    let node_version_path_buf = workspace.join(".node-version");
-
-    if snm_config.get_strict() {
-        // if package manager
-
-        if let Some(pj) = package_json {
-            // pj.check_package_manager()?;
-            let package_manager = match pj.package_manager {
-                Some(package_manager) => package_manager,
-                None => {
-                    return Err("Not found package manager".to_string());
-                }
-            };
-
-            let name = match package_manager.name {
-                Some(name) => name,
-                None => {
-                    return Err("Not found package manager name".to_string());
-                }
-            };
-
-            let version = match package_manager.version {
-                Some(version) => version,
-                None => {
-                    return Err("Not found package manager version".to_string());
-                }
-            };
-        } else {
-            panic!("Not found package.json file")
-        }
-        if node_version_path_buf.exists().not() {
-            panic!("Not found .node-version file")
-        }
-        // manager.check_satisfy_strict_mode("npm");
-        let v = manager.get_strict_shim_version();
-
-        let anchor_file_path_buf = match manager.get_anchor_file_path_buf(&v) {
-            Ok(anchor_file_path_buf) => anchor_file_path_buf,
-            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
-        };
-
-        if anchor_file_path_buf.exists().not() {
-            if manager.download_condition(&v) {
-                // exec download
+    bin_name: &str,
+    v: Option<String>,
+) -> Result<PathBuf, SnmError> {
+    if let Some(node_version) = v {
+        if shim
+            .get_anchor_file_path_buf(node_version.as_str())?
+            .exists()
+            .not()
+        {
+            if shim.download_condition(node_version.as_str()) {
+                // download
+                download(&shim, node_version.as_str()).await?;
             } else {
-                panic!("Not found anchor file")
+                // exit 0
             }
         }
-    } else {
-        // if none then found default target then panic
+
+        let binary = shim.get_strict_shim_binary_path_buf(bin_name, node_version.as_str())?;
+
+        return Ok(binary);
     }
 
-    Ok(())
+    Err(SnmError::NotFoundNodeVersionConfigFile)
+}
+
+pub async fn exec_default(
+    shim: &Box<dyn ManageTrait>,
+    bin_name: &str,
+) -> Result<(String, PathBuf), SnmError> {
+    let tuple = read_runtime_dir_name_vec(&shim)?;
+    let v = shim.check_default_version(&tuple);
+    let binary_path_buf = shim.get_runtime_binary_file_path_buf(bin_name, &v)?;
+    Ok((v, binary_path_buf))
+}
+
+fn read_runtime_dir_name_vec(
+    shim: &Box<dyn ManageTrait>,
+) -> Result<(Vec<String>, Option<String>), SnmError> {
+    let runtime_dir_path_buf = shim.get_runtime_base_dir_path_buf()?;
+
+    let mut default_dir = None;
+
+    if runtime_dir_path_buf.exists().not() {
+        // TODO here create not suitable , should be find a better way
+        fs::create_dir_all(&runtime_dir_path_buf).expect(
+            format!(
+                "read_runtime_dir_name_vec create_dir_all error {:?}",
+                &runtime_dir_path_buf.display()
+            )
+            .as_str(),
+        );
+    }
+
+    let dir_name_vec = runtime_dir_path_buf
+        .read_dir()
+        .expect(
+            format!(
+                "read_runtime_dir_name_vec read_dir error {:?}",
+                &runtime_dir_path_buf.display()
+            )
+            .as_str(),
+        )
+        .filter_map(|dir_entry| dir_entry.ok())
+        .filter(|dir_entry| dir_entry.path().is_dir())
+        .filter_map(|dir_entry| {
+            let file_name = dir_entry.file_name().into_string().ok()?;
+
+            if file_name.ends_with("-default") {
+                default_dir = Some(file_name.trim_end_matches("-default").to_string());
+                return None;
+            }
+
+            return Some(file_name);
+        })
+        .collect::<Vec<String>>();
+
+    Ok((dir_name_vec, default_dir))
 }
 
 pub async fn launch_shim(
@@ -125,36 +149,4 @@ pub async fn launch_shim(
         .and_then(|process| process.wait_with_output());
 
     Ok(())
-}
-
-pub fn _check(actual_package_manager: &str) {
-    let dir = match current_dir() {
-        Ok(dir) => dir,
-        Err(_) => panic!("NoCurrentDir"),
-    };
-
-    let package_json = match parse_package_json(&dir) {
-        Some(pkg) => pkg,
-        None => panic!("NoPackageManager"),
-    };
-
-    println!("dir: {:?}", package_json);
-    let package_manager = match package_json.package_manager {
-        Some(pm) => pm,
-        None => panic!("NoPackageManager"),
-    };
-
-    let name = match package_manager.name {
-        Some(n) => n,
-        None => panic!("NoPackageManager"),
-    };
-
-    if name != actual_package_manager {
-        let msg = format!(
-            "NotMatchPackageManager {} {}",
-            name,
-            actual_package_manager.to_string()
-        );
-        panic!("{msg}");
-    }
 }

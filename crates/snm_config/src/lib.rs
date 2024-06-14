@@ -124,13 +124,13 @@ impl SnmConfig {
     pub fn get_node_install_strategy(&self) -> InstallStrategy {
         self.node_install_strategy
             .clone()
-            .unwrap_or(InstallStrategy::Auto)
+            .unwrap_or(InstallStrategy::Ask)
     }
 
     pub fn get_package_manager_install_strategy(&self) -> InstallStrategy {
         self.package_manager_install_strategy
             .clone()
-            .unwrap_or(InstallStrategy::Auto)
+            .unwrap_or(InstallStrategy::Ask)
     }
 }
 

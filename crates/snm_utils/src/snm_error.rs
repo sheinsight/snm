@@ -10,4 +10,10 @@ pub enum SnmError {
 
     #[error("Get workspace dir error")]
     GetWorkspaceError,
+
+    #[error("Read file error: {0}")]
+    ReadFileError(#[from] std::io::Error),
+
+    #[error("Not found node version file")]
+    NotFoundNodeVersionConfigFile,
 }

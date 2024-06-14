@@ -28,8 +28,7 @@ impl DispatchManage {
         &self,
         bin_name: &str,
     ) -> Result<(String, PathBuf), SnmError> {
-        let shim_trait = self.manager.get_shim_trait();
-        let version = shim_trait.get_strict_shim_version();
+        let version = self.manager.get_strict_shim_version();
 
         let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&version) {
             Ok(anchor_file_path_buf) => anchor_file_path_buf,
@@ -37,13 +36,15 @@ impl DispatchManage {
         };
 
         if anchor_file_path_buf.exists().not() {
-            if shim_trait.download_condition(&version) {
+            if self.manager.download_condition(&version) {
                 self.download(&version).await;
             } else {
                 panic!("SilentExit");
             }
         }
-        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &version)?;
+        let binary_path_buf = self
+            .manager
+            .get_strict_shim_binary_path_buf(&bin_name, &version)?;
         return Ok((version.to_string(), binary_path_buf));
     }
 
@@ -51,23 +52,24 @@ impl DispatchManage {
         &self,
         bin_name: &str,
     ) -> Result<(String, PathBuf), SnmError> {
-        let shim_trait = self.manager.get_shim_trait();
-        let v = shim_trait.get_strict_shim_version();
+        let v = self.manager.get_strict_shim_version();
 
-        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
+        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v.as_str()) {
             Ok(anchor_file_path_buf) => anchor_file_path_buf,
             Err(_) => panic!("set_default get_anchor_file_path_buf error"),
         };
 
         if anchor_file_path_buf.exists().not() {
-            if shim_trait.download_condition(&v) {
+            if self.manager.download_condition(&v) {
                 self.download(&v).await;
             } else {
                 let msg = "SilentExit";
                 panic!("{msg}");
             }
         }
-        let binary_path_buf = shim_trait.get_strict_shim_binary_path_buf(&bin_name, &v)?;
+        let binary_path_buf = self
+            .manager
+            .get_strict_shim_binary_path_buf(&bin_name, &v)?;
 
         return Ok((v, binary_path_buf));
     }
@@ -76,10 +78,11 @@ impl DispatchManage {
         &self,
         bin_name: &str,
     ) -> Result<(String, PathBuf), SnmError> {
-        let shim_trait = self.manager.get_shim_trait();
         let tuple = self.read_runtime_dir_name_vec()?;
-        let v = shim_trait.check_default_version(&tuple);
-        let binary_path_buf = shim_trait.get_runtime_binary_file_path_buf(&bin_name, &v)?;
+        let v = self.manager.check_default_version(&tuple);
+        let binary_path_buf = self
+            .manager
+            .get_runtime_binary_file_path_buf(&bin_name, &v)?;
         Ok((v, binary_path_buf))
     }
 
@@ -88,8 +91,7 @@ impl DispatchManage {
         bin_name: &str,
         strict: bool,
     ) -> Result<(String, PathBuf), SnmError> {
-        let shim_trait = self.manager.get_shim_trait();
-        shim_trait.check_satisfy_strict_mode(bin_name);
+        self.manager.check_satisfy_strict_mode(bin_name);
 
         if strict {
             self.proxy_process_by_strict(bin_name).await

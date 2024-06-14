@@ -5,10 +5,7 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
-use snm_core::{
-    traits::{manage::ManageTrait, shared_behavior::SharedBehaviorTrait, shim::ShimTrait},
-    utils::tarball::decompress_tgz,
-};
+use snm_core::{traits::manage::ManageTrait, utils::tarball::decompress_tgz};
 use snm_current_dir::current_dir;
 use snm_package_json::parse_package_json;
 use snm_utils::snm_error::SnmError;
@@ -35,18 +32,137 @@ impl SnmPackageManager {
     }
 }
 
-impl SharedBehaviorTrait for SnmPackageManager {
+impl ManageTrait for SnmPackageManager {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
             .join(&self.prefix)
             .join(v)
+            .join("package")
             .join("package.json")
             .to_ok()
     }
-}
 
-impl ManageTrait for SnmPackageManager {
+    fn check_satisfy_strict_mode(&self, bin_name: &str) {
+        let workspace = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
+
+        let package_json = match parse_package_json(&workspace) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
+
+        let package_manager = match package_json.package_manager {
+            Some(pm) => pm,
+            None => panic!("NoPackageManager"),
+        };
+
+        let name = match package_manager.name {
+            Some(n) => n,
+            None => panic!("NoPackageManager"),
+        };
+
+        if name != bin_name {
+            let msg = format!("NotMatchPackageManager {} {}", name, bin_name.to_string());
+            panic!("{msg}");
+        }
+    }
+
+    fn get_strict_shim_version(&self) -> String {
+        let workspace = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
+
+        let package_json = match parse_package_json(&workspace) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
+
+        let package_manager = match package_json.package_manager {
+            Some(pm) => pm,
+            None => panic!("NoPackageManager"),
+        };
+
+        match package_manager.version {
+            Some(v) => v,
+            None => panic!("NoPackageManager"),
+        }
+    }
+
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        self.get_runtime_binary_file_path_buf(&bin_name, &version)?
+            .to_ok()
+    }
+
+    fn download_condition(&self, version: &str) -> bool {
+        match self.snm_config.get_package_manager_install_strategy() {
+            InstallStrategy::Ask => {
+                return Confirm::new()
+                    .with_prompt(format!(
+                        "🤔 {} is not installed, do you want to install it ?",
+                        &version
+                    ))
+                    .interact()
+                    .expect("download Confirm error")
+            }
+            InstallStrategy::Panic => {
+                let msg = format!(
+                    "UnsupportedPackageManager {} {}",
+                    self.prefix.to_string(),
+                    version.to_string()
+                );
+                panic!("{msg}");
+            }
+            InstallStrategy::Auto => true,
+        }
+    }
+
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        let package_json_dir_buf_path = self
+            .snm_config
+            .get_node_modules_dir()?
+            .join(self.prefix.to_string())
+            .join(&version)
+            .join("package");
+
+        let mut package_json = match parse_package_json(&package_json_dir_buf_path) {
+            Some(package_json) => package_json,
+            None => panic!("NoPackageManager"),
+        };
+
+        if let Some(bin) = package_json.bin.remove(bin_name) {
+            return Ok(bin);
+        } else {
+            let msg = format!(
+                "Not found binary from {} bin property: {}",
+                package_json_dir_buf_path.display(),
+                bin_name
+            );
+            panic!("{msg}");
+        }
+    }
+
+    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
+        let (_, default_v_dir) = tuple;
+        if let Some(v) = default_v_dir {
+            return v.to_string();
+        } else {
+            let msg = format!("NotFoundDefaultPackageManager {}", self.prefix.to_string());
+            panic!("{msg}");
+        }
+    }
+
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry();
         format!(
@@ -74,7 +190,7 @@ impl ManageTrait for SnmPackageManager {
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_bin_dir()?
+            .get_node_modules_dir()?
             .join(&self.prefix)
             .join(&v)
             .to_ok()
@@ -188,143 +304,11 @@ impl ManageTrait for SnmPackageManager {
         todo!("show_list_remote")
     }
 
-    fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmPackageManager::from_prefix(
-            &self.prefix,
-            self.snm_config.clone(),
-        ))
-    }
-
     fn decompress_download_file(
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) {
         decompress_tgz(&input_file_path_buf, &output_dir_path_buf);
-    }
-}
-
-impl ShimTrait for SnmPackageManager {
-    fn check_satisfy_strict_mode(&self, bin_name: &str) {
-        let workspace = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let package_json = match parse_package_json(&workspace) {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
-
-        let package_manager = match package_json.package_manager {
-            Some(pm) => pm,
-            None => panic!("NoPackageManager"),
-        };
-
-        let name = match package_manager.name {
-            Some(n) => n,
-            None => panic!("NoPackageManager"),
-        };
-
-        if name != bin_name {
-            let msg = format!("NotMatchPackageManager {} {}", name, bin_name.to_string());
-            panic!("{msg}");
-        }
-    }
-
-    fn get_strict_shim_version(&self) -> String {
-        let workspace = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let package_json = match parse_package_json(&workspace) {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
-
-        let package_manager = match package_json.package_manager {
-            Some(pm) => pm,
-            None => panic!("NoPackageManager"),
-        };
-
-        match package_manager.version {
-            Some(v) => v,
-            None => panic!("NoPackageManager"),
-        }
-    }
-
-    fn get_strict_shim_binary_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        self.get_runtime_binary_file_path_buf(&bin_name, &version)?
-            .to_ok()
-    }
-
-    fn download_condition(&self, version: &str) -> bool {
-        match self.snm_config.get_package_manager_install_strategy() {
-            InstallStrategy::Ask => {
-                return Confirm::new()
-                    .with_prompt(format!(
-                        "🤔 {} is not installed, do you want to install it ?",
-                        &version
-                    ))
-                    .interact()
-                    .expect("download Confirm error")
-            }
-            InstallStrategy::Panic => {
-                let msg = format!(
-                    "UnsupportedPackageManager {} {}",
-                    self.prefix.to_string(),
-                    version.to_string()
-                );
-                panic!("{msg}");
-            }
-            InstallStrategy::Auto => true,
-        }
-    }
-
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        let mut package_json_buf_path = self
-            .snm_config
-            .get_node_modules_dir()?
-            .join(self.prefix.to_string())
-            .join(&version);
-
-        if !(&package_json_buf_path.join("package.json").exists()) {
-            package_json_buf_path = package_json_buf_path.join("package")
-        }
-
-        let mut package_json = match parse_package_json(&package_json_buf_path) {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
-
-        if let Some(bin) = package_json.bin.remove(bin_name) {
-            return Ok(bin);
-        } else {
-            let msg = format!(
-                "Not found binary from {} bin property: {}",
-                package_json_buf_path.display(),
-                bin_name
-            );
-            panic!("{msg}");
-        }
-    }
-
-    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
-        let (_, default_v_dir) = tuple;
-        if let Some(v) = default_v_dir {
-            return v.to_string();
-        } else {
-            let msg = format!("NotFoundDefaultPackageManager {}", self.prefix.to_string());
-            panic!("{msg}");
-        }
     }
 }

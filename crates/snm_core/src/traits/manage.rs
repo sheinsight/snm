@@ -2,12 +2,7 @@ use std::{path::PathBuf, pin::Pin};
 
 use futures_util::Future;
 use snm_utils::snm_error::SnmError;
-
-use super::{shared_behavior::SharedBehaviorTrait, shim::ShimTrait};
-
-pub trait ManageTrait: SharedBehaviorTrait {
-    fn get_shim_trait(&self) -> Box<dyn ShimTrait>;
-
+pub trait ManageTrait {
     fn get_download_url(&self, v: &str) -> String;
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
@@ -53,4 +48,26 @@ pub trait ManageTrait: SharedBehaviorTrait {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> ();
+
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError>;
+
+    fn get_strict_shim_version(&self) -> String;
+
+    fn download_condition(&self, version: &str) -> bool;
+
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError>;
+
+    fn check_satisfy_strict_mode(&self, bin_name: &str);
+
+    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String;
+
+    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 }

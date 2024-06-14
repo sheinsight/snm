@@ -16,8 +16,6 @@ use sha2::Sha256;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::manage::ManageTrait;
-use snm_core::traits::shared_behavior::SharedBehaviorTrait;
-use snm_core::traits::shim::ShimTrait;
 use snm_core::utils::tarball::decompress_xz;
 use snm_current_dir::current_dir;
 use snm_utils::snm_error::SnmError;
@@ -163,7 +161,7 @@ impl SnmNode {
     }
 }
 
-impl SharedBehaviorTrait for SnmNode {
+impl ManageTrait for SnmNode {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_bin_dir()?
@@ -172,9 +170,102 @@ impl SharedBehaviorTrait for SnmNode {
             .join("node")
             .to_ok()
     }
-}
 
-impl ManageTrait for SnmNode {
+    fn check_satisfy_strict_mode(&self, _bin_name: &str) {
+        let wk = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
+
+        let node_version_path_buf = Path::new(&wk).join(".node-version");
+
+        if node_version_path_buf.exists().not() {
+            let msg = format!(
+                "NotFoundNodeVersionFile {}",
+                node_version_path_buf.display().to_string()
+            );
+            panic!("{msg}");
+        }
+    }
+
+    fn get_strict_shim_version(&self) -> String {
+        let wk = match current_dir() {
+            Ok(dir) => dir,
+            Err(_) => panic!("NoCurrentDir"),
+        };
+
+        let node_version_path_buf = Path::new(&wk).join(".node-version");
+
+        if node_version_path_buf.exists().not() {
+            let msg = format!(
+                "NotFoundNodeVersionFile {}",
+                node_version_path_buf.display().to_string()
+            );
+            panic!("{msg}")
+        }
+        let version_processor =
+            |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
+        let version = read_to_string(&node_version_path_buf)
+            .map(version_processor)
+            .expect(
+                format!(
+                    "read_to_string {} error",
+                    &node_version_path_buf.display().to_string()
+                )
+                .as_str(),
+            );
+        version
+    }
+
+    fn get_strict_shim_binary_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        self.get_runtime_binary_file_path_buf(&bin_name, &version)
+    }
+
+    fn download_condition(&self, version: &str) -> bool {
+        match self.snm_config.get_node_install_strategy() {
+            InstallStrategy::Ask => Confirm::new()
+                .with_prompt(format!(
+                    "🤔 {} is not installed, do you want to install it ?",
+                    &version
+                ))
+                .interact()
+                .expect("download_condition Confirm error"),
+            InstallStrategy::Panic => {
+                let msg = format!("Unsupported version: {}", version);
+                panic!("{msg}");
+            }
+            InstallStrategy::Auto => true,
+        }
+    }
+
+    fn get_runtime_binary_file_path_buf(
+        &self,
+        bin_name: &str,
+        version: &str,
+    ) -> Result<PathBuf, SnmError> {
+        self.get_runtime_dir_path_buf(&version)?
+            .join("bin")
+            .join(bin_name)
+            .to_ok()
+    }
+
+    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
+        let (_, default_v_dir) = tuple;
+        if let Some(v) = default_v_dir {
+            return v.to_string();
+        } else {
+            let msg = format!(
+                "Not found default node version, please use {} to set default node version.",
+                "snm node default <version>".bright_green().bold()
+            );
+            panic!("{msg}");
+        }
+    }
+
     fn get_download_url(&self, v: &str) -> String {
         let host = self.snm_config.get_node_dist_url();
         let download_url = format!(
@@ -466,106 +557,5 @@ impl ManageTrait for SnmNode {
         output_dir_path_buf: &PathBuf,
     ) {
         decompress_xz(&input_file_path_buf, &output_dir_path_buf);
-    }
-
-    fn get_shim_trait(&self) -> Box<dyn ShimTrait> {
-        Box::new(SnmNode::new(self.snm_config.clone()))
-    }
-}
-
-impl ShimTrait for SnmNode {
-    fn check_satisfy_strict_mode(&self, _bin_name: &str) {
-        let wk = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let node_version_path_buf = Path::new(&wk).join(".node-version");
-
-        if node_version_path_buf.exists().not() {
-            let msg = format!(
-                "NotFoundNodeVersionFile {}",
-                node_version_path_buf.display().to_string()
-            );
-            panic!("{msg}");
-        }
-    }
-
-    fn get_strict_shim_version(&self) -> String {
-        let wk = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let node_version_path_buf = Path::new(&wk).join(".node-version");
-
-        if node_version_path_buf.exists().not() {
-            let msg = format!(
-                "NotFoundNodeVersionFile {}",
-                node_version_path_buf.display().to_string()
-            );
-            panic!("{msg}")
-        }
-        let version_processor =
-            |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
-        let version = read_to_string(&node_version_path_buf)
-            .map(version_processor)
-            .expect(
-                format!(
-                    "read_to_string {} error",
-                    &node_version_path_buf.display().to_string()
-                )
-                .as_str(),
-            );
-        version
-    }
-
-    fn get_strict_shim_binary_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        self.get_runtime_binary_file_path_buf(&bin_name, &version)
-    }
-
-    fn download_condition(&self, version: &str) -> bool {
-        match self.snm_config.get_node_install_strategy() {
-            InstallStrategy::Ask => Confirm::new()
-                .with_prompt(format!(
-                    "🤔 {} is not installed, do you want to install it ?",
-                    &version
-                ))
-                .interact()
-                .expect("download_condition Confirm error"),
-            InstallStrategy::Panic => {
-                let msg = format!("Unsupported version: {}", version);
-                panic!("{msg}");
-            }
-            InstallStrategy::Auto => true,
-        }
-    }
-
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        self.get_runtime_dir_path_buf(&version)?
-            .join("bin")
-            .join(bin_name)
-            .to_ok()
-    }
-
-    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
-        let (_, default_v_dir) = tuple;
-        if let Some(v) = default_v_dir {
-            return v.to_string();
-        } else {
-            let msg = format!(
-                "Not found default node version, please use {} to set default node version.",
-                "snm node default <version>".bright_green().bold()
-            );
-            panic!("{msg}");
-        }
     }
 }
