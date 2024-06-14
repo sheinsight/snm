@@ -4,10 +4,16 @@ use snm_utils::snm_error::SnmError;
 
 #[derive(Debug)]
 pub struct NodeVersion {
-    pub version: Option<String>,
+    version: Option<String>,
     pub raw: String,
     pub raw_file_path: PathBuf,
     pub raw_workspace: PathBuf,
+}
+
+impl NodeVersion {
+    pub fn get_version(&self) -> Option<String> {
+        self.version.clone()
+    }
 }
 
 pub fn parse_node_version(workspace: &PathBuf) -> Result<Option<NodeVersion>, SnmError> {

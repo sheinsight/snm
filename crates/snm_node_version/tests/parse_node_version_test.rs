@@ -21,7 +21,7 @@ fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>
     if let Some(node_version) =
         parse_node_version(&workspace.join("tests").join("features").join("no_content"))?
     {
-        assert_eq!(node_version.version.is_none(), true);
+        assert_eq!(node_version.get_version().is_none(), true);
     }
     Ok(())
 }
@@ -36,7 +36,7 @@ fn test_parse_node_version_start_with_v() -> Result<(), Box<dyn std::error::Erro
             .join("features")
             .join("node_version_start_width_v"),
     )? {
-        assert_eq!(node_version.version, Some("20.0.1".to_string()));
+        assert_eq!(node_version.get_version(), Some("20.0.1".to_string()));
     }
     Ok(())
 }
