@@ -67,7 +67,5 @@ pub trait ManageTrait {
 
     fn check_satisfy_strict_mode(&self, bin_name: &str);
 
-    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String;
-
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 }

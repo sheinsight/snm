@@ -16,4 +16,15 @@ pub enum SnmError {
 
     #[error("Not found node version file")]
     NotFoundNodeVersionConfigFile,
+
+    #[error("Not found valid node version")]
+    NotFoundValidNodeVersion,
+
+    #[error(
+        "Not found default node version , please use `snm node use` to set default node version"
+    )]
+    NotFoundDefaultNodeVersion,
+
+    #[error("Not found package manager")]
+    NotFoundPackageManager,
 }

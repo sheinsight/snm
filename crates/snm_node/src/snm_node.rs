@@ -253,19 +253,6 @@ impl ManageTrait for SnmNode {
             .to_ok()
     }
 
-    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
-        let (_, default_v_dir) = tuple;
-        if let Some(v) = default_v_dir {
-            return v.to_string();
-        } else {
-            let msg = format!(
-                "Not found default node version, please use {} to set default node version.",
-                "snm node default <version>".bright_green().bold()
-            );
-            panic!("{msg}");
-        }
-    }
-
     fn get_download_url(&self, v: &str) -> String {
         let host = self.snm_config.get_node_dist_url();
         let download_url = format!(

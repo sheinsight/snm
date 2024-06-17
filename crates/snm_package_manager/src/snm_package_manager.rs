@@ -153,16 +153,6 @@ impl ManageTrait for SnmPackageManager {
         }
     }
 
-    fn check_default_version(&self, tuple: &(Vec<String>, Option<String>)) -> String {
-        let (_, default_v_dir) = tuple;
-        if let Some(v) = default_v_dir {
-            return v.to_string();
-        } else {
-            let msg = format!("NotFoundDefaultPackageManager {}", self.prefix.to_string());
-            panic!("{msg}");
-        }
-    }
-
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry();
         format!(

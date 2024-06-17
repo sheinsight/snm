@@ -2,9 +2,9 @@ mod shim;
 
 use std::ops::Not;
 
-use shim::{exec_default, node_exec_strict};
+use shim::{get_binary_path_buf_by_default, get_binary_path_buf_by_strict};
 use snm_config::parse_snm_config;
-use snm_core::traits::manage::ManageTrait;
+use snm_core::{println_error, traits::manage::ManageTrait};
 use snm_current_dir::current_dir;
 use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
@@ -31,27 +31,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             panic!("{msg}")
         }
 
-        if let Ok(x) = node_exec_strict(
-            &snm_node,
-            snm_config.clone(),
-            BIN_NAME,
-            package_manager.version,
-        )
-        .await
+        let args: Vec<String> = std::env::args().skip(1).collect();
+
+        if let Ok(binary_path_buf) =
+            get_binary_path_buf_by_strict(&snm_node, BIN_NAME, package_manager.version).await
         {
-            println!("严格模式 {:?}", x);
-            let args: Vec<String> = std::env::args().skip(1).collect();
-
-            exec_cli(x, args);
-
+            exec_cli(binary_path_buf, &args);
             return Ok(());
         }
 
         if snm_config.get_strict().not() {
-            if let Ok(sss) = exec_default(&snm_node, BIN_NAME).await {
-                println!("默认版本 {:?}", sss);
+            if let Ok(binary_path_buf) = get_binary_path_buf_by_default(&snm_node, BIN_NAME).await {
+                exec_cli(binary_path_buf, &args);
+                return Ok(());
             }
         }
+    } else {
+        println_error!("No found valid package manager ")
     }
 
     Ok(())
