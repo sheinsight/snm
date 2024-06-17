@@ -3,13 +3,20 @@ members = [
     "crates/cli",
     "crates/snm_node",
     "crates/snm_core",
-    "crates/snm_npm",
-    "crates/snm_pnpm",
+    "crates/snm_package_manager", 
+    "crates/snm_package_json", 
+    "crates/snm_npmrc", 
+    "crates/snm_current_dir", 
+    "crates/snm_config", 
+    "crates/snm_utils", 
+    "crates/snm_node_version"
 ]
+
 resolver = "2"
 
 [profile.release]
 lto = true
-strip = "symbols"
+strip = "none"
 opt-level = "s"
 codegen-units = 1
+debug = 2

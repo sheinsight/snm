@@ -1,0 +1,19 @@
+[package]
+name = "snm_package_manager"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+snm_core = { path = "../snm_core" }
+dialoguer = "0.11.0"
+async-trait = "0.1.79"
+reqwest = { version = "0.12.3", features = ["json", "blocking", "stream","native-tls-vendored"] }
+serde_json = "1.0"
+sha1 = "0.10.0"
+colored = "2.1.0"
+snm_package_json = { path = "../snm_package_json" }
+snm_current_dir = { path = "../snm_current_dir" }
+snm_config = { path = "../snm_config" }
+snm_utils = { path = "../snm_utils" }

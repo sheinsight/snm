@@ -1,4 +1,3 @@
-use crate::model::SnmError;
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -37,56 +36,48 @@ impl DownloadBuilder {
         self
     }
 
-    pub async fn download<P: AsRef<Path>>(
-        &mut self,
-        download_url: &str,
-        abs_path: P,
-    ) -> Result<P, SnmError> {
+    pub async fn download<P: AsRef<Path>>(&mut self, download_url: &str, abs_path: P) -> P {
         let mut attempts = 0;
         while attempts < (self.retries + 1) {
-            match self.original_download(download_url, &abs_path).await {
+            let result = self.original_download(download_url, &abs_path).await;
+            match result {
                 Ok(_) => {
                     // 假设下载成功，返回Ok(())
-                    return Ok(abs_path);
+                    return abs_path;
                 }
-                Err(e) => match e {
-                    SnmError::ResourceNotFound { download_url: _ } => {
-                        return Err(e);
-                    }
-                    _ => {
-                        attempts += 1;
+                Err(_) => {
+                    attempts += 1;
 
-                        if attempts <= self.retries {
-                            crate::println_error!(
-                                "Download failed, attempting retry {} . The URL is {} .",
-                                attempts.to_string().bright_yellow().bold(),
-                                download_url.bright_red()
-                            );
-                        }
-                        sleep(Duration::from_millis((self.retries + 10).into())).await;
+                    if attempts <= self.retries {
+                        crate::println_error!(
+                            "Download failed, attempting retry {} . The URL is {} .",
+                            attempts.to_string().bright_yellow().bold(),
+                            download_url.bright_red()
+                        );
                     }
-                },
+                    sleep(Duration::from_millis((self.retries + 10).into())).await;
+                }
             }
         }
-        Err(SnmError::Error(format!(
+
+        let msg = format!(
             "Download {} failed after {} attempts",
             download_url, self.retries
-        )))
+        );
+        panic!("{msg}");
     }
 
     pub async fn original_download<P: AsRef<Path>>(
         &mut self,
         download_url: &str,
         abs_path: P,
-    ) -> Result<P, SnmError> {
+    ) -> Result<P, ()> {
         let abs_path_ref = abs_path.as_ref();
         if abs_path_ref.exists() {
             match self.write_strategy {
                 WriteStrategy::Error => {
-                    return Err(SnmError::Error(format!(
-                        "file already exists {}",
-                        &abs_path_ref.display()
-                    )));
+                    let msg = format!("file already exists {}", &abs_path_ref.display());
+                    panic!("{msg}");
                 }
                 WriteStrategy::WriteAfterDelete => {
                     std::fs::remove_file(&abs_path_ref).expect(
@@ -103,14 +94,13 @@ impl DownloadBuilder {
 
         if let Some(parent) = abs_path_ref.parent() {
             if !parent.exists() {
-                std::fs::create_dir_all(parent).map_err(|_| {
-                    SnmError::Error(format!("create dir error {}", &parent.display()))
-                })?;
+                std::fs::create_dir_all(parent)
+                    .expect(format!("create dir error {}", &parent.display()).as_str());
             }
 
             let response = reqwest::Client::new()
                 .get(download_url)
-                .timeout(Duration::from_secs(1))
+                .timeout(Duration::from_secs(60))
                 .send()
                 .await
                 .expect(format!("download error {}", &download_url).as_str());
@@ -118,16 +108,13 @@ impl DownloadBuilder {
             let response_status = response.status();
 
             if response_status.as_str() == "404" {
-                return Err(SnmError::ResourceNotFound {
-                    download_url: download_url.to_string(),
-                });
+                let msg = format!("ResourceNotFound {}", download_url.to_string());
+                panic!("{msg}");
             }
 
             if !response_status.is_success() {
-                return Err(SnmError::Error(format!(
-                    "download error {}",
-                    response_status.as_str()
-                )));
+                let msg = format!("download error {}", response_status.as_str());
+                panic!("{msg}");
             }
 
             let total_size = response.content_length();
@@ -172,9 +159,4 @@ impl DownloadBuilder {
 
         Ok(abs_path)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }

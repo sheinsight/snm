@@ -1,12 +1,14 @@
 {
     "rust-analyzer.linkedProjects": [
         "./crates/cli/Cargo.toml",
-        "./crates/snm_core/Cargo.toml",
         "./crates/snm_node/Cargo.toml",
-        "./crates/snm_npm/Cargo.toml",
-        "./crates/snm_yarn/Cargo.toml",
         "./crates/snm_core/Cargo.toml",
-        "./crates/cli/Cargo.toml"
+        "./crates/snm_package_manager/Cargo.toml",
+        "./crates/snm_npmrc/Cargo.toml",
+        "./crates/snm_current_dir/Cargo.toml",
+        "./crates/snm_config/Cargo.toml",
+        "./crates/snm_utils/Cargo.toml",
+        "./crates/snm_node_version/Cargo.toml",
     ],
     "cSpell.words": [
         "canonicalize",
@@ -16,9 +18,12 @@
         "dialoguer",
         "flate",
         "hasher",
+        "pnpx",
         "premajor",
         "reqwest",
         "SHASUMS",
+        "tempdir",
+        "tempfile",
         "thiserror",
         "Unalias",
         "yarnpkg"

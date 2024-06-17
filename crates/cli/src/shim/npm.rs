@@ -1,20 +1,8 @@
 mod shim;
-
-use crate::shim::launch_shim;
-use shim::check;
-use snm_core::model::snm_error::handle_snm_error;
-use snm_npm::snm_npm::SnmNpm;
-
-const BIN_NAME: &str = "npm";
+use shim::load_package_manage_shim;
 
 #[tokio::main]
-async fn main() {
-    env_logger::init();
-
-    match check("npm") {
-        Ok(_) => {
-            launch_shim(Box::new(SnmNpm::new()), BIN_NAME).await;
-        }
-        Err(error) => handle_snm_error(error),
-    }
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    load_package_manage_shim("npm", "npm").await?;
+    Ok(())
 }
