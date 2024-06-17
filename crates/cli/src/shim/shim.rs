@@ -1,10 +1,16 @@
 use colored::*;
+use snm_config::{parse_snm_config, SnmConfig};
 use snm_core::{
+    println_error,
     traits::manage::ManageTrait,
     utils::download::{DownloadBuilder, WriteStrategy},
 };
-use snm_utils::snm_error::SnmError;
-use snm_utils::to_ok::ToOk;
+use snm_current_dir::current_dir;
+use snm_node::snm_node::SnmNode;
+use snm_node_version::parse_node_version;
+use snm_package_json::parse_package_json;
+use snm_package_manager::snm_package_manager::SnmPackageManager;
+use snm_utils::{exec::exec_cli, snm_error::SnmError};
 use std::{fs, ops::Not, path::PathBuf};
 
 async fn download<'a>(manage: &Box<dyn ManageTrait + 'a>, v: &str) -> Result<(), SnmError> {
@@ -99,4 +105,89 @@ pub async fn get_binary_path_buf_by_default(
 pub fn get_default_version(manage: &Box<dyn ManageTrait>) -> Result<Option<String>, SnmError> {
     let (_, default_v) = read_runtime_dir_name_vec(&manage)?;
     return Ok(default_v);
+}
+
+pub async fn get_binary_path_buf(
+    bin_name: &str,
+    version: Option<String>,
+    manage: &Box<dyn ManageTrait>,
+) -> Result<PathBuf, SnmError> {
+    match version {
+        Some(v) => get_binary_path_buf_by_strict(manage, bin_name, Some(v)).await,
+        None => return Err(SnmError::NotFoundValidNodeVersion),
+    }
+}
+
+pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
+    let dir = current_dir()?;
+
+    let snm_config = parse_snm_config(&dir)?;
+
+    let mut version = None;
+    if let Some(package_manager) = parse_package_json(&dir).and_then(|x| x.package_manager) {
+        let name = package_manager.name.unwrap();
+        version = package_manager.version;
+
+        if snm_config.get_strict().not() && version.is_none() {
+            let snm_node: Box<dyn ManageTrait> =
+                Box::new(SnmPackageManager::from_prefix(prefix, snm_config.clone()));
+            version = get_default_version(&snm_node)?;
+        }
+
+        if name != prefix {
+            let msg = format!("you config {} but use {}", name, bin_name);
+            panic!("{msg}");
+        }
+    } else {
+        println_error!("No valid package manager found");
+        return Ok(());
+    }
+
+    load_shim(bin_name, version, |snm_config| {
+        SnmPackageManager::from_prefix(prefix, snm_config)
+    })
+    .await
+}
+
+pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
+    let dir = current_dir()?;
+
+    let snm_config = parse_snm_config(&dir)?;
+
+    let mut version = parse_node_version(&snm_config.get_workspace()?)
+        .ok()
+        .and_then(|node_version| node_version.map(|nv| nv.get_version()))
+        .flatten();
+
+    if snm_config.get_strict().not() && version.is_none() {
+        let snm_node: Box<dyn ManageTrait> = Box::new(SnmNode::new(snm_config.clone()));
+        version = get_default_version(&snm_node)?;
+    }
+
+    load_shim(bin_name, version, SnmNode::new).await
+}
+
+pub async fn load_shim<T>(
+    bin_name: &str,
+    version: Option<String>,
+    create_manager: impl Fn(SnmConfig) -> T,
+) -> Result<(), SnmError>
+where
+    T: ManageTrait + 'static,
+{
+    env_logger::init();
+
+    let dir = current_dir()?;
+
+    let snm_config = parse_snm_config(&dir)?;
+
+    let snm_node: Box<dyn ManageTrait> = Box::new(create_manager(snm_config.clone()));
+
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    let binary_path_buf = get_binary_path_buf(bin_name, version, &snm_node).await?;
+
+    exec_cli(binary_path_buf, &args);
+
+    Ok(())
 }
