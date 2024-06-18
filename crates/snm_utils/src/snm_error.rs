@@ -13,6 +13,9 @@ pub enum SnmError {
     #[error("Network error: {0}")]
     NetworkError(#[from] reqwest::Error),
 
+    #[error("Deserialize error: {0}")]
+    DeserializeError(#[from] serde_json::Error),
+
     #[error("Not found: {0}")]
     NotFoundResourceError(String),
 

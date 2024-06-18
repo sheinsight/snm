@@ -2,6 +2,7 @@ use std::{collections::HashMap, fs::File, io::BufReader, path::PathBuf};
 
 use regex::Regex;
 use serde::Deserialize;
+use snm_utils::snm_error::SnmError;
 
 use crate::{
     package_manager_meta::{PackageManager, PackageManagerDownloadHash},
@@ -25,15 +26,14 @@ pub struct PackageJson {
     pub raw_workspace: PathBuf,
 }
 
-pub fn parse_package_json(workspace: &PathBuf) -> Option<PackageJson> {
+pub fn parse_package_json(workspace: &PathBuf) -> Result<Option<PackageJson>, SnmError> {
     let raw_file_path = workspace.join("package.json");
 
-    let file = File::open(&raw_file_path).unwrap();
-
-    let reader = BufReader::new(&file);
-
     if raw_file_path.exists() {
-        let raw = serde_json::from_reader::<_, PackageJsonRaw>(reader).unwrap();
+        let file = File::open(&raw_file_path)?;
+        let reader = BufReader::new(&file);
+
+        let raw = serde_json::from_reader::<_, PackageJsonRaw>(reader)?;
 
         let package_manager = if let Some(raw_package_manager) = &raw.package_manager {
             parse_package_manager(raw_package_manager.as_str())
@@ -45,7 +45,7 @@ pub fn parse_package_json(workspace: &PathBuf) -> Option<PackageJson> {
         } else {
             HashMap::new()
         };
-        return Some(PackageJson {
+        return Ok(Some(PackageJson {
             bin: bin_hashmap,
             name: raw.name.clone(),
             version: raw.version.clone(),
@@ -53,11 +53,10 @@ pub fn parse_package_json(workspace: &PathBuf) -> Option<PackageJson> {
             raw,
             raw_workspace: workspace.clone(),
             raw_file_path,
-        });
+        }));
+    } else {
+        Ok(None)
     }
-
-    // Self {}
-    None
 }
 
 fn bin_transform_to_hashmap(bin: &Bin, raw_workspace: &PathBuf) -> HashMap<String, PathBuf> {

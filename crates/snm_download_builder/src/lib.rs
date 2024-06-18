@@ -43,11 +43,11 @@ impl DownloadBuilder {
         download_url: &str,
         abs_path: P,
     ) -> Result<P, SnmError> {
-        let response = Client::new().head(download_url).send().await?;
+        // let response = Client::new().head(download_url).send().await?;
 
-        if response.status() == StatusCode::NOT_FOUND {
-            return Err(SnmError::NotFoundResourceError(download_url.to_string()));
-        }
+        // if response.status() == StatusCode::NOT_FOUND {
+        //     return Err(SnmError::NotFoundResourceError(download_url.to_string()));
+        // }
 
         let mut attempts = 0;
 
@@ -105,6 +105,10 @@ impl DownloadBuilder {
                 .timeout(Duration::from_secs(60))
                 .send()
                 .await?;
+
+            if response.status() == StatusCode::NOT_FOUND {
+                return Err(SnmError::NotFoundResourceError(download_url.to_string()));
+            }
 
             if !response.status().is_success() {
                 return Err(SnmError::HttpStatusCodeUnOk);

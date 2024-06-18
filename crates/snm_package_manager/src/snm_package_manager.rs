@@ -43,55 +43,6 @@ impl AtomTrait for SnmPackageManager {
             .to_ok()
     }
 
-    fn check_satisfy_strict_mode(&self, bin_name: &str) {
-        let workspace = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let package_json = match parse_package_json(&workspace) {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
-
-        let package_manager = match package_json.package_manager {
-            Some(pm) => pm,
-            None => panic!("NoPackageManager"),
-        };
-
-        let name = match package_manager.name {
-            Some(n) => n,
-            None => panic!("NoPackageManager"),
-        };
-
-        if name != bin_name {
-            let msg = format!("NotMatchPackageManager {} {}", name, bin_name.to_string());
-            panic!("{msg}");
-        }
-    }
-
-    fn get_strict_shim_version(&self) -> String {
-        let workspace = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let package_json = match parse_package_json(&workspace) {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
-
-        let package_manager = match package_json.package_manager {
-            Some(pm) => pm,
-            None => panic!("NoPackageManager"),
-        };
-
-        match package_manager.version {
-            Some(v) => v,
-            None => panic!("NoPackageManager"),
-        }
-    }
-
     fn get_strict_shim_binary_path_buf(
         &self,
         bin_name: &str,
@@ -136,7 +87,7 @@ impl AtomTrait for SnmPackageManager {
             .join(&version)
             .join("package");
 
-        let mut package_json = match parse_package_json(&package_json_dir_buf_path) {
+        let mut package_json = match parse_package_json(&package_json_dir_buf_path)? {
             Some(package_json) => package_json,
             None => panic!("NoPackageManager"),
         };
