@@ -2,7 +2,7 @@ use std::{path::PathBuf, pin::Pin};
 
 use futures_util::Future;
 use snm_utils::snm_error::SnmError;
-pub trait ManageTrait {
+pub trait AtomTrait {
     fn get_download_url(&self, v: &str) -> String;
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;

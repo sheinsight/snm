@@ -1,7 +1,7 @@
 use colored::*;
 use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
 use snm_config::SnmConfig;
-use snm_core::traits::manage::ManageTrait;
+use snm_core::traits::atom::AtomTrait;
 
 use snm_core::model::dispatch_manage::DispatchManage;
 
@@ -19,7 +19,7 @@ use crate::{
     SnmCli,
 };
 
-async fn exec_manage_trait(command: ManageCommands, manage: Box<dyn ManageTrait>) {
+async fn exec_manage_trait(command: ManageCommands, manage: Box<dyn AtomTrait>) {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
     let dispatch = DispatchManage::new(manage);
     match command {

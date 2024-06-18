@@ -15,7 +15,7 @@ use sha2::Digest;
 use sha2::Sha256;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
-use snm_core::traits::manage::ManageTrait;
+use snm_core::traits::atom::AtomTrait;
 use snm_core::utils::tarball::decompress_xz;
 use snm_current_dir::current_dir;
 use snm_utils::snm_error::SnmError;
@@ -161,7 +161,7 @@ impl SnmNode {
     }
 }
 
-impl ManageTrait for SnmNode {
+impl AtomTrait for SnmNode {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_bin_dir()?

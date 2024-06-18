@@ -4,18 +4,18 @@ use dialoguer::Confirm;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
-use crate::traits::manage::ManageTrait;
+use crate::traits::atom::AtomTrait;
 #[cfg(unix)]
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
 
 pub struct DispatchManage {
-    manager: Box<dyn ManageTrait>,
+    manager: Box<dyn AtomTrait>,
 }
 
 impl DispatchManage {
-    pub fn new(manager: Box<dyn ManageTrait>) -> Self {
+    pub fn new(manager: Box<dyn AtomTrait>) -> Self {
         Self { manager }
     }
 }

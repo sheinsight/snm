@@ -5,7 +5,7 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
-use snm_core::{traits::manage::ManageTrait, utils::tarball::decompress_tgz};
+use snm_core::{traits::atom::AtomTrait, utils::tarball::decompress_tgz};
 use snm_current_dir::current_dir;
 use snm_package_json::parse_package_json;
 use snm_utils::snm_error::SnmError;
@@ -32,7 +32,7 @@ impl SnmPackageManager {
     }
 }
 
-impl ManageTrait for SnmPackageManager {
+impl AtomTrait for SnmPackageManager {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?

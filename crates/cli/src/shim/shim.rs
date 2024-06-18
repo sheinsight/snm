@@ -1,6 +1,6 @@
 use colored::*;
 use snm_config::{parse_snm_config, SnmConfig};
-use snm_core::{println_error, traits::manage::ManageTrait};
+use snm_core::{println_error, traits::atom::AtomTrait};
 use snm_current_dir::current_dir;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_node::snm_node::SnmNode;
@@ -10,7 +10,7 @@ use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
 use std::{fs, ops::Not, path::PathBuf};
 
-async fn download<'a>(manage: &Box<dyn ManageTrait + 'a>, v: &str) -> Result<(), SnmError> {
+async fn download<'a>(manage: &Box<dyn AtomTrait + 'a>, v: &str) -> Result<(), SnmError> {
     let download_url = manage.get_download_url(v);
 
     let downloaded_file_path_buf = manage.get_downloaded_file_path_buf(v)?;
@@ -31,7 +31,7 @@ async fn download<'a>(manage: &Box<dyn ManageTrait + 'a>, v: &str) -> Result<(),
 }
 
 fn read_runtime_dir_name_vec(
-    shim: &Box<dyn ManageTrait>,
+    shim: &Box<dyn AtomTrait>,
 ) -> Result<(Vec<String>, Option<String>), SnmError> {
     let runtime_dir_path_buf = shim.get_runtime_base_dir_path_buf()?;
 
@@ -62,7 +62,7 @@ fn read_runtime_dir_name_vec(
 }
 
 pub async fn get_binary_path_buf_by_strict<'a>(
-    manage: &Box<dyn ManageTrait + 'a>,
+    manage: &Box<dyn AtomTrait + 'a>,
     bin_name: &str,
     v: Option<String>,
 ) -> Result<PathBuf, SnmError> {
@@ -88,7 +88,7 @@ pub async fn get_binary_path_buf_by_strict<'a>(
 }
 
 pub async fn get_binary_path_buf_by_default(
-    manage: &Box<dyn ManageTrait>,
+    manage: &Box<dyn AtomTrait>,
     bin_name: &str,
 ) -> Result<PathBuf, SnmError> {
     let (_, default_v) = read_runtime_dir_name_vec(&manage)?;
@@ -99,7 +99,7 @@ pub async fn get_binary_path_buf_by_default(
     }
 }
 
-pub fn get_default_version(manage: &Box<dyn ManageTrait>) -> Result<Option<String>, SnmError> {
+pub fn get_default_version(manage: &Box<dyn AtomTrait>) -> Result<Option<String>, SnmError> {
     let (_, default_v) = read_runtime_dir_name_vec(&manage)?;
     return Ok(default_v);
 }
@@ -107,7 +107,7 @@ pub fn get_default_version(manage: &Box<dyn ManageTrait>) -> Result<Option<Strin
 pub async fn get_binary_path_buf(
     bin_name: &str,
     version: Option<String>,
-    manage: &Box<dyn ManageTrait>,
+    manage: &Box<dyn AtomTrait>,
 ) -> Result<PathBuf, SnmError> {
     match version {
         Some(v) => get_binary_path_buf_by_strict(manage, bin_name, Some(v)).await,
@@ -126,7 +126,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
         version = package_manager.version;
 
         if snm_config.get_strict().not() && version.is_none() {
-            let snm_node: Box<dyn ManageTrait> =
+            let snm_node: Box<dyn AtomTrait> =
                 Box::new(SnmPackageManager::from_prefix(prefix, snm_config.clone()));
             version = get_default_version(&snm_node)?;
         }
@@ -157,7 +157,7 @@ pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
         .flatten();
 
     if snm_config.get_strict().not() && version.is_none() {
-        let snm_node: Box<dyn ManageTrait> = Box::new(SnmNode::new(snm_config.clone()));
+        let snm_node: Box<dyn AtomTrait> = Box::new(SnmNode::new(snm_config.clone()));
         version = get_default_version(&snm_node)?;
     }
 
@@ -170,7 +170,7 @@ pub async fn load_shim<T>(
     create_manager: impl Fn(SnmConfig) -> T,
 ) -> Result<(), SnmError>
 where
-    T: ManageTrait + 'static,
+    T: AtomTrait + 'static,
 {
     env_logger::init();
 
@@ -178,7 +178,7 @@ where
 
     let snm_config = parse_snm_config(&dir)?;
 
-    let snm_node: Box<dyn ManageTrait> = Box::new(create_manager(snm_config.clone()));
+    let snm_node: Box<dyn AtomTrait> = Box::new(create_manager(snm_config.clone()));
 
     let args: Vec<String> = std::env::args().skip(1).collect();
 
