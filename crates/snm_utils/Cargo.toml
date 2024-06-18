@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.58"
 config = "0.14.0"
+reqwest = { version = "0.12.3", features = ["stream", "native-tls-vendored"] }

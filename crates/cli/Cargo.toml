@@ -47,6 +47,7 @@ snm_current_dir = { path = "../snm_current_dir" }
 snm_config = { path = "../snm_config" }
 snm_utils = { path = "../snm_utils" }
 snm_node_version = { path = "../snm_node_version" }
+snm_download_builder = { path = "../snm_download_builder" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }
 clap = { version = "4.5.1", features = ["derive"] }

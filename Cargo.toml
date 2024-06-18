@@ -10,7 +10,7 @@ members = [
     "crates/snm_config", 
     "crates/snm_utils", 
     "crates/snm_node_version"
-]
+, "crates/snm_download_builder"]
 
 resolver = "2"
 

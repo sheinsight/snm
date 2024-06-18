@@ -1,11 +1,8 @@
 use colored::*;
 use snm_config::{parse_snm_config, SnmConfig};
-use snm_core::{
-    println_error,
-    traits::manage::ManageTrait,
-    utils::download::{DownloadBuilder, WriteStrategy},
-};
+use snm_core::{println_error, traits::manage::ManageTrait};
 use snm_current_dir::current_dir;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_node::snm_node::SnmNode;
 use snm_node_version::parse_node_version;
 use snm_package_json::parse_package_json;
@@ -22,7 +19,7 @@ async fn download<'a>(manage: &Box<dyn ManageTrait + 'a>, v: &str) -> Result<(),
         .retries(3)
         .write_strategy(WriteStrategy::Nothing)
         .download(&download_url, &downloaded_file_path_buf)
-        .await;
+        .await?;
 
     let runtime_dir_path_buf = manage.get_runtime_dir_path_buf(v)?;
 

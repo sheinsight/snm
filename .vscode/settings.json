@@ -18,6 +18,7 @@
         "dialoguer",
         "flate",
         "hasher",
+        "indicatif",
         "pnpx",
         "premajor",
         "reqwest",

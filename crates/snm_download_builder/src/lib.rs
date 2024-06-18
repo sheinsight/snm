@@ -1,6 +1,8 @@
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
+use reqwest::{Client, StatusCode};
+use snm_utils::snm_error::SnmError;
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;
@@ -36,20 +38,30 @@ impl DownloadBuilder {
         self
     }
 
-    pub async fn download<P: AsRef<Path>>(&mut self, download_url: &str, abs_path: P) -> P {
+    pub async fn download<P: AsRef<Path>>(
+        &mut self,
+        download_url: &str,
+        abs_path: P,
+    ) -> Result<P, SnmError> {
+        let response = Client::new().head(download_url).send().await?;
+
+        if response.status() == StatusCode::NOT_FOUND {
+            return Err(SnmError::NotFoundResourceError(download_url.to_string()));
+        }
+
         let mut attempts = 0;
+
         while attempts < (self.retries + 1) {
             let result = self.original_download(download_url, &abs_path).await;
             match result {
                 Ok(_) => {
-                    // 假设下载成功，返回Ok(())
-                    return abs_path;
+                    return Ok(abs_path);
                 }
                 Err(_) => {
                     attempts += 1;
 
                     if attempts <= self.retries {
-                        crate::println_error!(
+                        eprintln!(
                             "Download failed, attempting retry {} . The URL is {} .",
                             attempts.to_string().bright_yellow().bold(),
                             download_url.bright_red()
@@ -60,33 +72,24 @@ impl DownloadBuilder {
             }
         }
 
-        let msg = format!(
-            "Download {} failed after {} attempts",
-            download_url, self.retries
-        );
-        panic!("{msg}");
+        return Err(SnmError::ExceededMaxRetries(download_url.to_string()));
     }
 
     pub async fn original_download<P: AsRef<Path>>(
         &mut self,
         download_url: &str,
         abs_path: P,
-    ) -> Result<P, ()> {
+    ) -> Result<P, SnmError> {
         let abs_path_ref = abs_path.as_ref();
         if abs_path_ref.exists() {
             match self.write_strategy {
                 WriteStrategy::Error => {
-                    let msg = format!("file already exists {}", &abs_path_ref.display());
-                    panic!("{msg}");
+                    return Err(SnmError::FileAlreadyExists(abs_path_ref.to_path_buf()));
                 }
                 WriteStrategy::WriteAfterDelete => {
-                    std::fs::remove_file(&abs_path_ref).expect(
-                        format!("download remove file error {:?}", &abs_path_ref.display())
-                            .as_str(),
-                    );
+                    std::fs::remove_file(&abs_path_ref)?;
                 }
                 WriteStrategy::Nothing => {
-                    // 如果选择不覆盖已存在的文件，则直接返回成功
                     return Ok(abs_path);
                 }
             };
@@ -94,34 +97,22 @@ impl DownloadBuilder {
 
         if let Some(parent) = abs_path_ref.parent() {
             if !parent.exists() {
-                std::fs::create_dir_all(parent)
-                    .expect(format!("create dir error {}", &parent.display()).as_str());
+                std::fs::create_dir_all(parent)?;
             }
 
-            let response = reqwest::Client::new()
+            let response = Client::new()
                 .get(download_url)
                 .timeout(Duration::from_secs(60))
                 .send()
-                .await
-                .expect(format!("download error {}", &download_url).as_str());
+                .await?;
 
-            let response_status = response.status();
-
-            if response_status.as_str() == "404" {
-                let msg = format!("ResourceNotFound {}", download_url.to_string());
-                panic!("{msg}");
-            }
-
-            if !response_status.is_success() {
-                let msg = format!("download error {}", response_status.as_str());
-                panic!("{msg}");
+            if !response.status().is_success() {
+                return Err(SnmError::HttpStatusCodeUnOk);
             }
 
             let total_size = response.content_length();
 
-            let mut file = tokio::fs::File::create(abs_path_ref).await.expect(
-                format!("download create file error {:?}", &abs_path_ref.display()).as_str(),
-            );
+            let mut file = tokio::fs::File::create(abs_path_ref).await?;
 
             let mut stream = response.bytes_stream();
 
@@ -141,18 +132,14 @@ impl DownloadBuilder {
             progress_bar.set_message(download_url.to_string());
 
             while let Some(chunk) = stream.next().await {
-                let chunk = chunk.expect("download stream chunk error");
+                let chunk = chunk?;
 
-                file.write_all(&chunk).await.expect(
-                    format!("download write file error {:?}", &abs_path_ref.display()).as_str(),
-                );
+                file.write_all(&chunk).await?;
 
                 progress_bar.inc(chunk.len() as u64);
             }
 
-            file.flush().await.expect(
-                format!("download flush file error {:?}", &abs_path_ref.display()).as_str(),
-            );
+            file.flush().await?;
 
             progress_bar.finish();
         }

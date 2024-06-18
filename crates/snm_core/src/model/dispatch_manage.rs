@@ -1,12 +1,10 @@
 use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
-use crate::{
-    traits::manage::ManageTrait,
-    utils::download::{DownloadBuilder, WriteStrategy},
-};
+use crate::traits::manage::ManageTrait;
 #[cfg(unix)]
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
@@ -207,7 +205,7 @@ impl DispatchManage {
             .retries(3)
             .write_strategy(WriteStrategy::Nothing)
             .download(&download_url, &downloaded_file_path_buf)
-            .await;
+            .await?;
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
         self.manager
