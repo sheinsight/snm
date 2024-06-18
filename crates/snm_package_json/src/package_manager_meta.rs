@@ -8,8 +8,8 @@ pub struct PackageManagerDownloadHash {
 
 #[derive(Debug, Deserialize)]
 pub struct PackageManager {
-    pub name: Option<String>,
-    pub version: Option<String>,
+    pub name: String,
+    pub version: String,
     pub hash: Option<PackageManagerDownloadHash>,
 
     pub raw: String,

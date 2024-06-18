@@ -69,7 +69,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         | SnmCommands::R(_) => {
             let name = match parse_package_json(&snm_config.get_workspace()?)? {
                 Some(package_json) => match package_json.package_manager {
-                    Some(package_manager) => package_manager.name.unwrap(),
+                    Some(package_manager) => package_manager.name,
                     None => {
                         panic!("No package manager found in the workspace.")
                     }

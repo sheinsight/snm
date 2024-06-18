@@ -31,8 +31,8 @@ pub enum SnmError {
     #[error("Not found node version file")]
     NotFoundNodeVersionConfigFile,
 
-    #[error("Not found valid node version")]
-    NotFoundValidNodeVersion,
+    #[error("Not found valid version")]
+    NotFoundValidVersion,
 
     #[error(
         "Not found default node version , please use `snm node use` to set default node version"
@@ -47,4 +47,7 @@ pub enum SnmError {
 
     #[error("Exceeded maximum retry attempts: {0}")]
     ExceededMaxRetries(String),
+
+    #[error("Parse package manager error , raw is {0}")]
+    ParsePackageManagerError(String),
 }

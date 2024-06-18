@@ -36,7 +36,7 @@ pub fn parse_package_json(workspace: &PathBuf) -> Result<Option<PackageJson>, Sn
         let raw = serde_json::from_reader::<_, PackageJsonRaw>(reader)?;
 
         let package_manager = if let Some(raw_package_manager) = &raw.package_manager {
-            parse_package_manager(raw_package_manager.as_str())
+            parse_package_manager(raw_package_manager.as_str())?
         } else {
             None
         };
@@ -77,19 +77,48 @@ fn bin_transform_to_hashmap(bin: &Bin, raw_workspace: &PathBuf) -> HashMap<Strin
     }
 }
 
-fn parse_package_manager(raw_package_manager: &str) -> Option<PackageManager> {
+fn parse_package_manager(raw_package_manager: &str) -> Result<Option<PackageManager>, SnmError> {
     let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
     let regex = Regex::new(regex_str).unwrap();
 
-    regex.captures(raw_package_manager).map(|caps| {
-        return PackageManager {
-            raw: raw_package_manager.to_string(),
-            name: caps.name("name").map(|x| x.as_str().to_string()),
-            version: caps.name("version").map(|x| x.as_str().to_string()),
-            hash: Some(PackageManagerDownloadHash {
-                value: caps.name("hash_value").map(|x| x.as_str().to_string()),
-                name: caps.name("hash_method").map(|x| x.as_str().to_string()),
-            }),
-        };
-    })
+    match regex.captures(raw_package_manager) {
+        Some(caps) => {
+            let name = if let Some(m) = caps.name("name") {
+                if m.is_empty() {
+                    return Err(SnmError::ParsePackageManagerError(
+                        raw_package_manager.to_string(),
+                    ));
+                }
+                m.as_str().to_string()
+            } else {
+                return Err(SnmError::ParsePackageManagerError(
+                    raw_package_manager.to_string(),
+                ));
+            };
+
+            let version = if let Some(m) = caps.name("version") {
+                if m.is_empty() {
+                    return Err(SnmError::ParsePackageManagerError(
+                        raw_package_manager.to_string(),
+                    ));
+                }
+                m.as_str().to_string()
+            } else {
+                return Err(SnmError::ParsePackageManagerError(
+                    raw_package_manager.to_string(),
+                ));
+            };
+
+            return Ok(Some(PackageManager {
+                raw: raw_package_manager.to_string(),
+                name,
+                version,
+                hash: Some(PackageManagerDownloadHash {
+                    value: caps.name("hash_value").map(|x| x.as_str().to_string()),
+                    name: caps.name("hash_method").map(|x| x.as_str().to_string()),
+                }),
+            }));
+        }
+        None => return Ok(None),
+    }
 }

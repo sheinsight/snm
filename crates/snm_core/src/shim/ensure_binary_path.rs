@@ -1,11 +1,10 @@
 use std::{ops::Not, path::PathBuf};
 
-// use snm_package_json::PackageJson;
 use snm_utils::snm_error::SnmError;
 
 use crate::traits::atom::AtomTrait;
 
-use super::{download::download, get_runtime_dir_name_vec::read_runtime_dir_name_vec};
+use super::download::download;
 
 pub async fn ensure_binary_path(
     bin_name: &str,
@@ -28,12 +27,3 @@ pub async fn ensure_binary_path(
 
     return Ok(binary);
 }
-
-// fn get_package_manage_version(package_json: Option<PackageJson>, shim: &dyn AtomTrait) {
-//     match package_json {
-//         Some(_) => todo!(),
-//         None => {
-//             // let () = read_runtime_dir_name_vec(shim)
-//         }
-//     }
-// }
