@@ -20,12 +20,12 @@
 //!
 //! In your main function, just insert the following snippet. That's it!
 //! ```rust
-//! snm_core::color_backtrace::install();
+//! snm_utils::color_backtrace::install();
 //! ```
 //!
 //! If you want to customize some settings, you can instead do:
 //! ```rust
-//! use snm_core::color_backtrace::{default_output_stream, BacktracePrinter};
+//! use snm_utils::color_backtrace::{default_output_stream, BacktracePrinter};
 //! BacktracePrinter::new().message("Custom message!").install(default_output_stream());
 //! ```
 //!
@@ -102,7 +102,7 @@ impl Verbosity {
 /// This currently is a convenience shortcut for writing
 ///
 /// ```rust
-/// use snm_core::color_backtrace::{BacktracePrinter, default_output_stream};
+/// use snm_utils::color_backtrace::{BacktracePrinter, default_output_stream};
 /// BacktracePrinter::default().install(default_output_stream())
 /// ```
 pub fn install() {
@@ -580,7 +580,7 @@ impl BacktracePrinter {
     /// # Example
     ///
     /// ```rust
-    /// use snm_core::color_backtrace::{default_output_stream, BacktracePrinter};
+    /// use snm_utils::color_backtrace::{default_output_stream, BacktracePrinter};
     ///
     /// BacktracePrinter::new()
     ///     .add_frame_filter(Box::new(|frames| {
