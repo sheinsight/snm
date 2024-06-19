@@ -11,6 +11,7 @@ pub async fn download(version: &str, manage: &dyn AtomTrait) -> Result<(), SnmEr
 
     DownloadBuilder::new()
         .retries(3)
+        .timeout(manage.get_snm_config().get_download_timeout_secs())
         .write_strategy(WriteStrategy::Nothing)
         .download(&download_url, &downloaded_file_path_buf)
         .await?;

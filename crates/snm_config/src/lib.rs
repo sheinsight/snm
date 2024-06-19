@@ -52,6 +52,8 @@ pub struct SnmConfig {
 
     node_install_strategy: Option<InstallStrategy>,
 
+    download_timeout_secs: Option<u64>,
+
     package_manager_install_strategy: Option<InstallStrategy>,
 
     npm_registry: Option<String>,
@@ -75,6 +77,10 @@ impl SnmConfig {
             Some(dir) => base_dir.join(dir),
             None => base_dir.join(default),
         })
+    }
+
+    pub fn get_download_timeout_secs(&self) -> u64 {
+        self.download_timeout_secs.unwrap_or(30)
     }
 
     pub fn get_workspace(&self) -> Result<PathBuf, SnmError> {
@@ -163,6 +169,7 @@ mod tests {
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
         env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
+        env::set_var("SNM_DOWNLOAD_TIMEOUT_SECS", "60");
         env::set_var(
             "SNM_NODE_GITHUB_RESOURCE_HOST",
             "https://raw.githubusercontent.com",
@@ -182,6 +189,7 @@ mod tests {
                 node_dist_url: Some("https://nodejs.org/dist".to_string()),
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
                 node_install_strategy: Some(InstallStrategy::Auto),
+                download_timeout_secs: Some(60),
                 package_manager_install_strategy: Some(InstallStrategy::Auto),
                 npm_registry: None,
                 workspace: Some(current_dir().unwrap().to_string_lossy().to_string())

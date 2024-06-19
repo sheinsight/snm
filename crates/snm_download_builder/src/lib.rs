@@ -17,6 +17,7 @@ pub enum WriteStrategy {
 
 pub struct DownloadBuilder {
     retries: u8,
+    timeout: u64,
     write_strategy: WriteStrategy,
 }
 
@@ -24,6 +25,7 @@ impl DownloadBuilder {
     pub fn new() -> Self {
         Self {
             retries: 0,
+            timeout: 30,
             write_strategy: WriteStrategy::WriteAfterDelete,
         }
     }
@@ -35,6 +37,11 @@ impl DownloadBuilder {
 
     pub fn write_strategy(mut self, write_strategy: WriteStrategy) -> Self {
         self.write_strategy = write_strategy;
+        self
+    }
+
+    pub fn timeout(mut self, timeout: u64) -> Self {
+        self.timeout = timeout;
         self
     }
 
