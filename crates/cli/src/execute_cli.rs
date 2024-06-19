@@ -1,23 +1,20 @@
-use colored::*;
-use ni::trait_transform_args::{CommandArgsCreatorTrait, InstallCommandArgs};
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
 
 use snm_core::model::dispatch_manage::DispatchManage;
 
+use snm_ni::trait_transform::IArgs;
+use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform};
 use snm_node::snm_node::SnmNode;
 use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::exec::exec_cli;
 use snm_utils::snm_error::SnmError;
 
-use crate::commands::manage_command::ManageCommands;
-use crate::commands::snm_command::SnmCommands;
-use crate::{
-    fig::fig_spec_impl,
-    ni::{self, npm_args::NpmArgsTransform, pnpm_args::PnpmArgsTransform},
-    SnmCli,
-};
+use crate::fig::fig_spec_impl;
+use crate::manage_command::ManageCommands;
+use crate::snm_command::SnmCommands;
+use crate::SnmCli;
 
 async fn exec_manage_trait(command: ManageCommands, manage: Box<dyn AtomTrait>) {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
@@ -87,22 +84,21 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
 
             let args = match cli.command {
                 // snm command start
-                SnmCommands::I(args) => transform.get_install_command(args),
-                SnmCommands::C(_) => transform.get_install_command(InstallCommandArgs {
+                SnmCommands::I(args) => transform.i(args),
+                SnmCommands::C(_) => transform.i(IArgs {
                     frozen_lockfile: true,
                 }),
-                SnmCommands::A(args) => transform.get_add_command(args),
-                SnmCommands::D(args) => transform.get_delete_command(args),
-                SnmCommands::X(args) => transform.get_dlx_command(args),
-                SnmCommands::E(args) => transform.get_exec_command(args),
-                SnmCommands::R(args) => transform.get_run_command(args),
+                SnmCommands::A(args) => transform.a(args),
+                SnmCommands::D(args) => transform.d(args),
+                SnmCommands::X(args) => transform.x(args),
+                SnmCommands::E(args) => transform.e(args),
+                SnmCommands::R(args) => transform.r(args),
                 _ => unreachable!("unreachable"),
             };
 
             exec_cli(name, args);
         }
 
-        // snm command end
         SnmCommands::FigSpec => {
             fig_spec_impl();
         }

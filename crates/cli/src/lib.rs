@@ -1,9 +1,9 @@
 use clap::{command, Parser};
-use commands::snm_command::SnmCommands;
+use snm_command::SnmCommands;
 
-pub mod commands;
 pub mod fig;
-pub mod ni;
+pub mod manage_command;
+pub mod snm_command;
 
 pub mod execute_cli;
 

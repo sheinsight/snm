@@ -1,5 +1,4 @@
 use regex::Regex;
-use snm_core::print_warning;
 use std::time::Duration;
 
 use crate::conditional_compiler::{get_arch, get_os};
@@ -64,9 +63,9 @@ pub async fn _check_supported(node_version: &str, node_dist_url: &str) {
     }
 
     if !is_supported {
-        print_warning!("not support {}", &temp_su);
+        eprintln!("not support {}", &temp_su);
 
-        print_warning!("supported list {:?}", &supported_list);
+        eprintln!("supported list {:?}", &supported_list);
         panic!("UnsupportedPlatform {os} {arch}")
     }
 }

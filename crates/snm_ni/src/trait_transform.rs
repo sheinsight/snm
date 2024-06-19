@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-pub struct AddCommandArgs {
+pub struct AArgs {
     #[arg(help = "The package spec to install.")]
     pub package_spec: String,
     #[arg(short = 'P', long, help = "Save to dependencies")]
@@ -19,7 +19,7 @@ pub struct AddCommandArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct InstallCommandArgs {
+pub struct IArgs {
     #[arg(
         long,
         help = "If true, pnpm skips lockfile generation, failing install if the lockfile is out of sync or missing."
@@ -28,7 +28,7 @@ pub struct InstallCommandArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct DeleteCommandArgs {
+pub struct DArgs {
     #[arg(
         help = "If true, pnpm skips lockfile generation, failing install if the lockfile is out of sync or missing."
     )]
@@ -36,41 +36,33 @@ pub struct DeleteCommandArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct DlxCommandArgs {
+pub struct XArgs {
     #[arg(help = "The package spec to install.")]
     pub package_spec: Vec<String>,
 }
 
 #[derive(Parser, Debug)]
-pub struct ExecCommandArgs {
+pub struct EArgs {
     #[arg(help = "The package spec to install.")]
     pub package_spec: Vec<String>,
 }
 
 #[derive(Parser, Debug)]
-pub struct RunCommandArgs {
+pub struct RArgs {
     #[arg(help = "script file path")]
     pub args: Vec<String>,
 }
 
-#[derive(Parser, Debug)]
-pub struct SetCacheArgs {
-    #[arg(help = "cache dir path")]
-    pub cache_path: String,
-}
-
 pub trait CommandArgsCreatorTrait {
-    fn get_install_command(&self, args: InstallCommandArgs) -> Vec<String>;
+    fn i(&self, args: IArgs) -> Vec<String>;
 
-    fn get_add_command<'a>(&self, args: AddCommandArgs) -> Vec<String>;
+    fn a<'a>(&self, args: AArgs) -> Vec<String>;
 
-    fn get_delete_command(&self, args: DeleteCommandArgs) -> Vec<String>;
+    fn d(&self, args: DArgs) -> Vec<String>;
 
-    fn get_dlx_command(&self, args: DlxCommandArgs) -> Vec<String>;
+    fn x(&self, args: XArgs) -> Vec<String>;
 
-    fn get_exec_command(&self, args: ExecCommandArgs) -> Vec<String>;
+    fn e(&self, args: EArgs) -> Vec<String>;
 
-    fn get_run_command(&self, args: RunCommandArgs) -> Vec<String>;
-
-    fn get_set_cache_command(&self, args: SetCacheArgs) -> Vec<String>;
+    fn r(&self, args: RArgs) -> Vec<String>;
 }

@@ -37,4 +37,5 @@ snm_package_json = { path = "../snm_package_json" }
 snm_node_version = { path = "../snm_node_version" }
 snm_package_manager = { path = "../snm_package_manager" }
 snm_download_builder = { path = "../snm_download_builder" }
-
+snm_ni = { path = "../snm_ni" }
+termimad = "0.29.4"

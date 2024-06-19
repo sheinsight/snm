@@ -1,12 +1,9 @@
-use super::trait_transform_args::{
-    AddCommandArgs, CommandArgsCreatorTrait, DeleteCommandArgs, DlxCommandArgs, ExecCommandArgs,
-    InstallCommandArgs, SetCacheArgs,
-};
+use crate::trait_transform::{AArgs, CommandArgsCreatorTrait, DArgs, EArgs, IArgs, RArgs, XArgs};
 
 pub struct PnpmArgsTransform;
 
 impl CommandArgsCreatorTrait for PnpmArgsTransform {
-    fn get_install_command(&self, args: InstallCommandArgs) -> Vec<String> {
+    fn i(&self, args: IArgs) -> Vec<String> {
         let mut process_args = vec!["install".to_string()];
         if args.frozen_lockfile {
             process_args.push("--frozen-lockfile".to_string());
@@ -15,7 +12,7 @@ impl CommandArgsCreatorTrait for PnpmArgsTransform {
         process_args
     }
 
-    fn get_add_command(&self, args: AddCommandArgs) -> Vec<String> {
+    fn a(&self, args: AArgs) -> Vec<String> {
         let mut process_args = vec!["add".to_string(), args.package_spec];
         if args.save_prod {
             process_args.push("--save".to_string());
@@ -33,31 +30,26 @@ impl CommandArgsCreatorTrait for PnpmArgsTransform {
         process_args
     }
 
-    fn get_delete_command(&self, args: DeleteCommandArgs) -> Vec<String> {
+    fn d(&self, args: DArgs) -> Vec<String> {
         let process_args = vec!["remove".to_string(), args.package_spec];
         process_args
     }
 
-    fn get_dlx_command(&self, args: DlxCommandArgs) -> Vec<String> {
+    fn x(&self, args: XArgs) -> Vec<String> {
         let mut process_args = vec!["dlx".to_string()];
         process_args.append(&mut args.package_spec.clone());
         process_args
     }
 
-    fn get_exec_command(&self, args: ExecCommandArgs) -> Vec<String> {
+    fn e(&self, args: EArgs) -> Vec<String> {
         let mut process_args: Vec<String> = vec!["exec".to_string()];
         process_args.append(&mut args.package_spec.clone());
         process_args
     }
 
-    fn get_run_command(&self, args: super::trait_transform_args::RunCommandArgs) -> Vec<String> {
+    fn r(&self, args: RArgs) -> Vec<String> {
         let mut process_args: Vec<String> = vec!["run".to_string()];
         process_args.append(&mut args.args.clone());
-        process_args
-    }
-
-    fn get_set_cache_command(&self, args: SetCacheArgs) -> Vec<String> {
-        let process_args = vec!["set".to_string(), "store-dir".to_string(), args.cache_path];
         process_args
     }
 }

@@ -25,6 +25,7 @@
         "SHASUMS",
         "tempdir",
         "tempfile",
+        "termimad",
         "thiserror",
         "Unalias",
         "yarnpkg"
