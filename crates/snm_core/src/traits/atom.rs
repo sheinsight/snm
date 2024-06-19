@@ -48,7 +48,7 @@ pub trait AtomTrait {
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
-    ) -> ();
+    ) -> Result<(), SnmError>;
 
     fn get_strict_shim_binary_path_buf(
         &self,

@@ -16,7 +16,8 @@ use sha2::Sha256;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
-use snm_core::utils::tarball::decompress_xz;
+use snm_tarball::decompress;
+use snm_tarball::TarballType;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::collections::HashMap;
@@ -158,10 +159,11 @@ impl SnmNode {
 }
 
 impl AtomTrait for SnmNode {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    fn get_anchor_file_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_bin_dir()?
-            .join(&v)
+            .join(&version)
+            .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join("node")
             .to_ok()
@@ -198,6 +200,7 @@ impl AtomTrait for SnmNode {
         version: &str,
     ) -> Result<PathBuf, SnmError> {
         self.get_runtime_dir_path_buf(&version)?
+            .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join(bin_name)
             .to_ok()
@@ -492,8 +495,8 @@ impl AtomTrait for SnmNode {
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
-    ) {
-        decompress_xz(&input_file_path_buf, &output_dir_path_buf);
+    ) -> Result<(), SnmError> {
+        decompress(&input_file_path_buf, &output_dir_path_buf, TarballType::Xz)
     }
 
     fn get_snm_config(&self) -> &SnmConfig {
