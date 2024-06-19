@@ -1,4 +1,3 @@
-use colored::*;
 use snm_shim::load_node_shim;
 
 #[tokio::main]
