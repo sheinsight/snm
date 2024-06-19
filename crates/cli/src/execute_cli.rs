@@ -52,6 +52,17 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
             let npm = Box::new(SnmPackageManager::from_prefix("npm", snm_config.clone()));
             exec_manage_trait(command, npm).await;
         }
+        SnmCommands::Yarn { command } => {
+            let npm = Box::new(SnmPackageManager::from_prefix("yarn", snm_config.clone()));
+            exec_manage_trait(command, npm).await;
+        }
+        SnmCommands::YarnPkg { command } => {
+            let npm = Box::new(SnmPackageManager::from_prefix(
+                "@yarnpkg/cli-dist",
+                snm_config.clone(),
+            ));
+            exec_manage_trait(command, npm).await;
+        }
         SnmCommands::Node { command } => {
             let node = Box::new(SnmNode::new(snm_config));
             exec_manage_trait(command, node).await;

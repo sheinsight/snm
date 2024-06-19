@@ -107,10 +107,20 @@ impl AtomTrait for SnmPackageManager {
 
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry();
-        format!(
-            "{}/{}/-/{}-{}.tgz",
-            npm_registry, &self.prefix, &self.prefix, &v
-        )
+        if self.prefix.starts_with("@") {
+            format!(
+                "{}/{}/-/{}-{}.tgz",
+                npm_registry,
+                &self.prefix,
+                &self.prefix.split("/").last().unwrap(),
+                &v
+            )
+        } else {
+            format!(
+                "{}/{}/-/{}-{}.tgz",
+                npm_registry, &self.prefix, &self.prefix, &v
+            )
+        }
     }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {

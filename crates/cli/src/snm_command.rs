@@ -17,6 +17,15 @@ pub enum SnmCommands {
         command: ManageCommands,
     },
 
+    #[command(about = "Manage npm versions.")]
+    Yarn {
+        #[command(subcommand)]
+        command: ManageCommands,
+    },
+    YarnPkg {
+        #[command(subcommand)]
+        command: ManageCommands,
+    },
     #[command(about = "Manage pnpm versions.")]
     Pnpm {
         #[command(subcommand)]
