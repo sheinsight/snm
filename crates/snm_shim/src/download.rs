@@ -18,7 +18,7 @@ pub async fn download(version: &str, manage: &dyn AtomTrait) -> Result<(), SnmEr
 
     let runtime_dir_path_buf = manage.get_runtime_dir_path_buf(version)?;
 
-    manage.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf);
+    manage.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
     fs::remove_file(&downloaded_file_path_buf)?;
 
