@@ -1,12 +1,11 @@
-pub mod download;
-pub mod ensure_binary_path;
-pub mod get_node_version;
-pub mod get_package_manage_version;
+mod download;
+mod ensure_binary_path;
+mod get_node_version;
+mod get_package_manage_version;
 
-pub use download::download;
-pub use ensure_binary_path::ensure_binary_path;
-pub use get_node_version::get_node_version;
-pub use get_package_manage_version::get_package_manage_version;
+use ensure_binary_path::ensure_binary_path;
+use get_node_version::get_node_version;
+use get_package_manage_version::get_package_manage_version;
 use snm_config::parse_snm_config;
 use snm_core::traits::atom::AtomTrait;
 use snm_current_dir::current_dir;
