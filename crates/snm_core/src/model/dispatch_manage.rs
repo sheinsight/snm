@@ -209,7 +209,7 @@ impl DispatchManage {
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
         self.manager
-            .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf);
+            .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
         let remove_result = fs::remove_file(&downloaded_file_path_buf);
 
