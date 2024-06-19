@@ -495,4 +495,8 @@ impl AtomTrait for SnmNode {
     ) {
         decompress_xz(&input_file_path_buf, &output_dir_path_buf);
     }
+
+    fn get_snm_config(&self) -> &SnmConfig {
+        &self.snm_config
+    }
 }

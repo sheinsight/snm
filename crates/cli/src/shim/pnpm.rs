@@ -1,5 +1,4 @@
-mod shim;
-use shim::load_package_manage_shim;
+use snm_shim::load_package_manage_shim;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,6 +1,7 @@
 use std::{fs, ops::Not as _, path::PathBuf, pin::Pin};
 
 use futures_util::Future;
+use snm_config::SnmConfig;
 use snm_utils::snm_error::SnmError;
 pub trait AtomTrait {
     fn get_download_url(&self, v: &str) -> String;
@@ -65,6 +66,8 @@ pub trait AtomTrait {
 
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
+    fn get_snm_config(&self) -> &SnmConfig;
+
     fn read_runtime_dir_name_vec(&self) -> Result<(Vec<String>, Option<String>), SnmError> {
         let runtime_dir_path_buf = self.get_runtime_base_dir_path_buf()?;
 
@@ -92,5 +95,14 @@ pub trait AtomTrait {
             .collect::<Vec<String>>();
 
         Ok((dir_name_vec, default_dir))
+    }
+
+    fn get_default_version(&self) -> Result<String, SnmError> {
+        if self.get_snm_config().get_strict() {
+            return Err(SnmError::NotFoundValidVersion);
+        } else {
+            let (_, default_v) = self.read_runtime_dir_name_vec()?;
+            default_v.ok_or(SnmError::NotFoundValidVersion)
+        }
     }
 }

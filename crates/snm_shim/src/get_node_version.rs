@@ -1,7 +1,6 @@
+use snm_core::traits::atom::AtomTrait;
 use snm_node_version::NodeVersion;
 use snm_utils::snm_error::SnmError;
-
-use crate::traits::atom::AtomTrait;
 
 pub fn get_node_version(
     node_version: Option<NodeVersion>,

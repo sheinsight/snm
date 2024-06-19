@@ -1,0 +1,18 @@
+[package]
+name = "snm_shim"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.11.2"
+snm_node = { path = "../snm_node" }
+snm_core = { path = "../snm_core" }
+snm_utils = { path = "../snm_utils" }
+snm_config = { path = "../snm_config" }
+snm_current_dir = { path = "../snm_current_dir" }
+snm_node_version = { path = "../snm_node_version" }
+snm_package_json = { path = "../snm_package_json" }
+snm_package_manager = { path = "../snm_package_manager" }
+snm_download_builder ={ path = "../snm_download_builder" }
