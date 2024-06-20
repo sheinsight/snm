@@ -1,6 +1,10 @@
+use crate::npm_library::NpmLibraryMeta;
+use crate::npm_library::NpmLibraryVersionMeta;
+use chrono::DateTime;
+use chrono::NaiveDate;
 use colored::*;
 use dialoguer::Confirm;
-use semver::{BuildMetadata, Prerelease, Version, VersionReq};
+use semver::{Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
@@ -32,6 +36,21 @@ impl SnmPackageManager {
             snm_config,
         }
     }
+
+    // async fn get_npm_l(&self) -> Result<NpmLibraryMeta, SnmError> {
+    //     let npm_registry = self.snm_config.get_npm_registry();
+
+    //     let response = reqwest::get(format!("{}/{}", npm_registry, &self.library_name).as_str())
+    //         .await?
+    //         .json::<NpmLibraryMeta>()
+    //         .await?;
+
+    //     let mut versions: Vec<&NpmLibraryVersionMeta> = response.versions.values().collect();
+
+    //     versions.sort_by_cached_key(|v| Version::parse(&v.version).ok());
+
+    //     Ok(response)
+    // }
 }
 
 impl AtomTrait for SnmPackageManager {
@@ -89,20 +108,6 @@ impl AtomTrait for SnmPackageManager {
             .join(&version)
             .join("package");
 
-        // if let Some(p) = parse_package_json(&package_json_dir_buf_path)? {
-        //     if let Some(bin) = package_json.bin.remove(bin_name) {
-        //         return Ok(bin);
-        //     } else {
-        //         return Err(SnmError::NotFoundNpmLibraryBinError(
-        //             package_json_dir_buf_path.display(),
-        //         ));
-        //     }
-        // } else {
-        //     return Err(SnmError::NotFoundPackageJsonError(
-        //         package_json_dir_buf_path.display().to_string(),
-        //     ));
-        // }
-
         match parse_package_json(&package_json_dir_buf_path)? {
             Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
             Some(_) => Err(SnmError::NotFoundNpmLibraryBinError {
@@ -130,20 +135,6 @@ impl AtomTrait for SnmPackageManager {
                 npm_registry, &self.library_name, &self.library_name, &v
             )
         }
-        // if self.library_name.starts_with("@") {
-        //     format!(
-        //         "{}/{}/-/{}-{}.tgz",
-        //         npm_registry,
-        //         &self.library_name,
-        //         &self.library_name.split("/").last().unwrap(),
-        //         &v
-        //     )
-        // } else {
-        //     format!(
-        //         "{}/{}/-/{}-{}.tgz",
-        //         npm_registry, &self.library_name, &self.library_name, &v
-        //     )
-        // }
     }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
@@ -281,8 +272,50 @@ impl AtomTrait for SnmPackageManager {
         &'a self,
         _dir_tuple: &'a (Vec<String>, Option<String>),
         _all: bool,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
-        todo!("show_list_remote")
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
+        Box::pin(async move {
+            let npm_registry = self.snm_config.get_npm_registry();
+
+            let response: NpmLibraryMeta =
+                reqwest::get(format!("{}/{}", npm_registry, &self.library_name).as_str())
+                    .await?
+                    .json::<NpmLibraryMeta>()
+                    .await?;
+
+            let mut versions: Vec<&NpmLibraryVersionMeta> = response.versions.values().collect();
+
+            versions.sort_by_cached_key(|v| Version::parse(&v.version).ok());
+
+            versions.iter().for_each(|item| {
+                let license = if let Some(license) = &item.license {
+                    license.clone().bright_green()
+                } else {
+                    "None".to_string().bright_black()
+                };
+
+                let publish_time = if let Some(time) = response.time.get(&item.version) {
+                    let date_time_utc = DateTime::parse_from_rfc3339(time).expect("xx");
+
+                    let naive_date: NaiveDate = date_time_utc.date_naive();
+
+                    naive_date.format("%Y-%m-%d").to_string()
+                } else {
+                    "None".to_string()
+                };
+
+                let x: String = format!(
+                    "{:<2} {:<20} {:<14} {}",
+                    "".to_string(),
+                    item.version.bright_green(),
+                    license,
+                    publish_time.to_string().bright_black()
+                );
+
+                println!("{}", x);
+            });
+
+            Ok(())
+        })
     }
 
     fn decompress_download_file(

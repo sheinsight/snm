@@ -418,7 +418,7 @@ impl AtomTrait for SnmNode {
         &'a self,
         dir_tuple: &'a (Vec<String>, Option<String>),
         all: bool,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
         Box::pin(async move {
             let (dir_vec, _default_v) = dir_tuple;
 
@@ -488,6 +488,7 @@ impl AtomTrait for SnmNode {
                     return "";
                 }
             });
+            Ok(())
         })
     }
 

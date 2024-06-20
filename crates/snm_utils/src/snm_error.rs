@@ -216,6 +216,7 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
         | SnmError::IOError(_) => {
+            eprintln!("debug error");
             panic!("{error}");
         }
     }

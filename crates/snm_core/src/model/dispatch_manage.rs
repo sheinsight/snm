@@ -36,19 +36,19 @@ impl DispatchManage {
 
     pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
         let dir_tuple = self.read_runtime_dir_name_vec()?;
-        self.manager.show_list_remote(&dir_tuple, all).await;
+        self.manager.show_list_remote(&dir_tuple, all).await?;
         Ok(())
     }
 
-    pub async fn install(&self, v: &str) {
+    pub async fn install(&self, v: &str) -> Result<(), SnmError> {
         let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
             Ok(anchor_file_path_buf) => anchor_file_path_buf,
             Err(_) => panic!("set_default get_anchor_file_path_buf error"),
         };
 
         if anchor_file_path_buf.exists().not() {
-            self.download(v).await;
-            return;
+            self.download(v).await?;
+            return Ok(());
         }
 
         let confirm = Confirm::new()
@@ -60,8 +60,10 @@ impl DispatchManage {
             .expect("install Confirm error");
 
         if confirm {
-            self.download(v).await;
+            self.download(v).await?;
         }
+
+        Ok(())
     }
 
     pub async fn un_install(&self, v: &str) -> Result<(), SnmError> {
@@ -124,7 +126,7 @@ impl DispatchManage {
                 .interact()
                 .expect("set_default Confirm error");
 
-            self.install(&v).await;
+            self.install(&v).await?;
         }
 
         if let Some(d_v) = default_v {

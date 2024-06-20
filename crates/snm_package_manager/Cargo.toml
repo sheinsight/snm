@@ -19,3 +19,5 @@ snm_config = { path = "../snm_config" }
 snm_tarball = { path = "../snm_tarball" }
 snm_utils = { path = "../snm_utils" }
 semver = "1.0.23"
+serde = { version = "1.0.197", features = ["derive"] }
+chrono = "0.4"

@@ -42,7 +42,7 @@ pub trait AtomTrait {
         &'a self,
         dir_tuple: &'a (Vec<String>, Option<String>),
         all: bool,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
 
     fn decompress_download_file(
         &self,

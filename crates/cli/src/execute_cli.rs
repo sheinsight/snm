@@ -16,29 +16,34 @@ use crate::manage_command::ManageCommands;
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 
-async fn exec_manage_trait(command: ManageCommands, manage: Box<dyn AtomTrait>) {
+async fn exec_manage_trait(
+    command: ManageCommands,
+    manage: Box<dyn AtomTrait>,
+) -> Result<(), SnmError> {
     let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
     let dispatch = DispatchManage::new(manage);
     match command {
         ManageCommands::Default { version } => {
-            dispatch.set_default(trim_version(version).as_str()).await;
+            dispatch.set_default(trim_version(version).as_str()).await?;
         }
         ManageCommands::Install { version } => {
-            dispatch.install(trim_version(version).as_str()).await;
+            dispatch.install(trim_version(version).as_str()).await?;
         }
         ManageCommands::Uninstall { version } => {
-            dispatch.un_install(trim_version(version).as_str()).await;
+            dispatch.un_install(trim_version(version).as_str()).await?;
         }
         ManageCommands::ListOffline => {
-            dispatch.list_offline().await;
+            dispatch.list_offline().await?;
         }
         ManageCommands::List => {
-            dispatch.list().await;
+            dispatch.list().await?;
         }
         ManageCommands::ListRemote { all } => {
-            dispatch.list_remote(all).await;
+            dispatch.list_remote(all).await?;
         }
     }
+
+    Ok(())
 }
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmError> {
@@ -46,19 +51,19 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         // manage start
         SnmCommands::Pnpm { command } => {
             let pnpm = Box::new(SnmPackageManager::from_prefix("pnpm", snm_config.clone()));
-            exec_manage_trait(command, pnpm).await;
+            exec_manage_trait(command, pnpm).await?;
         }
         SnmCommands::Npm { command } => {
             let npm = Box::new(SnmPackageManager::from_prefix("npm", snm_config.clone()));
-            exec_manage_trait(command, npm).await;
+            exec_manage_trait(command, npm).await?;
         }
         SnmCommands::Yarn { command } => {
             let npm = Box::new(SnmPackageManager::from_prefix("yarn", snm_config.clone()));
-            exec_manage_trait(command, npm).await;
+            exec_manage_trait(command, npm).await?;
         }
         SnmCommands::Node { command } => {
             let node = Box::new(SnmNode::new(snm_config));
-            exec_manage_trait(command, node).await;
+            exec_manage_trait(command, node).await?;
         }
         // manage end
         SnmCommands::I(_)
@@ -104,7 +109,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         }
 
         SnmCommands::FigSpec => {
-            fig_spec_impl();
+            fig_spec_impl()?;
         }
     }
 
