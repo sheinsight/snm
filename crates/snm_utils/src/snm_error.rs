@@ -19,6 +19,12 @@ pub enum SnmError {
     #[error("Not found: {0}")]
     NotFoundResourceError(String),
 
+    #[error("Not found package.json {0}")]
+    NotFoundPackageJsonError(String),
+
+    #[error("Not found npm library bin {name} {file_path}")]
+    NotFoundNpmLibraryBinError { name: String, file_path: PathBuf },
+
     #[error("Http status code not ok")]
     HttpStatusCodeUnOk,
 
@@ -191,7 +197,21 @@ pub fn friendly_error_message(error: SnmError) {
             "##
             );
         }
+        SnmError::NotFoundNpmLibraryBinError { name, file_path } => {
+            eprintln!(
+                r##"
+                
+        👹 Not found bin for package.json
+
+        The bin {} not found in package.json file path is {}.
+            
+            "##,
+                name.bold().red(),
+                file_path.to_string_lossy().bold().red()
+            );
+        }
         SnmError::HttpStatusCodeUnOk
+        | SnmError::NotFoundPackageJsonError(_)
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)

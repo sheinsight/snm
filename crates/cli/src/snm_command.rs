@@ -22,10 +22,7 @@ pub enum SnmCommands {
         #[command(subcommand)]
         command: ManageCommands,
     },
-    YarnPkg {
-        #[command(subcommand)]
-        command: ManageCommands,
-    },
+
     #[command(about = "Manage pnpm versions.")]
     Pnpm {
         #[command(subcommand)]

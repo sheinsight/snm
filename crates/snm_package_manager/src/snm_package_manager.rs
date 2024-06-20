@@ -1,5 +1,6 @@
 use colored::*;
 use dialoguer::Confirm;
+use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
@@ -21,13 +22,13 @@ use std::{
 
 pub struct SnmPackageManager {
     snm_config: SnmConfig,
-    prefix: String,
+    library_name: String,
 }
 
 impl SnmPackageManager {
-    pub fn from_prefix(prefix: &str, snm_config: SnmConfig) -> Self {
+    pub fn from_prefix(library_name: &str, snm_config: SnmConfig) -> Self {
         Self {
-            prefix: prefix.to_string(),
+            library_name: library_name.to_string(),
             snm_config,
         }
     }
@@ -37,7 +38,7 @@ impl AtomTrait for SnmPackageManager {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
-            .join(&self.prefix)
+            .join(&self.library_name)
             .join(v)
             .join("package")
             .join("package.json")
@@ -67,7 +68,7 @@ impl AtomTrait for SnmPackageManager {
             InstallStrategy::Panic => {
                 let msg = format!(
                     "UnsupportedPackageManager {} {}",
-                    self.prefix.to_string(),
+                    self.library_name.to_string(),
                     version.to_string()
                 );
                 panic!("{msg}");
@@ -84,66 +85,94 @@ impl AtomTrait for SnmPackageManager {
         let package_json_dir_buf_path = self
             .snm_config
             .get_node_modules_dir()?
-            .join(self.prefix.to_string())
+            .join(self.library_name.to_string())
             .join(&version)
             .join("package");
 
-        let mut package_json = match parse_package_json(&package_json_dir_buf_path)? {
-            Some(package_json) => package_json,
-            None => panic!("NoPackageManager"),
-        };
+        // if let Some(p) = parse_package_json(&package_json_dir_buf_path)? {
+        //     if let Some(bin) = package_json.bin.remove(bin_name) {
+        //         return Ok(bin);
+        //     } else {
+        //         return Err(SnmError::NotFoundNpmLibraryBinError(
+        //             package_json_dir_buf_path.display(),
+        //         ));
+        //     }
+        // } else {
+        //     return Err(SnmError::NotFoundPackageJsonError(
+        //         package_json_dir_buf_path.display().to_string(),
+        //     ));
+        // }
 
-        if let Some(bin) = package_json.bin.remove(bin_name) {
-            return Ok(bin);
-        } else {
-            let msg = format!(
-                "Not found binary from {} bin property: {}",
-                package_json_dir_buf_path.display(),
-                bin_name
-            );
-            panic!("{msg}");
+        match parse_package_json(&package_json_dir_buf_path)? {
+            Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
+            Some(_) => Err(SnmError::NotFoundNpmLibraryBinError {
+                name: bin_name.to_string(),
+                file_path: package_json_dir_buf_path.to_path_buf(),
+            }),
+            None => Err(SnmError::NotFoundPackageJsonError(
+                package_json_dir_buf_path.display().to_string(),
+            )),
         }
     }
 
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry();
-        if self.prefix.starts_with("@") {
-            format!(
-                "{}/{}/-/{}-{}.tgz",
-                npm_registry,
-                &self.prefix,
-                &self.prefix.split("/").last().unwrap(),
-                &v
-            )
+
+        let req = VersionReq::parse(">1").unwrap();
+
+        let version = Version::parse(v).unwrap();
+
+        if self.library_name == "yarn" && req.matches(&version) {
+            format!("{}/@yarnpkg/cli-dist/-/cli-dist-{}.tgz", npm_registry, &v)
         } else {
             format!(
                 "{}/{}/-/{}-{}.tgz",
-                npm_registry, &self.prefix, &self.prefix, &v
+                npm_registry, &self.library_name, &self.library_name, &v
             )
         }
+        // if self.library_name.starts_with("@") {
+        //     format!(
+        //         "{}/{}/-/{}-{}.tgz",
+        //         npm_registry,
+        //         &self.library_name,
+        //         &self.library_name.split("/").last().unwrap(),
+        //         &v
+        //     )
+        // } else {
+        //     format!(
+        //         "{}/{}/-/{}-{}.tgz",
+        //         npm_registry, &self.library_name, &self.library_name, &v
+        //     )
+        // }
     }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_download_dir()?
-            .join(&self.prefix)
+            .join(&self.library_name)
             .join(&v)
-            .join(format!("{}@{}.tgz", &self.prefix, &v))
+            .join(format!("{}@{}.tgz", &self.library_name, &v))
             .to_ok()
     }
 
     fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_download_dir()?
-            .join(&self.prefix)
+            .join(&self.library_name)
             .join(&v)
             .to_ok()
     }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+        let library_name = if &self.library_name == "@yarnpkg/cli-dist" {
+            "yarn"
+        } else {
+            &self.library_name
+        };
+
         self.snm_config
             .get_node_modules_dir()?
-            .join(&self.prefix)
+            .join(&library_name)
             .join(&v)
             .to_ok()
     }
@@ -151,7 +180,7 @@ impl AtomTrait for SnmPackageManager {
     fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
-            .join(&self.prefix)
+            .join(&self.library_name)
             .join(format!("{}-default", &v))
             .to_ok()
     }
@@ -159,7 +188,7 @@ impl AtomTrait for SnmPackageManager {
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
-            .join(&self.prefix)
+            .join(&self.library_name)
             .to_ok()
     }
 
@@ -169,7 +198,7 @@ impl AtomTrait for SnmPackageManager {
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
         Box::pin(async move {
             let npm_registry = self.snm_config.get_npm_registry();
-            let download_url = format!("{}/{}/{}", npm_registry, &self.prefix, &v);
+            let download_url = format!("{}/{}/{}", npm_registry, &self.library_name, &v);
 
             let value: Value = reqwest::get(&download_url)
                 .await
