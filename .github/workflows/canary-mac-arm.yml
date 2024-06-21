@@ -15,9 +15,11 @@ jobs:
         run: |
           echo "target=aarch64-apple-darwin" > config.txt
           echo "ttt=hello" >> config.txt
+          ls -l
+          cat config.txt
 
       - name: Upload config artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: config
           path: config.txt
