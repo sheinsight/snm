@@ -10,7 +10,7 @@ fn test_parse_for_bin() {
         .join("features")
         .join("has_bin");
 
-    let package_json = match parse_package_json(&workspace_path_buf) {
+    let package_json = match parse_package_json(&workspace_path_buf).unwrap() {
         Some(package_json) => package_json,
         None => unreachable!("Failed to parse package.json"),
     };
@@ -39,7 +39,9 @@ fn test_parse_package_manager() {
             .join("tests")
             .join("features")
             .join("package_manager"),
-    ) {
+    )
+    .unwrap()
+    {
         Some(package_json) => package_json,
         None => unreachable!("Failed to parse package.json"),
     };
@@ -49,10 +51,7 @@ fn test_parse_package_manager() {
         None => unreachable!("Failed to parse package manager"),
     };
 
-    let name = match package_manager.name {
-        Some(name) => name,
-        None => unreachable!("Failed to parse package manager name"),
-    };
+    let name = package_manager.name;
 
     assert_eq!(name, "pnpm".to_string());
 }

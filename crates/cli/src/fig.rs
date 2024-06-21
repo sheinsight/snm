@@ -1,11 +1,11 @@
-use std::{fs, ops::Not};
-
 use clap::CommandFactory;
-use snm_core::println_success;
+use colored::*;
+use snm_utils::snm_error::SnmError;
+use std::{fs, ops::Not};
 
 use crate::SnmCli;
 
-pub fn fig_spec_impl() {
+pub fn fig_spec_impl() -> Result<(), SnmError> {
     let mut output = Vec::new();
     clap_complete::generate(
         clap_complete_fig::Fig,
@@ -38,12 +38,22 @@ pub fn fig_spec_impl() {
             );
         }
 
-        fs::write(&spec_path_buf, &output_string)
-            .expect(format!("fig_spec_impl write error {:?}", &spec_path_buf.display()).as_str());
+        fs::write(&spec_path_buf, &output_string)?;
 
-        println_success!(
-            "Fig spec file has been created at {}",
-            spec_path_buf.display()
+        let message = format!(
+            r##"
+    🎉 Fig spec file create successful. 
+
+    🔔 Now ! Fig rename to {}
+
+                                    {}
+            "##,
+            "Amazon Q".green().bold(),
+            "Powered by snm".bright_black(),
         );
+
+        eprintln!("{message}");
     }
+
+    Ok(())
 }

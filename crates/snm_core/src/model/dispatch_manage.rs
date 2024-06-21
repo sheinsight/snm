@@ -1,23 +1,21 @@
 use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
-use crate::{
-    traits::manage::ManageTrait,
-    utils::download::{DownloadBuilder, WriteStrategy},
-};
+use crate::traits::atom::AtomTrait;
 #[cfg(unix)]
 use std::os::unix::fs as unix_fs;
 #[cfg(windows)]
 use std::os::windows::fs as windows_fs;
 
 pub struct DispatchManage {
-    manager: Box<dyn ManageTrait>,
+    manager: Box<dyn AtomTrait>,
 }
 
 impl DispatchManage {
-    pub fn new(manager: Box<dyn ManageTrait>) -> Self {
+    pub fn new(manager: Box<dyn AtomTrait>) -> Self {
         Self { manager }
     }
 }
@@ -38,19 +36,19 @@ impl DispatchManage {
 
     pub async fn list_remote(&self, all: bool) -> Result<(), SnmError> {
         let dir_tuple = self.read_runtime_dir_name_vec()?;
-        self.manager.show_list_remote(&dir_tuple, all).await;
+        self.manager.show_list_remote(&dir_tuple, all).await?;
         Ok(())
     }
 
-    pub async fn install(&self, v: &str) {
+    pub async fn install(&self, v: &str) -> Result<(), SnmError> {
         let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
             Ok(anchor_file_path_buf) => anchor_file_path_buf,
             Err(_) => panic!("set_default get_anchor_file_path_buf error"),
         };
 
         if anchor_file_path_buf.exists().not() {
-            self.download(v).await;
-            return;
+            self.download(v).await?;
+            return Ok(());
         }
 
         let confirm = Confirm::new()
@@ -62,8 +60,10 @@ impl DispatchManage {
             .expect("install Confirm error");
 
         if confirm {
-            self.download(v).await;
+            self.download(v).await?;
         }
+
+        Ok(())
     }
 
     pub async fn un_install(&self, v: &str) -> Result<(), SnmError> {
@@ -126,7 +126,7 @@ impl DispatchManage {
                 .interact()
                 .expect("set_default Confirm error");
 
-            self.install(&v).await;
+            self.install(&v).await?;
         }
 
         if let Some(d_v) = default_v {
@@ -207,11 +207,11 @@ impl DispatchManage {
             .retries(3)
             .write_strategy(WriteStrategy::Nothing)
             .download(&download_url, &downloaded_file_path_buf)
-            .await;
+            .await?;
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
         self.manager
-            .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf);
+            .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
         let remove_result = fs::remove_file(&downloaded_file_path_buf);
 

@@ -15,15 +15,12 @@ use sha2::Digest;
 use sha2::Sha256;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
-use snm_core::traits::manage::ManageTrait;
-use snm_core::utils::tarball::decompress_xz;
-use snm_current_dir::current_dir;
+use snm_core::traits::atom::AtomTrait;
+use snm_tarball::decompress;
+use snm_tarball::TarballType;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::ops::Not;
-use std::path::Path;
 use std::pin::Pin;
 use std::{
     fs::File,
@@ -161,60 +158,15 @@ impl SnmNode {
     }
 }
 
-impl ManageTrait for SnmNode {
-    fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+impl AtomTrait for SnmNode {
+    fn get_anchor_file_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_bin_dir()?
-            .join(&v)
+            .join(&version)
+            .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join("node")
             .to_ok()
-    }
-
-    fn check_satisfy_strict_mode(&self, _bin_name: &str) {
-        let wk = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let node_version_path_buf = Path::new(&wk).join(".node-version");
-
-        if node_version_path_buf.exists().not() {
-            let msg = format!(
-                "NotFoundNodeVersionFile {}",
-                node_version_path_buf.display().to_string()
-            );
-            panic!("{msg}");
-        }
-    }
-
-    fn get_strict_shim_version(&self) -> String {
-        let wk = match current_dir() {
-            Ok(dir) => dir,
-            Err(_) => panic!("NoCurrentDir"),
-        };
-
-        let node_version_path_buf = Path::new(&wk).join(".node-version");
-
-        if node_version_path_buf.exists().not() {
-            let msg = format!(
-                "NotFoundNodeVersionFile {}",
-                node_version_path_buf.display().to_string()
-            );
-            panic!("{msg}")
-        }
-        let version_processor =
-            |value: String| value.trim_start_matches(['v', 'V']).trim().to_string();
-        let version = read_to_string(&node_version_path_buf)
-            .map(version_processor)
-            .expect(
-                format!(
-                    "read_to_string {} error",
-                    &node_version_path_buf.display().to_string()
-                )
-                .as_str(),
-            );
-        version
     }
 
     fn get_strict_shim_binary_path_buf(
@@ -248,6 +200,7 @@ impl ManageTrait for SnmNode {
         version: &str,
     ) -> Result<PathBuf, SnmError> {
         self.get_runtime_dir_path_buf(&version)?
+            .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join(bin_name)
             .to_ok()
@@ -465,7 +418,7 @@ impl ManageTrait for SnmNode {
         &'a self,
         dir_tuple: &'a (Vec<String>, Option<String>),
         all: bool,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
         Box::pin(async move {
             let (dir_vec, _default_v) = dir_tuple;
 
@@ -535,6 +488,7 @@ impl ManageTrait for SnmNode {
                     return "";
                 }
             });
+            Ok(())
         })
     }
 
@@ -542,7 +496,11 @@ impl ManageTrait for SnmNode {
         &self,
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
-    ) {
-        decompress_xz(&input_file_path_buf, &output_dir_path_buf);
+    ) -> Result<(), SnmError> {
+        decompress(&input_file_path_buf, &output_dir_path_buf, TarballType::Xz)
+    }
+
+    fn get_snm_config(&self) -> &SnmConfig {
+        &self.snm_config
     }
 }
