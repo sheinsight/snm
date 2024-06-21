@@ -5,28 +5,37 @@ on:
       - dev
   pull_request:
     branches:
-      - main 
+      - dev 
 jobs:
 
-  create_env_artifact:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Create artifact file
-        run: |
-          echo "target=aarch64-apple-darwin" > config.txt
-          echo "ttt=hello" >> config.txt
-          ls -l
-          cat config.txt
+      - uses: actions/checkout@v2
+      - id: set-env
+        uses: ./.github/actions
+    outputs:
+      target: ${{ steps.set-env.outputs.target }}
 
-      - name: Upload config artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: config
-          path: config.txt
+  # create_env_artifact:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Create artifact file
+  #       run: |
+  #         echo "target=aarch64-apple-darwin" > config.txt
+  #         echo "ttt=hello" >> config.txt
+  #         ls -l
+  #         cat config.txt
+
+  #     - name: Upload config artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: config
+  #         path: config.txt
 
   run_test:
     runs-on: macos-latest
-    needs: create_env_artifact
+    needs: setup
     steps:
       - name: Download config artifact
         uses: actions/download-artifact@v4
@@ -40,8 +49,8 @@ jobs:
 
       - name: Test get environment variables
         run: |
-          echo "target: ${{ env.target }}"
-          echo "ttt: ${{ env.ttt }}"
+          echo "target: ${{ needs.setup.outputs.target }}"
+          echo "ttt: ${{ needs.setup.outputs.target }}"
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -52,7 +61,7 @@ jobs:
           toolchain: nightly
           profile: minimal
           override: true
-          target: ${{ env.TARGET }}
+          target: ${{ needs.setup.outputs.target }}
 
       - name: Cargo testing
         run: |
@@ -62,7 +71,7 @@ jobs:
 
   run_build:
     runs-on: macos-latest
-    needs: create_env_artifact
+    needs: setup
     steps:
       - name: Download config artifact
         uses: actions/download-artifact@v4
@@ -76,8 +85,7 @@ jobs:
 
       - name: Test get environment variables
         run: |
-          echo "target: ${{ env.target }}"
-          echo "ttt: ${{ env.ttt }}"
+          echo "target: ${{ needs.setup.outputs.target }}"
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -88,103 +96,44 @@ jobs:
           toolchain: nightly
           profile: minimal
           override: true
-          target: ${{ env.target }}
+          target: ${{ needs.setup.outputs.target }}
 
       - name: Build binary
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --release --target ${{ env.target }}
+          args: --verbose --release --target ${{ needs.setup.outputs.target }}
 
       - name: Strip binary (linux and macos)
         run:  |
           for file in snm node npm npx pnpm pnpx; do
-            strip "target/${{ env.target }}/release/$file"
+            strip "target/${{ needs.setup.outputs.target }}/release/$file"
           done
 
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md target/${{ env.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
-          tar -czf ${{ env.target }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
+          cp LICENSE README.md target/${{ needs.setup.outputs.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+          tar -czf ${{ needs.setup.outputs.target }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
           ls -l
 
       - name: Calculate SHA256 checksum
         run: |
-          echo "Calculating SHA256 for ${{ env.target }}.tar.gz..."
-          shasum -a 256 ${{ env.target }}.tar.gz | tee ${{ env.target }}.sha256
-          cat ${{ env.target }}.sha256
+          echo "Calculating SHA256 for ${{ needs.setup.outputs.target }}.tar.gz..."
+          shasum -a 256 ${{ needs.setup.outputs.target }}.tar.gz | tee ${{ needs.setup.outputs.target }}.sha256
+          cat ${{ needs.setup.outputs.target }}.sha256
 
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}.tar.gz
-          path: ${{ env.target }}.tar.gz
+          name: ${{ needs.setup.outputs.target }}.tar.gz
+          path: ${{ needs.setup.outputs.target }}.tar.gz
 
       - name: Upload archive sha256
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}.sha256
-          path: ${{ env.target }}.sha256
+          name: ${{ needs.setup.outputs.target }}.sha256
+          path: ${{ needs.setup.outputs.target }}.sha256
 
-
-
-  # build-canary-mac-arm:
-  #   runs-on: macos-latest
-  #   env:
-  #     TARGET: aarch64-apple-darwin
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-
-  #     - name: Install Rust
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly
-  #         profile: minimal
-  #         override: true
-  #         target: ${{ env.TARGET }}
-
-  #     - name: Build binary
-  #       run: |
-  #         cargo build --verbose --release --target ${{ env.TARGET }}
-  #       env:
-  #         RUST_BACKTRACE: full
-
-  #     - name: Strip binary (linux and macos)
-  #       run:  |
-  #         for file in snm node npm npx pnpm pnpx; do
-  #           strip "target/${{ env.TARGET }}/release/$file"
-  #         done
-
-  #     - name: Build archive
-  #       shell: bash
-  #       run: |
-  #         mkdir archive
-  #         cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
-  #         tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
-  #         ls -l
-
-  #     - name: Calculate SHA256 checksum
-  #       run: |
-  #         echo "Calculating SHA256 for ${{ env.TARGET }}.tar.gz..."
-  #         shasum -a 256 ${{ env.TARGET }}.tar.gz | tee ${{ env.TARGET }}.sha256
-  #         cat ${{ env.TARGET }}.sha256
-
-  #     - name: Upload archive
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: ${{ env.TARGET }}.tar.gz
-  #         path: .
-  # update-to-archive:
-  #   runs-on: ubuntu-latest
-  #   needs: build-canary-mac-arm
-  #   steps:
-  #     - name: Download archive
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: ${{ env.TARGET }}.tar.gz
-
-   
-  
+ 

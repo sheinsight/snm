@@ -1,0 +1,12 @@
+name: 'Set Target Architecture'
+description: 'Sets the target architecture for builds'
+outputs:
+  target:
+    description: 'The target architecture'
+    value: ${{ steps.set-target.outputs.target }}
+runs:
+  using: "composite"
+  steps:
+    - id: set-env
+      run: echo "target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
+      shell: bash
