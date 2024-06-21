@@ -23,6 +23,7 @@ jobs:
         with:
           name: config
           path: config.txt
+
   run_test:
     runs-on: macos-latest
     needs: create_env_artifact
@@ -59,6 +60,73 @@ jobs:
         env:
           RUST_BACKTRACE: full
 
+  run_build:
+    runs-on: macos-latest
+    needs: create_env_artifact
+    steps:
+      - name: Download config artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: config
+      - name: set env
+        run: |
+          while IFS='=' read -r key value; do
+            echo "$key=$value" >> $GITHUB_ENV
+          done < config.txt
+
+      - name: Test get environment variables
+        run: |
+          echo "target: ${{ env.target }}"
+          echo "ttt: ${{ env.ttt }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          target: ${{ env.TARGET }}
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ env.target }}
+
+      - name: Strip binary (linux and macos)
+        run:  |
+          for file in snm node npm npx pnpm pnpx; do
+            strip "target/${{ env.TARGET }}/release/$file"
+          done
+
+      - name: Build archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
+          ls -l
+
+      - name: Calculate SHA256 checksum
+        run: |
+          echo "Calculating SHA256 for ${{ env.TARGET }}.tar.gz..."
+          shasum -a 256 ${{ env.TARGET }}.tar.gz | tee ${{ env.TARGET }}.sha256
+          cat ${{ env.TARGET }}.sha256
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TARGET }}.tar.gz
+          path: .
+
+      - name: Upload archive sha256
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TARGET }}.sha256
+          path: .
 
 
 
