@@ -36,7 +36,11 @@ jobs:
           while IFS='=' read -r key value; do
             echo "$key=$value" >> $GITHUB_ENV
           done < config.txt
-          echo "target ${{ env.target }}"
+
+      - name: Test get environment variables
+        run: |
+          echo "target: ${{ env.target }}"
+          echo "ttt: ${{ env.ttt }}"
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -49,7 +53,7 @@ jobs:
           override: true
           target: ${{ env.TARGET }}
 
-      - name: Build binary
+      - name: Cargo testing
         run: |
             cargo t
         env:
