@@ -5,45 +5,100 @@ on:
       - dev
   pull_request:
     branches:
-      - main 
+      - dev 
 jobs:
-  build-ubuntu-arm:
+
+  setup:
     runs-on: ubuntu-latest
-    env:
-      TARGET: x86_64-unknown-linux-gnu
     steps:
+      - run: echo "setup environment"
+        shell: bash
+    outputs:
+      target: 'x86_64-unknown-linux-gnu' 
+ 
+  run_test:
+    runs-on: macos-latest
+    needs: setup
+    steps:
+
+      - name: Test get environment variables
+        run: |
+          echo "target: ${{ needs.setup.outputs.target }}"
+          echo "ttt: ${{ needs.setup.outputs.target }}"
+
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           profile: minimal
           override: true
-          target: ${{ env.TARGET }}
-      - name: Build binary
+          target: ${{ needs.setup.outputs.target }}
+
+      - name: Cargo testing
         run: |
-          sudo apt-get install musl-tools
-          cargo build --verbose --release --target ${{ env.TARGET }}
+            cargo t
         env:
           RUST_BACKTRACE: full
+
+  run_build:
+    runs-on: macos-latest
+    needs: setup
+    steps:
+
+      - name: Test get environment variables
+        run: |
+          echo "target: ${{ needs.setup.outputs.target }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          target: ${{ needs.setup.outputs.target }}
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ needs.setup.outputs.target }}
+
       - name: Strip binary (linux and macos)
         run:  |
           for file in snm node npm npx pnpm pnpx; do
-            strip "target/${{ env.TARGET }}/release/$file"
+            strip "target/${{ needs.setup.outputs.target }}/release/$file"
           done
+
       - name: Build archive
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
-          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
+          cp LICENSE README.md target/${{ needs.setup.outputs.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+          tar -czf ${{ needs.setup.outputs.target }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
           ls -l
-      - name: Upload archive
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.TARGET }}.tar.gz
-          path: ${{ env.TARGET }}.tar.gz
 
-   
-  
+      - name: Calculate SHA256 checksum
+        run: |
+          echo "Calculating SHA256 for ${{ needs.setup.outputs.target }}.tar.gz..."
+          shasum -a 256 ${{ needs.setup.outputs.target }}.tar.gz | tee ${{ needs.setup.outputs.target }}.sha256
+          cat ${{ needs.setup.outputs.target }}.sha256
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.target }}.tar.gz
+          path: ${{ needs.setup.outputs.target }}.tar.gz
+
+      - name: Upload archive sha256
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.target }}.sha256
+          path: ${{ needs.setup.outputs.target }}.sha256
+
+ 
