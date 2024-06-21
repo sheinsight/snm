@@ -10,6 +10,9 @@ jobs:
 
   setup:
     runs-on: macos-latest
+    steps:
+      - run: echo "setup environment"
+        shell: bash
     outputs:
       target: 'aarch64-apple-darwin' 
  
