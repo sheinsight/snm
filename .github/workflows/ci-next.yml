@@ -81,19 +81,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: snm-macos-x86_64.zip
-          path: snm-macos-x86_64.zip
+          path: .
       - uses: actions/download-artifact@v4
         with:
           name: snm-macos-x86_64.zip.sha256
-          path: snm-macos-x86_64.zip.sha256
+          path: .
       - uses: actions/download-artifact@v4
         with:
           name: snm-macos-arm.zip
-          path: snm-macos-arm.zip
+          path: .
       - uses: actions/download-artifact@v4
         with:
           name: snm-macos-arm.zip.sha256
-          path: snm-macos-arm.zip.sha256
+          path: .
 
       - name: Display structure of downloaded files
         run: ls -R
@@ -126,11 +126,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: snm-macos-x86_64.zip.sha256
-          path: snm-macos-x86_64.zip.sha256
+          path: .
       - uses: actions/download-artifact@v4
         with:
           name: snm-macos-arm.zip.sha256
-          path: snm-macos-arm.zip.sha256
+          path: .
 
       - name: Update Formula
         run: |
