@@ -7,71 +7,57 @@ on:
     branches: [dev]
 
 jobs:
-  setup:
+  build-and-test:
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: windows-2019
+          - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: macos-latest
             target: aarch64-apple-darwin
-    runs-on: ${{ matrix.os }}
-    outputs:
-      matrix: ${{ toJson(matrix) }}
-    steps:
-      - run: echo "Setting up for ${{ matrix.os }} with target ${{ matrix.target }}"
 
-  test:
-    needs: setup
-    strategy:
-      matrix: ${{fromJson(needs.setup.outputs.matrix)}}
     runs-on: ${{ matrix.os }}
+    
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           profile: minimal
           override: true
           target: ${{ matrix.target }}
+
       - name: Run tests
         run: cargo test
         env:
           RUST_BACKTRACE: full
 
-  build:
-    needs: setup
-    strategy:
-      matrix: ${{fromJson(needs.setup.outputs.matrix)}}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          profile: minimal
-          override: true
-          target: ${{ matrix.target }}
       - name: Build binary
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
-      - name: Strip binary (linux and macos)
+
+      - name: Strip binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
           for file in snm node npm npx pnpm pnpx; do
             strip "target/${{ matrix.target }}/release/$file"
           done
-      - name: Build archive
+
+      - name: Create archive
         shell: bash
         run: |
           mkdir archive
           cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
           tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm
           ls -l
+
       - name: Calculate SHA256 checksum
         run: |
           echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
@@ -82,6 +68,7 @@ jobs:
           fi
           cat ${{ matrix.target }}.sha256
         shell: bash
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
