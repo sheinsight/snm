@@ -120,13 +120,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.target }}.tar.gz
-          path: .
+          path: ${{ env.target }}.tar.gz
 
       - name: Upload archive sha256
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.target }}.sha256
-          path: .
+          path: ${{ env.target }}.sha256
 
 
 
