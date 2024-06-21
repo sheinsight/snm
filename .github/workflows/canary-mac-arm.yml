@@ -7,13 +7,38 @@ on:
     branches:
       - main 
 jobs:
-  build-canary-mac-arm:
-    runs-on: macos-latest
-    env:
-      TARGET: aarch64-apple-darwin
+
+  create_env_artifact:
+    runs-on: ubuntu-latest
     steps:
+      - name: Create artifact file
+        run: |
+          echo "target=aarch64-apple-darwin" > config.txt
+          echo "ttt=hello" >> config.txt
+
+      - name: Upload config artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: config
+          path: config.txt
+  run_test:
+    runs-on: macos-latest
+    needs: create_env_artifact
+    steps:
+      - name: Download config artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: config
+      - name: set env
+        run: |
+          while IFS='=' read -r key value; do
+            echo "$key=$value" >> $GITHUB_ENV
+          done < config.txt
+          echo "target ${{ env.target }}"
+
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -21,28 +46,71 @@ jobs:
           profile: minimal
           override: true
           target: ${{ env.TARGET }}
+
       - name: Build binary
         run: |
-          cargo build --verbose --release --target ${{ env.TARGET }}
+            cargo t
         env:
           RUST_BACKTRACE: full
-      - name: Strip binary (linux and macos)
-        run:  |
-          for file in snm node npm npx pnpm pnpx; do
-            strip "target/${{ env.TARGET }}/release/$file"
-          done
-      - name: Build archive
-        shell: bash
-        run: |
-          mkdir archive
-          cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
-          tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
-          ls -l
-      - name: Upload archive
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.TARGET }}.tar.gz
-          path: ${{ env.TARGET }}.tar.gz
+
+
+
+
+  # build-canary-mac-arm:
+  #   runs-on: macos-latest
+  #   env:
+  #     TARGET: aarch64-apple-darwin
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly
+  #         profile: minimal
+  #         override: true
+  #         target: ${{ env.TARGET }}
+
+  #     - name: Build binary
+  #       run: |
+  #         cargo build --verbose --release --target ${{ env.TARGET }}
+  #       env:
+  #         RUST_BACKTRACE: full
+
+  #     - name: Strip binary (linux and macos)
+  #       run:  |
+  #         for file in snm node npm npx pnpm pnpx; do
+  #           strip "target/${{ env.TARGET }}/release/$file"
+  #         done
+
+  #     - name: Build archive
+  #       shell: bash
+  #       run: |
+  #         mkdir archive
+  #         cp LICENSE README.md target/${{ env.TARGET }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+  #         tar -czf ${{ env.TARGET }}.tar.gz -C archive  LICENSE README.md node npm npx pnpm pnpx snm
+  #         ls -l
+
+  #     - name: Calculate SHA256 checksum
+  #       run: |
+  #         echo "Calculating SHA256 for ${{ env.TARGET }}.tar.gz..."
+  #         shasum -a 256 ${{ env.TARGET }}.tar.gz | tee ${{ env.TARGET }}.sha256
+  #         cat ${{ env.TARGET }}.sha256
+
+  #     - name: Upload archive
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ env.TARGET }}.tar.gz
+  #         path: .
+  # update-to-archive:
+  #   runs-on: ubuntu-latest
+  #   needs: build-canary-mac-arm
+  #   steps:
+  #     - name: Download archive
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: ${{ env.TARGET }}.tar.gz
 
    
   
