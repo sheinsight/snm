@@ -10,12 +10,8 @@ jobs:
 
   setup:
     runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - id: setup
-        uses: ./.github/actions/mac-arm
     outputs:
-      target: ${{ steps.setup.outputs.target }}
+      target: 'aarch64-apple-darwin' 
  
   run_test:
     runs-on: macos-latest
