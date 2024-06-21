@@ -1,0 +1,163 @@
+name: snapshot
+
+on:
+  push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [macos-x86_64, macos-arm]
+        include:
+          - build: macos-x86_64
+            os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+            archive-name: snm-macos-x86_64.zip
+          - build: macos-arm
+            os: macos-latest
+            rust: nightly
+            target: aarch64-apple-darwin
+            archive-name: snm-macos-arm.zip
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Strip binary
+        run: |
+          strip target/${{ matrix.target }}/release/snm
+
+      - name: Build archive
+        run: |
+          mkdir archive
+          cp target/${{ matrix.target }}/release/snm archive/
+          zip -r ${{ matrix.archive-name }} archive/
+
+      - name: Calculate SHA256 checksum
+        id: checksum
+        run: |
+          sha256sum ${{ matrix.archive-name }} | awk '{ print $1 }' > ${{ matrix.archive-name }}.sha256
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive-name }}
+          path: ${{ matrix.archive-name }}
+          if-no-files-found: error
+          overwrite: true
+
+      - name: Upload SHA256 checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive-name }}.sha256
+          path: ${{ matrix.archive-name }}.sha256
+          if-no-files-found: error
+          overwrite: true
+
+  release: 
+    name: Upload to Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-x86_64.zip
+          path: snm-macos-x86_64.zip
+      - uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-x86_64.zip.sha256
+          path: snm-macos-x86_64.zip.sha256
+      - uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-arm.zip
+          path: snm-macos-arm.zip
+      - uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-arm.zip.sha256
+          path: snm-macos-arm.zip.sha256
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: ${{ github.ref_name }}
+          files: |
+            snm-macos-x86_64.zip
+            snm-macos-x86_64.zip.sha256
+            snm-macos-arm.zip
+            snm-macos-arm.zip.sha256
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout homebrew-shined repository
+        uses: actions/checkout@v3
+        with:
+          repository: sheinsight/homebrew-shined
+          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          path: homebrew-shined
+
+      - name: Download SHA256 checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-x86_64.zip.sha256
+          path: snm-macos-x86_64.zip.sha256
+      - uses: actions/download-artifact@v4
+        with:
+          name: snm-macos-arm.zip.sha256
+          path: snm-macos-arm.zip.sha256
+
+      - name: Update Formula
+        run: |
+          cd homebrew-shined
+          MACOS_X86_64_SHA256=$(cat ../snm-macos-x86_64.zip.sha256)
+          MACOS_ARM_SHA256=$(cat ../snm-macos-arm.zip.sha256)
+          sed -i "s|url \".*\"|url \"https://github.com/sheinsight/snm/releases/download/${{ github.ref_name }}/snm-macos-x86_64.zip\"|" Formula/snm.rb
+          sed -i "s|sha256 \".*\"|sha256 \"$MACOS_X86_64_SHA256\"|" Formula/snm.rb
+          sed -i "s|url \".*\"|url \"https://github.com/sheinsight/snm/releases/download/${{ github.ref_name }}/snm-macos-arm.zip\"|" Formula/snm.rb
+          sed -i "s|sha256 \".*\"|sha256 \"$MACOS_ARM_SHA256\"|" Formula/snm.rb
+
+      - name: Commit and Push Changes
+        run: |
+          cd homebrew-shined
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b update-formula-${{ github.ref_name }}
+          git add Formula/snm.rb
+          git commit -m "Update snm formula to version ${{ github.ref_name }}"
+          git push --set-upstream origin update-formula-${{ github.ref_name }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          commit-message: "Update snm formula to version ${{ github.ref_name }}"
+          title: "Update snm formula to version ${{ github.ref_name }}"
+          body: "This PR updates the snm formula to version ${{ github.ref_name }}."
+          branch: update-formula-${{ github.ref_name }}
+          base: main
