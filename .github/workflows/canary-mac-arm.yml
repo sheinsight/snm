@@ -13,26 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: setup
-        uses: ./.github/actions
+        uses: ./.github/actions/mac-arm
     outputs:
       target: ${{ steps.setup.outputs.target }}
-
-  # create_env_artifact:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Create artifact file
-  #       run: |
-  #         echo "target=aarch64-apple-darwin" > config.txt
-  #         echo "ttt=hello" >> config.txt
-  #         ls -l
-  #         cat config.txt
-
-  #     - name: Upload config artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: config
-  #         path: config.txt
-
+ 
   run_test:
     runs-on: macos-latest
     needs: setup
