@@ -37,15 +37,6 @@ jobs:
     runs-on: macos-latest
     needs: setup
     steps:
-      - name: Download config artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: config
-      - name: set env
-        run: |
-          while IFS='=' read -r key value; do
-            echo "$key=$value" >> $GITHUB_ENV
-          done < config.txt
 
       - name: Test get environment variables
         run: |
@@ -73,15 +64,6 @@ jobs:
     runs-on: macos-latest
     needs: setup
     steps:
-      - name: Download config artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: config
-      - name: set env
-        run: |
-          while IFS='=' read -r key value; do
-            echo "$key=$value" >> $GITHUB_ENV
-          done < config.txt
 
       - name: Test get environment variables
         run: |
