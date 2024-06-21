@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - id: set-env
+      - id: setup
         uses: ./.github/actions
     outputs:
-      target: ${{ steps.set-env.outputs.target }}
+      target: ${{ steps.setup.outputs.target }}
 
   # create_env_artifact:
   #   runs-on: ubuntu-latest
