@@ -1,4 +1,4 @@
-name: snapshot
+name: CI
 on:
   push:
     tags:
