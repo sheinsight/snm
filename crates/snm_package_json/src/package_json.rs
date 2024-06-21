@@ -67,7 +67,16 @@ fn bin_transform_to_hashmap(bin: &Bin, raw_workspace: &PathBuf) -> HashMap<Strin
         Bin::Map(map) => map
             .into_iter()
             .filter_map(|(k, v)| {
-                if let Some(bin_path_buf) = raw_workspace.join(v).canonicalize().ok() {
+                if let Some(mut bin_path_buf) = raw_workspace.join(v).canonicalize().ok() {
+                    if cfg!(target_os = "windows") {
+                        if let Some(stripped) = bin_path_buf
+                            .to_str()
+                            .map(|s| s.strip_prefix("\\\\?\\"))
+                            .flatten()
+                        {
+                            bin_path_buf = PathBuf::from(stripped);
+                        }
+                    }
                     Some((k.to_string(), bin_path_buf))
                 } else {
                     None
