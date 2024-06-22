@@ -117,3 +117,51 @@ jobs:
           files: |
             **/*.tar.gz
             **/*.sha256
+
+  publish-homebrew:
+    name: Publish to Homebrew
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: sheinsight/homebrew-shined
+          path: homebrew-tap
+      - uses: actions/download-artifact@v4
+        with:
+          name: homebrew-formula
+          path: homebrew-tap/Formula
+      - name: Generate Homebrew Formula
+        run: |
+          VERSION=${{ github.ref_name }}
+          SHA256_INTEL=$(cat homebrew-tap/Formula/x86_64-apple-darwin.sha256)
+          SHA256_ARM=$(cat homebrew-tap/Formula/aarch64-apple-darwin.sha256)
+          cat <<EOF > homebrew-tap/Formula/snm.rb
+          class Snm < Formula
+            desc "snm = corepack + fnm + ni ."
+            homepage "https://github.com/sheinsight/snm"
+            version "$VERSION"
+            if Hardware::CPU.intel?
+              url "https://github.com/sheinsight/snm/releases/download/$VERSION/snm-macos-x86_64.zip"
+              sha256 "$SHA256_INTEL"
+            elsif Hardware::CPU.arm?
+              url "https://github.com/sheinsight/snm/releases/download/$VERSION/snm-macos-arm.zip"
+              sha256 "$SHA256_ARM"
+            end
+            license "MIT"
+            def install
+              bin.install "snm", "pnpx", "pnpm", "npx", "npm", "yarn", "node"
+            end
+            test do
+              system "#{bin}/snm", "--version"
+            end
+          end
+          EOF
+      - name: Update Homebrew Formula
+        run: |
+          cd homebrew-tap
+          git config user.name "ityuany"
+          git config user.email "519495771@qq.com"
+          git add Formula/snm.rb
+          git commit -m "Update snm formula to version ${{ github.ref_name }}"
+          git push
