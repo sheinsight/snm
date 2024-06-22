@@ -128,14 +128,11 @@ jobs:
           repository: sheinsight/homebrew-shined
           path: homebrew-tap
       - uses: actions/download-artifact@v4
-        with:
-          name: homebrew-formula
-          path: homebrew-tap/Formula
       - name: Generate Homebrew Formula
         run: |
           VERSION=${{ github.ref_name }}
-          SHA256_INTEL=$(cat homebrew-tap/Formula/x86_64-apple-darwin.sha256)
-          SHA256_ARM=$(cat homebrew-tap/Formula/aarch64-apple-darwin.sha256)
+          SHA256_INTEL=$(cat ./x86_64-apple-darwin.sha256)
+          SHA256_ARM=$(cat ./aarch64-apple-darwin.sha256)
           cat <<EOF > homebrew-tap/Formula/snm.rb
           class Snm < Formula
             desc "snm = corepack + fnm + ni ."
