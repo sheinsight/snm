@@ -91,13 +91,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: ${{ matrix.target }}.tar.gz
+          path: .
 
       - name: Upload artifacts sha256
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}.sha256
-          path: ${{ matrix.target }}.sha256
+          path: .
 
 
   publish-github-release:
@@ -115,8 +115,8 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           files: |
-            **/*.tar.gz
-            **/*.sha256
+            *.sha256
+            *.tar.gz
 
   publish-homebrew:
     name: Publish to Homebrew
