@@ -128,6 +128,8 @@ jobs:
           repository: sheinsight/homebrew-shined
           path: homebrew-tap
       - uses: actions/download-artifact@v4
+      - name: Display structure of downloaded files
+        run: ls -R
       - name: Generate Homebrew Formula
         run: |
           VERSION=${{ github.ref_name }}
