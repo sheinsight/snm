@@ -100,7 +100,7 @@ jobs:
           path: ${{ matrix.target }}.sha256
 
 
-  publish:
+  publish-github-release:
     name: Publish to github release
     runs-on: ubuntu-latest
     needs: build-and-test
@@ -121,7 +121,7 @@ jobs:
   publish-homebrew:
     name: Publish to Homebrew
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: publish-github-release
     steps:
       - uses: actions/checkout@v3
         with:
