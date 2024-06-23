@@ -131,12 +131,15 @@ jobs:
         with:
           path: .
       - name: Display structure of downloaded files
-        run: ls -R
+        run: ｜
+          ls -R
+          cd x86_64-apple-darwin.sha256
+          cat x86_64-apple-darwin.sha256
       - name: Generate Homebrew Formula
         run: |
           VERSION=${{ github.ref_name }}
-          SHA256_INTEL=$(cat x86_64-apple-darwin.sha256)
-          SHA256_ARM=$(cat aarch64-apple-darwin.sha256)
+          SHA256_INTEL=$(cat x86_64-apple-darwin.sha256/x86_64-apple-darwin.sha256)
+          SHA256_ARM=$(cat aarch64-apple-darwin.sha256/aarch64-apple-darwin.sha256)
           cat <<EOF > homebrew-tap/Formula/snm.rb
           class Snm < Formula
             desc "snm = corepack + fnm + ni ."
