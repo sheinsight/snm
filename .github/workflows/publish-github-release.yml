@@ -205,6 +205,11 @@ jobs:
           token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           path: homebrew-shined
 
+      - name: Configure Git
+        run: |
+          git config --global user.email "ityuany@qq.com"
+          git config --global user.name "ityuany"
+
       - name: Copy snm.rb to homebrew-shined
         run: |
           cp snm.rb/snm.rb homebrew-shined/snm.rb
