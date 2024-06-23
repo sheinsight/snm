@@ -159,17 +159,6 @@ jobs:
             end
           end
           EOF
-      - name: Update Homebrew Formula
-        env: 
-          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          cd homebrew-tap
-          git config user.name "ityuany"
-          git config user.email "519495771@qq.com"
-          git add snm.rb
-          git commit -m "Update snm formula to version ${{ github.ref_name }}"
-          git push https://ityuany:${GH_TOKEN}@github.com/sheinsight/homebrew-shined.git
       - name: Upload artifacts snm.rb
         uses: actions/upload-artifact@v4
         with:
