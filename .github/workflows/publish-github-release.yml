@@ -170,4 +170,4 @@ jobs:
           git config user.email "519495771@qq.com"
           git add snm.rb
           git commit -m "Update snm formula to version ${{ github.ref_name }}"
-          git push https://x-access-token:${GH_TOKEN}@github.com/sheinsight/homebrew-shined.git
+          git push https://x-access-token:${{ secrets.HOMEBREW_GITHUB_TOKEN }}@github.com/sheinsight/homebrew-shined.git
