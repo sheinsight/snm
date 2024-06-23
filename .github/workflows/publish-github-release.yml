@@ -165,7 +165,7 @@ jobs:
           EOF
       - name: Update Homebrew Formula
         env: 
-          GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           cd homebrew-tap
