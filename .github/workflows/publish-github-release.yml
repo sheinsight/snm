@@ -162,6 +162,7 @@ jobs:
           end
           EOF
       - name: Update Homebrew Formula
+        env: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
         run: |
           cd homebrew-tap
           git config user.name "ityuany"
