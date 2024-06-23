@@ -118,7 +118,7 @@ jobs:
             **/*.tar.gz
             **/*.sha256
 
-  publish-rb-file:
+  generate-homebrew-formula:
     permissions:
       contents: write
     name: Publish to Homebrew
@@ -136,8 +136,8 @@ jobs:
       - name: Generate Homebrew Formula
         run: |
           VERSION=${{ github.ref_name }}
-          SHA256_INTEL=$(cat x86_64-apple-darwin.sha256/x86_64-apple-darwin.sha256)
-          SHA256_ARM=$(cat aarch64-apple-darwin.sha256/aarch64-apple-darwin.sha256)
+          SHA256_INTEL=$(cat x86_64-apple-darwin.sha256/x86_64-apple-darwin.sha256 | awk '{print $1}')
+          SHA256_ARM=$(cat aarch64-apple-darwin.sha256/aarch64-apple-darwin.sha256 | awk '{print $1}')
           cat <<EOF > snm.rb
           class Snm < Formula
             desc "snm = corepack + fnm + ni ."
