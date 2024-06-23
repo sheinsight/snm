@@ -131,7 +131,7 @@ jobs:
         with:
           path: .
       - name: Display structure of downloaded files
-        run: ｜
+        run: |
           ls -R
           cd x86_64-apple-darwin.sha256
           cat x86_64-apple-darwin.sha256
