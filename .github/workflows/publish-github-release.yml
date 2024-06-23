@@ -164,10 +164,11 @@ jobs:
       - name: Update Homebrew Formula
         env: 
           GH_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+        shell: bash
         run: |
           cd homebrew-tap
           git config user.name "ityuany"
           git config user.email "519495771@qq.com"
           git add snm.rb
           git commit -m "Update snm formula to version ${{ github.ref_name }}"
-          git push https://x-access-token:${{ secrets.HOMEBREW_GITHUB_TOKEN }}@github.com/sheinsight/homebrew-shined.git
+          git push https://x-access-token:${GH_TOKEN}@github.com/sheinsight/homebrew-shined.git
