@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xz2 = "0.1.7"
+xz2 = {version = "0.1.7" , features = ["static"]}
 dirs = "5.0.1"
 tar = "0.4.40"
 sha2 = "0.10.2"
