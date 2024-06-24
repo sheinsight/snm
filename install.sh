@@ -103,7 +103,7 @@ download_snm(){
       exit 1
     fi
     # unzip -q "$DOWNLOAD_DIR/$FILENAME" -d "$DOWNLOAD_DIR"
-    tar -xzf "$DOWNLOAD_DIR/$FILENAME" -C "$DOWNLOAD_DIR"
+    tar -xzf "$DOWNLOAD_DIR/$FILENAME" -C "$DOWNLOAD_DIR/archive"
 
     for file in "$DOWNLOAD_DIR"/archive/*; do
         chmod u+x "$file"
@@ -124,8 +124,8 @@ check_dependencies() {
     SHOULD_EXIT="true"
   fi
 
-  echo -n "Checking availability of unzip... "
-  if hash unzip 2>/dev/null; then
+  echo -n "Checking availability of tar... "
+  if hash tar 2>/dev/null; then
     echo "OK!"
   else
     echo "Missing!"
