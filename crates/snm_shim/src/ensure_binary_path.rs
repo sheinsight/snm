@@ -8,7 +8,7 @@ use super::download::download;
 pub async fn ensure_binary_path(
     bin_name: &str,
     manage: &dyn AtomTrait,
-    version: String,
+    version: &String,
 ) -> Result<PathBuf, SnmError> {
     if manage
         .get_anchor_file_path_buf(version.as_str())?
