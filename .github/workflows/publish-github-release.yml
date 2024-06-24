@@ -189,46 +189,46 @@ jobs:
       #     body: "This PR updates snm.rb to version ${{ github.ref_name }}."
       #     branch: update-snm-rb-${{ github.ref_name }}
       #     base: main
-  create-pull-request:
-    name: Create Pull Request
-    runs-on: ubuntu-latest
-    needs: generate-homebrew-formula
-    steps:
+  # create-pull-request:
+  #   name: Create Pull Request
+  #   runs-on: ubuntu-latest
+  #   needs: generate-homebrew-formula
+  #   steps:
  
-      - uses: actions/download-artifact@v4
-        with:
-            name: snm.rb
-            path: snm.rb
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #           name: snm.rb
+  #           path: snm.rb
 
-      - name: Display structure of downloaded files
-        run: ls -R
+  #     - name: Display structure of downloaded files
+  #       run: ls -R
         
 
-      - name: Checkout homebrew-shined repository
-        uses: actions/checkout@v3
-        with:
-          repository: ityuany/homebrew-shined
-          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          path: .
+  #     - name: Checkout homebrew-shined repository
+  #       uses: actions/checkout@v3
+  #       with:
+  #         repository: ityuany/homebrew-shined
+  #         token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+  #         path: .
 
-      - name: Configure Git
-        run: |
-          git config --global user.email "ityuany@qq.com"
-          git config --global user.name "ityuany"
+  #     - name: Configure Git
+  #       run: |
+  #         git config --global user.email "ityuany@qq.com"
+  #         git config --global user.name "ityuany"
 
-      - name: Copy snm.rb to homebrew-shined
-        run: |
-          # cp snm.rb/snm.rb homebrew-shined/snm.rb
-          # cd homebrew-shined
-          git add snm.rb
-          git commit -m "Update snm.rb to version ${{ github.ref_name }}"
+  #     - name: Copy snm.rb to homebrew-shined
+  #       run: |
+  #         # cp snm.rb/snm.rb homebrew-shined/snm.rb
+  #         # cd homebrew-shined
+  #         git add snm.rb
+  #         git commit -m "Update snm.rb to version ${{ github.ref_name }}"
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          commit-message: "Update snm.rb to version ${{ github.ref_name }}"
-          title: "Update snm.rb to version ${{ github.ref_name }}"
-          body: "This PR updates snm.rb to version ${{ github.ref_name }}."
-          branch: update-snm-rb-${{ github.ref_name }}
-          base: main
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@v6
+  #       with:
+  #         token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+  #         commit-message: "Update snm.rb to version ${{ github.ref_name }}"
+  #         title: "Update snm.rb to version ${{ github.ref_name }}"
+  #         body: "This PR updates snm.rb to version ${{ github.ref_name }}."
+  #         branch: update-snm-rb-${{ github.ref_name }}
+  #         base: main
