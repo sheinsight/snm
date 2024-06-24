@@ -194,16 +194,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: generate-homebrew-formula
     steps:
+ 
       - uses: actions/download-artifact@v4
+        with:
+            name: snm.rb
+            path: snm.rb
+
       - name: Display structure of downloaded files
         run: ls -R
+        
 
       - name: Checkout homebrew-shined repository
         uses: actions/checkout@v3
         with:
           repository: ityuany/homebrew-shined
           token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          path: homebrew-shined
+          path: .
 
       - name: Configure Git
         run: |
@@ -212,8 +218,8 @@ jobs:
 
       - name: Copy snm.rb to homebrew-shined
         run: |
-          cp snm.rb/snm.rb homebrew-shined/snm.rb
-          cd homebrew-shined
+          # cp snm.rb/snm.rb homebrew-shined/snm.rb
+          # cd homebrew-shined
           git add snm.rb
           git commit -m "Update snm.rb to version ${{ github.ref_name }}"
 
@@ -226,4 +232,3 @@ jobs:
           body: "This PR updates snm.rb to version ${{ github.ref_name }}."
           branch: update-snm-rb-${{ github.ref_name }}
           base: main
- 
