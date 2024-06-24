@@ -58,10 +58,10 @@ set_filename() {
         exit 1
         ;;
       aarch* | armv8*)
-        FILENAME="x86_64-unknown-linux-gnu.tar.gz"
+        FILENAME="x86_64-unknown-linux-musl.tar.gz"
         ;;
       *)
-        FILENAME="x86_64-unknown-linux-gnu.tar.gz"
+        FILENAME="x86_64-unknown-linux-musl.tar.gz"
     esac
   elif [ "$OS" = "Darwin" ] && [ "$FORCE_INSTALL" = "true" ]; then
     FILENAME="fnm-macos"
