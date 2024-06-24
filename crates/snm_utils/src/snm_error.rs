@@ -1,5 +1,5 @@
 use colored::*;
-use std::path::PathBuf;
+use std::{path::PathBuf, process::exit};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -243,4 +243,6 @@ pub fn friendly_error_message(error: SnmError) {
             panic!("{error}");
         }
     }
+
+    exit(1);
 }
