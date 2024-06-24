@@ -102,7 +102,8 @@ download_snm(){
       echo "Download failed.  Check that the release/filename are correct."
       exit 1
     fi
-    unzip -q "$DOWNLOAD_DIR/$FILENAME" -d "$DOWNLOAD_DIR"
+    # unzip -q "$DOWNLOAD_DIR/$FILENAME" -d "$DOWNLOAD_DIR"
+    tar -xzf "$DOWNLOAD_DIR/$FILENAME" -C "$DOWNLOAD_DIR"
 
     for file in "$DOWNLOAD_DIR"/archive/*; do
         chmod u+x "$file"
