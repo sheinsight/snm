@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 tar = "0.4.40"
-xz2 = "0.1.7"
+xz2 = {version = "0.1.7" , features = ["static"]}
 flate2 = "1.0.28"
 snm_utils = { path = "../snm_utils" }

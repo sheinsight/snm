@@ -49,6 +49,7 @@ parse_args() {
 }
 
 set_filename() {
+  
   if [ "$OS" = "Linux" ]; then
     # Based on https://stackoverflow.com/a/45125525
     case "$(uname -m)" in
@@ -57,18 +58,18 @@ set_filename() {
         exit 1
         ;;
       aarch* | armv8*)
-        FILENAME="snm-linux-x86_64.zip"
+        FILENAME="x86_64-unknown-linux-gnu.tar.gz"
         ;;
       *)
-        FILENAME="snm-linux-x86_64.zip"
+        FILENAME="x86_64-unknown-linux-gnu.tar.gz"
     esac
   elif [ "$OS" = "Darwin" ] && [ "$FORCE_INSTALL" = "true" ]; then
     FILENAME="fnm-macos"
     USE_HOMEBREW="false"
     if [ "$(uname -m)" = "arm64" ]; then
-        FILENAME="snm-macos-arm.zip"
+        FILENAME="aarch64-apple-darwin.tar.gz"
     else
-        FILENAME="snm-macos-x86_64.zip"
+        FILENAME="x86_64-apple-darwin.tar.gz"
     fi
     echo "Downloading the latest fnm binary from GitHub..."
     # echo "  Pro tip: it's easier to use Homebrew for managing fnm in macOS."

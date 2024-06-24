@@ -1,0 +1,91 @@
+name: Homebrew
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+jobs:
+  build:
+    strategy:
+        matrix:
+          include:
+            - os: macos-14
+              target: aarch64-apple-darwin
+            - os: macos-13
+              target: x86_64-apple-darwin
+        fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          # toolchain: nightly
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Run tests
+        run: cargo test
+        env:
+          RUST_BACKTRACE: full
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Linux and macOS only)
+        run: |
+          for file in snm node npm npx pnpm pnpx yarn; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
+
+      - name: Build archive
+        run: |
+           mkdir archive
+           cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
+           tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm
+           ls -l
+
+      - name: Calculate SHA256 checksum
+        run: |
+          echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
+          shasum -a 256 ${{ matrix.target }}.tar.gz | tee ${{ matrix.target }}.sha256
+          cat ${{ matrix.target }}.sha256
+        shell: bash
+
+      - name: Upload tar.gz artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
+      
+      - name: Upload sha256 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}.sha256
+          path: ${{ matrix.target }}.sha256
+ 
+  # publish:
+  #   name: Publish to github release
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v4
+  #     - name: Display structure of downloaded files
+  #       run: ls -R
+  #     - name: Upload Release Asset
+  #       id: upload-release-asset
+  #       uses: softprops/action-gh-release@v2
+  #       if: startsWith(github.ref, 'refs/tags/')
+  #       with:
+  #         name: ${{ github.ref_name }}
+  #         # prerelease: true
+  #         files: |
+  #           **/*.zip

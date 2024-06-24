@@ -1,0 +1,234 @@
+name: Publish GitHub release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # - os: ubuntu-latest
+          #   target: i686-unknown-linux-gnu
+          # - os: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+          
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssl pkg-config libssl-dev
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Run tests
+        run: cargo test
+        env:
+          RUST_BACKTRACE: full
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Linux and macOS only)
+        if: matrix.os != 'windows-latest'
+        run: |
+          for file in snm node npm npx pnpm pnpx yarn; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
+
+      - name: Create archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm,yarn} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm yarn
+          ls -l
+
+      - name: Calculate SHA256 checksum
+        run: |
+          echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            certutil -hashfile "${{ matrix.target }}.tar.gz" SHA256 > "${{ matrix.target }}.sha256"
+          else
+            shasum -a 256 ${{ matrix.target }}.tar.gz | tee ${{ matrix.target }}.sha256
+          fi
+          cat ${{ matrix.target }}.sha256
+        shell: bash
+
+      - name: Upload artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
+
+      - name: Upload artifacts sha256
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}.sha256
+          path: ${{ matrix.target }}.sha256
+
+
+  publish-github-release:
+    name: Publish to github release
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: ${{ github.ref_name }}
+          files: |
+            **/*.tar.gz
+            **/*.sha256
+
+  generate-homebrew-formula:
+    permissions:
+      contents: write
+    name: Publish to Homebrew
+    runs-on: ubuntu-latest
+    needs: publish-github-release
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: .
+      - name: Display structure of downloaded files
+        run: |
+          ls -R
+          cd x86_64-apple-darwin.sha256
+          cat x86_64-apple-darwin.sha256
+      - name: Generate Homebrew Formula
+        run: |
+          VERSION=${{ github.ref_name }}
+          SHA256_INTEL=$(cat x86_64-apple-darwin.sha256/x86_64-apple-darwin.sha256 | awk '{print $1}')
+          SHA256_ARM=$(cat aarch64-apple-darwin.sha256/aarch64-apple-darwin.sha256 | awk '{print $1}')
+          cat <<EOF > snm.rb
+          class Snm < Formula
+            desc "snm = corepack + fnm + ni ."
+            homepage "https://github.com/sheinsight/snm"
+            version "$VERSION"
+            if Hardware::CPU.intel?
+              url "https://github.com/sheinsight/snm/releases/download/$VERSION/x86_64-apple-darwin.tar.gz"
+              sha256 "$SHA256_INTEL"
+            elsif Hardware::CPU.arm?
+              url "https://github.com/sheinsight/snm/releases/download/$VERSION/aarch64-apple-darwin.tar.gz"
+              sha256 "$SHA256_ARM"
+            end
+            license "MIT"
+            def install
+              bin.install "snm", "pnpx", "pnpm", "npx", "npm", "yarn", "node"
+            end
+            test do
+              system "#{bin}/snm", "--version"
+            end
+          end
+          EOF
+      - name: Upload artifacts snm.rb
+        uses: actions/upload-artifact@v4
+        with:
+          name: snm.rb
+          path: snm.rb
+
+      # 新增的步骤：创建 PR
+      # - name: Checkout homebrew-shined repository
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: ityuany/homebrew-shined
+      #     token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+      #     path: homebrew-shined
+
+      # - name: Copy snm.rb to homebrew-shined
+      #   run: |
+      #     cp snm.rb homebrew-shined/snm.rb
+      #     cd homebrew-shined
+      #     git add snm.rb
+      #     git commit -m "Update snm.rb to version ${{ github.ref_name }}"
+
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v6
+      #   with:
+      #     token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+      #     commit-message: "Update snm.rb to version ${{ github.ref_name }}"
+      #     title: "Update snm.rb to version ${{ github.ref_name }}"
+      #     body: "This PR updates snm.rb to version ${{ github.ref_name }}."
+      #     branch: update-snm-rb-${{ github.ref_name }}
+      #     base: main
+  # create-pull-request:
+  #   name: Create Pull Request
+  #   runs-on: ubuntu-latest
+  #   needs: generate-homebrew-formula
+  #   steps:
+ 
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #           name: snm.rb
+  #           path: snm.rb
+
+  #     - name: Display structure of downloaded files
+  #       run: ls -R
+        
+
+  #     - name: Checkout homebrew-shined repository
+  #       uses: actions/checkout@v3
+  #       with:
+  #         repository: ityuany/homebrew-shined
+  #         token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+  #         path: .
+
+  #     - name: Configure Git
+  #       run: |
+  #         git config --global user.email "ityuany@qq.com"
+  #         git config --global user.name "ityuany"
+
+  #     - name: Copy snm.rb to homebrew-shined
+  #       run: |
+  #         # cp snm.rb/snm.rb homebrew-shined/snm.rb
+  #         # cd homebrew-shined
+  #         git add snm.rb
+  #         git commit -m "Update snm.rb to version ${{ github.ref_name }}"
+
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@v6
+  #       with:
+  #         token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+  #         commit-message: "Update snm.rb to version ${{ github.ref_name }}"
+  #         title: "Update snm.rb to version ${{ github.ref_name }}"
+  #         body: "This PR updates snm.rb to version ${{ github.ref_name }}."
+  #         branch: update-snm-rb-${{ github.ref_name }}
+  #         base: main
