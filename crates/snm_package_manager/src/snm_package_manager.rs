@@ -115,7 +115,7 @@ impl AtomTrait for SnmPackageManager {
                 file_path: package_json_dir_buf_path.to_path_buf(),
             }),
             None => Err(SnmError::NotFoundPackageJsonError(
-                package_json_dir_buf_path.display().to_string(),
+                package_json_dir_buf_path.to_path_buf(),
             )),
         }
     }
