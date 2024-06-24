@@ -103,9 +103,9 @@ download_snm(){
       exit 1
     fi
     # unzip -q "$DOWNLOAD_DIR/$FILENAME" -d "$DOWNLOAD_DIR"
-    tar -xzf "$DOWNLOAD_DIR/$FILENAME" -C "$DOWNLOAD_DIR/archive"
+    tar -xzf "$DOWNLOAD_DIR/$FILENAME" -C "$DOWNLOAD_DIR"
 
-    for file in "$DOWNLOAD_DIR"/archive/*; do
+    for file in "$DOWNLOAD_DIR"/*; do
         chmod u+x "$file"
         mv "$file" "$INSTALL_DIR"
     done
