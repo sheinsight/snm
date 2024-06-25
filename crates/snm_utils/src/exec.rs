@@ -16,7 +16,12 @@ where
         .spawn()
         .and_then(|process| process.wait_with_output());
 
-    if let Err(_) = output {
+    if let Ok(res) = output {
+        if !res.status.success() {
+            let err_msg = format!("snm proxy execute failed : {:?}", res);
+            panic!("{err_msg}");
+        }
+    } else {
         panic!("snm proxy execute failed");
     }
 }
