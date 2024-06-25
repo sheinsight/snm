@@ -52,6 +52,9 @@ pub enum SnmError {
 
     #[error("Parse package manager error , raw is {0}")]
     ParsePackageManagerError(String),
+
+    #[error("Unsupported command: {raw_command}")]
+    UnsupportedCommandError { raw_command: String },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -231,6 +234,16 @@ pub fn friendly_error_message(error: SnmError) {
             "##,
                 name.bold().red(),
                 file_path.to_string_lossy().bold().red()
+            );
+        }
+        SnmError::UnsupportedCommandError { raw_command } => {
+            eprintln!(
+                r##"
+        👹  You exec command is unsupported
+
+            {}
+                "##,
+                raw_command
             );
         }
         SnmError::HttpStatusCodeUnOk

@@ -4,7 +4,7 @@ use snm_core::traits::atom::AtomTrait;
 use snm_core::model::dispatch_manage::DispatchManage;
 
 use snm_ni::trait_transform::IArgs;
-use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform};
+use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_node::snm_node::SnmNode;
 use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
@@ -73,9 +73,9 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         | SnmCommands::X(_)
         | SnmCommands::E(_)
         | SnmCommands::R(_) => {
-            let name = match parse_package_json(&snm_config.get_workspace()?)? {
+            let package_manager = match parse_package_json(&snm_config.get_workspace()?)? {
                 Some(package_json) => match package_json.package_manager {
-                    Some(package_manager) => package_manager.name,
+                    Some(package_manager) => package_manager,
                     None => {
                         panic!("No package manager found in the workspace.")
                     }
@@ -85,10 +85,13 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
                 }
             };
 
-            let transform: Box<dyn CommandArgsCreatorTrait> = match name.as_str() {
+            let transform: Box<dyn CommandArgsCreatorTrait> = match package_manager.name.as_str() {
                 "npm" => Box::new(NpmArgsTransform {}),
                 "pnpm" => Box::new(PnpmArgsTransform {}),
-                _ => panic!("Unsupported package manager"),
+                "yarn" => Box::new(YarnArgsTransform {
+                    version: package_manager.version.to_string(),
+                }),
+                _ => panic!("Unsupported package manager: {}", &package_manager.name),
             };
 
             let args = match cli.command {
@@ -105,7 +108,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
                 _ => unreachable!("unreachable"),
             };
 
-            exec_cli(name, args);
+            exec_cli(package_manager.name, args);
         }
 
         SnmCommands::FigSpec => {
