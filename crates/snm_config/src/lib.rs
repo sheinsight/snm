@@ -4,7 +4,7 @@ use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
 use snm_package_json::{parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
@@ -37,6 +37,10 @@ impl InstallStrategy {
         }
     }
 }
+
+const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
+const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
+const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
@@ -168,7 +172,20 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let node_version = parse_node_version(workspace)?;
 
+    if let Some(ref v) = node_version {
+        if let Some(v) = v.get_version() {
+            env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
+        }
+    }
+
     let package_json = parse_package_json(workspace)?;
+
+    if let Some(ref p) = package_json {
+        if let Some(ref pm) = p.package_manager {
+            env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, pm.name.clone());
+            env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, pm.version.clone());
+        }
+    }
 
     config.npm_registry = registry;
     config.workspace = Some(workspace.to_string_lossy().to_string());
