@@ -20,6 +20,8 @@ where
         if !res.status.success() {
             let err_msg = format!("snm proxy execute failed : {:?}", res);
             panic!("{err_msg}");
+        } else {
+            println!("{}", String::from_utf8_lossy(&res.stdout).to_string())
         }
     } else {
         panic!("snm proxy execute failed");

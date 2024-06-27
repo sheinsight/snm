@@ -89,6 +89,27 @@ impl SnmConfig {
         })
     }
 
+    pub fn get_runtime_node_version(&self) -> Option<String> {
+        match env::var(SNM_NODE_VERSION_ENV_KEY) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        }
+    }
+
+    pub fn get_runtime_package_manager_name(&self) -> Option<String> {
+        match env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        }
+    }
+
+    pub fn get_runtime_package_manager_version(&self) -> Option<String> {
+        match env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        }
+    }
+
     pub fn get_snm_node_version(&self) -> Option<NodeVersion> {
         self.snm_node_version.clone()
     }

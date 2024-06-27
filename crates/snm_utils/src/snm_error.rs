@@ -32,6 +32,9 @@ pub enum SnmError {
     #[error("Not found npm library bin {name} {file_path}")]
     NotFoundNpmLibraryBinError { name: String, file_path: PathBuf },
 
+    #[error("Not found package manager {name} version in env")]
+    NotFoundPackageManagerVersionInEnvError { name: String },
+
     #[error("Http status code not ok")]
     HttpStatusCodeUnOk,
 
@@ -245,6 +248,16 @@ pub fn friendly_error_message(error: SnmError) {
                 "##,
                 raw_command
             );
+        }
+        SnmError::NotFoundPackageManagerVersionInEnvError { name } => {
+            eprintln!(
+                r##"
+        👹  Not found packageManager {} version in env
+
+            This may be an unexpected error, an unknown boundary, please contact the author.
+            "##,
+                name.bold().red()
+            )
         }
         SnmError::HttpStatusCodeUnOk
         | SnmError::NotFoundPackageJsonError(_)

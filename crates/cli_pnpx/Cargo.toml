@@ -11,4 +11,5 @@ path = "src/main.rs"
 
 [dependencies]
 snm_shim ={ path = "../snm_shim" }
+snm_utils = { path = "../snm_utils" }
 tokio = { version = "1.0.0", features = ["full"] }
