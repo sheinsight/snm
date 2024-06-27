@@ -9,7 +9,7 @@ use crate::{
     package_manager_raw::{Bin, PackageJsonRaw},
 };
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct PackageJson {
     pub package_manager: Option<PackageManager>,
 

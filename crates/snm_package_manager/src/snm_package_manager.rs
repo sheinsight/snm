@@ -36,21 +36,6 @@ impl SnmPackageManager {
             snm_config,
         }
     }
-
-    // async fn get_npm_l(&self) -> Result<NpmLibraryMeta, SnmError> {
-    //     let npm_registry = self.snm_config.get_npm_registry();
-
-    //     let response = reqwest::get(format!("{}/{}", npm_registry, &self.library_name).as_str())
-    //         .await?
-    //         .json::<NpmLibraryMeta>()
-    //         .await?;
-
-    //     let mut versions: Vec<&NpmLibraryVersionMeta> = response.versions.values().collect();
-
-    //     versions.sort_by_cached_key(|v| Version::parse(&v.version).ok());
-
-    //     Ok(response)
-    // }
 }
 
 impl AtomTrait for SnmPackageManager {

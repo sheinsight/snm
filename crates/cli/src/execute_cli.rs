@@ -6,7 +6,6 @@ use snm_core::model::dispatch_manage::DispatchManage;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_node::snm_node::SnmNode;
-use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::exec::exec_cli;
 use snm_utils::snm_error::SnmError;
@@ -73,7 +72,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         | SnmCommands::X(_)
         | SnmCommands::E(_)
         | SnmCommands::R(_) => {
-            let package_manager = match parse_package_json(&snm_config.get_workspace()?)? {
+            let package_manager = match snm_config.get_snm_package_json() {
                 Some(package_json) => match package_json.package_manager {
                     Some(package_manager) => package_manager,
                     None => {

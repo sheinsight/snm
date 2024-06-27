@@ -1,18 +1,14 @@
 mod download;
 mod ensure_binary_path;
-mod get_node_version;
 
 use std::env;
 
 use colored::*;
 use ensure_binary_path::ensure_binary_path;
-use get_node_version::get_node_version;
 use snm_config::parse_snm_config;
 use snm_core::traits::atom::AtomTrait;
 use snm_current_dir::current_dir;
 use snm_node::snm_node::SnmNode;
-use snm_node_version::parse_node_version;
-use snm_package_json::parse_package_json;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
 
@@ -29,7 +25,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
 
     let snm_config = parse_snm_config(&dir)?;
 
-    let package_json = parse_package_json(&dir)?;
+    let package_json = snm_config.get_snm_package_json();
 
     let snm_package_manage: &dyn AtomTrait =
         &SnmPackageManager::from_prefix(prefix, snm_config.clone());
@@ -93,9 +89,16 @@ pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
 
     let snm_node: &dyn AtomTrait = &SnmNode::new(snm_config.clone());
 
-    let node_version = parse_node_version(&snm_config.get_workspace()?)?;
-
-    let version = get_node_version(node_version, snm_node)?;
+    let version = match snm_config.get_snm_node_version() {
+        Some(node_version) => {
+            let version = node_version.get_version();
+            match version {
+                Some(version) => version,
+                None => snm_node.get_default_version()?,
+            }
+        }
+        None => snm_node.get_default_version()?,
+    };
 
     println!(
         r##"

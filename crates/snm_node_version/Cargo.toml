@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 snm_utils = { path = "../snm_utils" }
+serde = { version = "1.0", features = ["derive"] }

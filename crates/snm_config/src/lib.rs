@@ -1,6 +1,8 @@
 use config::{Config, Environment};
 use serde::Deserialize;
+use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
+use snm_package_json::{parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 use std::path::PathBuf;
 
@@ -59,6 +61,10 @@ pub struct SnmConfig {
     npm_registry: Option<String>,
 
     workspace: Option<String>,
+
+    snm_package_json: Option<PackageJson>,
+
+    snm_node_version: Option<NodeVersion>,
 }
 
 impl SnmConfig {
@@ -77,6 +83,14 @@ impl SnmConfig {
             Some(dir) => base_dir.join(dir),
             None => base_dir.join(default),
         })
+    }
+
+    pub fn get_snm_node_version(&self) -> Option<NodeVersion> {
+        self.snm_node_version.clone()
+    }
+
+    pub fn get_snm_package_json(&self) -> Option<PackageJson> {
+        self.snm_package_json.clone()
     }
 
     pub fn get_download_timeout_secs(&self) -> u64 {
@@ -152,8 +166,14 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
         None => None,
     };
 
+    let node_version = parse_node_version(workspace)?;
+
+    let package_json = parse_package_json(workspace)?;
+
     config.npm_registry = registry;
     config.workspace = Some(workspace.to_string_lossy().to_string());
+    config.snm_node_version = node_version;
+    config.snm_package_json = package_json;
 
     Ok(config)
 }
@@ -192,7 +212,9 @@ mod tests {
                 download_timeout_secs: Some(60),
                 package_manager_install_strategy: Some(InstallStrategy::Auto),
                 npm_registry: None,
-                workspace: Some(current_dir().unwrap().to_string_lossy().to_string())
+                workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
+                snm_node_version: None,
+                snm_package_json: None,
             }
         );
 

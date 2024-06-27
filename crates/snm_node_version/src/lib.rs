@@ -1,8 +1,9 @@
 use std::{fs::read_to_string, path::PathBuf};
 
+use serde::Deserialize;
 use snm_utils::snm_error::SnmError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub struct NodeVersion {
     version: Option<String>,
     pub raw: String,
