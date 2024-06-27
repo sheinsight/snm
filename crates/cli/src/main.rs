@@ -1,5 +1,5 @@
 use clap::Parser;
-use cli::{execute_cli::execute_cli, SnmCli};
+use snm::{execute_cli::execute_cli, SnmCli};
 use snm_config::parse_snm_config;
 use snm_current_dir::current_dir;
 use snm_utils::{

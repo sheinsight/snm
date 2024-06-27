@@ -22,9 +22,11 @@ members = [
 
 resolver = "2"
 
+
 [profile.release]
 lto = true
 strip = "none"
 opt-level = "s"
 codegen-units = 1
 debug = 2
+ 
