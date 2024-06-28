@@ -88,12 +88,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         file.flush().expect("msg");
 
         println!("{:?} version changed", &path.display());
-
-        run_git_command(&["add", &path.display().to_string()]);
-        run_git_command(&["commit", "-m", &format!("chore: bump version to {}", ans)]);
-        run_git_command(&["tag", &format!("v{}", ans)]);
-        run_git_command(&["push"]);
     });
+
+    run_git_command(&["add", "."]);
+    run_git_command(&["commit", "-m", &format!("chore: bump version to {}", ans)]);
+    run_git_command(&["tag", &format!("v{}", ans)]);
+    run_git_command(&["push"]);
 
     Ok(())
 }
