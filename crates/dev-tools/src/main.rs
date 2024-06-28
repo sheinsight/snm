@@ -87,36 +87,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         file.flush().expect("msg");
 
-        println!("{:?} version changed", path.display())
+        println!("{:?} version changed", &path.display());
+
+        run_git_command(&["add", &path.display().to_string()]);
+        run_git_command(&["commit", "-m", &format!("chore: bump version to {}", ans)]);
+        run_git_command(&["tag", &format!("v{}", ans)]);
+        run_git_command(&["push"]);
     });
 
-    // let mut version = None;
-
-    // for path in paths {
-    //     let mut file = File::open(&path).expect("msg");
-    //     let mut toml_str = String::new();
-    //     file.read_to_string(&mut toml_str).expect("msg");
-
-    //     let mut doc = toml_str.parse::<DocumentMut>().expect("msg");
-
-    //     if version.is_none() {
-    //         version = Some(doc["package"]["version"].as_str().unwrap().to_string());
-    //     }
-
-    //     println!(
-    //         "{:?} --->",
-    //         Version::parse(doc["package"]["version"].as_str().unwrap())
-    //     );
-
-    //     doc["package"]["version"] = value("0.0.1-85");
-
-    //     let mut file = File::create(&path).expect("msg");
-    //     file.write_all(doc.to_string().as_bytes()).expect("msg");
-
-    //     file.flush().expect("msg");
-
-    //     println!("{:?} version changed", path.display())
-    // }
-
     Ok(())
+}
+
+fn run_git_command(args: &[&str]) {
+    let output = std::process::Command::new("git")
+        .args(args)
+        .output()
+        .expect("Failed to execute git command");
+
+    if !output.status.success() {
+        panic!(
+            "Command executed with failing error code: {:?}",
+            output.status.code()
+        );
+    }
 }
