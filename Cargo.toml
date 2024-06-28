@@ -18,7 +18,7 @@ members = [
     "crates/cli_pnpx", 
     "crates/cli_node", 
     "crates/snm_tarball", 
-    "crates/snm_ni" , "crates/cli_yarn" ]
+    "crates/snm_ni" , "crates/cli_yarn","crates/dev-tools" ]
 
 resolver = "2"
 
