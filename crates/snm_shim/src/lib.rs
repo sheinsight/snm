@@ -15,43 +15,43 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
 
     let args_all: Vec<String> = env::args().collect();
 
+    let command = &args_all[1];
+
     let args: Vec<String> = std::env::args().skip(1).collect();
 
     let dir = current_dir()?;
 
     let snm_config = parse_snm_config(&dir)?;
 
-    // let package_json = snm_config.get_snm_package_json();
-
     let snm_package_manage: &dyn AtomTrait =
         &SnmPackageManager::from_prefix(prefix, snm_config.clone());
-
-    // let package_manager = match package_json {
-    //     Some(ref package_json) => &package_json.package_manager,
-    //     None if snm_config.get_strict() => {
-    //         return Err(SnmError::NotFoundPackageJsonError(dir.to_path_buf()));
-    //     }
-    //     None => &None,
-    // };
 
     if snm_config.get_strict() && snm_config.get_runtime_package_manager_name().is_none() {
         return Err(SnmError::NotFoundPackageJsonError(dir.to_path_buf()));
     }
 
+    let restricted_list = vec!["install".to_string(), "run".to_string()];
+
     let version = match snm_config.get_runtime_package_manager_name() {
         Some(name) if name == bin_name => {
             if let Some(v) = snm_config.get_runtime_package_manager_version().clone() {
                 v
-            } else {
+            } else if restricted_list.contains(command) {
                 return Err(SnmError::NotFoundPackageManagerVersionInEnvError { name: name });
+            } else {
+                snm_package_manage.get_default_version()?
             }
         }
         Some(name) => {
-            return Err(SnmError::NotMatchPackageManagerError {
-                raw_command: args_all.join(" "),
-                expected: name.clone(),
-                actual: bin_name.to_string(),
-            });
+            if restricted_list.contains(command) {
+                return Err(SnmError::NotMatchPackageManagerError {
+                    raw_command: args_all.join(" "),
+                    expected: name.clone(),
+                    actual: bin_name.to_string(),
+                });
+            } else {
+                snm_package_manage.get_default_version()?
+            }
         }
         None => snm_package_manage.get_default_version()?,
     };
