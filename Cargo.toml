@@ -34,6 +34,7 @@ debug = 2
 [workspace.metadata.cargo-llvm-cov]
 ignore-filename-regex = [
     ".*\\.cargo/registry/src/.*",
-    ".*target/.*"
+    ".*target/.*",
+     ".*ordered-multimap-0.6.0/.*"
 ]
  
