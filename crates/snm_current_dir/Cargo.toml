@@ -1,6 +1,6 @@
 [package]
 name = "snm_current_dir"
-version = "0.0.1-89"
+version = "0.0.1-90"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
