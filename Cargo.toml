@@ -31,4 +31,9 @@ codegen-units = 1
 debug = 2
  
 
+[workspace.metadata.cargo-llvm-cov]
+ignore-filename-regex = [
+    ".*\\.cargo/registry/src/.*",
+    ".*target/.*"
+]
  
