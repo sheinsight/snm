@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut toml_str = String::new();
             file.read_to_string(&mut toml_str).expect("msg");
 
-            let mut doc = toml_str.parse::<DocumentMut>().expect("msg");
+            let doc = toml_str.parse::<DocumentMut>().expect("msg");
             doc["package"]["version"]
                 .clone()
                 .as_str()
