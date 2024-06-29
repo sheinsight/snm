@@ -14,3 +14,4 @@ snm_npmrc = { path = "../snm_npmrc" }
 snm_utils = { path = "../snm_utils" }
 snm_package_json ={ path = "../snm_package_json"}
 snm_node_version = { path = "../snm_node_version" }
+ordered-multimap = "0.7.3"
