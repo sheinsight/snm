@@ -63,30 +63,39 @@ jobs:
           for file in snm node npm npx pnpm pnpx; do
             strip "target/${{ matrix.target }}/release/$file"
           done
+  coverage:
+    name: Collect test coverage
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    env:
+      # RUSTFLAGS: -D warnings
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+        # Nightly Rust is used for cargo llvm-cov --doc below.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2
 
-      # - name: Create archive
-      #   shell: bash
-      #   run: |
-      #     mkdir archive
-      #     cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm} archive/
-      #     tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm
-      #     ls -l
+      - name: Install latest nextest release
+        uses: taiki-e/install-action@6608b29f1fd1773aafb923cffd26c3a528f72083 # v2
+        with:
+          tool: nextest
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@6608b29f1fd1773aafb923cffd26c3a528f72083 # v2
+        with:
+          tool: cargo-llvm-cov
 
-      # - name: Calculate SHA256 checksum
-      #   run: |
-      #     echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
-      #     if [ "${{ matrix.os }}" == "windows-latest" ]; then
-      #       certutil -hashfile "${{ matrix.target }}.tar.gz" SHA256 > "${{ matrix.target }}.sha256"
-      #     else
-      #       shasum -a 256 ${{ matrix.target }}.tar.gz | tee ${{ matrix.target }}.sha256
-      #     fi
-      #     cat ${{ matrix.target }}.sha256
-      #   shell: bash
-
-      # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ matrix.target }}
-      #     path: |
-      #       ${{ matrix.target }}.tar.gz
-      #       ${{ matrix.target }}.sha256
+      - name: Collect coverage data
+        # Generate separate reports for nextest and doctests, and combine them.
+        run: |
+          cargo +nightly llvm-cov --no-report nextest --test-threads=1
+          cargo +nightly llvm-cov --no-report --doc
+          cargo +nightly llvm-cov report --doctests --lcov --output-path lcov.info
+      - name: Upload coverage data to codecov
+        uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: lcov.info
