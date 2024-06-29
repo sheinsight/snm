@@ -90,9 +90,9 @@ jobs:
       - name: Collect coverage data
         # Generate separate reports for nextest and doctests, and combine them.
         run: |
-          cargo +nightly llvm-cov --no-report nextest --test-threads=1
-          cargo +nightly llvm-cov --no-report --doc
-          cargo +nightly llvm-cov report --doctests --lcov --output-path lcov.info
+          cargo llvm-cov --no-report nextest --test-threads=1
+          cargo llvm-cov --no-report --doc
+          cargo llvm-cov report --doctests --lcov --output-path lcov.info
       - name: Upload coverage data to codecov
         uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # v4
         env:
