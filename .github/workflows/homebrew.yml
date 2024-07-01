@@ -15,7 +15,7 @@ jobs:
       - name: Clone repository B
         run: |
           ls -l
-          git clone https://github.com/ityuany/homebrew-shined.git repo-b
+          git clone https://x-access-token:${{ secrets.HOMEBREW_GITHUB_TOKEN }}@github.com/ityuany/homebrew-shined.git repo-b
           cd repo-b
           git checkout -b feature-branch
           ls -l
