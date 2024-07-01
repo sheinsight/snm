@@ -40,6 +40,8 @@ jobs:
 
       - name: Copy changes from repository A to repository B
         run: |
+          git config --global user.email "519495771@qq.com"
+          git config --global user.name "ityuany"
           touch hello.txt
           git add .
           git commit -m "Auto-generated commit from repository A"
