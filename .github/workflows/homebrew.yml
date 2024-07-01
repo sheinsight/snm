@@ -28,7 +28,7 @@ jobs:
           git config --global user.name "ityuany"
           echo "Hello, world!" > hello.txt
           ls -l
-          git add .
+          git add hello.txt
           git commit -m "Auto-generated commit from repository A"
           git push origin feature-branch
 
