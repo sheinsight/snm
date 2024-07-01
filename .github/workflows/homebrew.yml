@@ -26,8 +26,8 @@ jobs:
           ls -l
           git config --global user.email "519495771@qq.com"
           git config --global user.name "ityuany"
-          touch hello.txt
           echo "Hello, world!" > hello.txt
+          ls -l
           git add .
           git commit -m "Auto-generated commit from repository A"
           git push origin feature-branch
