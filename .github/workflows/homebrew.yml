@@ -15,6 +15,7 @@ jobs:
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@v3
         with:
+
           # Required, custom GitHub access token with the 'public_repo' and 'workflow' scopes
           token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
           # Optional, will commit with this user name
@@ -30,7 +31,13 @@ jobs:
           # Formula name, required
           formula: snm
 
-          tag: v0.0.1-92
+          # tag: v0.0.1-92
+
+          url: "https://github.com/sheinsight/snm/releases/download/v0.0.1-91/x86_64-apple-darwin.tar.gz"
+
+          sha256: "cee90bab56966246f41fdd948bda1237df55dbee8495821ee96d940674f39020"
+
+          
 
           # version: "v0.0.1-92"
 
