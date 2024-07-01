@@ -29,6 +29,11 @@ jobs:
           tap: sheinsight/homebrew-shined
           # Formula name, required
           formula: snm
+
+          tag: v0.0.1-92
+
+          # version: "v0.0.1-92"
+
           # Optional, will be determined automatically
           # tag: ${{github.ref}}
           # # Optional, will be determined automatically
