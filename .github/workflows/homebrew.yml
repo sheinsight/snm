@@ -14,9 +14,10 @@ jobs:
 
       - name: Clone repository B
         run: |
-          git clone https://github.com/ityuany/homebrew-shined.git
-          cd homebrew-shined
+          git clone https://github.com/ityuany/homebrew-shined.git repo-b
+          cd repo-b
           git checkout -b feature-branch
+          ls -l
 
       - name: Copy changes from repository A to repository B
         run: |
