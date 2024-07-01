@@ -9,8 +9,8 @@ jobs:
   create-pull-request:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository A code
-        uses: actions/checkout@v2
+      # - name: Check out repository A code
+      #   uses: actions/checkout@v2
 
       - name: Clone repository B
         run: |
