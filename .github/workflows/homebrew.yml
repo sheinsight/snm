@@ -41,7 +41,13 @@ jobs:
 
       - name: write file
         run: |
+          git checkout -b feature-branch
           touch hello.txt
+          git config --global user.email "519495771@qq.com"
+          git config --global user.name "ityuany"
+          git add hello.txt
+          git commit -m "Auto-generated commit from repository A"
+          git push origin feature-branch
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
