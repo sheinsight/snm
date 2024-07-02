@@ -60,5 +60,3 @@ jobs:
           add-paths: hello.txt
           branch: feature-branch
           base: main
-          committer: ityuany
-          author: 519495771@qq.com
