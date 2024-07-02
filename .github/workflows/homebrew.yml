@@ -26,7 +26,7 @@ jobs:
           ls -l
           git config --global user.email "519495771@qq.com"
           git config --global user.name "ityuany"
-          echo "Hello, world!" > hello.txt
+          touch hello.txt
           ls -l
           git add hello.txt
           git commit -m "Auto-generated commit from repository A"
