@@ -2,7 +2,7 @@ use config::{Config, Environment};
 use serde::Deserialize;
 use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
-use snm_package_json::{parse_package_json, PackageJson};
+use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 use std::{env, path::PathBuf};
 
@@ -96,18 +96,25 @@ impl SnmConfig {
         }
     }
 
-    pub fn get_runtime_package_manager_name(&self) -> Option<String> {
-        match env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        }
-    }
-
-    pub fn get_runtime_package_manager_version(&self) -> Option<String> {
-        match env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        }
+    pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
+        let name = match env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY) {
+            Ok(v) => v,
+            Err(_) => {
+                return None;
+            }
+        };
+        let version = match env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY) {
+            Ok(v) => v,
+            Err(_) => {
+                return None;
+            }
+        };
+        Some(PackageManager {
+            name,
+            version,
+            hash: None,
+            raw: "".to_string(),
+        })
     }
 
     pub fn get_snm_node_version(&self) -> Option<NodeVersion> {

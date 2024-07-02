@@ -92,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     run_git_command(&["add", "."]);
     run_git_command(&["commit", "-m", &format!("chore: bump version to {}", ans)]);
-    run_git_command(&["tag", &format!("v{}", ans)]);
+    run_git_command(&["tag", &format!("{}", ans)]);
     // run_git_command(&["push"]);
 
     println!("Please run `git push --tags` to push the tags to the remote repository.");

@@ -26,34 +26,22 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
     let snm_package_manage: &dyn AtomTrait =
         &SnmPackageManager::from_prefix(prefix, snm_config.clone());
 
-    if snm_config.get_strict() && snm_config.get_runtime_package_manager_name().is_none() {
+    if snm_config.get_strict() && snm_config.get_runtime_package_manager().is_none() {
         return Err(SnmError::NotFoundPackageJsonError(dir.to_path_buf()));
     }
 
-    let restricted_list = vec!["install".to_string(), "run".to_string()];
+    let restricted_list = vec!["install", "i", "run"];
 
-    let version = match snm_config.get_runtime_package_manager_name() {
-        Some(name) if name == bin_name => {
-            if let Some(v) = snm_config.get_runtime_package_manager_version().clone() {
-                v
-            } else if restricted_list.contains(command) {
-                return Err(SnmError::NotFoundPackageManagerVersionInEnvError { name: name });
-            } else {
-                snm_package_manage.get_default_version()?
-            }
+    let version = match snm_config.get_runtime_package_manager() {
+        Some(package_manager) if package_manager.name == prefix => package_manager.version,
+        Some(package_manager) if restricted_list.contains(&command.as_str()) => {
+            return Err(SnmError::NotMatchPackageManagerError {
+                raw_command: args_all.join(" "),
+                expected: package_manager.name.clone(),
+                actual: prefix.to_string(),
+            });
         }
-        Some(name) => {
-            if restricted_list.contains(command) {
-                return Err(SnmError::NotMatchPackageManagerError {
-                    raw_command: args_all.join(" "),
-                    expected: name.clone(),
-                    actual: bin_name.to_string(),
-                });
-            } else {
-                snm_package_manage.get_default_version()?
-            }
-        }
-        None => snm_package_manage.get_default_version()?,
+        _ => snm_package_manage.get_default_version()?,
     };
 
     let binary_path_buf = ensure_binary_path(bin_name, snm_package_manage, &version).await?;
