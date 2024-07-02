@@ -38,7 +38,7 @@ jobs:
           repository: ityuany/homebrew-shined
           ref: feature-branch
           token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-          # path: repo-b
+          path: .
 
       - name: write file
         run: |
