@@ -53,6 +53,11 @@ pub fn get_os() -> String {
     "darwin".to_string()
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_os() -> String {
+    "win".to_string()
+}
+
 #[cfg(not(target_os = "macos"))]
 pub fn get_os() -> String {
     std::env::consts::OS.to_string()
