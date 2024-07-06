@@ -58,6 +58,9 @@ pub enum SnmError {
 
     #[error("Unsupported command: {raw_command}")]
     UnsupportedCommandError { raw_command: String },
+
+    #[error("Duplicate lock file error")]
+    DuplicateLockFileError { lock_file_vec: Vec<String> },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -258,6 +261,16 @@ pub fn friendly_error_message(error: SnmError) {
             "##,
                 name.bold().red()
             )
+        }
+        SnmError::DuplicateLockFileError { lock_file_vec } => {
+            eprintln!(
+                r##"
+        👹  Duplicate lock file error
+            
+            Multiple package manager lock files found: {} , Please remove the unnecessary ones.
+            "##,
+                lock_file_vec.join(", ").bold().red()
+            );
         }
         SnmError::HttpStatusCodeUnOk
         | SnmError::NotFoundPackageJsonError(_)
