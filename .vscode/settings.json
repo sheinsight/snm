@@ -11,6 +11,8 @@
         "./crates/snm_node_version/Cargo.toml",
     ],
     "cSpell.words": [
+        "aarch",
+        "armv",
         "canonicalize",
         "chrono",
         "consts",
