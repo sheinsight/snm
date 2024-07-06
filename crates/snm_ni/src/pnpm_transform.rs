@@ -1,4 +1,4 @@
-use crate::trait_transform::{AArgs, CommandArgsCreatorTrait, DArgs, EArgs, IArgs, RArgs, XArgs};
+use crate::trait_transform::{AArgs, CommandArgsCreatorTrait, EArgs, IArgs, RArgs, XArgs};
 
 pub struct PnpmArgsTransform;
 
@@ -27,11 +27,6 @@ impl CommandArgsCreatorTrait for PnpmArgsTransform {
         } else if args.global {
             process_args.push("--global".to_string());
         }
-        process_args
-    }
-
-    fn d(&self, args: DArgs) -> Vec<String> {
-        let process_args = vec!["remove".to_string(), args.package_spec];
         process_args
     }
 

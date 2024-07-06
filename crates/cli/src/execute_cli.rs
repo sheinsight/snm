@@ -68,7 +68,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
         SnmCommands::I(_)
         | SnmCommands::C(_)
         | SnmCommands::A(_)
-        | SnmCommands::D(_)
         | SnmCommands::X(_)
         | SnmCommands::E(_)
         | SnmCommands::R(_) => {
@@ -100,7 +99,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
                     frozen_lockfile: true,
                 }),
                 SnmCommands::A(args) => transform.a(args),
-                SnmCommands::D(args) => transform.d(args),
                 SnmCommands::X(args) => transform.x(args),
                 SnmCommands::E(args) => transform.e(args),
                 SnmCommands::R(args) => transform.r(args),

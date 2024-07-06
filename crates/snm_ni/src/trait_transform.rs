@@ -28,14 +28,6 @@ pub struct IArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct DArgs {
-    #[arg(
-        help = "If true, pnpm skips lockfile generation, failing install if the lockfile is out of sync or missing."
-    )]
-    pub package_spec: String,
-}
-
-#[derive(Parser, Debug)]
 pub struct XArgs {
     #[arg(help = "The package spec to install.")]
     pub package_spec: Vec<String>,
@@ -57,8 +49,6 @@ pub trait CommandArgsCreatorTrait {
     fn i(&self, args: IArgs) -> Vec<String>;
 
     fn a<'a>(&self, args: AArgs) -> Vec<String>;
-
-    fn d(&self, args: DArgs) -> Vec<String>;
 
     fn x(&self, args: XArgs) -> Vec<String>;
 
