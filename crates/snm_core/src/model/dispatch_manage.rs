@@ -203,6 +203,7 @@ impl DispatchManage {
             Ok(downloaded_file_path_buf) => downloaded_file_path_buf,
             Err(_) => panic!("download get_downloaded_file_path_buf error"),
         };
+
         DownloadBuilder::new()
             .retries(3)
             .write_strategy(WriteStrategy::Nothing)
@@ -213,15 +214,7 @@ impl DispatchManage {
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-        let remove_result = fs::remove_file(&downloaded_file_path_buf);
-
-        if remove_result.is_err() {
-            let msg = format!(
-                "download remove_file error {:?}",
-                &downloaded_file_path_buf.display()
-            );
-            panic!("{msg}");
-        }
+        fs::remove_file(&downloaded_file_path_buf)?;
 
         Ok(())
     }
