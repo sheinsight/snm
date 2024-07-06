@@ -1,6 +1,7 @@
 use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
+use snm_config::InstallStrategy;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
@@ -51,16 +52,18 @@ impl DispatchManage {
             return Ok(());
         }
 
-        let confirm = Confirm::new()
-            .with_prompt(format!(
-                "🤔 v{} is already installed, do you want to reinstall it ?",
-                &v
-            ))
-            .interact()
-            .expect("install Confirm error");
+        if self.manager.get_snm_config().get_node_install_strategy() == InstallStrategy::Ask {
+            let confirm = Confirm::new()
+                .with_prompt(format!(
+                    "🤔 v{} is already installed, do you want to reinstall it ?",
+                    &v
+                ))
+                .interact()
+                .expect("install Confirm error");
 
-        if confirm {
-            self.download(v).await?;
+            if confirm {
+                self.download(v).await?;
+            }
         }
 
         Ok(())
