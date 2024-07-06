@@ -25,7 +25,7 @@ fn test_auto_install_node() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn test_delete_node() -> Result<(), Box<dyn Error>> {
-    let node_version = "20.12.1";
+    let node_version = "20.0.0";
     Command::cargo_bin("snm")?
         .env("SNM_NODE_INSTALL_STRATEGY", "auto")
         .arg("node")
