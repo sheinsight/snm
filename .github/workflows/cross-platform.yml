@@ -47,7 +47,9 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Run tests
-        run: cargo test
+        run: | 
+          cargo b 
+          cargo test
         env:
           RUST_BACKTRACE: full
 
