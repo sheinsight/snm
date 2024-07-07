@@ -13,7 +13,6 @@ use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
 use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
-use snm_tarball::TarballType;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::future::Future;
@@ -308,7 +307,7 @@ impl AtomTrait for SnmPackageManager {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress(&input_file_path_buf, &output_dir_path_buf, TarballType::Tgz)
+        decompress(&input_file_path_buf, &output_dir_path_buf)
     }
 
     fn get_snm_config(&self) -> &SnmConfig {

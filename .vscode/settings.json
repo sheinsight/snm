@@ -21,6 +21,7 @@
         "flate",
         "hasher",
         "indicatif",
+        "outpath",
         "pnpx",
         "premajor",
         "reqwest",

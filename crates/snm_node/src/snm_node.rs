@@ -17,7 +17,6 @@ use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
 use snm_tarball::decompress;
-use snm_tarball::TarballType;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::collections::HashMap;
@@ -497,7 +496,7 @@ impl AtomTrait for SnmNode {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress(&input_file_path_buf, &output_dir_path_buf, TarballType::Xz)
+        decompress(&input_file_path_buf, &output_dir_path_buf)
     }
 
     fn get_snm_config(&self) -> &SnmConfig {

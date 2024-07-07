@@ -13,6 +13,9 @@ pub enum SnmError {
     #[error("Network error: {0}")]
     NetworkError(#[from] reqwest::Error),
 
+    #[error("Zip error: {0}")]
+    ZipError(#[from] zip::result::ZipError),
+
     #[error("Deserialize error: {0}")]
     DeserializeError(#[from] serde_json::Error),
 
@@ -277,8 +280,9 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
+        | SnmError::ZipError(_)
         | SnmError::IOError(_) => {
-            eprintln!("debug error");
+            eprintln!("debug error",);
             panic!("{error}");
         }
     }
