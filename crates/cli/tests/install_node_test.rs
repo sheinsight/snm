@@ -71,6 +71,7 @@ fn test_set_default_node() -> Result<(), Box<dyn Error>> {
         .success();
 
     Command::cargo_bin("snm")?
+        .env("SNM_NODE_INSTALL_STRATEGY", "auto")
         .arg("node")
         .arg("default")
         .arg(node_version)
