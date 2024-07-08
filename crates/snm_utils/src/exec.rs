@@ -24,6 +24,7 @@ where
             print!("{}", String::from_utf8_lossy(&res.stdout).to_string())
         }
     } else {
-        panic!("snm proxy execute failed");
+        let err_meg = format!("snm proxy execute failed : {:?}", output);
+        panic!("{err_meg}");
     }
 }
