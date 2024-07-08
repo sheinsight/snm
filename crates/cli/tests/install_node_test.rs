@@ -1,88 +1,84 @@
-// use std::error::Error;
+use std::{error::Error, ops::Not};
 
-// use assert_cmd::Command;
-// use predicates::prelude::*;
+use assert_cmd::Command;
+use predicates::prelude::*;
+use rexpect::spawn;
 
-// #[test]
-// fn test_auto_install_node() -> Result<(), Box<dyn Error>> {
-//     let node_version = "20.12.1";
-//     Command::cargo_bin("snm")?
-//         .env("SNM_NODE_INSTALL_STRATEGY", "auto")
-//         .arg("node")
-//         .arg("install")
-//         .arg(node_version)
-//         .assert()
-//         .success();
+#[test]
+fn test_auto_install_node() -> Result<(), Box<dyn Error>> {
+    let node_version = "20.12.1";
 
-//     Command::cargo_bin("snm")?
-//         .arg("node")
-//         .arg("list")
-//         .assert()
-//         .success()
-//         .stdout(predicate::str::contains(node_version));
+    let mut p = spawn(
+        format!("snm node install {}", node_version).as_str(),
+        Some(30_000),
+    )?;
+    p.send_line("y")?;
 
-//     Ok(())
-// }
+    let mut p = spawn("snm node list", Some(30_000))?;
 
-// #[test]
-// fn test_delete_node() -> Result<(), Box<dyn Error>> {
-//     let node_version = "20.0.0";
-//     Command::cargo_bin("snm")?
-//         .env("SNM_NODE_INSTALL_STRATEGY", "auto")
-//         .arg("node")
-//         .arg("install")
-//         .arg(node_version)
-//         .assert()
-//         .success();
+    p.exp_string(&node_version)?;
 
-//     Command::cargo_bin("snm")?
-//         .arg("node")
-//         .arg("list")
-//         .assert()
-//         .success()
-//         .stdout(predicate::str::contains(node_version));
+    Ok(())
+}
 
-//     Command::cargo_bin("snm")?
-//         .arg("node")
-//         .arg("uninstall")
-//         .arg(node_version)
-//         .assert()
-//         .success();
+#[test]
+fn test_delete_node() -> Result<(), Box<dyn Error>> {
+    let node_version = "20.0.0";
 
-//     Command::cargo_bin("snm")?
-//         .arg("node")
-//         .arg("list")
-//         .assert()
-//         .success()
-//         .stdout(predicate::str::contains(node_version).not());
+    let mut p = spawn(
+        format!("snm node install {}", node_version).as_str(),
+        Some(30_000),
+    )?;
+    p.send_line("y")?;
 
-//     Ok(())
-// }
+    p.exp_eof()?;
 
-// #[test]
-// fn test_set_default_node() -> Result<(), Box<dyn Error>> {
-//     let node_version = "20.12.2";
-//     Command::cargo_bin("snm")?
-//         .env("SNM_NODE_INSTALL_STRATEGY", "auto")
-//         .arg("node")
-//         .arg("install")
-//         .arg(node_version)
-//         .assert()
-//         .success();
+    let mut p = spawn("snm node list", Some(30_000))?;
 
-//     Command::cargo_bin("snm")?
-//         .env("SNM_NODE_INSTALL_STRATEGY", "auto")
-//         .arg("node")
-//         .arg("default")
-//         .arg(node_version)
-//         .assert()
-//         .success();
+    let output = p.exp_eof()?;
 
-//     Command::cargo_bin("node")?
-//         .arg("-v")
-//         .assert()
-//         .success()
-//         .stdout(predicate::str::contains(node_version));
+    assert_eq!(output.contains(&node_version), true);
 
-//     Ok(())
-// }
+    let mut p = spawn(
+        format!("snm node uninstall {}", node_version).as_str(),
+        Some(30_000),
+    )?;
+
+    p.exp_eof()?;
+
+    let mut p = spawn("snm node list", Some(30_000))?;
+
+    let output = p.exp_eof()?;
+
+    assert_eq!(output.contains(&node_version), false);
+
+    Ok(())
+}
+
+#[test]
+fn test_set_default_node() -> Result<(), Box<dyn Error>> {
+    let node_version = "20.12.2";
+
+    let mut p = spawn(
+        format!("snm node install {}", node_version).as_str(),
+        Some(30_000),
+    )?;
+    p.send_line("y")?;
+
+    p.exp_eof()?;
+
+    let mut p = spawn(
+        format!("snm node default {}", node_version).as_str(),
+        Some(30_000),
+    )?;
+
+    p.send_line("y")?;
+
+    p.exp_eof()?;
+
+    let mut p = spawn("node -v", Some(30_000))?;
+
+    p.exp_string(node_version)?;
+
+    Ok(())
+}
