@@ -11,7 +11,10 @@ dev:
     echo "Running the project..."
     cargo watch -x build
 
+qtest:
+    echo "Running tests..."
+    cargo qtest
+
 test:
     echo "Running tests..."
     cargo t
-
