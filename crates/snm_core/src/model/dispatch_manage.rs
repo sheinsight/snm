@@ -120,7 +120,9 @@ impl DispatchManage {
             Err(_) => panic!("set_default get_anchor_file_path_buf error"),
         };
 
-        if anchor_file_path_buf.exists().not() {
+        if self.manager.get_snm_config().get_node_install_strategy() == InstallStrategy::Ask
+            && anchor_file_path_buf.exists().not()
+        {
             Confirm::new()
                 .with_prompt(format!(
                     "🤔 v{} is not installed, do you want to install it ?",
