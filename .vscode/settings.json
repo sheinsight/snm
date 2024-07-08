@@ -5,7 +5,6 @@
         "./crates/snm_core/Cargo.toml",
         "./crates/snm_package_manager/Cargo.toml",
         "./crates/snm_npmrc/Cargo.toml",
-        "./crates/snm_current_dir/Cargo.toml",
         "./crates/snm_config/Cargo.toml",
         "./crates/snm_utils/Cargo.toml",
         "./crates/snm_node_version/Cargo.toml",

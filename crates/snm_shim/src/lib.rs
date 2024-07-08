@@ -4,11 +4,10 @@ mod ensure_binary_path;
 use ensure_binary_path::ensure_binary_path;
 use snm_config::parse_snm_config;
 use snm_core::traits::atom::AtomTrait;
-use snm_current_dir::current_dir;
 use snm_node::snm_node::SnmNode;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
-use std::env;
+use std::env::{self, current_dir};
 
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<String, SnmError> {
     env_logger::init();

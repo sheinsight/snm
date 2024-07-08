@@ -33,7 +33,6 @@ snm_node = { path = "../snm_node" }
 snm_shim = { path = "../snm_shim" }
 snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
-snm_current_dir = { path = "../snm_current_dir" }
 snm_node_version = { path = "../snm_node_version" }
 snm_package_manager = { path = "../snm_package_manager" }
 snm_download_builder = { path = "../snm_download_builder" }

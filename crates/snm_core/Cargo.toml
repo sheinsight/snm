@@ -29,7 +29,6 @@ termcolor = "1.4.1"
 backtrace = "0.3.71"
 snm_utils = { path = "../snm_utils" }
 snm_download_builder = { path = "../snm_download_builder" }
-snm_current_dir = { path = "../snm_current_dir" }
 snm_package_json = { path = "../snm_package_json" }
 snm_config = { path = "../snm_config" }
 snm_node_version = { path = "../snm_node_version" }
