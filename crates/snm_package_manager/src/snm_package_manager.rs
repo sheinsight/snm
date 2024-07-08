@@ -48,14 +48,14 @@ impl AtomTrait for SnmPackageManager {
             .to_ok()
     }
 
-    fn get_strict_shim_binary_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        self.get_runtime_binary_file_path_buf(&bin_name, &version)?
-            .to_ok()
-    }
+    // fn get_strict_shim_binary_path_buf(
+    //     &self,
+    //     bin_name: &str,
+    //     version: &str,
+    // ) -> Result<PathBuf, SnmError> {
+    //     self.get_runtime_binary_file_path_buf(&bin_name, &version)?
+    //         .to_ok()
+    // }
 
     fn download_condition(&self, version: &str) -> bool {
         match self.snm_config.get_package_manager_install_strategy() {
@@ -130,13 +130,13 @@ impl AtomTrait for SnmPackageManager {
             .to_ok()
     }
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        self.snm_config
-            .get_download_dir()?
-            .join(&self.library_name)
-            .join(&v)
-            .to_ok()
-    }
+    // fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    //     self.snm_config
+    //         .get_download_dir()?
+    //         .join(&self.library_name)
+    //         .join(&v)
+    //         .to_ok()
+    // }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         let library_name = if &self.library_name == "@yarnpkg/cli-dist" {

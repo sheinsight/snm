@@ -22,7 +22,7 @@ pub async fn ensure_binary_path(
         }
     }
 
-    let binary = manage.get_strict_shim_binary_path_buf(bin_name, version.as_str())?;
+    let binary = manage.get_runtime_binary_file_path_buf(bin_name, version.as_str())?;
 
     return Ok(binary);
 }

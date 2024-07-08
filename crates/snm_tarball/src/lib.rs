@@ -55,32 +55,25 @@ pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), Snm
             }
         }
         "zip" => {
-            // 创建 zip archive
             let mut archive = ZipArchive::new(input_file)?;
 
-            // 遍历 archive 中的每个文件
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i)?;
 
-                // 获取文件名
                 let outpath = match file.enclosed_name() {
                     Some(path) => path.to_owned(),
-                    None => continue, // 跳过无效路径
+                    None => continue,
                 };
 
-                // 构造完整的输出文件路径
                 let final_path = output_path.join(outpath);
 
-                // 判断是文件还是目录
                 if file.is_dir() {
-                    // 创建目录
                     std::fs::create_dir_all(&final_path)?;
                 } else {
-                    // 确保父目录存在
                     if let Some(parent) = final_path.parent() {
                         std::fs::create_dir_all(parent)?;
                     }
-                    // 创建文件并写入内容
+
                     let mut outfile = File::create(&final_path)?;
                     std::io::copy(&mut file, &mut outfile)?;
                 }

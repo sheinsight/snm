@@ -1,7 +1,6 @@
 use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
-use snm_config::InstallStrategy;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
@@ -201,10 +200,7 @@ impl DispatchManage {
 
     async fn download(&self, v: &str) -> Result<(), SnmError> {
         let download_url = self.manager.get_download_url(v);
-        let downloaded_file_path_buf = match self.manager.get_downloaded_file_path_buf(v) {
-            Ok(downloaded_file_path_buf) => downloaded_file_path_buf,
-            Err(_) => panic!("download get_downloaded_file_path_buf error"),
-        };
+        let downloaded_file_path_buf = self.manager.get_downloaded_file_path_buf(v)?;
 
         DownloadBuilder::new()
             .retries(3)

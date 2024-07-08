@@ -8,7 +8,7 @@ pub trait AtomTrait {
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    // fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
@@ -50,11 +50,11 @@ pub trait AtomTrait {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError>;
 
-    fn get_strict_shim_binary_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError>;
+    // fn get_strict_shim_binary_path_buf(
+    //     &self,
+    //     bin_name: &str,
+    //     version: &str,
+    // ) -> Result<PathBuf, SnmError>;
 
     fn download_condition(&self, version: &str) -> bool;
 
