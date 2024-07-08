@@ -52,18 +52,16 @@ impl DispatchManage {
             return Ok(());
         }
 
-        if self.manager.get_snm_config().get_node_install_strategy() == InstallStrategy::Ask {
-            let confirm = Confirm::new()
-                .with_prompt(format!(
-                    "🤔 v{} is already installed, do you want to reinstall it ?",
-                    &v
-                ))
-                .interact()
-                .expect("install Confirm error");
+        let confirm = Confirm::new()
+            .with_prompt(format!(
+                "🤔 v{} is already installed, do you want to reinstall it ?",
+                &v
+            ))
+            .interact()
+            .expect("install Confirm error");
 
-            if confirm {
-                self.download(v).await?;
-            }
+        if confirm {
+            self.download(v).await?;
         }
 
         Ok(())
@@ -120,18 +118,17 @@ impl DispatchManage {
             Err(_) => panic!("set_default get_anchor_file_path_buf error"),
         };
 
-        if self.manager.get_snm_config().get_node_install_strategy() == InstallStrategy::Ask
-            && anchor_file_path_buf.exists().not()
-        {
-            Confirm::new()
+        if anchor_file_path_buf.exists().not() {
+            if Confirm::new()
                 .with_prompt(format!(
                     "🤔 v{} is not installed, do you want to install it ?",
                     &v
                 ))
                 .interact()
-                .expect("set_default Confirm error");
-
-            self.install(&v).await?;
+                .expect("set_default Confirm error")
+            {
+                self.install(&v).await?;
+            }
         }
 
         if let Some(d_v) = default_v {
