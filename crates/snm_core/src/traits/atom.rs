@@ -26,7 +26,7 @@ pub trait AtomTrait {
         downloaded_file_path_buf: &'a PathBuf,
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
 
-    fn get_host(&self) -> Option<String>;
+    // fn get_host(&self) -> Option<String>;
 
     fn show_list<'a>(
         &'a self,

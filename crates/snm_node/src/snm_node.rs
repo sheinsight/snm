@@ -298,9 +298,9 @@ impl AtomTrait for SnmNode {
         })
     }
 
-    fn get_host(&self) -> Option<String> {
-        None
-    }
+    // fn get_host(&self) -> Option<String> {
+    //     None
+    // }
 
     fn show_list<'a>(
         &'a self,

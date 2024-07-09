@@ -223,9 +223,9 @@ impl AtomTrait for SnmPackageManager {
         })
     }
 
-    fn get_host(&self) -> Option<String> {
-        todo!("get_host")
-    }
+    // fn get_host(&self) -> Option<String> {
+    //     todo!("get_host")
+    // }
 
     fn show_list<'a>(
         &'a self,
