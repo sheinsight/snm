@@ -2,6 +2,7 @@ use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
+use snm_package_json::{parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 
 use crate::traits::atom::AtomTrait;
@@ -209,8 +210,25 @@ impl DispatchManage {
             .await?;
 
         let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(v)?;
+
+        if runtime_dir_path_buf.exists() {
+            fs::remove_dir_all(&runtime_dir_path_buf)?;
+        }
+
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
+
+        let package_dir_path_buf = runtime_dir_path_buf.join("package");
+
+        if let Some(package_json) = parse_package_json(&package_dir_path_buf)? {
+            let bin = package_dir_path_buf.join("bin");
+            if bin.exists().not() {
+                fs::create_dir_all(&bin)?;
+            }
+            for (k, v) in package_json.bin.iter() {
+                create_symlink(v, &bin.join(k))?;
+            }
+        }
 
         fs::remove_file(&downloaded_file_path_buf)?;
 
