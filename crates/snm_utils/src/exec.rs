@@ -3,7 +3,9 @@ use std::{
     process::{Command, Stdio},
 };
 
-pub fn exec_cli<T: AsRef<OsStr>, I, S>(bin_name: T, args: I)
+use crate::snm_error::SnmError;
+
+pub fn exec_cli<T: AsRef<OsStr>, I, S>(bin_name: T, args: I) -> Result<(), SnmError>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
@@ -14,17 +16,15 @@ where
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())
         .spawn()
-        .and_then(|process| process.wait_with_output());
+        .and_then(|process| process.wait_with_output())?;
 
-    if let Ok(res) = output {
-        if !res.status.success() {
-            let err_msg = format!("snm proxy execute failed : {:?}", res);
-            panic!("{err_msg}");
-        } else {
-            print!("{}", String::from_utf8_lossy(&res.stdout).to_string())
-        }
-    } else {
-        let err_meg = format!("snm proxy execute failed : {:?}", output);
-        panic!("{err_meg}");
+    if !output.status.success() {
+        return Err(SnmError::SNMBinaryProxyFail {
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+        });
     }
+
+    print!("{}", String::from_utf8_lossy(&output.stdout).to_string());
+
+    Ok(())
 }

@@ -105,7 +105,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
                 _ => unreachable!("unreachable"),
             };
 
-            exec_cli(package_manager.name, args);
+            exec_cli(package_manager.name, args)?;
         }
 
         SnmCommands::FigSpec => {

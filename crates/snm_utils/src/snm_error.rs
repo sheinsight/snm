@@ -64,6 +64,9 @@ pub enum SnmError {
 
     #[error("Duplicate lock file error")]
     DuplicateLockFileError { lock_file_vec: Vec<String> },
+
+    #[error("{stderr}")]
+    SNMBinaryProxyFail { stderr: String },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -274,6 +277,16 @@ pub fn friendly_error_message(error: SnmError) {
             "##,
                 lock_file_vec.join(", ").bold().red()
             );
+        }
+        SnmError::SNMBinaryProxyFail { stderr } => {
+            eprintln!(
+                r##"
+        👹  SNM proxy error info:
+
+            {}
+            "##,
+                stderr
+            )
         }
         SnmError::HttpStatusCodeUnOk
         | SnmError::NotFoundPackageJsonError(_)

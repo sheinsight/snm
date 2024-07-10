@@ -45,7 +45,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
 
     let binary_path_buf = ensure_binary_path(bin_name, snm_package_manage, &version).await?;
 
-    exec_cli(binary_path_buf, &args);
+    exec_cli(binary_path_buf, &args)?;
 
     Ok(version)
 }
@@ -68,7 +68,7 @@ pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
 
     let binary_path_buf = ensure_binary_path(bin_name, snm_node, &version).await?;
 
-    exec_cli(binary_path_buf, &args);
+    exec_cli(binary_path_buf, &args)?;
 
     Ok(())
 }
