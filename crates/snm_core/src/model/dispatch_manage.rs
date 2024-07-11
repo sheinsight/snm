@@ -226,7 +226,10 @@ impl DispatchManage {
                 fs::create_dir_all(&bin)?;
             }
             for (k, v) in package_json.bin.iter() {
-                create_symlink(v, &bin.join(k))?;
+                let link_file = &bin.join(k);
+                if link_file.exists().not() {
+                    create_symlink(v, &bin.join(k))?;
+                }
             }
         }
 
