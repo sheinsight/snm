@@ -6,14 +6,18 @@ use std::{
 
 use crate::snm_error::SnmError;
 
-pub fn exec_cli<T: AsRef<OsStr>, I, S>(dir: String, bin_name: T, args: I) -> Result<(), SnmError>
+pub fn exec_cli<T: AsRef<OsStr>, I, S>(
+    dir: Vec<String>,
+    bin_name: T,
+    args: I,
+) -> Result<(), SnmError>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
     let original_path = env::var("PATH")?;
 
-    let new_path: String = format!("{}:{}", dir, original_path);
+    let new_path: String = format!("{}:{}", dir.join(":"), original_path);
 
     let output = Command::new(bin_name)
         .args(args)
