@@ -1,4 +1,4 @@
-use std::{ops::Not, path::PathBuf};
+use std::ops::Not;
 
 use snm_core::traits::atom::AtomTrait;
 use snm_utils::snm_error::SnmError;
@@ -6,10 +6,9 @@ use snm_utils::snm_error::SnmError;
 use super::download::download;
 
 pub async fn ensure_binary_path(
-    bin_name: &str,
     manage: &dyn AtomTrait,
     version: &String,
-) -> Result<PathBuf, SnmError> {
+) -> Result<String, SnmError> {
     if manage
         .get_anchor_file_path_buf(version.as_str())?
         .exists()
@@ -22,7 +21,7 @@ pub async fn ensure_binary_path(
         }
     }
 
-    let binary = manage.get_runtime_binary_file_path_buf(bin_name, version.as_str())?;
+    let binary = manage.get_runtime_binary_dir_string(version.as_str())?;
 
     return Ok(binary);
 }

@@ -1,17 +1,23 @@
 use std::{
+    env,
     ffi::OsStr,
     process::{Command, Stdio},
 };
 
 use crate::snm_error::SnmError;
 
-pub fn exec_cli<T: AsRef<OsStr>, I, S>(bin_name: T, args: I) -> Result<(), SnmError>
+pub fn exec_cli<T: AsRef<OsStr>, I, S>(dir: String, bin_name: T, args: I) -> Result<(), SnmError>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
+    let original_path = env::var("PATH")?;
+
+    let new_path: String = format!("{}:{}", dir, original_path);
+
     let output = Command::new(bin_name)
         .args(args)
+        .env("PATH", new_path)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())

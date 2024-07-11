@@ -43,9 +43,9 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
         _ => snm_package_manage.get_default_version()?,
     };
 
-    let binary_path_buf = ensure_binary_path(bin_name, snm_package_manage, &version).await?;
+    let binary_dir_string = ensure_binary_path(snm_package_manage, &version).await?;
 
-    exec_cli(binary_path_buf, &args)?;
+    exec_cli(binary_dir_string, bin_name, &args)?;
 
     Ok(version)
 }
@@ -66,9 +66,9 @@ pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
         None => snm_node.get_default_version()?,
     };
 
-    let binary_path_buf = ensure_binary_path(bin_name, snm_node, &version).await?;
+    let binary_dir_string = ensure_binary_path(snm_node, &version).await?;
 
-    exec_cli(binary_path_buf, &args)?;
+    exec_cli(binary_dir_string, bin_name, &args)?;
 
     Ok(())
 }

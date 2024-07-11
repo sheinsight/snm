@@ -13,6 +13,9 @@ pub enum SnmError {
     #[error("Network error: {0}")]
     NetworkError(#[from] reqwest::Error),
 
+    #[error("Get var error :{0}")]
+    VarError(#[from] std::env::VarError),
+
     #[error("Zip error: {0}")]
     ZipError(#[from] zip::result::ZipError),
 
@@ -293,6 +296,7 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
+        | SnmError::VarError(_)
         | SnmError::ZipError(_)
         | SnmError::IOError(_) => {
             eprintln!("debug error",);
