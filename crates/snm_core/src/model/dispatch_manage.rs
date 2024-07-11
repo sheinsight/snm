@@ -218,21 +218,6 @@ impl DispatchManage {
         self.manager
             .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-        let package_dir_path_buf = runtime_dir_path_buf.join("package");
-
-        if let Some(package_json) = parse_package_json(&package_dir_path_buf)? {
-            let bin = package_dir_path_buf.join("bin");
-            if bin.exists().not() {
-                fs::create_dir_all(&bin)?;
-            }
-            for (k, v) in package_json.bin.iter() {
-                let link_file = &bin.join(k);
-                if link_file.exists().not() {
-                    create_symlink(v, &bin.join(k))?;
-                }
-            }
-        }
-
         fs::remove_file(&downloaded_file_path_buf)?;
 
         Ok(())

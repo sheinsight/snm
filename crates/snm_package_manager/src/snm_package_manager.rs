@@ -15,7 +15,9 @@ use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
+use std::fs;
 use std::future::Future;
+use std::ops::Not as _;
 use std::pin::Pin;
 use std::{
     fs::File,
@@ -319,7 +321,28 @@ impl AtomTrait for SnmPackageManager {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
-        decompress(&input_file_path_buf, &output_dir_path_buf)
+        decompress(&input_file_path_buf, &output_dir_path_buf)?;
+        let package_dir_path_buf = output_dir_path_buf.join("package");
+        if let Some(package_json) = parse_package_json(&package_dir_path_buf)? {
+            let bin = package_dir_path_buf.join("bin");
+            if bin.exists().not() {
+                fs::create_dir_all(&bin)?;
+            }
+            for (k, v) in package_json.bin.iter() {
+                let link_file = &bin.join(k);
+                if link_file.exists().not() {
+                    #[cfg(unix)]
+                    {
+                        std::os::unix::fs::symlink(v, link_file)?;
+                    }
+                    #[cfg(windows)]
+                    {
+                        std::os::windows::fs::symlink_dir(v, link_file)?;
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     fn get_snm_config(&self) -> &SnmConfig {
