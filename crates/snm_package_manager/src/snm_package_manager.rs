@@ -45,7 +45,7 @@ impl AtomTrait for SnmPackageManager {
             .get_node_modules_dir()?
             .join(&self.library_name)
             .join(v)
-            .join("package")
+            // .join("package")
             .join("package.json")
             .to_ok()
     }
@@ -88,7 +88,7 @@ impl AtomTrait for SnmPackageManager {
             .get_node_modules_dir()?
             .join(self.library_name.to_string())
             .join(&version)
-            .join("package")
+            // .join("package")
             .join("bin")
             .display()
             .to_string())
@@ -103,8 +103,8 @@ impl AtomTrait for SnmPackageManager {
             .snm_config
             .get_node_modules_dir()?
             .join(self.library_name.to_string())
-            .join(&version)
-            .join("package");
+            .join(&version);
+        // .join("package");
 
         match parse_package_json(&package_json_dir_buf_path)? {
             Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
@@ -322,9 +322,10 @@ impl AtomTrait for SnmPackageManager {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
         decompress(&input_file_path_buf, &output_dir_path_buf)?;
-        let package_dir_path_buf = output_dir_path_buf.join("package");
-        if let Some(package_json) = parse_package_json(&package_dir_path_buf)? {
-            let bin = package_dir_path_buf.join("bin");
+        // let package_dir_path_buf = output_dir_path_buf.join("package");
+        if let Some(package_json) = parse_package_json(&output_dir_path_buf)? {
+            let bin = output_dir_path_buf.join("bin");
+
             if bin.exists().not() {
                 fs::create_dir_all(&bin)?;
             }

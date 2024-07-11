@@ -14,11 +14,12 @@ pub async fn ensure_binary_path(
         .exists()
         .not()
     {
-        if manage.download_condition(version.as_str()) {
-            download(version.as_str(), manage).await?;
-        } else {
-            // exit 0
-        }
+        // if manage.download_condition(version.as_str()) {
+        //     download(version.as_str(), manage).await?;
+        // } else {
+        //     // exit 0
+        // }
+        download(version.as_str(), manage).await?;
     }
 
     let binary = manage.get_runtime_binary_dir_string(version.as_str())?;

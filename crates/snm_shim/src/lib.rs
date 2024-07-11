@@ -7,7 +7,10 @@ use snm_core::traits::atom::AtomTrait;
 use snm_node::snm_node::SnmNode;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
-use std::env::{self, current_dir};
+use std::{
+    env::{self, current_dir},
+    ops::Not,
+};
 
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<String, SnmError> {
     env_logger::init();
@@ -30,6 +33,18 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
     }
 
     let restricted_list = vec!["install", "i", "run"];
+
+    // if restricted_list.contains(&command.as_str()) {
+    //     if package_manager.name != prefix {
+    //         // error not match
+    //     } else {
+    //         // ok run
+    //     }
+    // } else {
+    //     // npx yarn
+    //     // find default v by bin_name
+    //     // if default bin_name not found redirect to node bin
+    // }
 
     let version = match snm_config.get_runtime_package_manager() {
         Some(package_manager) if package_manager.name == prefix => package_manager.version,

@@ -15,7 +15,7 @@ pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), Snm
 
     match extension {
         "tgz" => {
-            let new_dir_name = "package";
+            // let new_dir_name = "package";
             let decoder = GzDecoder::new(input_file);
             let mut archive = Archive::new(decoder);
 
@@ -43,7 +43,7 @@ pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), Snm
                 let path = entry.path()?.to_owned();
                 let new_path = if let Some(first_component) = path.components().next() {
                     let stripped = path.strip_prefix(first_component.as_os_str()).unwrap();
-                    Path::new(new_dir_name).join(stripped)
+                    stripped.to_path_buf()
                 } else {
                     path.to_path_buf()
                 };
@@ -82,7 +82,21 @@ pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> Result<(), Snm
         "xz" => {
             let decoder = XzDecoder::new(input_file);
             let mut archive = Archive::new(decoder);
-            archive.unpack(output_path)?;
+            for entry in archive.entries()? {
+                let mut entry = entry?;
+                let path = entry.path()?.to_owned();
+                let new_path = if let Some(first_component) = path.components().next() {
+                    let stripped = path.strip_prefix(first_component.as_os_str()).unwrap();
+                    stripped.to_path_buf()
+                } else {
+                    path.to_path_buf()
+                };
+                let final_path = Path::new(&output_path).join(new_path);
+                if let Some(parent) = final_path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                entry.unpack(final_path)?;
+            }
         }
 
         _ => {
