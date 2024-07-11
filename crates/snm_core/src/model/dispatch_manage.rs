@@ -2,7 +2,6 @@ use std::{fs, ops::Not, path::PathBuf};
 
 use dialoguer::Confirm;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_package_json::{parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 
 use crate::traits::atom::AtomTrait;
