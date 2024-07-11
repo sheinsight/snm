@@ -60,9 +60,28 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<St
 
     let binary_dir_string = ensure_binary_path(snm_package_manage, &version).await?;
 
-    exec_cli(binary_dir_string, bin_name, &args)?;
+    let node_dir = get_node_bin_dir().await?;
+
+    exec_cli(vec![binary_dir_string, node_dir], bin_name, &args)?;
 
     Ok(version)
+}
+
+pub async fn get_node_bin_dir() -> Result<String, SnmError> {
+    let dir = current_dir()?;
+
+    let snm_config = parse_snm_config(&dir)?;
+
+    let snm_node: &dyn AtomTrait = &SnmNode::new(snm_config.clone());
+
+    let version = match snm_config.get_runtime_node_version() {
+        Some(node_version) => node_version,
+        None => snm_node.get_default_version()?,
+    };
+
+    let binary_dir_string = ensure_binary_path(snm_node, &version).await?;
+
+    Ok(binary_dir_string)
 }
 
 pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
@@ -83,7 +102,7 @@ pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
 
     let binary_dir_string = ensure_binary_path(snm_node, &version).await?;
 
-    exec_cli(binary_dir_string, bin_name, &args)?;
+    exec_cli(vec![binary_dir_string], bin_name, &args)?;
 
     Ok(())
 }
