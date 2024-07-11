@@ -99,12 +99,12 @@ pub trait AtomTrait {
         Ok((dir_name_vec, default_dir))
     }
 
-    fn get_default_version(&self) -> Result<String, SnmError> {
+    fn get_default_version(&self) -> Result<Option<String>, SnmError> {
         if self.get_snm_config().get_strict() {
-            return Err(SnmError::NotFoundValidVersion);
+            return Ok(None);
         } else {
             let (_, default_v) = self.read_runtime_dir_name_vec()?;
-            default_v.ok_or(SnmError::NotFoundValidVersion)
+            Ok(default_v)
         }
     }
 }
