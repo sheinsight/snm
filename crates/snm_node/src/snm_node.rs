@@ -193,6 +193,15 @@ impl AtomTrait for SnmNode {
         }
     }
 
+    fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
+        Ok(self
+            .get_runtime_dir_path_buf(&version)?
+            .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
+            .join("bin")
+            .display()
+            .to_string())
+    }
+
     fn get_runtime_binary_file_path_buf(
         &self,
         bin_name: &str,

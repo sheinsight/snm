@@ -80,6 +80,18 @@ impl AtomTrait for SnmPackageManager {
         }
     }
 
+    fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
+        Ok(self
+            .snm_config
+            .get_node_modules_dir()?
+            .join(self.library_name.to_string())
+            .join(&version)
+            .join("package")
+            .join("bin")
+            .display()
+            .to_string())
+    }
+
     fn get_runtime_binary_file_path_buf(
         &self,
         bin_name: &str,

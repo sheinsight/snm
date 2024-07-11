@@ -58,6 +58,8 @@ pub trait AtomTrait {
 
     fn download_condition(&self, version: &str) -> bool;
 
+    fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError>;
+
     fn get_runtime_binary_file_path_buf(
         &self,
         bin_name: &str,
