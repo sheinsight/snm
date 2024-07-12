@@ -4,7 +4,7 @@ use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
-use std::{env, path::PathBuf};
+use std::{env, fs::File, ops::Not, path::PathBuf};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
@@ -43,6 +43,17 @@ const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
+pub struct Ini {
+    default_node: Option<String>,
+
+    default_npm: Option<String>,
+
+    default_pnpm: Option<String>,
+
+    default_yarn: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
     strict: Option<bool>,
 
@@ -69,6 +80,9 @@ pub struct SnmConfig {
     snm_package_json: Option<PackageJson>,
 
     snm_node_version: Option<NodeVersion>,
+
+    #[serde(skip)]
+    ini: Ini,
 }
 
 impl SnmConfig {
@@ -193,10 +207,7 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let mut config: SnmConfig = config.try_deserialize()?;
 
-    let registry = match parse_npmrc(workspace) {
-        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
-        None => None,
-    };
+    let registry = read_npmrc(&workspace);
 
     let node_version = parse_node_version(workspace)?;
 
@@ -215,12 +226,31 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
         }
     }
 
+    let file = config.get_base_dir()?.join("snm.ini");
+
+    if file.exists().not() {
+        File::create(&file)?;
+    }
+
+    let ini: Ini = Config::builder()
+        .add_source(config::File::from(file))
+        .build()?
+        .try_deserialize()?;
+
+    config.ini = ini;
     config.npm_registry = registry;
     config.workspace = Some(workspace.to_string_lossy().to_string());
     config.snm_node_version = node_version;
     config.snm_package_json = package_json;
 
     Ok(config)
+}
+
+fn read_npmrc(workspace: &PathBuf) -> Option<String> {
+    match parse_npmrc(workspace) {
+        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
+        None => None,
+    }
 }
 
 #[cfg(test)]
