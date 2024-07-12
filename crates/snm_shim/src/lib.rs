@@ -78,29 +78,11 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
     env_logger::init();
 
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let bin_args: Vec<String> = std::env::args().skip(1).collect();
 
-    let dir = current_dir()?;
+    let node_dir = get_node_bin_dir().await?;
 
-    let snm_config = parse_snm_config(&dir)?;
-
-    let snm_node: &dyn AtomTrait = &SnmNode::new(snm_config.clone());
-
-    let version = match snm_config.get_runtime_node_version() {
-        Some(node_version) => Some(node_version),
-        None => snm_node.get_default_version()?,
-    };
-
-    match version {
-        Some(v) => {
-            let binary_dir_string = ensure_binary_path(snm_node, &v).await?;
-
-            exec_cli(vec![binary_dir_string], bin_name, &args)?;
-        }
-        None => {
-            return Err(SnmError::NotFoundValidVersion);
-        }
-    }
+    exec_cli(vec![node_dir], bin_name, &bin_args)?;
 
     Ok(())
 }
