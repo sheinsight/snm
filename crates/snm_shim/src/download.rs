@@ -20,7 +20,9 @@ pub async fn download(version: &str, manage: &dyn AtomTrait) -> Result<(), SnmEr
 
     manage.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-    fs::remove_file(&downloaded_file_path_buf)?;
+    if let Some(parent) = downloaded_file_path_buf.parent() {
+        fs::remove_dir_all(parent)?;
+    }
 
     Ok(())
 }
