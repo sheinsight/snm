@@ -55,7 +55,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
     Ok(())
 }
 
-pub async fn get_node_bin_dir() -> Result<String, SnmError> {
+pub fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
 
     let snm_config = parse_snm_config(&dir)?;
