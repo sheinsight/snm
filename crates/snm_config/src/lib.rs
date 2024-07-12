@@ -104,10 +104,7 @@ impl SnmConfig {
     }
 
     pub fn get_runtime_node_version(&self) -> Option<String> {
-        match env::var(SNM_NODE_VERSION_ENV_KEY) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        }
+        env::var(SNM_NODE_VERSION_ENV_KEY).ok()
     }
 
     pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
