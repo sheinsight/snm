@@ -25,32 +25,50 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
     let snm_package_manage: &dyn AtomTrait =
         &SnmPackageManager::from_prefix(prefix, snm_config.clone());
 
-    if snm_config.get_strict() && snm_config.get_runtime_package_manager().is_none() {
-        return Err(SnmError::NotFoundPackageJsonError(dir.to_path_buf()));
-    }
-
     let restricted_list = vec!["install", "i", "run"];
 
-    let version = match snm_config.get_runtime_package_manager() {
-        Some(package_manager) if package_manager.name == prefix => Some(package_manager.version),
-        Some(package_manager) if restricted_list.contains(&command.as_str()) => {
-            return Err(SnmError::NotMatchPackageManagerError {
-                raw_command: args_all.join(" "),
-                expected: package_manager.name.clone(),
-                actual: prefix.to_string(),
-            });
+    let get_default_version = || -> Result<String, SnmError> {
+        if snm_config.get_strict() && restricted_list.contains(&command.as_str()) {
+            Err(SnmError::NotFoundValidVersion)
+        } else {
+            let (_, version) = snm_package_manage.read_runtime_dir_name_vec()?;
+            version.ok_or(SnmError::NotFoundValidVersion)
         }
-        _ => snm_package_manage.get_default_version()?,
     };
 
-    let binary_dir_string = match version {
-        Some(v) => ensure_binary_path(snm_package_manage, &v).await?,
-        None => "".to_string(),
+    let version = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
+        if package_manager.name == prefix {
+            Ok(package_manager.version)
+        } else {
+            if restricted_list.contains(&command.as_str()) {
+                Err(SnmError::NotMatchPackageManagerError {
+                    raw_command: args_all.join(" "),
+                    expected: package_manager.name.clone(),
+                    actual: prefix.to_string(),
+                })
+            } else {
+                get_default_version()
+            }
+        }
+    } else {
+        let default_version = get_default_version();
+        snm_config
+            .get_snm_package_json()
+            .and_then(|item| item.package_manager)
+            .map(|item| Ok(item.version))
+            .unwrap_or(default_version)
     };
 
     let node_dir = get_node_bin_dir().await?;
 
-    exec_cli(vec![binary_dir_string, node_dir], bin_name, &args)?;
+    let mut bin_dirs = vec![node_dir];
+
+    if let Ok(v) = version {
+        let binary_dir_string = ensure_binary_path(snm_package_manage, &v).await?;
+        bin_dirs.insert(0, binary_dir_string);
+    }
+
+    exec_cli(bin_dirs, bin_name, &args)?;
 
     Ok(())
 }
