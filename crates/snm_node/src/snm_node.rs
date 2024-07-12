@@ -162,19 +162,10 @@ impl AtomTrait for SnmNode {
         self.snm_config
             .get_node_bin_dir()?
             .join(&version)
-            // .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join("node")
             .to_ok()
     }
-
-    // fn get_strict_shim_binary_path_buf(
-    //     &self,
-    //     bin_name: &str,
-    //     version: &str,
-    // ) -> Result<PathBuf, SnmError> {
-    //     self.get_runtime_binary_file_path_buf(&bin_name, &version)
-    // }
 
     fn download_condition(&self, version: &str) -> bool {
         match self.snm_config.get_node_install_strategy() {
@@ -196,7 +187,6 @@ impl AtomTrait for SnmNode {
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
         Ok(self
             .get_runtime_dir_path_buf(&version)?
-            // .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .display()
             .to_string())
@@ -208,7 +198,6 @@ impl AtomTrait for SnmNode {
         version: &str,
     ) -> Result<PathBuf, SnmError> {
         self.get_runtime_dir_path_buf(&version)?
-            // .join(format!("node-v{}-{}-{}", &version, get_os(), get_arch()))
             .join("bin")
             .join(bin_name)
             .to_ok()
@@ -227,14 +216,6 @@ impl AtomTrait for SnmNode {
         );
         download_url
     }
-
-    // fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-    //     self.snm_config
-    //         .get_download_dir()?
-    //         .join("node")
-    //         .join(v)
-    //         .to_ok()
-    // }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
@@ -306,10 +287,6 @@ impl AtomTrait for SnmNode {
             }
         })
     }
-
-    // fn get_host(&self) -> Option<String> {
-    //     None
-    // }
 
     fn show_list<'a>(
         &'a self,

@@ -144,14 +144,7 @@ impl DispatchManage {
         let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
         let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
 
-        create_symlink(&from_dir_path_buf, &to_dir_path_buf).expect(
-            format!(
-                "set_default create_symlink error from: {:?} to: {:?}",
-                &from_dir_path_buf.display(),
-                &to_dir_path_buf.display()
-            )
-            .as_str(),
-        );
+        create_symlink(&from_dir_path_buf, &to_dir_path_buf)?;
 
         Ok(())
     }

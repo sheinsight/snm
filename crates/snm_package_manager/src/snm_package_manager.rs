@@ -45,19 +45,9 @@ impl AtomTrait for SnmPackageManager {
             .get_node_modules_dir()?
             .join(&self.library_name)
             .join(v)
-            // .join("package")
             .join("package.json")
             .to_ok()
     }
-
-    // fn get_strict_shim_binary_path_buf(
-    //     &self,
-    //     bin_name: &str,
-    //     version: &str,
-    // ) -> Result<PathBuf, SnmError> {
-    //     self.get_runtime_binary_file_path_buf(&bin_name, &version)?
-    //         .to_ok()
-    // }
 
     fn download_condition(&self, version: &str) -> bool {
         match self.snm_config.get_package_manager_install_strategy() {
@@ -88,7 +78,6 @@ impl AtomTrait for SnmPackageManager {
             .get_node_modules_dir()?
             .join(self.library_name.to_string())
             .join(&version)
-            // .join("package")
             .join("bin")
             .display()
             .to_string())
@@ -104,7 +93,6 @@ impl AtomTrait for SnmPackageManager {
             .get_node_modules_dir()?
             .join(self.library_name.to_string())
             .join(&version);
-        // .join("package");
 
         match parse_package_json(&package_json_dir_buf_path)? {
             Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
@@ -143,14 +131,6 @@ impl AtomTrait for SnmPackageManager {
             .join(format!("{}@{}.tgz", &self.library_name, &v))
             .to_ok()
     }
-
-    // fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-    //     self.snm_config
-    //         .get_download_dir()?
-    //         .join(&self.library_name)
-    //         .join(&v)
-    //         .to_ok()
-    // }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         let library_name = if &self.library_name == "@yarnpkg/cli-dist" {
@@ -237,10 +217,6 @@ impl AtomTrait for SnmPackageManager {
         })
     }
 
-    // fn get_host(&self) -> Option<String> {
-    //     todo!("get_host")
-    // }
-
     fn show_list<'a>(
         &'a self,
         dir_tuple: &'a (Vec<String>, Option<String>),
@@ -322,7 +298,6 @@ impl AtomTrait for SnmPackageManager {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
         decompress(&input_file_path_buf, &output_dir_path_buf)?;
-        // let package_dir_path_buf = output_dir_path_buf.join("package");
         if let Some(package_json) = parse_package_json(&output_dir_path_buf)? {
             let bin = output_dir_path_buf.join("bin");
 

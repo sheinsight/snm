@@ -8,8 +8,6 @@ pub trait AtomTrait {
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    // fn get_downloaded_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
-
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
@@ -25,8 +23,6 @@ pub trait AtomTrait {
         &'a self,
         downloaded_file_path_buf: &'a PathBuf,
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
-
-    // fn get_host(&self) -> Option<String>;
 
     fn show_list<'a>(
         &'a self,
@@ -49,12 +45,6 @@ pub trait AtomTrait {
         input_file_path_buf: &PathBuf,
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError>;
-
-    // fn get_strict_shim_binary_path_buf(
-    //     &self,
-    //     bin_name: &str,
-    //     version: &str,
-    // ) -> Result<PathBuf, SnmError>;
 
     fn download_condition(&self, version: &str) -> bool;
 
