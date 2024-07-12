@@ -64,14 +64,10 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
     let get_default_version = || -> Result<String, SnmError> {
         if snm_config.get_strict() {
-            return Err(SnmError::NotFoundValidVersion);
+            Err(SnmError::NotFoundValidVersion)
         } else {
             let (_, version) = snm_node.read_runtime_dir_name_vec()?;
-            if let Some(v) = version {
-                Ok(v)
-            } else {
-                return Err(SnmError::NotFoundValidVersion);
-            }
+            version.ok_or(SnmError::NotFoundValidVersion)
         }
     };
 
@@ -79,11 +75,10 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
         version
     } else {
         let default_version = get_default_version()?;
-        if let Some(node_version) = snm_config.get_snm_node_version() {
-            node_version.get_version().unwrap_or(default_version)
-        } else {
-            default_version
-        }
+        snm_config
+            .get_snm_node_version()
+            .and_then(|node_version| node_version.get_version())
+            .unwrap_or(default_version)
     };
 
     let binary_dir_string = ensure_binary_path(snm_node, &version).await?;
