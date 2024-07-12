@@ -80,9 +80,8 @@ pub struct SnmConfig {
     snm_package_json: Option<PackageJson>,
 
     snm_node_version: Option<NodeVersion>,
-
-    #[serde(skip)]
-    ini: Ini,
+    // #[serde(skip)]
+    // ini: Ini,
 }
 
 impl SnmConfig {
@@ -223,18 +222,18 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
         }
     }
 
-    let file = config.get_base_dir()?.join("snm.ini");
+    // let file = config.get_base_dir()?.join("snm.ini");
 
-    if file.exists().not() {
-        File::create(&file)?;
-    }
+    // if file.exists().not() {
+    //     File::create(&file)?;
+    // }
 
-    let ini: Ini = Config::builder()
-        .add_source(config::File::from(file))
-        .build()?
-        .try_deserialize()?;
+    // let ini: Ini = Config::builder()
+    //     .add_source(config::File::from(file))
+    //     .build()?
+    //     .try_deserialize()?;
 
-    config.ini = ini;
+    // config.ini = ini;
     config.npm_registry = registry;
     config.workspace = Some(workspace.to_string_lossy().to_string());
     config.snm_node_version = node_version;
