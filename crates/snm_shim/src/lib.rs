@@ -9,10 +9,22 @@ use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
 use std::env::{self, current_dir};
 
+fn anchor_mark() -> Result<(), SnmError> {
+    match env::var("SNM_ANCHOR") {
+        Ok(_) => return Err(SnmError::NotFoundValidVersion),
+        Err(_) => {
+            env::set_var("SNM_ANCHOR", "true");
+        }
+    }
+    Ok(())
+}
+
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
     env_logger::init();
 
     let args_all: Vec<String> = env::args().collect();
+
+    anchor_mark()?;
 
     let command = &args_all[1];
 
@@ -75,6 +87,8 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
+
+    anchor_mark()?;
 
     let snm_config = parse_snm_config(&dir)?;
 
