@@ -41,11 +41,8 @@ impl DispatchManage {
     }
 
     pub async fn install(&self, v: &str) -> Result<(), SnmError> {
-        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
-            Ok(anchor_file_path_buf) => anchor_file_path_buf,
-            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
-        };
-
+        let anchor_file_path_buf = self.manager.get_anchor_file_path_buf(&v)?;
+        let current_version_dir = self.manager.get_runtime_dir_path_buf(&v)?;
         if anchor_file_path_buf.exists().not() {
             self.download(v).await?;
             return Ok(());
@@ -56,93 +53,59 @@ impl DispatchManage {
                 "🤔 v{} is already installed, do you want to reinstall it ?",
                 &v
             ))
-            .interact()
-            .expect("install Confirm error");
+            .interact()?;
 
         if confirm {
+            fs::remove_dir_all(&current_version_dir)?;
             self.download(v).await?;
+        }
+
+        let default_path_buf = self.manager.get_runtime_dir_for_default_path_buf()?;
+
+        if default_path_buf.exists().not() {
+            create_symlink(&current_version_dir, &default_path_buf)?;
         }
 
         Ok(())
     }
 
     pub async fn un_install(&self, v: &str) -> Result<(), SnmError> {
-        let (dir_name_vec, default_v) = self.read_runtime_dir_name_vec()?;
-
-        if dir_name_vec.is_empty() || dir_name_vec.iter().any(|item| item == &v).not() {
-            let msg = format!("Not found {}", &v);
-            panic!("{msg}");
-        }
-
-        if let Some(d_v) = default_v {
-            if &d_v == &v {
-                let result = Confirm::new()
-                    .with_prompt(format!(
-                        "🤔 {} is default instance, do you want to uninstall it ?",
-                        &d_v
-                    ))
-                    .interact()
-                    .expect("un_install Confirm error");
-                if result {
-                    let default_path_buf = self
-                        .manager
-                        .get_runtime_dir_path_buf(format!("{}-default", &v).as_str())?;
-
-                    fs::remove_dir_all(&default_path_buf).expect(
-                        format!(
-                            "un_install remove_dir_all error {:?}",
-                            &default_path_buf.display()
-                        )
-                        .as_str(),
-                    );
-                }
+        let default_path_buf = self.manager.get_runtime_dir_for_default_path_buf()?;
+        let current_version_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
+        if fs::read_link(&default_path_buf)?.eq(&current_version_path_buf) {
+            let msg = format!(
+                "🤔 {} is default instance, do you want to uninstall it ?",
+                &v
+            );
+            if Confirm::new().with_prompt(msg).interact()? {
+                fs::remove_dir_all(&default_path_buf)?;
+                fs::remove_dir_all(current_version_path_buf)?;
             }
         }
-
-        let runtime_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
-        let msg = format!(
-            "un_install remove_dir_all error {:?}",
-            &runtime_dir_path_buf.display()
-        );
-        fs::remove_dir_all(&runtime_dir_path_buf).expect(&msg);
-
         Ok(())
     }
 
     pub async fn set_default(&self, v: &str) -> Result<(), SnmError> {
-        let (_, default_v) = self.read_runtime_dir_name_vec()?;
-
-        let anchor_file_path_buf = match self.manager.get_anchor_file_path_buf(&v) {
-            Ok(anchor_file_path_buf) => anchor_file_path_buf,
-            Err(_) => panic!("set_default get_anchor_file_path_buf error"),
-        };
-
-        if anchor_file_path_buf.exists().not() {
+        if self.manager.get_anchor_file_path_buf(&v)?.exists().not() {
             if Confirm::new()
                 .with_prompt(format!(
                     "🤔 v{} is not installed, do you want to install it ?",
                     &v
                 ))
-                .interact()
-                .expect("set_default Confirm error")
+                .interact()?
             {
                 self.install(&v).await?;
             }
         }
 
-        if let Some(d_v) = default_v {
-            let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&d_v)?;
-            fs::remove_dir_all(&default_dir_path_buf).expect(
-                format!(
-                    "set_default remove_dir_all error {:?}",
-                    &default_dir_path_buf.display()
-                )
-                .as_str(),
-            );
+        let default_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf()?;
+
+        if default_dir_path_buf.exists() {
+            fs::remove_dir_all(&default_dir_path_buf)?;
         }
 
         let from_dir_path_buf = self.manager.get_runtime_dir_path_buf(&v)?;
-        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf(&v)?;
+        let to_dir_path_buf = self.manager.get_runtime_dir_for_default_path_buf()?;
 
         create_symlink(&from_dir_path_buf, &to_dir_path_buf)?;
 
@@ -179,8 +142,15 @@ impl DispatchManage {
             .filter_map(|dir_entry| {
                 let file_name = dir_entry.file_name().into_string().ok()?;
 
-                if file_name.ends_with("-default") {
-                    default_dir = Some(file_name.trim_end_matches("-default").to_string());
+                if file_name.eq("default") {
+                    if let Some(o) = fs::read_link(dir_entry.path()).ok() {
+                        if let Some(last) =
+                            o.components().last().and_then(|x| x.as_os_str().to_str())
+                        {
+                            default_dir = Some(String::from(last));
+                        }
+                    }
+
                     return None;
                 }
 

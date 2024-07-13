@@ -10,7 +10,7 @@ pub trait AtomTrait {
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
+    fn get_runtime_dir_for_default_path_buf(&self) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError>;
 

@@ -146,11 +146,11 @@ impl AtomTrait for SnmPackageManager {
             .to_ok()
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
+    fn get_runtime_dir_for_default_path_buf(&self) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
             .join(&self.library_name)
-            .join(format!("{}-default", &v))
+            .join("default")
             .to_ok()
     }
 

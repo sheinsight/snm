@@ -10,6 +10,9 @@ pub enum SnmError {
     #[error("IO error: {0}")]
     IOError(#[from] std::io::Error),
 
+    #[error("Dialoguer error: {0}")]
+    DialoguerError(#[from] dialoguer::Error),
+
     #[error("Network error: {0}")]
     NetworkError(#[from] reqwest::Error),
 
@@ -296,6 +299,7 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
+        | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
         | SnmError::ZipError(_)
         | SnmError::IOError(_) => {

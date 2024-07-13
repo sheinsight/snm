@@ -236,11 +236,8 @@ impl AtomTrait for SnmNode {
         self.snm_config.get_node_bin_dir()?.join(&v).to_ok()
     }
 
-    fn get_runtime_dir_for_default_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        self.snm_config
-            .get_node_bin_dir()?
-            .join(format!("{}-default", &v))
-            .to_ok()
+    fn get_runtime_dir_for_default_path_buf(&self) -> Result<PathBuf, SnmError> {
+        self.snm_config.get_node_bin_dir()?.join("default").to_ok()
     }
 
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
