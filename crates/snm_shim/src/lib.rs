@@ -7,24 +7,32 @@ use snm_core::traits::atom::AtomTrait;
 use snm_node::snm_node::SnmNode;
 use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
-use std::env::{self, current_dir};
+use std::{
+    env::{self, current_dir},
+    ops::Not,
+    path::Path,
+};
 
-fn anchor_mark() -> Result<(), SnmError> {
-    match env::var("SNM_ANCHOR") {
-        Ok(_) => return Err(SnmError::NotFoundValidVersion),
-        Err(_) => {
-            env::set_var("SNM_ANCHOR", "true");
-        }
+fn get_default_bin_dir(node_dir: &str, bin_name: &str) -> Result<String, SnmError> {
+    let default_bin_dir = Path::new(&node_dir);
+
+    let default_bin = default_bin_dir.join(bin_name);
+    if default_bin.exists().not() {
+        return Err(SnmError::CannotFindDefaultCommand {
+            command: bin_name.to_string(),
+        });
+    } else {
+        Ok(default_bin_dir.display().to_string())
     }
-    Ok(())
 }
 
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
+    color_backtrace::install();
     env_logger::init();
 
-    let args_all: Vec<String> = env::args().collect();
+    let node_dir = get_node_bin_dir().await?;
 
-    anchor_mark()?;
+    let args_all: Vec<String> = env::args().collect();
 
     let command = &args_all[1];
 
@@ -39,46 +47,23 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 
     let restricted_list = vec!["install", "i", "run"];
 
-    let get_default_version = || -> Result<String, SnmError> {
-        if snm_config.get_strict() && restricted_list.contains(&command.as_str()) {
-            Err(SnmError::NotFoundValidVersion)
-        } else {
-            let (_, version) = snm_package_manage.read_runtime_dir_name_vec()?;
-            version.ok_or(SnmError::NotFoundValidVersion)
-        }
-    };
-
-    let version = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
+    let bin_dirs = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
         if package_manager.name == prefix {
-            Ok(package_manager.version)
+            let version = package_manager.version;
+            vec![
+                node_dir.clone(),
+                ensure_binary_path(snm_package_manage, &version).await?,
+            ]
+        } else if restricted_list.contains(&command.as_str()) {
+            return Err(SnmError::CannotFindDefaultCommand {
+                command: bin_name.to_string(),
+            });
         } else {
-            if restricted_list.contains(&command.as_str()) {
-                Err(SnmError::NotMatchPackageManagerError {
-                    raw_command: args_all.join(" "),
-                    expected: package_manager.name.clone(),
-                    actual: prefix.to_string(),
-                })
-            } else {
-                get_default_version()
-            }
+            vec![node_dir.clone(), get_default_bin_dir(&node_dir, bin_name)?]
         }
     } else {
-        let default_version = get_default_version();
-        snm_config
-            .get_snm_package_json()
-            .and_then(|item| item.package_manager)
-            .map(|item| Ok(item.version))
-            .unwrap_or(default_version)
+        vec![node_dir.clone(), get_default_bin_dir(&node_dir, bin_name)?]
     };
-
-    let node_dir = get_node_bin_dir().await?;
-
-    let mut bin_dirs = vec![node_dir];
-
-    if let Ok(v) = version {
-        let binary_dir_string = ensure_binary_path(snm_package_manage, &v).await?;
-        bin_dirs.insert(0, binary_dir_string);
-    }
 
     exec_cli(bin_dirs, bin_name, &args)?;
 
@@ -87,8 +72,6 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
-
-    anchor_mark()?;
 
     let snm_config = parse_snm_config(&dir)?;
 

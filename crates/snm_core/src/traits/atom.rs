@@ -24,19 +24,14 @@ pub trait AtomTrait {
         downloaded_file_path_buf: &'a PathBuf,
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
 
-    fn show_list<'a>(
-        &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+    fn show_list<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
 
     fn show_list_offline<'a>(
         &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
 
     fn show_list_remote<'a>(
         &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
         all: bool,
     ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
 
@@ -49,12 +44,6 @@ pub trait AtomTrait {
     fn download_condition(&self, version: &str) -> bool;
 
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError>;
-
-    // fn get_runtime_binary_file_path_buf(
-    //     &self,
-    //     bin_name: &str,
-    //     version: &str,
-    // ) -> Result<PathBuf, SnmError>;
 
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
@@ -77,8 +66,15 @@ pub trait AtomTrait {
             .filter_map(|dir_entry| {
                 let file_name = dir_entry.file_name().into_string().ok()?;
 
-                if file_name.ends_with("-default") {
-                    default_dir = Some(file_name.trim_end_matches("-default").to_string());
+                if file_name.eq("default") {
+                    if let Some(o) = fs::read_link(dir_entry.path()).ok() {
+                        if let Some(last) =
+                            o.components().last().and_then(|x| x.as_os_str().to_str())
+                        {
+                            default_dir = Some(String::from(last));
+                        }
+                    }
+
                     return None;
                 }
 

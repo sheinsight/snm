@@ -16,49 +16,169 @@ use sha2::Sha256;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::collections::HashMap;
+use std::fs;
+use std::ops::Not;
 use std::pin::Pin;
+use std::time::Duration;
 use std::{
     fs::File,
     io::{BufReader, Read},
     path::PathBuf,
 };
+use tokio::try_join;
 
 pub struct SnmNode {
     snm_config: SnmConfig,
 }
 
 impl SnmNode {
+    async fn download(&self, version: &str) -> Result<(), SnmError> {
+        let download_url = self.get_download_url(version);
+        let downloaded_file_path_buf = self.get_downloaded_file_path_buf(version)?;
+
+        DownloadBuilder::new()
+            .retries(3)
+            .write_strategy(WriteStrategy::Nothing)
+            .download(&download_url, &downloaded_file_path_buf)
+            .await?;
+
+        let runtime = self.get_runtime_dir_path_buf(version)?;
+
+        if runtime.exists() {
+            fs::remove_dir_all(&runtime)?;
+        }
+
+        self.decompress_download_file(&downloaded_file_path_buf, &runtime)?;
+
+        fs::remove_file(&downloaded_file_path_buf)?;
+
+        Ok(())
+    }
+
+    pub async fn set_default(&self, version: &str) -> Result<(), SnmError> {
+        if self.get_anchor_file_path_buf(version)?.exists().not() {
+            let msg = format!(
+                "🤔 v{} is not installed, do you want to install it ?",
+                version
+            );
+            if Confirm::new().with_prompt(msg).interact()? {
+                self.install(version).await?;
+            }
+        } else {
+            let default_dir = self.get_runtime_dir_for_default_path_buf()?;
+            if default_dir.exists() {
+                fs::remove_dir_all(&default_dir)?;
+            }
+
+            let from_dir = self.get_runtime_dir_path_buf(version)?;
+
+            #[cfg(unix)]
+            {
+                std::os::unix::fs::symlink(&from_dir, &default_dir)?;
+            }
+            #[cfg(windows)]
+            {
+                std::os::windows::fs::symlink_dir(&version_dir, &default_dir)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn un_install(&self, version: &str) -> Result<(), SnmError> {
+        let default_dir = self.get_runtime_dir_for_default_path_buf()?;
+        let version_dir = self.get_runtime_dir_path_buf(&version)?;
+        if fs::read_link(&default_dir)?.eq(&version_dir) {
+            let msg = format!(
+                "🤔 {} is default instance, do you want to uninstall it ?",
+                version
+            );
+            if Confirm::new().with_prompt(msg).interact()? {
+                fs::remove_file(&default_dir)?;
+                fs::remove_dir_all(version_dir)?;
+            }
+        } else {
+            fs::remove_dir_all(version_dir)?;
+        }
+        Ok(())
+    }
+
+    pub async fn install(&self, version: &str) -> Result<(), SnmError> {
+        let anchor_file = self.get_anchor_file_path_buf(&version)?;
+        let version_dir = self.get_runtime_dir_path_buf(&version)?;
+
+        if anchor_file.exists().not() {
+            self.download(version).await?;
+        } else {
+            let confirm = Confirm::new()
+                .with_prompt(format!(
+                    "🤔 v{} is already installed, do you want to reinstall it ?",
+                    &version
+                ))
+                .interact()
+                .expect("install Confirm error");
+
+            if confirm {
+                fs::remove_dir_all(&version_dir)?;
+                self.download(version).await?;
+            }
+
+            let default_dir = self.get_runtime_dir_for_default_path_buf()?;
+
+            if default_dir.exists().not() {
+                #[cfg(unix)]
+                {
+                    std::os::unix::fs::symlink(&version_dir, &default_dir)?;
+                }
+                #[cfg(windows)]
+                {
+                    std::os::windows::fs::symlink_dir(&version_dir, &default_dir)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn new(snm_config: SnmConfig) -> Self {
         Self { snm_config }
     }
 
-    async fn get_node_list_remote(&self) -> Vec<NodeModel> {
+    async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
         let host = self.snm_config.get_node_dist_url();
         let node_list_url = format!("{}/index.json", host);
-        let node_vec: Vec<NodeModel> = reqwest::get(&node_list_url)
-            .await
-            .expect(format!("fetch {} failed", &node_list_url).as_str())
+
+        let client = reqwest::Client::new();
+
+        let node_vec: Vec<NodeModel> = client
+            .get(&node_list_url)
+            .timeout(Duration::from_secs(10))
+            .send()
+            .await?
             .json::<Vec<NodeModel>>()
-            .await
-            .expect(format!("parse {} response to json failed", &node_list_url).as_str());
-        node_vec
+            .await?;
+        Ok(node_vec)
     }
 
-    async fn get_node_schedule(&self) -> Vec<NodeSchedule> {
+    async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
         let host = self.snm_config.get_node_github_resource_host();
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
-        let node_schedule_vec: Vec<NodeSchedule> = reqwest::get(&node_schedule_url)
-            .await
-            .expect(format!("fetch {} failed", node_schedule_url).as_str())
+        let client = reqwest::Client::new();
+
+        let node_schedule_vec: Vec<NodeSchedule> = client
+            .get(&node_schedule_url)
+            .timeout(Duration::from_secs(10))
+            .send()
+            .await?
             .json::<std::collections::HashMap<String, NodeSchedule>>()
-            .await
-            .expect(format!("parse {} response to json failed", node_schedule_url).as_str())
+            .await?
             .into_iter()
             .map(|(v, mut schedule)| {
                 schedule.version = Some(v[1..].to_string());
@@ -66,7 +186,7 @@ impl SnmNode {
             })
             .collect();
 
-        node_schedule_vec
+        Ok(node_schedule_vec)
     }
 
     async fn get_node_sha256_hashmap(&self, node_version: &str) -> HashMap<String, String> {
@@ -192,17 +312,6 @@ impl AtomTrait for SnmNode {
             .to_string())
     }
 
-    // fn get_runtime_binary_file_path_buf(
-    //     &self,
-    //     bin_name: &str,
-    //     version: &str,
-    // ) -> Result<PathBuf, SnmError> {
-    //     self.get_runtime_dir_path_buf(&version)?
-    //         .join("bin")
-    //         .join(bin_name)
-    //         .to_ok()
-    // }
-
     fn get_download_url(&self, v: &str) -> String {
         let host = self.snm_config.get_node_dist_url();
         let download_url = format!(
@@ -285,12 +394,9 @@ impl AtomTrait for SnmNode {
         })
     }
 
-    fn show_list<'a>(
-        &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+    fn show_list<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let (dir_vec, default_v) = dir_tuple;
+            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
             if dir_vec.is_empty() {
                 let msg = format!(
                     "Node list is empty, please use {} to get the latest version.",
@@ -301,7 +407,7 @@ impl AtomTrait for SnmNode {
 
             let now = Utc::now().date_naive();
             let (remote_node_vec, node_schedule_vec) =
-                join!(self.get_node_list_remote(), self.get_node_schedule());
+                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
 
             let version_req_vec = node_schedule_vec
                 .into_iter()
@@ -362,7 +468,7 @@ impl AtomTrait for SnmNode {
 
             if let Some(v) = default_v {
                 self.show_node_list(node_vec, |node_v| {
-                    if node_v == v {
+                    if *node_v == v {
                         return "⛳️";
                     } else {
                         return "";
@@ -373,15 +479,15 @@ impl AtomTrait for SnmNode {
                     return "";
                 });
             }
+            Ok(())
         })
     }
 
     fn show_list_offline<'a>(
         &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let (dir_vec, default_v) = dir_tuple;
+            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
             if dir_vec.is_empty() {
                 let msg = format!(
                     "Node list is empty, please use {} to get the latest version.",
@@ -397,20 +503,20 @@ impl AtomTrait for SnmNode {
                     " "
                 };
                 println!("{:<2} {}", prefix, item);
-            })
+            });
+            Ok(())
         })
     }
 
     fn show_list_remote<'a>(
         &'a self,
-        dir_tuple: &'a (Vec<String>, Option<String>),
         all: bool,
     ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let (dir_vec, _default_v) = dir_tuple;
+            let (dir_vec, _default_v) = self.read_runtime_dir_name_vec()?;
 
             let (mut node_vec, node_schedule_vec) =
-                join!(self.get_node_list_remote(), self.get_node_schedule());
+                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
 
             let now = Utc::now().date_naive();
 

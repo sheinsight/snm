@@ -38,12 +38,6 @@ pub enum SnmError {
         actual: String,
     },
 
-    #[error("Not found npm library bin {name} {file_path}")]
-    NotFoundNpmLibraryBinError { name: String, file_path: PathBuf },
-
-    #[error("Not found package manager {name} version in env")]
-    NotFoundPackageManagerVersionInEnvError { name: String },
-
     #[error("Http status code not ok")]
     HttpStatusCodeUnOk,
 
@@ -73,6 +67,9 @@ pub enum SnmError {
 
     #[error("{stderr}")]
     SNMBinaryProxyFail { stderr: String },
+
+    #[error("Cannot find command: {command}")]
+    CannotFindDefaultCommand { command: String },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -241,19 +238,6 @@ pub fn friendly_error_message(error: SnmError) {
                 actual.red()
             );
         }
-        SnmError::NotFoundNpmLibraryBinError { name, file_path } => {
-            eprintln!(
-                r##"
-                
-        👹  Not found bin for package.json
-
-            The bin {} not found in package.json file path is {}.
-            
-            "##,
-                name.bold().red(),
-                file_path.to_string_lossy().bold().red()
-            );
-        }
         SnmError::UnsupportedCommandError { raw_command } => {
             eprintln!(
                 r##"
@@ -263,16 +247,6 @@ pub fn friendly_error_message(error: SnmError) {
                 "##,
                 raw_command
             );
-        }
-        SnmError::NotFoundPackageManagerVersionInEnvError { name } => {
-            eprintln!(
-                r##"
-        👹  Not found packageManager {} version in env
-
-            This may be an unexpected error, an unknown boundary, please contact the author.
-            "##,
-                name.bold().red()
-            )
         }
         SnmError::DuplicateLockFileError { lock_file_vec } => {
             eprintln!(
@@ -301,10 +275,12 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::NetworkError(_)
         | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
+        | SnmError::CannotFindDefaultCommand { command: _ }
         | SnmError::ZipError(_)
         | SnmError::IOError(_) => {
-            eprintln!("debug error",);
-            panic!("{error}");
+            let msg = format!("{}", error.to_string());
+            panic!("{msg}");
+            // eprintln!("[error]: {}", msg);
         }
     }
 

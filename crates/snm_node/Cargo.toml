@@ -25,6 +25,7 @@ snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
 snm_node_version = { path = "../snm_node_version" }
 snm_tarball = { path = "../snm_tarball" }
+snm_download_builder = { path = "../snm_download_builder" }
 xz2 = {version = "0.1.7" , features = ["static"]}
 tar = "0.4"
 num-format = "0.4.0"

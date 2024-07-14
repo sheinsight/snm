@@ -4,7 +4,7 @@ use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
-use std::{env, fs::File, ops::Not, path::PathBuf};
+use std::{env, path::PathBuf};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
