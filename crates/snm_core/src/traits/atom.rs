@@ -50,11 +50,11 @@ pub trait AtomTrait {
 
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError>;
 
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError>;
+    // fn get_runtime_binary_file_path_buf(
+    //     &self,
+    //     bin_name: &str,
+    //     version: &str,
+    // ) -> Result<PathBuf, SnmError>;
 
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 

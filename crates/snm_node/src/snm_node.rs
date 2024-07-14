@@ -192,16 +192,16 @@ impl AtomTrait for SnmNode {
             .to_string())
     }
 
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        self.get_runtime_dir_path_buf(&version)?
-            .join("bin")
-            .join(bin_name)
-            .to_ok()
-    }
+    // fn get_runtime_binary_file_path_buf(
+    //     &self,
+    //     bin_name: &str,
+    //     version: &str,
+    // ) -> Result<PathBuf, SnmError> {
+    //     self.get_runtime_dir_path_buf(&version)?
+    //         .join("bin")
+    //         .join(bin_name)
+    //         .to_ok()
+    // }
 
     fn get_download_url(&self, v: &str) -> String {
         let host = self.snm_config.get_node_dist_url();

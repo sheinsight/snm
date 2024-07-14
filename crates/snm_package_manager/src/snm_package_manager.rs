@@ -83,28 +83,28 @@ impl AtomTrait for SnmPackageManager {
             .to_string())
     }
 
-    fn get_runtime_binary_file_path_buf(
-        &self,
-        bin_name: &str,
-        version: &str,
-    ) -> Result<PathBuf, SnmError> {
-        let package_json_dir_buf_path = self
-            .snm_config
-            .get_node_modules_dir()?
-            .join(self.library_name.to_string())
-            .join(&version);
+    // fn get_runtime_binary_file_path_buf(
+    //     &self,
+    //     bin_name: &str,
+    //     version: &str,
+    // ) -> Result<PathBuf, SnmError> {
+    //     let package_json_dir_buf_path = self
+    //         .snm_config
+    //         .get_node_modules_dir()?
+    //         .join(self.library_name.to_string())
+    //         .join(&version);
 
-        match parse_package_json(&package_json_dir_buf_path)? {
-            Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
-            Some(_) => Err(SnmError::NotFoundNpmLibraryBinError {
-                name: bin_name.to_string(),
-                file_path: package_json_dir_buf_path.to_path_buf(),
-            }),
-            None => Err(SnmError::NotFoundPackageJsonError(
-                package_json_dir_buf_path.to_path_buf(),
-            )),
-        }
-    }
+    //     match parse_package_json(&package_json_dir_buf_path)? {
+    //         Some(mut p) if p.bin.contains_key(bin_name) => Ok(p.bin.remove(bin_name).unwrap()),
+    //         Some(_) => Err(SnmError::NotFoundNpmLibraryBinError {
+    //             name: bin_name.to_string(),
+    //             file_path: package_json_dir_buf_path.to_path_buf(),
+    //         }),
+    //         None => Err(SnmError::NotFoundPackageJsonError(
+    //             package_json_dir_buf_path.to_path_buf(),
+    //         )),
+    //     }
+    // }
 
     fn get_download_url(&self, v: &str) -> String {
         let npm_registry = self.snm_config.get_npm_registry();
