@@ -11,24 +11,6 @@ pub enum SnmCommands {
         command: ManageCommands,
     },
 
-    #[command(about = "Manage npm versions.")]
-    Npm {
-        #[command(subcommand)]
-        command: ManageCommands,
-    },
-
-    #[command(about = "Manage npm versions.")]
-    Yarn {
-        #[command(subcommand)]
-        command: ManageCommands,
-    },
-
-    #[command(about = "Manage pnpm versions.")]
-    Pnpm {
-        #[command(subcommand)]
-        command: ManageCommands,
-    },
-
     #[command(about = "Used to install all dependencies for a project.")]
     I(IArgs),
 

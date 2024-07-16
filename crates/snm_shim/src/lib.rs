@@ -12,8 +12,8 @@ use std::{
     ops::Not,
     path::Path,
 };
-use tracing::{instrument, Level};
-use tracing_subscriber::{self, fmt::format::FmtSpan};
+use tracing::instrument;
+use tracing_subscriber::{self};
 
 #[instrument(level = "trace", ret)]
 fn get_default_bin_dir(node_dir: &str, bin_name: &str) -> Result<String, SnmError> {

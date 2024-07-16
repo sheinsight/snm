@@ -128,7 +128,7 @@ impl DownloadBuilder {
             let mut stream = response.bytes_stream();
 
             let progress_bar = ProgressBar::with_draw_target(
-                Some(total_size.unwrap_or(0)),
+                Some(total_size.unwrap_or(100)),
                 ProgressDrawTarget::stdout(),
             );
 

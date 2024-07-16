@@ -3,7 +3,6 @@ use snm_core::traits::atom::AtomTrait;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_node::snm_node::SnmNode;
-use snm_package_manager::snm_package_manager::SnmPackageManager;
 use snm_utils::snm_error::SnmError;
 use std::process::{Command, Stdio};
 
@@ -12,54 +11,9 @@ use crate::manage_command::ManageCommands;
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 
-async fn exec_manage_trait(
-    command: ManageCommands,
-    package_manager: SnmPackageManager,
-) -> Result<(), SnmError> {
-    let trim_version = |version: String| version.trim_start_matches(['v', 'V']).trim().to_owned();
-    match command {
-        ManageCommands::Default { version } => {
-            package_manager.set_default(version.as_str()).await?;
-        }
-        ManageCommands::Install { version } => {
-            package_manager
-                .install(trim_version(version).as_str())
-                .await?;
-        }
-        ManageCommands::Uninstall { version } => {
-            package_manager
-                .un_install(trim_version(version).as_str())
-                .await?;
-        }
-        ManageCommands::ListOffline => {
-            package_manager.show_list_offline().await?;
-        }
-        ManageCommands::List => {
-            package_manager.show_list().await?;
-        }
-        ManageCommands::ListRemote { all } => {
-            package_manager.show_list_remote(all).await?;
-        }
-    }
-
-    Ok(())
-}
-
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmError> {
     match cli.command {
         // manage start
-        SnmCommands::Pnpm { command } => {
-            let pnpm = SnmPackageManager::from_prefix("pnpm", snm_config.clone());
-            exec_manage_trait(command, pnpm).await?;
-        }
-        SnmCommands::Npm { command } => {
-            let npm = SnmPackageManager::from_prefix("npm", snm_config.clone());
-            exec_manage_trait(command, npm).await?;
-        }
-        SnmCommands::Yarn { command } => {
-            let yarn = SnmPackageManager::from_prefix("yarn", snm_config.clone());
-            exec_manage_trait(command, yarn).await?;
-        }
         SnmCommands::Node { command } => {
             let snm_node = SnmNode::new(snm_config);
             match command {
