@@ -15,3 +15,5 @@ snm_config = { path = "../snm_config" }
 snm_package_manager = { path = "../snm_package_manager" }
 snm_download_builder ={ path = "../snm_download_builder" }
 color-backtrace = "0.6.1"
+tracing = "0.1"
+tracing-subscriber = "0.3"

@@ -12,7 +12,10 @@ use std::{
     ops::Not,
     path::Path,
 };
+use tracing::{instrument, Level};
+use tracing_subscriber::{self, fmt::format::FmtSpan};
 
+#[instrument(level = "trace", ret)]
 fn get_default_bin_dir(node_dir: &str, bin_name: &str) -> Result<String, SnmError> {
     let default_bin_dir = Path::new(&node_dir);
 
@@ -28,7 +31,8 @@ fn get_default_bin_dir(node_dir: &str, bin_name: &str) -> Result<String, SnmErro
 
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
     color_backtrace::install();
-    env_logger::init();
+
+    tracing_subscriber::fmt::init();
 
     let node_dir = get_node_bin_dir().await?;
 
@@ -48,6 +52,9 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
     let restricted_list = vec!["install", "i", "run"];
 
     let bin_dirs = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
+        tracing::trace!(
+            "There is a package manager in the entry process that is currently in use."
+        );
         if package_manager.name == prefix {
             let version = package_manager.version;
             vec![
