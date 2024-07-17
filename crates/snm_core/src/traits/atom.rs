@@ -30,8 +30,6 @@ pub trait AtomTrait {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError>;
 
-    fn download_condition(&self, version: &str) -> bool;
-
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError>;
 
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
@@ -72,14 +70,5 @@ pub trait AtomTrait {
             .collect::<Vec<String>>();
 
         Ok((dir_name_vec, default_dir))
-    }
-
-    fn get_default_version(&self) -> Result<Option<String>, SnmError> {
-        if self.get_snm_config().get_strict() {
-            return Ok(None);
-        } else {
-            let (_, default_v) = self.read_runtime_dir_name_vec()?;
-            Ok(default_v)
-        }
     }
 }

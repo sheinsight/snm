@@ -480,23 +480,6 @@ impl AtomTrait for SnmNode {
             .to_ok()
     }
 
-    fn download_condition(&self, version: &str) -> bool {
-        match self.snm_config.get_node_install_strategy() {
-            InstallStrategy::Ask => Confirm::new()
-                .with_prompt(format!(
-                    "🤔 {} is not installed, do you want to install it ?",
-                    &version
-                ))
-                .interact()
-                .expect("download_condition Confirm error"),
-            InstallStrategy::Panic => {
-                let msg = format!("Unsupported version: {}", version);
-                panic!("{msg}");
-            }
-            InstallStrategy::Auto => true,
-        }
-    }
-
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
         Ok(self
             .get_runtime_dir_path_buf(&version)?

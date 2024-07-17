@@ -44,29 +44,6 @@ impl AtomTrait for SnmPackageManager {
             .to_ok()
     }
 
-    fn download_condition(&self, version: &str) -> bool {
-        match self.snm_config.get_package_manager_install_strategy() {
-            InstallStrategy::Ask => {
-                return Confirm::new()
-                    .with_prompt(format!(
-                        "🤔 {} is not installed, do you want to install it ?",
-                        &version
-                    ))
-                    .interact()
-                    .expect("download Confirm error")
-            }
-            InstallStrategy::Panic => {
-                let msg = format!(
-                    "UnsupportedPackageManager {} {}",
-                    self.library_name.to_string(),
-                    version.to_string()
-                );
-                panic!("{msg}");
-            }
-            InstallStrategy::Auto => true,
-        }
-    }
-
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
         Ok(self
             .snm_config
