@@ -4,7 +4,10 @@ use snm_core::traits::atom::AtomTrait;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
-pub async fn download(version: &str, manage: &dyn AtomTrait) -> Result<(), SnmError> {
+pub async fn download<T>(version: &str, manage: &T) -> Result<(), SnmError>
+where
+    T: AtomTrait,
+{
     let download_url = manage.get_download_url(version);
 
     let downloaded_file_path_buf = manage.get_downloaded_file_path_buf(version)?;

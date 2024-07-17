@@ -275,6 +275,199 @@ impl SnmNode {
             );
         }
     }
+
+    pub fn show_list<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
+        Box::pin(async move {
+            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
+            if dir_vec.is_empty() {
+                let msg = format!(
+                    "Node list is empty, please use {} to get the latest version.",
+                    "snm node list-remote".bright_green().bold()
+                );
+                panic!("{msg}");
+            }
+
+            let now = Utc::now().date_naive();
+            let (remote_node_vec, node_schedule_vec) =
+                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
+
+            let version_req_vec = node_schedule_vec
+                .into_iter()
+                .filter_map(|schedule| {
+                    schedule
+                        .version
+                        .as_ref()
+                        .and_then(|v| VersionReq::parse(v).ok())
+                        .map(|vr| (vr, schedule))
+                })
+                .collect::<Vec<(VersionReq, NodeSchedule)>>();
+
+            let mut hashmap = remote_node_vec
+                .into_iter()
+                .map(|node| (node.version.as_str().to_string(), node))
+                .collect::<HashMap<String, NodeModel>>();
+
+            let mut node_vec = dir_vec
+                .into_iter()
+                .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
+                .map(|mut node| {
+                    node.version = node.version.trim_start_matches("v").to_string();
+
+                    let version = Version::parse(&node.version);
+
+                    let eq_version = |req: &VersionReq| {
+                        version
+                            .as_ref()
+                            .map_or(false, |version| req.matches(version))
+                    };
+
+                    let node_schedule = version_req_vec
+                        .iter()
+                        .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
+
+                    {
+                        node.end = node_schedule
+                            .map(|schedule| schedule.end.clone())
+                            .map_or(Some("None".to_string()), Some);
+                    }
+
+                    {
+                        let map_deprecated = |schedule: &NodeSchedule| {
+                            NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
+                                .map(|end| now > end)
+                                .unwrap_or(true)
+                        };
+
+                        node.deprecated =
+                            node_schedule.map(map_deprecated).map_or(Some(true), Some);
+                    }
+
+                    node
+                })
+                .collect::<Vec<NodeModel>>();
+
+            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
+
+            if let Some(v) = default_v {
+                self.show_node_list(node_vec, |node_v| {
+                    if *node_v == v {
+                        return "⛳️";
+                    } else {
+                        return "";
+                    }
+                });
+            } else {
+                self.show_node_list(node_vec, |_node_v| {
+                    return "";
+                });
+            }
+            Ok(())
+        })
+    }
+
+    pub fn show_list_offline<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
+        Box::pin(async move {
+            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
+            if dir_vec.is_empty() {
+                let msg = format!(
+                    "Node list is empty, please use {} to get the latest version.",
+                    "snm node list-remote".bright_green().bold()
+                );
+                panic!("{msg}");
+            }
+
+            dir_vec.iter().for_each(|item| {
+                let prefix = if Some(item) == default_v.as_ref() {
+                    "⛳️"
+                } else {
+                    " "
+                };
+                println!("{:<2} {}", prefix, item);
+            });
+            Ok(())
+        })
+    }
+
+    pub fn show_list_remote<'a>(
+        &'a self,
+        all: bool,
+    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
+        Box::pin(async move {
+            let (dir_vec, _default_v) = self.read_runtime_dir_name_vec()?;
+
+            let (mut node_vec, node_schedule_vec) =
+                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
+
+            let now = Utc::now().date_naive();
+
+            node_vec.iter_mut().for_each(|node| {
+                let eq_version = |req: VersionReq| {
+                    Version::parse(&node.version[1..])
+                        .map_or(false, |version| req.matches(&version))
+                };
+                // 查找匹配的调度 生命周期
+                let node_schedule = node_schedule_vec.iter().find(|&schedule| {
+                    // 确保 schedule.version 是 Some，并且 VersionReq 和 Version 都可以被成功解析
+                    schedule
+                        .version
+                        .as_ref()
+                        .and_then(|v| VersionReq::parse(v).ok())
+                        .map_or(false, eq_version)
+                });
+
+                if let Some(schedule) = node_schedule {
+                    // 更新节点的调度数据
+                    node.end = Some(schedule.end.clone());
+
+                    let _ = NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d").map(|end| {
+                        if now > end {
+                            node.deprecated = Some(true);
+                        } else {
+                            node.deprecated = Some(false);
+                        }
+                    });
+                } else {
+                    node.end = Some("None".to_string());
+                    node.deprecated = Some(true);
+                }
+            });
+
+            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
+
+            let mut marking_version: HashMap<String, String> = HashMap::new();
+
+            dir_vec.iter().for_each(|v| {
+                marking_version.insert(v.clone(), v.clone());
+            });
+
+            let node_vec = node_vec
+                .into_iter()
+                .filter(|node| {
+                    if all {
+                        true
+                    } else if let Lts::Str(_) = node.lts {
+                        node.deprecated == Some(false)
+                    } else {
+                        false
+                    }
+                })
+                .collect::<Vec<NodeModel>>();
+
+            self.show_node_list(node_vec, |node_v| {
+                let v = node_v.trim_start_matches("v");
+                if marking_version.contains_key(v) {
+                    return "🫐";
+                } else {
+                    return "";
+                }
+            });
+            Ok(())
+        })
+    }
 }
 
 impl AtomTrait for SnmNode {
@@ -391,197 +584,6 @@ impl AtomTrait for SnmNode {
             } else {
                 None
             }
-        })
-    }
-
-    fn show_list<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
-        Box::pin(async move {
-            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
-            if dir_vec.is_empty() {
-                let msg = format!(
-                    "Node list is empty, please use {} to get the latest version.",
-                    "snm node list-remote".bright_green().bold()
-                );
-                panic!("{msg}");
-            }
-
-            let now = Utc::now().date_naive();
-            let (remote_node_vec, node_schedule_vec) =
-                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
-
-            let version_req_vec = node_schedule_vec
-                .into_iter()
-                .filter_map(|schedule| {
-                    schedule
-                        .version
-                        .as_ref()
-                        .and_then(|v| VersionReq::parse(v).ok())
-                        .map(|vr| (vr, schedule))
-                })
-                .collect::<Vec<(VersionReq, NodeSchedule)>>();
-
-            let mut hashmap = remote_node_vec
-                .into_iter()
-                .map(|node| (node.version.as_str().to_string(), node))
-                .collect::<HashMap<String, NodeModel>>();
-
-            let mut node_vec = dir_vec
-                .into_iter()
-                .filter_map(|v| hashmap.remove(format!("v{}", v).as_str()))
-                .map(|mut node| {
-                    node.version = node.version.trim_start_matches("v").to_string();
-
-                    let version = Version::parse(&node.version);
-
-                    let eq_version = |req: &VersionReq| {
-                        version
-                            .as_ref()
-                            .map_or(false, |version| req.matches(version))
-                    };
-
-                    let node_schedule = version_req_vec
-                        .iter()
-                        .find_map(|(req, schedule)| eq_version(req).then_some(schedule));
-
-                    {
-                        node.end = node_schedule
-                            .map(|schedule| schedule.end.clone())
-                            .map_or(Some("None".to_string()), Some);
-                    }
-
-                    {
-                        let map_deprecated = |schedule: &NodeSchedule| {
-                            NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d")
-                                .map(|end| now > end)
-                                .unwrap_or(true)
-                        };
-
-                        node.deprecated =
-                            node_schedule.map(map_deprecated).map_or(Some(true), Some);
-                    }
-
-                    node
-                })
-                .collect::<Vec<NodeModel>>();
-
-            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
-
-            if let Some(v) = default_v {
-                self.show_node_list(node_vec, |node_v| {
-                    if *node_v == v {
-                        return "⛳️";
-                    } else {
-                        return "";
-                    }
-                });
-            } else {
-                self.show_node_list(node_vec, |_node_v| {
-                    return "";
-                });
-            }
-            Ok(())
-        })
-    }
-
-    fn show_list_offline<'a>(
-        &'a self,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
-        Box::pin(async move {
-            let (dir_vec, default_v) = self.read_runtime_dir_name_vec()?;
-            if dir_vec.is_empty() {
-                let msg = format!(
-                    "Node list is empty, please use {} to get the latest version.",
-                    "snm node list-remote".bright_green().bold()
-                );
-                panic!("{msg}");
-            }
-
-            dir_vec.iter().for_each(|item| {
-                let prefix = if Some(item) == default_v.as_ref() {
-                    "⛳️"
-                } else {
-                    " "
-                };
-                println!("{:<2} {}", prefix, item);
-            });
-            Ok(())
-        })
-    }
-
-    fn show_list_remote<'a>(
-        &'a self,
-        all: bool,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>> {
-        Box::pin(async move {
-            let (dir_vec, _default_v) = self.read_runtime_dir_name_vec()?;
-
-            let (mut node_vec, node_schedule_vec) =
-                try_join!(self.get_node_list_remote(), self.get_node_schedule())?;
-
-            let now = Utc::now().date_naive();
-
-            node_vec.iter_mut().for_each(|node| {
-                let eq_version = |req: VersionReq| {
-                    Version::parse(&node.version[1..])
-                        .map_or(false, |version| req.matches(&version))
-                };
-                // 查找匹配的调度 生命周期
-                let node_schedule = node_schedule_vec.iter().find(|&schedule| {
-                    // 确保 schedule.version 是 Some，并且 VersionReq 和 Version 都可以被成功解析
-                    schedule
-                        .version
-                        .as_ref()
-                        .and_then(|v| VersionReq::parse(v).ok())
-                        .map_or(false, eq_version)
-                });
-
-                if let Some(schedule) = node_schedule {
-                    // 更新节点的调度数据
-                    node.end = Some(schedule.end.clone());
-
-                    let _ = NaiveDate::parse_from_str(&schedule.end, "%Y-%m-%d").map(|end| {
-                        if now > end {
-                            node.deprecated = Some(true);
-                        } else {
-                            node.deprecated = Some(false);
-                        }
-                    });
-                } else {
-                    node.end = Some("None".to_string());
-                    node.deprecated = Some(true);
-                }
-            });
-
-            node_vec.sort_by_cached_key(|v| Version::parse(&v.version[1..]).ok());
-
-            let mut marking_version: HashMap<String, String> = HashMap::new();
-
-            dir_vec.iter().for_each(|v| {
-                marking_version.insert(v.clone(), v.clone());
-            });
-
-            let node_vec = node_vec
-                .into_iter()
-                .filter(|node| {
-                    if all {
-                        true
-                    } else if let Lts::Str(_) = node.lts {
-                        node.deprecated == Some(false)
-                    } else {
-                        false
-                    }
-                })
-                .collect::<Vec<NodeModel>>();
-
-            self.show_node_list(node_vec, |node_v| {
-                let v = node_v.trim_start_matches("v");
-                if marking_version.contains_key(v) {
-                    return "🫐";
-                } else {
-                    return "";
-                }
-            });
-            Ok(())
         })
     }
 

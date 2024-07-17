@@ -5,10 +5,10 @@ use snm_utils::snm_error::SnmError;
 
 use super::download::download;
 
-pub async fn ensure_binary_path(
-    manage: &dyn AtomTrait,
-    version: &String,
-) -> Result<String, SnmError> {
+pub async fn ensure_binary_path<T>(manage: &T, version: &String) -> Result<String, SnmError>
+where
+    T: AtomTrait,
+{
     if manage
         .get_anchor_file_path_buf(version.as_str())?
         .exists()

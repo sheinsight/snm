@@ -1,5 +1,4 @@
 use snm_config::SnmConfig;
-use snm_core::traits::atom::AtomTrait;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_node::snm_node::SnmNode;

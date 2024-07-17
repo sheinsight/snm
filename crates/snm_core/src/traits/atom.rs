@@ -24,17 +24,6 @@ pub trait AtomTrait {
         downloaded_file_path_buf: &'a PathBuf,
     ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
 
-    fn show_list<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
-
-    fn show_list_offline<'a>(
-        &'a self,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
-
-    fn show_list_remote<'a>(
-        &'a self,
-        all: bool,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SnmError>> + Send + 'a>>;
-
     fn decompress_download_file(
         &self,
         input_file_path_buf: &PathBuf,
