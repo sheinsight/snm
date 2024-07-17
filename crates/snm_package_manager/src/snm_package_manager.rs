@@ -11,14 +11,11 @@ use sha1::Sha1;
 use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
-use snm_download_builder::DownloadBuilder;
-use snm_download_builder::WriteStrategy;
 use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
 use std::fs;
-use std::fs::DirEntry;
 use std::future::Future;
 use std::ops::Not as _;
 use std::pin::Pin;
@@ -39,132 +36,6 @@ impl SnmPackageManager {
             library_name: library_name.to_string(),
             snm_config,
         }
-    }
-
-    async fn download(&self, version: &str) -> Result<(), SnmError> {
-        let download_url = self.get_download_url(version);
-        let downloaded_file_path_buf = self.get_downloaded_file_path_buf(version)?;
-
-        DownloadBuilder::new()
-            .retries(3)
-            .write_strategy(WriteStrategy::Nothing)
-            .download(&download_url, &downloaded_file_path_buf)
-            .await?;
-
-        let runtime = self.get_runtime_dir_path_buf(version)?;
-
-        if runtime.exists() {
-            fs::remove_dir_all(&runtime)?;
-        }
-
-        self.decompress_download_file(&downloaded_file_path_buf, &runtime)?;
-
-        fs::remove_file(&downloaded_file_path_buf)?;
-
-        Ok(())
-    }
-
-    async fn to_default(&self, version: &str) -> Result<(), SnmError> {
-        let version_dir = self.get_runtime_dir_path_buf(version)?;
-
-        if let Some(package_json) = parse_package_json(&version_dir)? {
-            for (k, v) in package_json.bin {
-                let dir_entry_vec: Vec<DirEntry> = self
-                    .snm_config
-                    .get_node_bin_dir()?
-                    .read_dir()?
-                    .filter_map(|item| item.ok())
-                    .filter(|dir_entry| dir_entry.path().is_dir())
-                    .collect();
-
-                for item in dir_entry_vec {
-                    let bin_path = item.path().join("bin").join(k.clone());
-                    if bin_path.exists().not() {
-                        #[cfg(unix)]
-                        {
-                            std::os::unix::fs::symlink(&v, &bin_path)?;
-                        }
-                        #[cfg(windows)]
-                        {
-                            std::os::windows::fs::symlink_dir(&v, &bin_path)?;
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    pub async fn set_default(&self, version: &str) -> Result<(), SnmError> {
-        if self.get_anchor_file_path_buf(version)?.exists().not() {
-            let msg = format!(
-                "🤔 v{} is not installed, do you want to install it ?",
-                version
-            );
-            if Confirm::new().with_prompt(msg).interact()? {
-                self.install(version).await?;
-            }
-        }
-
-        self.to_default(version).await?;
-
-        Ok(())
-    }
-
-    pub async fn install(&self, version: &str) -> Result<(), SnmError> {
-        let anchor_file = self.get_anchor_file_path_buf(&version)?;
-        let version_dir = self.get_runtime_dir_path_buf(&version)?;
-
-        if anchor_file.exists().not() {
-            self.download(version).await?;
-        } else {
-            let msg = format!(
-                "🤔 v{} is already installed, do you want to reinstall it ?",
-                version
-            );
-            let confirm = Confirm::new().with_prompt(msg).interact()?;
-            if confirm {
-                fs::remove_dir_all(&version_dir)?;
-                self.download(version).await?;
-            }
-        }
-
-        self.to_default(version).await?;
-
-        Ok(())
-    }
-
-    pub async fn un_install(&self, version: &str) -> Result<(), SnmError> {
-        let version_dir = self.get_runtime_dir_path_buf(&version)?;
-
-        if let Some(package_json) = parse_package_json(&version_dir)? {
-            for (k, _) in package_json.bin {
-                let dir_entry_vec: Vec<DirEntry> = self
-                    .snm_config
-                    .get_node_bin_dir()?
-                    .read_dir()?
-                    .filter_map(|item| item.ok())
-                    .filter(|dir_entry| dir_entry.path().is_dir())
-                    .collect();
-
-                for item in dir_entry_vec {
-                    let bin_path = item.path().join("bin").join(k.clone());
-                    if bin_path.exists() {
-                        let r = fs::read_link(&bin_path)?;
-                        if r.starts_with(&version_dir) {
-                            fs::remove_file(&bin_path)?;
-                        }
-                    }
-                }
-            }
-        }
-
-        if version_dir.exists() {
-            fs::remove_dir_all(version_dir)?;
-        }
-
-        Ok(())
     }
 }
 
