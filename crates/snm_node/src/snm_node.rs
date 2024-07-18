@@ -181,16 +181,14 @@ impl SnmNode {
         Ok(node_schedule_vec)
     }
 
-    async fn get_node_sha256_hashmap(&self, node_version: &str) -> HashMap<String, String> {
+    async fn get_node_sha256_hashmap(
+        &self,
+        node_version: &str,
+    ) -> Result<HashMap<String, String>, SnmError> {
         let host = self.snm_config.get_node_dist_url();
         let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
 
-        let sha256_str = reqwest::get(&url)
-            .await
-            .expect(format!("fetch {} failed", url).as_str())
-            .text()
-            .await
-            .expect(format!("parse {} response to text failed", url).as_str());
+        let sha256_str = reqwest::get(&url).await?.text().await?;
 
         let sha256_map: std::collections::HashMap<String, String> = sha256_str
             .lines()
@@ -202,7 +200,7 @@ impl SnmNode {
             })
             .collect();
 
-        sha256_map
+        Ok(sha256_map)
     }
 
     fn _show_off_online_node_list(&self, dir_tuple: &(Vec<String>, Option<String>)) {
@@ -480,17 +478,19 @@ impl AtomTrait for SnmNode {
             .to_string())
     }
 
-    fn get_download_url(&self, v: &str) -> String {
-        let host = self.snm_config.get_node_dist_url();
-        let download_url = format!(
-            "{}/v{}/node-v{}-{}-{}.{}",
-            &host,
-            &v,
+    fn get_downloaded_file_name(&self, v: &str) -> String {
+        format!(
+            "node-v{}-{}-{}.{}",
             &v,
             get_os(),
             get_arch(),
             get_tarball_ext()
-        );
+        )
+    }
+
+    fn get_download_url(&self, v: &str) -> String {
+        let host = self.snm_config.get_node_dist_url();
+        let download_url = format!("{}/v{}/{}", &host, &v, self.get_downloaded_file_name(v));
         download_url
     }
 
@@ -524,9 +524,9 @@ impl AtomTrait for SnmNode {
     fn get_expect_shasum<'a>(
         &'a self,
         v: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let mut hashmap = self.get_node_sha256_hashmap(&v).await;
+            let mut hashmap = self.get_node_sha256_hashmap(&v).await?;
             let tar_file_name = format!(
                 "node-v{}-{}-{}.{}",
                 &v,
@@ -534,30 +534,30 @@ impl AtomTrait for SnmNode {
                 get_arch(),
                 get_tarball_ext()
             );
-            hashmap.remove(&tar_file_name)
+            Ok(hashmap.remove(&tar_file_name))
         })
     }
 
     fn get_actual_shasum<'a>(
         &'a self,
         downloaded_file_path_buf: &'a PathBuf,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
             if let Ok(file) = File::open(downloaded_file_path_buf) {
                 let mut reader = BufReader::new(file);
                 let mut hasher = Sha256::new();
                 let mut buffer = [0; 1024];
                 loop {
-                    let n = reader.read(&mut buffer).expect("read error");
+                    let n = reader.read(&mut buffer)?;
                     if n == 0 {
                         break;
                     }
                     hasher.update(&buffer[..n]);
                 }
                 let result = hasher.finalize();
-                Some(format!("{:x}", result))
+                Ok(Some(format!("{:x}", result)))
             } else {
-                None
+                Ok(None)
             }
         })
     }

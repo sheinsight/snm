@@ -6,6 +6,8 @@ use snm_utils::snm_error::SnmError;
 pub trait AtomTrait {
     fn get_download_url(&self, v: &str) -> String;
 
+    fn get_downloaded_file_name(&self, v: &str) -> String;
+
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
@@ -17,12 +19,12 @@ pub trait AtomTrait {
     fn get_expect_shasum<'a>(
         &'a self,
         v: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>>;
 
     fn get_actual_shasum<'a>(
         &'a self,
         downloaded_file_path_buf: &'a PathBuf,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>>;
 
     fn decompress_download_file(
         &self,

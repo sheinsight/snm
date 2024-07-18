@@ -1,9 +1,7 @@
-use dialoguer::Confirm;
 use semver::{Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
-use snm_config::InstallStrategy;
 use snm_config::SnmConfig;
 use snm_core::traits::atom::AtomTrait;
 use snm_package_json::parse_package_json;
@@ -72,6 +70,10 @@ impl AtomTrait for SnmPackageManager {
         }
     }
 
+    fn get_downloaded_file_name(&self, v: &str) -> String {
+        format!("{}@{}.tgz", &self.library_name, &v)
+    }
+
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_download_dir()?
@@ -113,56 +115,43 @@ impl AtomTrait for SnmPackageManager {
     fn get_expect_shasum<'a>(
         &'a self,
         v: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
             let npm_registry = self.snm_config.get_npm_registry();
             let download_url = format!("{}/{}/{}", npm_registry, &self.library_name, &v);
 
-            let value: Value = reqwest::get(&download_url)
-                .await
-                .expect(format!("download error {}", &download_url).as_str())
-                .json()
-                .await
-                .expect(format!("json error {}", &download_url).as_str());
+            let value: Value = reqwest::get(&download_url).await?.json().await?;
 
-            let x = value
+            let shasum = value
                 .get("dist")
                 .and_then(|dist| dist.get("shasum"))
                 .and_then(|shasum| shasum.as_str())
-                .map(|shasum| shasum.to_string())
-                .expect(format!("NotFoundSha256ForNode {}", v.to_string()).as_str());
+                .map(|shasum| shasum.to_string());
 
-            Some(x)
+            Ok(shasum)
         })
     }
 
     fn get_actual_shasum<'a>(
         &'a self,
         downloaded_file_path_buf: &'a PathBuf,
-    ) -> Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let file = File::open(downloaded_file_path_buf).expect(
-                format!(
-                    "get_actual_shasum File::open error {:?}",
-                    &downloaded_file_path_buf.display()
-                )
-                .as_str(),
-            );
+            let file = File::open(downloaded_file_path_buf)?;
+
             let mut reader = BufReader::new(file);
             let mut hasher = Sha1::new();
 
             let mut buffer = [0; 1024];
             loop {
-                let n = reader
-                    .read(&mut buffer)
-                    .expect("get_actual_shasum read error");
+                let n = reader.read(&mut buffer)?;
                 if n == 0 {
                     break;
                 }
                 hasher.update(&buffer[..n]);
             }
             let result = hasher.finalize();
-            Some(format!("{:x}", result))
+            Ok(Some(format!("{:x}", result)))
         })
     }
 
