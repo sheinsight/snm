@@ -29,7 +29,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 
     let snm_config = parse_snm_config(&dir)?;
 
-    let snm_package_manage = SnmPackageManager::from_prefix(prefix, snm_config.clone());
+    let snm_package_manage = SnmPackageManager::new(prefix, snm_config.clone());
 
     let restricted_list = vec!["install", "i", "run"];
 

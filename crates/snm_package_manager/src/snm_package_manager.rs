@@ -26,7 +26,7 @@ pub struct SnmPackageManager {
 }
 
 impl SnmPackageManager {
-    pub fn from_prefix(library_name: &str, snm_config: SnmConfig) -> Self {
+    pub fn new(library_name: &str, snm_config: SnmConfig) -> Self {
         Self {
             library_name: library_name.to_string(),
             snm_config,
