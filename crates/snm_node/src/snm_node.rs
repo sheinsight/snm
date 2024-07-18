@@ -52,7 +52,7 @@ impl SnmNode {
             fs::remove_dir_all(&runtime)?;
         }
 
-        decompress(&downloaded_file_path_buf, &runtime)?;
+        self.decompress_download_file(&downloaded_file_path_buf, &runtime)?;
 
         fs::remove_file(&downloaded_file_path_buf)?;
 
