@@ -2,7 +2,7 @@ use std::env::current_dir;
 
 use snm_config::parse_snm_config;
 use snm_core::traits::atom::AtomTrait;
-use snm_node::snm_node::SnmNode;
+use snm_node::snm_node::NodeAtom;
 use snm_utils::snm_error::SnmError;
 use tracing::instrument;
 
@@ -14,7 +14,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
     let snm_config = parse_snm_config(&dir)?;
 
-    let snm_node = SnmNode::new(snm_config.clone());
+    let snm_node = NodeAtom::new(snm_config.clone());
 
     let get_default_version = || -> Result<String, SnmError> {
         if snm_config.get_strict() {

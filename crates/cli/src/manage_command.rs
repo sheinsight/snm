@@ -18,9 +18,10 @@ pub enum ManageCommands {
         version: String,
     },
     /// List installed npm versions
-    ListOffline,
-    /// List installed npm versions
-    List,
+    List {
+        #[arg(long, help = "Only show lts version")]
+        offline: bool,
+    },
     /// List remote npm versions
     ListRemote {
         #[arg(

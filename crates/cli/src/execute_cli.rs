@@ -1,12 +1,13 @@
 use snm_config::SnmConfig;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
-use snm_node::snm_node::SnmNode;
+use snm_node::snm_node::NodeAtom;
 use snm_utils::snm_error::SnmError;
 use std::process::{Command, Stdio};
 
 use crate::fig::fig_spec_impl;
 use crate::manage_command::ManageCommands;
+use crate::node_manager::node_manager::{ListArgs, ListRemoteArgs, NodeManager};
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 
@@ -14,25 +15,25 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
     match cli.command {
         // manage start
         SnmCommands::Node { command } => {
-            let snm_node = SnmNode::new(snm_config);
+            let node_atom = NodeAtom::new(snm_config);
+            let node_manager = NodeManager::new(&node_atom);
             match command {
                 ManageCommands::Default { version } => {
-                    snm_node.set_default(version.as_str()).await?;
+                    node_manager.set_default(version.as_str()).await?;
                 }
                 ManageCommands::Install { version } => {
-                    snm_node.install(version.as_str()).await?;
+                    node_manager.install(version.as_str()).await?;
                 }
                 ManageCommands::Uninstall { version } => {
-                    snm_node.un_install(version.as_str()).await?;
+                    node_manager.un_install(version.as_str()).await?;
                 }
-                ManageCommands::ListOffline => {
-                    snm_node.show_list_offline().await?;
-                }
-                ManageCommands::List => {
-                    snm_node.show_list().await?;
+                ManageCommands::List { offline } => {
+                    // node_manager.show_list().await?;
+                    node_manager.list(ListArgs { offline }).await?;
                 }
                 ManageCommands::ListRemote { all } => {
-                    snm_node.show_list_remote(all).await?;
+                    node_manager.list_remote(ListRemoteArgs { all }).await?;
+                    // node_manager.show_list_remote(all).await?;
                 }
             }
         }

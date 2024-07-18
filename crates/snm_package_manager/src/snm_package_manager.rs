@@ -18,12 +18,12 @@ use std::{
     path::PathBuf,
 };
 
-pub struct SnmPackageManager {
+pub struct PackageManagerAtom {
     snm_config: SnmConfig,
     library_name: String,
 }
 
-impl SnmPackageManager {
+impl PackageManagerAtom {
     pub fn new(library_name: &str, snm_config: SnmConfig) -> Self {
         Self {
             library_name: library_name.to_string(),
@@ -32,7 +32,7 @@ impl SnmPackageManager {
     }
 }
 
-impl AtomTrait for SnmPackageManager {
+impl AtomTrait for PackageManagerAtom {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
             .get_node_modules_dir()?
@@ -163,7 +163,6 @@ impl AtomTrait for SnmPackageManager {
         decompress(&input_file_path_buf, &output_dir_path_buf)?;
         if let Some(package_json) = parse_package_json(&output_dir_path_buf)? {
             let bin = output_dir_path_buf.join("bin");
-
             if bin.exists().not() {
                 fs::create_dir_all(&bin)?;
             }

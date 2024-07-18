@@ -7,7 +7,7 @@ use crate::get_default_bin_dir::get_default_bin_dir;
 use crate::get_node_bin_dir::get_node_bin_dir;
 use ensure_binary_path::ensure_binary_path;
 use snm_config::parse_snm_config;
-use snm_package_manager::snm_package_manager::SnmPackageManager;
+use snm_package_manager::snm_package_manager::PackageManagerAtom;
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
 use std::env::{self, current_dir};
 use tracing_subscriber::{self};
@@ -29,7 +29,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 
     let snm_config = parse_snm_config(&dir)?;
 
-    let snm_package_manage = SnmPackageManager::new(prefix, snm_config.clone());
+    let snm_package_manage = PackageManagerAtom::new(prefix, snm_config.clone());
 
     let restricted_list = vec!["install", "i", "run"];
 
