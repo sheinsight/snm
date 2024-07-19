@@ -139,28 +139,6 @@ where
         Ok(node_schedule_vec)
     }
 
-    async fn get_node_sha256_hashmap(
-        &self,
-        node_version: &str,
-    ) -> Result<HashMap<String, String>, SnmError> {
-        let host = self.node_atom.get_snm_config().get_node_dist_url();
-        let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
-
-        let sha256_str = reqwest::get(&url).await?.text().await?;
-
-        let sha256_map: std::collections::HashMap<String, String> = sha256_str
-            .lines()
-            .map(|line| {
-                let mut iter = line.split_whitespace();
-                let sha256 = iter.next().unwrap();
-                let file = iter.next().unwrap();
-                (file.to_string(), sha256.to_string())
-            })
-            .collect();
-
-        Ok(sha256_map)
-    }
-
     fn show_node_list<F>(&self, node_vec: Vec<NodeModel>, get_tag_fn: F)
     where
         F: Fn(&String) -> &str,
