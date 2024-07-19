@@ -1,4 +1,3 @@
-mod download;
 mod ensure_binary_path;
 mod get_default_bin_dir;
 mod get_node_bin_dir;
