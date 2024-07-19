@@ -218,6 +218,12 @@ where
         let anchor_file = self.node_atom.get_anchor_file_path_buf(&version)?;
         let version_dir = self.node_atom.get_runtime_dir_path_buf(&version)?;
 
+        let downloaded_file_path_buf = self.node_atom.get_downloaded_file_path_buf(version)?;
+
+        if downloaded_file_path_buf.exists() {
+            fs::remove_file(&downloaded_file_path_buf)?;
+        }
+
         if anchor_file.exists() {
             let confirm = Confirm::new()
                 .with_prompt(format!(
