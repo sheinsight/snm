@@ -4,7 +4,7 @@ use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::parse_npmrc;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
-use std::{env, path::PathBuf};
+use std::{env, f32::consts::E, path::PathBuf};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
@@ -38,6 +38,7 @@ impl InstallStrategy {
     }
 }
 
+const SNM_HOME_DIR_KEY: &str = "SNM_HOME_DIR";
 const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
@@ -86,11 +87,14 @@ pub struct SnmConfig {
 
 impl SnmConfig {
     fn get_base_dir(&self) -> Result<PathBuf, SnmError> {
-        match dirs::home_dir() {
-            Some(home_dir) => Ok(home_dir.join(".snm")),
-            None => {
-                return Err(SnmError::GetHomeDirError);
-            }
+        match env::var(SNM_HOME_DIR_KEY) {
+            Ok(dir) => Ok(PathBuf::from(dir)),
+            Err(_) => match dirs::home_dir() {
+                Some(dir) => Ok(dir.join(".snm")),
+                None => {
+                    return Err(SnmError::GetHomeDirError);
+                }
+            },
         }
     }
 
