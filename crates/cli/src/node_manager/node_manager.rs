@@ -44,6 +44,31 @@ where
             fs::remove_dir_all(&runtime)?;
         }
 
+        let expect = self.node_atom.get_expect_shasum(version).await?;
+
+        let actual = self
+            .node_atom
+            .get_actual_shasum(&downloaded_file_path_buf)
+            .await?;
+
+        if actual.is_none() || expect.is_none() {
+            fs::remove_file(&downloaded_file_path_buf)?;
+            return Err(SnmError::ShasumError {
+                file_path: downloaded_file_path_buf.display().to_string(),
+                expect: "None".to_string(),
+                actual: "None".to_string(),
+            });
+        }
+
+        if actual.eq(&expect).not() {
+            fs::remove_file(&downloaded_file_path_buf)?;
+            return Err(SnmError::ShasumError {
+                file_path: downloaded_file_path_buf.display().to_string(),
+                expect: expect.unwrap_or("None".to_string()),
+                actual: actual.unwrap_or("None".to_string()),
+            });
+        }
+
         self.node_atom
             .decompress_download_file(&downloaded_file_path_buf, &runtime)?;
 

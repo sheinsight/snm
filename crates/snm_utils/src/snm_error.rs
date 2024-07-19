@@ -70,6 +70,13 @@ pub enum SnmError {
 
     #[error("Cannot find command: {command}")]
     CannotFindDefaultCommand { command: String },
+
+    #[error("Shasum error: {file_path} , expect: {expect} , actual: {actual}")]
+    ShasumError {
+        file_path: String,
+        expect: String,
+        actual: String,
+    },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -267,6 +274,28 @@ pub fn friendly_error_message(error: SnmError) {
             "##,
                 stderr
             )
+        }
+        SnmError::ShasumError {
+            file_path,
+            expect,
+            actual,
+        } => {
+            eprintln!(
+                r##"
+        👹  Shasum error
+            
+            {} 
+
+            expect  {} , 
+
+            actual  {}.
+
+            Please try again
+                "##,
+                file_path,
+                expect.green(),
+                actual.red(),
+            );
         }
         SnmError::HttpStatusCodeUnOk
         | SnmError::NotFoundPackageJsonError(_)
