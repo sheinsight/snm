@@ -77,6 +77,9 @@ pub enum SnmError {
         expect: String,
         actual: String,
     },
+
+    #[error("Unsupported install node version error")]
+    UnsupportedInstallNodeVersionError,
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -304,6 +307,7 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::NetworkError(_)
         | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
+        | SnmError::UnsupportedInstallNodeVersionError
         | SnmError::CannotFindDefaultCommand { command: _ }
         | SnmError::ZipError(_)
         | SnmError::IOError(_) => {
