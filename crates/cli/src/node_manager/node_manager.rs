@@ -224,6 +224,8 @@ where
             fs::remove_file(&downloaded_file_path_buf)?;
         }
 
+        let node_install_strategy = self.node_atom.get_snm_config().get_node_install_strategy();
+
         if anchor_file.exists() {
             let confirm = Confirm::new()
                 .with_prompt(format!(
@@ -237,7 +239,20 @@ where
                 self.internal_download(version).await?;
             }
         } else {
-            self.internal_download(version).await?;
+            match node_install_strategy {
+                snm_config::InstallStrategy::Ask => {
+                    let confirm = Confirm::new()
+                        .with_prompt(format!("🤔 Do you want to install v{} ?", &version))
+                        .interact()?;
+                    if confirm {
+                        self.internal_download(version).await?;
+                    }
+                }
+                snm_config::InstallStrategy::Panic => todo!(),
+                snm_config::InstallStrategy::Auto => {
+                    self.internal_download(version).await?;
+                }
+            }
         }
 
         self.internal_set_default(version)?;
