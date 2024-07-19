@@ -17,4 +17,4 @@ qtest:
 
 test:
     echo "Running tests..."
-    cargo t
+    cargo t -- --nocapture
