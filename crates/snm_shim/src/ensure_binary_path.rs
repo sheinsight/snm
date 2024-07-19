@@ -1,6 +1,6 @@
 use std::ops::Not;
 
-use snm_core::traits::atom::AtomTrait;
+use snm_atom::atom::AtomTrait;
 use snm_utils::snm_error::SnmError;
 
 use super::download::download;

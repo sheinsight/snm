@@ -1,8 +1,7 @@
 use std::env::current_dir;
 
+use snm_atom::{atom::AtomTrait as _, node_atom::NodeAtom};
 use snm_config::parse_snm_config;
-use snm_core::traits::atom::AtomTrait;
-use snm_node::snm_node::NodeAtom;
 use snm_utils::snm_error::SnmError;
 use tracing::instrument;
 

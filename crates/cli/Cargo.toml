@@ -29,13 +29,11 @@ clap_complete = "4.5.1"
 clap_complete_fig = "4.5.0"
 rexpect ={ version = "0.5.0"}
 snm_ni = { path = "../snm_ni" }
-snm_core = { path = "../snm_core" }
-snm_node = { path = "../snm_node" }
 snm_shim = { path = "../snm_shim" }
 snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
+snm_atom = { path = "../snm_atom" }
 snm_node_version = { path = "../snm_node_version" }
-snm_package_manager = { path = "../snm_package_manager" }
 snm_download_builder = { path = "../snm_download_builder" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }

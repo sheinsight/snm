@@ -1,9 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
         "./crates/cli/Cargo.toml",
-        "./crates/snm_node/Cargo.toml",
-        "./crates/snm_core/Cargo.toml",
-        "./crates/snm_package_manager/Cargo.toml",
         "./crates/snm_npmrc/Cargo.toml",
         "./crates/snm_config/Cargo.toml",
         "./crates/snm_utils/Cargo.toml",

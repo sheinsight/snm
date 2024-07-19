@@ -1,3 +1,4 @@
+use crate::atom::AtomTrait;
 use crate::conditional_compiler::get_arch;
 use crate::conditional_compiler::get_os;
 use crate::conditional_compiler::get_tarball_ext;
@@ -5,7 +6,6 @@ use futures::*;
 use sha2::Digest;
 use sha2::Sha256;
 use snm_config::SnmConfig;
-use snm_core::traits::atom::AtomTrait;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;

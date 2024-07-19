@@ -1,9 +1,9 @@
+use crate::atom::AtomTrait;
 use semver::{Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
 use snm_config::SnmConfig;
-use snm_core::traits::atom::AtomTrait;
 use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;

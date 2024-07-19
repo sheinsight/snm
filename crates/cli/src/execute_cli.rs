@@ -1,7 +1,7 @@
+use snm_atom::node_atom::NodeAtom;
 use snm_config::SnmConfig;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
-use snm_node::snm_node::NodeAtom;
 use snm_utils::snm_error::SnmError;
 use std::process::{Command, Stdio};
 
@@ -28,12 +28,10 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmEr
                     node_manager.un_install(version.as_str()).await?;
                 }
                 ManageCommands::List { offline } => {
-                    // node_manager.show_list().await?;
                     node_manager.list(ListArgs { offline }).await?;
                 }
                 ManageCommands::ListRemote { all } => {
                     node_manager.list_remote(ListRemoteArgs { all }).await?;
-                    // node_manager.show_list_remote(all).await?;
                 }
             }
         }

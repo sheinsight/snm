@@ -6,7 +6,7 @@ use colored::*;
 use dialoguer::Confirm;
 use semver::Version;
 use semver::VersionReq;
-use snm_core::traits::atom::AtomTrait;
+use snm_atom::atom::AtomTrait;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 use std::{collections::HashMap, fs, ops::Not as _, path::PathBuf, time::Duration};

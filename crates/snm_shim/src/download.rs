@@ -1,6 +1,6 @@
 use std::fs;
 
-use snm_core::traits::atom::AtomTrait;
+use snm_atom::atom::AtomTrait;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
