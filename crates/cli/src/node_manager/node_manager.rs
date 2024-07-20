@@ -91,7 +91,7 @@ where
         }
         #[cfg(windows)]
         {
-            std::os::windows::fs::symlink_dir(&version_dir, &default_dir)?;
+            std::os::windows::fs::symlink_dir(&from_dir, &default_dir)?;
         }
         Ok(default_dir)
     }
