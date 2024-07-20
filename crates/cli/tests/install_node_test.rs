@@ -79,6 +79,11 @@ fn test_delete_node() -> Result<(), Box<dyn Error>> {
     p.exp_string(&node_version)?;
 
     p = spawn(
+        format!("snm node default {}", &node_version).as_str(),
+        Some(30_000),
+    )?;
+
+    p = spawn(
         format!("snm node uninstall {}", node_version).as_str(),
         Some(30_000),
     )?;
