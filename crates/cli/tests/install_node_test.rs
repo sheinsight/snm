@@ -6,6 +6,11 @@ use rexpect::spawn;
 use uuid::Uuid;
 
 fn create_temp_dir() -> PathBuf {
+    let current_dir = env::current_dir()?;
+    let target_debug_dir = current_dir.join("target").join("debug");
+    let current_path = env::var("PATH").unwrap_or_default();
+    let new_path = format!("{}:{}", target_debug_dir.display(), current_path);
+    env::set_var("PATH", new_path);
     let temp_dir = env::temp_dir();
     let unique_dir = temp_dir.join(Uuid::new_v4().to_string());
     fs::create_dir(&unique_dir).expect("Failed to create temp directory");
