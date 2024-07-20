@@ -7,7 +7,14 @@ use uuid::Uuid;
 
 fn create_temp_dir() -> PathBuf {
     let current_dir = env::current_dir().unwrap();
-    let target_debug_dir = current_dir.join("target").join("debug");
+    let target_debug_dir = current_dir
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("target")
+        .join("debug");
+    println!("Adding {:?} to PATH", target_debug_dir);
     let current_path = env::var("PATH").unwrap_or_default();
     let new_path = format!("{}:{}", target_debug_dir.display(), current_path);
     env::set_var("PATH", new_path);
