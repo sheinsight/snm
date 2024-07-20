@@ -6,7 +6,7 @@ use rexpect::spawn;
 use uuid::Uuid;
 
 fn create_temp_dir() -> PathBuf {
-    let current_dir = env::current_dir()?;
+    let current_dir = env::current_dir().unwrap();
     let target_debug_dir = current_dir.join("target").join("debug");
     let current_path = env::var("PATH").unwrap_or_default();
     let new_path = format!("{}:{}", target_debug_dir.display(), current_path);
