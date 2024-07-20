@@ -13,12 +13,13 @@ where
         .exists()
         .not()
     {
-        // if manage.download_condition(version.as_str()) {
-        //     download(version.as_str(), manage).await?;
-        // } else {
-        //     // exit 0
-        // }
-        download(version.as_str(), manage).await?;
+        if manage.get_snm_config().get_strict() {
+            return Err(SnmError::UnsupportedNodeVersionError {
+                version: version.to_string(),
+            });
+        } else {
+            download(version.as_str(), manage).await?;
+        }
     }
 
     let binary = manage.get_runtime_binary_dir_string(version.as_str())?;
