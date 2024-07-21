@@ -59,7 +59,11 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 }
 
 pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
-    env_logger::init();
+    // env_logger::init();
+
+    color_backtrace::install();
+
+    tracing_subscriber::fmt::init();
 
     let bin_args: Vec<String> = std::env::args().skip(1).collect();
 

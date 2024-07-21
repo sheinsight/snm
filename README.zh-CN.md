@@ -68,17 +68,16 @@ brew install snm
 
 在 shell 中我们提供了以下的配置项目：
 
-| 配置项                               | 默认值                            | 功能描述                        |
-| ------------------------------------ | --------------------------------- | ------------------------------- |
-| SNM_STRICT                           | false                             | 严格模式开关                    |
-| SNM_NODE_BIN_DIR                     | node_bin                          | node 的二进制存储目录           |
-| SNM_DOWNLOAD_DIR                     | downloads                         | 文件的下载目录                  |
-| SNM_NODE_MODULES_DIR                 | node_modules                      | npm 、pnpm、yarn 的模块存储目录 |
-| SNM_NODE_DIST_URL                    | https://nodejs.org/dist           | nodejs 元数据的获取地址         |
-| SNM_DOWNLOAD_TIMEOUT_SECS            | 60                                | 下载超时时间 ( 单位为 `秒` )    |
-| SNM_NODE_GITHUB_RESOURCE_HOST        | https://raw.githubusercontent.com | GITHUB_RESOURCE 地址            |
-| SNM_NODE_INSTALL_STRATEGY            | auto                              | node 的安装策略                 |
-| SNM_PACKAGE_MANAGER_INSTALL_STRATEGY | auto                              | 包管理器的安装策略              |
+| 配置项                        | 默认值                            | 功能描述                        |
+| ----------------------------- | --------------------------------- | ------------------------------- |
+| SNM_STRICT                    | false                             | 严格模式开关                    |
+| SNM_NODE_BIN_DIR              | node_bin                          | node 的二进制存储目录           |
+| SNM_DOWNLOAD_DIR              | downloads                         | 文件的下载目录                  |
+| SNM_NODE_MODULES_DIR          | node_modules                      | npm 、pnpm、yarn 的模块存储目录 |
+| SNM_NODE_DIST_URL             | https://nodejs.org/dist           | nodejs 元数据的获取地址         |
+| SNM_DOWNLOAD_TIMEOUT_SECS     | 60                                | 下载超时时间 ( 单位为 `秒` )    |
+| SNM_NODE_GITHUB_RESOURCE_HOST | https://raw.githubusercontent.com | GITHUB_RESOURCE 地址            |
+| SNM_NODE_INSTALL_STRATEGY     | auto                              | node 的安装策略                 |
 
 ### SNM_STRICT
 
@@ -132,7 +131,3 @@ node 的安装策略，可选值范围如下：
 - ask ( 询问用户是否需要安装，这也是默认值 )
 - panic ( 如果本地不存在该版本则直接报错 )
 - auto （ 静默安装 ）
-
-### SNM_PACKAGE_MANAGER_INSTALL_STRATEGY
-
-packageManager 的安装策略 ，可选值同上

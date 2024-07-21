@@ -48,7 +48,10 @@ pub enum SnmError {
     GetWorkspaceError,
 
     #[error("Not found valid version")]
-    NotFoundValidVersion,
+    NotFoundValidNodeVersionDeclaration,
+
+    #[error("No default node binary")]
+    NoDefaultNodeBinary,
 
     #[error("File already exists {0}")]
     FileAlreadyExists(PathBuf),
@@ -202,35 +205,11 @@ pub fn friendly_error_message(error: SnmError) {
                 path_buf.to_string_lossy().bold().red()
             );
         }
-        SnmError::NotFoundValidVersion => {
-            eprintln!(
-                r##"
-        👹  Not found valid version
-
-            If in strict mode, 
-
-            You must to be a .node-version file in current_dir and the correct version number configured.
-
-            You must to be a package.json in current_dir with the correct configuration of packageManager, for example: npm@8.0.0
-
-            If not in strict mode,
-
-            You can continue to follow strict mode rules 
-
-            or 
-
-            Use snm node default x.x.x to install the default version of node.
-
-            Use snm npm default x.x.x to install the default version of npm.
-
-            Use snm yarn default x.x.x to install the default version of yarn.
-
-            Use snm node install x.x.x to install the specified version of node.
-
-            You ensure that the default version exits at least one .
-        
-            "##
-            );
+        SnmError::NotFoundValidNodeVersionDeclaration => {
+            eprintln!(r##"[error]: Not found valid node version declaration"##);
+        }
+        SnmError::NoDefaultNodeBinary => {
+            eprintln!(r##"[error]: No default node binary"##);
         }
         SnmError::NotMatchPackageManagerError {
             raw_command,
