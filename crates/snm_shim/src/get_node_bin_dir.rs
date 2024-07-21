@@ -3,11 +3,11 @@ use std::env::current_dir;
 use snm_atom::{atom::AtomTrait as _, node_atom::NodeAtom};
 use snm_config::parse_snm_config;
 use snm_utils::snm_error::SnmError;
-use tracing::instrument;
+use tracing::{instrument, Level};
 
 use crate::ensure_binary_path;
 
-#[instrument(level = "trace", ret)]
+#[instrument(level = Level::TRACE, ret)]
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
 
