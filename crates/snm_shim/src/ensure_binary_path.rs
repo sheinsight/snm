@@ -38,7 +38,7 @@ where
     DownloadBuilder::new()
         .retries(3)
         .timeout(atom.get_snm_config().get_download_timeout_secs())
-        .write_strategy(WriteStrategy::Nothing)
+        .write_strategy(WriteStrategy::WriteAfterDelete)
         .download(&download_url, &downloaded_file_path_buf)
         .await?;
 
