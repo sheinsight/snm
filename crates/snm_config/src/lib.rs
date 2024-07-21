@@ -72,8 +72,6 @@ pub struct SnmConfig {
 
     download_timeout_secs: Option<u64>,
 
-    package_manager_install_strategy: Option<InstallStrategy>,
-
     npm_registry: Option<String>,
 
     workspace: Option<String>,
@@ -192,12 +190,6 @@ impl SnmConfig {
             .clone()
             .unwrap_or(InstallStrategy::Ask)
     }
-
-    pub fn get_package_manager_install_strategy(&self) -> InstallStrategy {
-        self.package_manager_install_strategy
-            .clone()
-            .unwrap_or(InstallStrategy::Ask)
-    }
 }
 
 pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
@@ -270,7 +262,6 @@ mod tests {
             "https://raw.githubusercontent.com",
         );
         env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
-        env::set_var("SNM_PACKAGE_MANAGER_INSTALL_STRATEGY", "auto");
 
         let config = parse_snm_config(&current_dir().unwrap()).unwrap();
 
@@ -285,7 +276,6 @@ mod tests {
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
                 node_install_strategy: Some(InstallStrategy::Auto),
                 download_timeout_secs: Some(60),
-                package_manager_install_strategy: Some(InstallStrategy::Auto),
                 npm_registry: None,
                 workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
                 snm_node_version: None,
