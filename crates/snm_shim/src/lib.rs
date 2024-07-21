@@ -43,8 +43,11 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
                 ensure_binary_path(&snm_package_manage, &version).await?,
             ]
         } else if restricted_list.contains(&command.as_str()) {
-            return Err(SnmError::CannotFindDefaultCommand {
-                command: bin_name.to_string(),
+            return Err(SnmError::NotMatchPackageManagerError {
+                // command: bin_name.to_string(),
+                raw_command: args_all.join(" ").to_string(),
+                expected: package_manager.name,
+                actual: prefix.to_string(),
             });
         } else {
             vec![node_dir.clone(), get_default_bin_dir(&node_dir, bin_name)?]

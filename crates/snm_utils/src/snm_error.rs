@@ -217,11 +217,7 @@ pub fn friendly_error_message(error: SnmError) {
             actual,
         } => {
             eprintln!(
-                r##"
-        👹  You Input: {} , Package Manager not match
-
-            The expected packageManager is {} , but the actual packageManager is {}.
-            "##,
+                r##"You input: {} , packageManager not match. The expected packageManager is {} , but the actual packageManager is {}."##,
                 raw_command.bold().red(),
                 expected.green(),
                 actual.red()
