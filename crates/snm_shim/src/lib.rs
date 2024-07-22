@@ -40,7 +40,7 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
             let version = package_manager.version;
             vec![
                 node_dir.clone(),
-                ensure_binary_path(&snm_package_manage, &version).await?,
+                ensure_binary_path(&snm_package_manage, &version, false).await?,
             ]
         } else if restricted_list.contains(&command.as_str()) {
             return Err(SnmError::NotMatchPackageManagerError {

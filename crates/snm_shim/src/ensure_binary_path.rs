@@ -4,7 +4,11 @@ use snm_atom::atom::AtomTrait;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 
-pub async fn ensure_binary_path<T>(atom: &T, version: &String) -> Result<String, SnmError>
+pub async fn ensure_binary_path<T>(
+    atom: &T,
+    version: &String,
+    is_check: bool,
+) -> Result<String, SnmError>
 where
     T: AtomTrait,
 {
@@ -31,7 +35,9 @@ where
 
             let runtime_dir_path_buf = atom.get_runtime_dir_path_buf(version)?;
 
-            check(version, atom).await?;
+            if is_check {
+                check(version, atom).await?;
+            }
 
             atom.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 

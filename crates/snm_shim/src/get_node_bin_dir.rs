@@ -24,7 +24,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
         version.ok_or(SnmError::NoDefaultNodeBinary)?
     };
 
-    let binary_dir_string = ensure_binary_path(&snm_node, &version).await?;
+    let binary_dir_string = ensure_binary_path(&snm_node, &version, true).await?;
 
     Ok(binary_dir_string)
 }
