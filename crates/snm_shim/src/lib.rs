@@ -44,7 +44,6 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
             ]
         } else if restricted_list.contains(&command.as_str()) {
             return Err(SnmError::NotMatchPackageManagerError {
-                // command: bin_name.to_string(),
                 raw_command: args_all.join(" ").to_string(),
                 expected: package_manager.name,
                 actual: prefix.to_string(),
@@ -62,8 +61,6 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
 }
 
 pub async fn load_node_shim(bin_name: &str) -> Result<(), SnmError> {
-    // env_logger::init();
-
     color_backtrace::install();
 
     tracing_subscriber::fmt::init();
