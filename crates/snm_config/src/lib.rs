@@ -62,6 +62,8 @@ pub struct SnmConfig {
 
     download_dir: Option<String>,
 
+    cache_dir: Option<String>,
+
     node_modules_dir: Option<String>,
 
     node_dist_url: Option<String>,
@@ -160,6 +162,10 @@ impl SnmConfig {
         self.get_dir(&self.download_dir, "downloads")
     }
 
+    pub fn get_cache_dir(&self) -> Result<PathBuf, SnmError> {
+        self.get_dir(&self.cache_dir, "cache")
+    }
+
     pub fn get_node_modules_dir(&self) -> Result<PathBuf, SnmError> {
         self.get_dir(&self.node_modules_dir, "node_modules")
     }
@@ -255,6 +261,7 @@ mod tests {
         env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
+        env::set_var("SNM_CACHE_DIR", "cache_demo");
         env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
         env::set_var("SNM_DOWNLOAD_TIMEOUT_SECS", "60");
         env::set_var(
@@ -271,6 +278,7 @@ mod tests {
                 strict: Some(true),
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
+                cache_dir: Some("cache_demo".to_string()),
                 node_modules_dir: Some("node_modules_demo".to_string()),
                 node_dist_url: Some("https://nodejs.org/dist".to_string()),
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
