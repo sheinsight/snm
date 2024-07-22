@@ -118,15 +118,17 @@ impl AtomTrait for PackageManagerAtom {
     ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
             let npm_registry = self.snm_config.get_npm_registry();
-            let download_url = format!("{}/{}/{}", npm_registry, &self.library_name, &v);
+            let download_url = format!("{}/{}", npm_registry, &self.library_name);
 
             let value: Value = reqwest::get(&download_url).await?.json().await?;
 
             let shasum = value
-                .get("dist")
-                .and_then(|dist| dist.get("shasum"))
-                .and_then(|shasum| shasum.as_str())
-                .map(|shasum| shasum.to_string());
+                .get("versions")
+                .and_then(|item| item.get(v))
+                .and_then(|item| item.get("dist"))
+                .and_then(|item| item.get("shasum"))
+                .and_then(|item| item.as_str())
+                .map(|item| item.to_string());
 
             Ok(shasum)
         })
