@@ -4,6 +4,7 @@ use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
 use snm_config::SnmConfig;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
@@ -117,12 +118,32 @@ impl AtomTrait for PackageManagerAtom {
         v: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
+            let cache_dir = self.snm_config.get_cache_dir()?;
+
+            if cache_dir.exists().not() {
+                fs::create_dir_all(&cache_dir)?;
+            }
+
+            let cache_file = cache_dir.join(format!("{}.json", &self.library_name));
+
             let npm_registry = self.snm_config.get_npm_registry();
+
             let download_url = format!("{}/{}", npm_registry, &self.library_name);
 
-            let value: Value = reqwest::get(&download_url).await?.json().await?;
+            if cache_file.exists().not() {
+                DownloadBuilder::new()
+                    .retries(3)
+                    .timeout(self.snm_config.get_download_timeout_secs())
+                    .write_strategy(WriteStrategy::WriteAfterDelete)
+                    .download(&download_url, &cache_file)
+                    .await?;
+            }
 
-            let shasum = value
+            let file = File::open(&cache_file)?;
+            let reader = BufReader::new(&file);
+            let raw = serde_json::from_reader::<_, Value>(reader)?;
+
+            let shasum = raw
                 .get("versions")
                 .and_then(|item| item.get(v))
                 .and_then(|item| item.get("dist"))
