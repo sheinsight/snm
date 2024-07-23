@@ -17,33 +17,27 @@ where
         .exists()
         .not()
     {
-        if atom.get_snm_config().get_strict() {
-            return Err(SnmError::UnsupportedNodeVersionError {
-                version: version.to_string(),
-            });
-        } else {
-            let download_url = atom.get_download_url(version);
+        let download_url = atom.get_download_url(version);
 
-            let downloaded_file_path_buf = atom.get_downloaded_file_path_buf(version)?;
+        let downloaded_file_path_buf = atom.get_downloaded_file_path_buf(version)?;
 
-            DownloadBuilder::new()
-                .retries(3)
-                .timeout(atom.get_snm_config().get_download_timeout_secs())
-                .write_strategy(WriteStrategy::WriteAfterDelete)
-                .download(&download_url, &downloaded_file_path_buf)
-                .await?;
+        DownloadBuilder::new()
+            .retries(3)
+            .timeout(atom.get_snm_config().get_download_timeout_secs())
+            .write_strategy(WriteStrategy::WriteAfterDelete)
+            .download(&download_url, &downloaded_file_path_buf)
+            .await?;
 
-            let runtime_dir_path_buf = atom.get_runtime_dir_path_buf(version)?;
+        let runtime_dir_path_buf = atom.get_runtime_dir_path_buf(version)?;
 
-            if is_check {
-                check(version, atom).await?;
-            }
+        if is_check {
+            check(version, atom).await?;
+        }
 
-            atom.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
+        atom.decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-            if let Some(parent) = downloaded_file_path_buf.parent() {
-                fs::remove_dir_all(parent)?;
-            }
+        if let Some(parent) = downloaded_file_path_buf.parent() {
+            fs::remove_dir_all(parent)?;
         }
     }
 

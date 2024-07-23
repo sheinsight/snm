@@ -5,10 +5,14 @@ mod get_node_bin_dir;
 use crate::get_default_bin_dir::get_default_bin_dir;
 use crate::get_node_bin_dir::get_node_bin_dir;
 use ensure_binary_path::ensure_binary_path;
-use snm_atom::package_manager_atom::PackageManagerAtom;
+use snm_atom::{atom::AtomTrait, package_manager_atom::PackageManagerAtom};
 use snm_config::parse_snm_config;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::{exec::exec_cli, snm_error::SnmError};
-use std::env::{self, current_dir};
+use std::{
+    env::{self, current_dir},
+    fs,
+};
 use tracing_subscriber::{self};
 
 pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
@@ -38,10 +42,35 @@ pub async fn load_package_manage_shim(prefix: &str, bin_name: &str) -> Result<()
         );
         if package_manager.name == prefix {
             let version = package_manager.version;
-            vec![
-                node_dir.clone(),
-                ensure_binary_path(&snm_package_manage, &version, false).await?,
-            ]
+
+            let download_url = snm_package_manage.get_download_url(&version);
+
+            let downloaded_file_path_buf =
+                snm_package_manage.get_downloaded_file_path_buf(&version)?;
+
+            DownloadBuilder::new()
+                .retries(3)
+                .timeout(
+                    snm_package_manage
+                        .get_snm_config()
+                        .get_download_timeout_secs(),
+                )
+                .write_strategy(WriteStrategy::WriteAfterDelete)
+                .download(&download_url, &downloaded_file_path_buf)
+                .await?;
+
+            let runtime_dir_path_buf = snm_package_manage.get_runtime_dir_path_buf(&version)?;
+
+            snm_package_manage
+                .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
+
+            if let Some(parent) = downloaded_file_path_buf.parent() {
+                fs::remove_dir_all(parent)?;
+            }
+
+            let binary = snm_package_manage.get_runtime_binary_dir_string(version.as_str())?;
+
+            vec![node_dir.clone(), binary]
         } else if restricted_list.contains(&command.as_str()) {
             return Err(SnmError::NotMatchPackageManagerError {
                 raw_command: args_all.join(" ").to_string(),
