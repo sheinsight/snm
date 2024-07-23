@@ -6,8 +6,6 @@ use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 use tracing::{instrument, Level};
 
-use crate::ensure_binary_path;
-
 #[instrument(level = Level::TRACE, ret)]
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
@@ -24,11 +22,13 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
     let node_white_list = snm_config.get_node_white_list();
 
-    if node_white_list.contains(&version).not() {
-        return Err(SnmError::UnsupportedNodeVersionError {
-            actual: version.to_string(),
-            expect: node_white_list,
-        });
+    if node_white_list.is_empty().not() {
+        if node_white_list.contains(&version).not() {
+            return Err(SnmError::UnsupportedNodeVersionError {
+                actual: version.to_string(),
+                expect: node_white_list,
+            });
+        }
     }
 
     if snm_node
@@ -81,8 +81,8 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
             fs::remove_dir_all(parent)?;
         }
     }
+    let binary = snm_node.get_runtime_binary_dir_string(version.as_str())?;
+    // let binary_dir_string = ensure_binary_path(&snm_node, &version).await?;
 
-    let binary_dir_string = ensure_binary_path(&snm_node, &version, true).await?;
-
-    Ok(binary_dir_string)
+    Ok(binary)
 }
