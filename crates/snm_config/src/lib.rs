@@ -279,7 +279,6 @@ mod tests {
         assert_eq!(
             config,
             SnmConfig {
-                strict: Some(true),
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
                 cache_dir: Some("cache_demo".to_string()),
