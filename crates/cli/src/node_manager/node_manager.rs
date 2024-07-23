@@ -248,11 +248,6 @@ where
                         self.internal_download(version).await?;
                     }
                 }
-                snm_config::InstallStrategy::Panic => {
-                    return Err(SnmError::UnsupportedNodeVersionError {
-                        version: version.to_string(),
-                    })
-                }
                 snm_config::InstallStrategy::Auto => {
                     self.internal_download(version).await?;
                 }

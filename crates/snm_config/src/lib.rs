@@ -9,7 +9,6 @@ use std::{env, path::PathBuf};
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
     Ask,
-    Panic,
     Auto,
 }
 
@@ -17,7 +16,6 @@ impl InstallStrategy {
     pub fn from_str(s: &str) -> Self {
         match s {
             "ask" => InstallStrategy::Ask,
-            "panic" => InstallStrategy::Panic,
             "auto" => InstallStrategy::Auto,
             _ => {
                 let msg = format!(
@@ -32,7 +30,6 @@ impl InstallStrategy {
     pub fn as_str(&self) -> &'static str {
         match self {
             InstallStrategy::Ask => "ask",
-            InstallStrategy::Panic => "panic",
             InstallStrategy::Auto => "auto",
         }
     }
