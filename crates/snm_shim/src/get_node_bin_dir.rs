@@ -24,6 +24,14 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
         version.ok_or(SnmError::NoDefaultNodeBinary)?
     };
 
+    let node_white_list = snm_config.get_node_white_list();
+
+    if node_white_list.contains(&version).not() {
+        return Err(SnmError::UnsupportedNodeVersionError {
+            version: version.to_string(),
+        });
+    }
+
     if snm_node
         .get_anchor_file_path_buf(version.as_str())?
         .exists()

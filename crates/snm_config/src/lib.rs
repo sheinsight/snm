@@ -72,6 +72,8 @@ pub struct SnmConfig {
 
     node_install_strategy: Option<InstallStrategy>,
 
+    node_white_list: Option<String>,
+
     download_timeout_secs: Option<u64>,
 
     npm_registry: Option<String>,
@@ -148,6 +150,13 @@ impl SnmConfig {
             Some(workspace) => Ok(PathBuf::from(workspace)),
             None => Err(SnmError::GetWorkspaceError),
         }
+    }
+
+    pub fn get_node_white_list(&self) -> Vec<String> {
+        if let Some(white_list) = &self.node_white_list {
+            return white_list.split(",").map(|s| s.to_string()).collect();
+        }
+        return vec![].to_vec();
     }
 
     pub fn get_strict(&self) -> bool {
@@ -269,6 +278,7 @@ mod tests {
             "https://raw.githubusercontent.com",
         );
         env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
+        env::set_var("SNM_NODE_WHITE_LIST", "1.1.0,1.2.0");
 
         let config = parse_snm_config(&current_dir().unwrap()).unwrap();
 
@@ -283,6 +293,7 @@ mod tests {
                 node_dist_url: Some("https://nodejs.org/dist".to_string()),
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
                 node_install_strategy: Some(InstallStrategy::Auto),
+                node_white_list: Some("1.1.0,1.2.0".to_string()),
                 download_timeout_secs: Some(60),
                 npm_registry: None,
                 workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
