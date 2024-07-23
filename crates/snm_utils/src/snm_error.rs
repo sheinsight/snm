@@ -81,8 +81,8 @@ pub enum SnmError {
         actual: String,
     },
 
-    #[error("Unsupported node v{version} ")]
-    UnsupportedNodeVersionError { version: String },
+    #[error("Unsupported node {actual} ")]
+    UnsupportedNodeVersionError { actual: String, expect: Vec<String> },
 }
 
 pub fn friendly_error_message(error: SnmError) {
@@ -275,6 +275,19 @@ pub fn friendly_error_message(error: SnmError) {
                 actual.red(),
             );
         }
+        SnmError::UnsupportedNodeVersionError { actual, expect } => {
+            eprintln!(
+                r##"👹 Unsupported node {} , Only the following list is supported:
+
+{}"##,
+                actual.bold().red(),
+                expect
+                    .iter()
+                    .map(|item| format!("- {}", item).to_string())
+                    .collect::<Vec<String>>()
+                    .join("\r\n")
+            );
+        }
         SnmError::HttpStatusCodeUnOk
         | SnmError::NotFoundPackageJsonError(_)
         | SnmError::GetWorkspaceError
@@ -282,7 +295,6 @@ pub fn friendly_error_message(error: SnmError) {
         | SnmError::NetworkError(_)
         | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
-        | SnmError::UnsupportedNodeVersionError { version: _ }
         | SnmError::CannotFindDefaultCommand { command: _ }
         | SnmError::ZipError(_)
         | SnmError::IOError(_) => {

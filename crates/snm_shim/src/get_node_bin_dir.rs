@@ -26,7 +26,8 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
     if node_white_list.contains(&version).not() {
         return Err(SnmError::UnsupportedNodeVersionError {
-            version: version.to_string(),
+            actual: version.to_string(),
+            expect: node_white_list,
         });
     }
 
