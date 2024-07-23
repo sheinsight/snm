@@ -56,8 +56,6 @@ pub struct Ini {
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
-    strict: Option<bool>,
-
     node_bin_dir: Option<String>,
 
     download_dir: Option<String>,
@@ -157,10 +155,6 @@ impl SnmConfig {
             return white_list.split(",").map(|s| s.to_string()).collect();
         }
         return vec![].to_vec();
-    }
-
-    pub fn get_strict(&self) -> bool {
-        self.strict.unwrap_or(false)
     }
 
     pub fn get_node_bin_dir(&self) -> Result<PathBuf, SnmError> {
