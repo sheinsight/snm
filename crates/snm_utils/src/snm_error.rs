@@ -28,10 +28,10 @@ pub enum SnmError {
     #[error("Not found: {0}")]
     NotFoundResourceError(String),
 
-    #[error("Package manager version not match, expected: {expected}, actual: {actual}")]
+    #[error("Package manager version not match, expected: {expect}, actual: {actual}")]
     NotMatchPackageManagerError {
         raw_command: String,
-        expected: String,
+        expect: String,
         actual: String,
     },
 
@@ -56,12 +56,6 @@ pub enum SnmError {
     #[error("Exceeded maximum retry attempts: {0}")]
     ExceededMaxRetries(String),
 
-    #[error("Parse package manager error , raw is {0}")]
-    ParsePackageManagerError(String),
-
-    #[error("Duplicate lock file error")]
-    DuplicateLockFileError { lock_file_vec: Vec<String> },
-
     #[error("{stderr}")]
     SNMBinaryProxyFail { stderr: String },
 
@@ -72,31 +66,66 @@ pub enum SnmError {
         actual: String,
     },
 
-    #[error("Unsupported node {actual} ")]
-    UnsupportedNodeVersionError { actual: String, expect: Vec<String> },
+    #[error("Unsupported node version: {version}")]
+    UnsupportedNodeVersionError {
+        version: String,
+        node_white_list: Vec<String>,
+    },
+
+    #[error("Not found command: {bin_name}")]
+    NotFoundCommandError { bin_name: String },
+
+    #[error("{raw_package_manager}")]
+    ParsePackageManagerError { raw_package_manager: String },
+}
+
+pub fn create_error_message(message: String, descriptions: Vec<String>) -> String {
+    let description = descriptions
+        .iter()
+        .map(|value| format!("{:<4}{}", "", value))
+        .collect::<Vec<String>>()
+        .join("\r\n".repeat(2).as_str());
+
+    format!(
+        r##"
+{:<3}{}.
+
+{}
+    "##,
+        "👹", message, description
+    )
 }
 
 pub fn friendly_error_message(error: SnmError) {
     match error {
-        SnmError::ParsePackageManagerError(raw) => {
-            eprintln!(
-                r##"
-        👹  Parse packageManager Error
-
-            The packageManager {} configured in your package.json is not being parsed correctly. 
-            "##,
-                raw.bold().red()
+        SnmError::ParsePackageManagerError {
+            raw_package_manager,
+        } => {
+            let message = create_error_message(
+                "Parse package manager error".to_string(),
+                vec![
+                    format!(
+                        "Please check the raw package manager configuration: {}",
+                        raw_package_manager.bold().red()
+                    ),
+                    format!(
+                        "Should satisfy {}, Example: {}",
+                        "[packageManager]@[version]".bold().green(),
+                        "npm@9.0.0".bold().green()
+                    ),
+                ],
             );
+            eprintln!("{}", message);
         }
         SnmError::ExceededMaxRetries(url) => {
-            eprintln!(
-                r##"
-        👹  Exceeded max retries
-
-            The download failed after {} retries. 
-            "##,
-                url.to_string().bold().red()
+            let message = create_error_message(
+                "Exceeded max retries".to_string(),
+                vec![format!(
+                    "The download failed after {} retries.",
+                    url.to_string().bold().red()
+                )],
             );
+            eprintln!("{}", message);
         }
         SnmError::NotFoundResourceError(url) => {
             eprintln!(
@@ -153,27 +182,30 @@ pub fn friendly_error_message(error: SnmError) {
         SnmError::NoDefaultNodeBinary => {
             eprintln!(r##"[error]: No default node binary"##);
         }
+        SnmError::NotFoundCommandError { bin_name } => {
+            let message = create_error_message(
+                format!("Not found command {}", bin_name.bold().red()),
+                vec![format!(
+                    "The command {} is not found in the current environment.",
+                    bin_name.bold().red()
+                )],
+            );
+            eprintln!("{}", message);
+        }
         SnmError::NotMatchPackageManagerError {
             raw_command,
-            expected,
+            expect,
             actual,
         } => {
-            eprintln!(
-                r##"You input: {} , packageManager not match. The expected packageManager is {} , but the actual packageManager is {}."##,
-                raw_command.bold().red(),
-                expected.green(),
-                actual.red()
+            let message = create_error_message(
+                "Not match package manager".to_string(),
+                vec![
+                    format!("You input: {}", raw_command.bright_black()),
+                    format!("Expect {}", expect.green()),
+                    format!("Actual {}", actual.red()),
+                ],
             );
-        }
-        SnmError::DuplicateLockFileError { lock_file_vec } => {
-            eprintln!(
-                r##"
-        👹  Duplicate lock file error
-            
-            Multiple package manager lock files found: {} , Please remove the unnecessary ones.
-            "##,
-                lock_file_vec.join(", ").bold().red()
-            );
+            eprintln!("{}", message);
         }
         SnmError::SNMBinaryProxyFail { stderr } => {
             eprintln!(
@@ -190,35 +222,32 @@ pub fn friendly_error_message(error: SnmError) {
             expect,
             actual,
         } => {
-            eprintln!(
-                r##"
-        👹  Shasum error
-            
-            {} 
-
-            expect  {} , 
-
-            actual  {}.
-
-            Please try again
-                "##,
-                file_path,
-                expect.green(),
-                actual.red(),
+            let message = create_error_message(
+                "Check shasum error".to_string(),
+                vec![
+                    format!("File path {}", file_path.bright_black()),
+                    format!("Expect {}", expect.bold().green()),
+                    format!("Actual {}", actual.bold().red()),
+                ],
             );
+            eprintln!("{}", message);
         }
-        SnmError::UnsupportedNodeVersionError { actual, expect } => {
-            eprintln!(
-                r##"👹 Unsupported node {} , Only the following list is supported:
-
-{}"##,
-                actual.bold().red(),
-                expect
-                    .iter()
-                    .map(|item| format!("- {}", item).to_string())
-                    .collect::<Vec<String>>()
-                    .join("\r\n")
+        SnmError::UnsupportedNodeVersionError {
+            version,
+            node_white_list,
+        } => {
+            let message = create_error_message(
+                format!("Unsupported node {}", version.bold().bright_red()),
+                vec![
+                    vec!["Only the following list is supported:".to_string()],
+                    node_white_list
+                        .iter()
+                        .map(|item| format!("- {}", item).to_string())
+                        .collect::<Vec<String>>(),
+                ]
+                .concat(),
             );
+            eprintln!("{}", message);
         }
         SnmError::HttpStatusCodeUnOk
         | SnmError::GetWorkspaceError

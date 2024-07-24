@@ -1,6 +1,6 @@
 use std::{env::current_dir, fs, ops::Not as _};
 
-use snm_atom::{atom::AtomTrait as _, node_atom::NodeAtom};
+use snm_atom::{atom::AtomTrait, node_atom::NodeAtom};
 use snm_config::parse_snm_config;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
@@ -25,8 +25,8 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     if node_white_list.is_empty().not() {
         if node_white_list.contains(&version).not() {
             return Err(SnmError::UnsupportedNodeVersionError {
-                actual: version.to_string(),
-                expect: node_white_list,
+                version,
+                node_white_list,
             });
         }
     }
@@ -82,6 +82,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
         }
     }
     let binary = snm_node.get_runtime_binary_dir_string(version.as_str())?;
+
     // let binary_dir_string = ensure_binary_path(&snm_node, &version).await?;
 
     Ok(binary)

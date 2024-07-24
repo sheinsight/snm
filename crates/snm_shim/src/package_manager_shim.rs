@@ -1,6 +1,8 @@
 use std::{
     env::{self, current_dir},
     fs,
+    ops::Not,
+    path::PathBuf,
 };
 
 use snm_atom::{atom::AtomTrait as _, package_manager_atom::PackageManagerAtom};
@@ -69,7 +71,7 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmErro
         } else if restricted_list.contains(&command.as_str()) {
             return Err(SnmError::NotMatchPackageManagerError {
                 raw_command: args_all.join(" ").to_string(),
-                expected: package_manager.name,
+                expect: package_manager.name,
                 actual: prefix.to_string(),
             });
         } else {
@@ -78,6 +80,16 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmErro
     } else {
         vec![node_dir.clone()]
     };
+
+    let exists = bin_dirs
+        .iter()
+        .any(|dir| PathBuf::from(dir).join(bin_name).exists());
+
+    if exists.not() {
+        return Err(SnmError::NotFoundCommandError {
+            bin_name: bin_name.to_string(),
+        });
+    }
 
     exec_cli(bin_dirs, bin_name, &args)?;
 

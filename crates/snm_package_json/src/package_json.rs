@@ -94,28 +94,28 @@ fn parse_package_manager(raw_package_manager: &str) -> Result<Option<PackageMana
         Some(caps) => {
             let name = if let Some(m) = caps.name("name") {
                 if m.is_empty() {
-                    return Err(SnmError::ParsePackageManagerError(
-                        raw_package_manager.to_string(),
-                    ));
+                    return Err(SnmError::ParsePackageManagerError {
+                        raw_package_manager: raw_package_manager.to_string(),
+                    });
                 }
                 m.as_str().to_string()
             } else {
-                return Err(SnmError::ParsePackageManagerError(
-                    raw_package_manager.to_string(),
-                ));
+                return Err(SnmError::ParsePackageManagerError {
+                    raw_package_manager: raw_package_manager.to_string(),
+                });
             };
 
             let version = if let Some(m) = caps.name("version") {
                 if m.is_empty() {
-                    return Err(SnmError::ParsePackageManagerError(
-                        raw_package_manager.to_string(),
-                    ));
+                    return Err(SnmError::ParsePackageManagerError {
+                        raw_package_manager: raw_package_manager.to_string(),
+                    });
                 }
                 m.as_str().to_string()
             } else {
-                return Err(SnmError::ParsePackageManagerError(
-                    raw_package_manager.to_string(),
-                ));
+                return Err(SnmError::ParsePackageManagerError {
+                    raw_package_manager: raw_package_manager.to_string(),
+                });
             };
 
             return Ok(Some(PackageManager {
@@ -128,6 +128,10 @@ fn parse_package_manager(raw_package_manager: &str) -> Result<Option<PackageMana
                 }),
             }));
         }
-        None => return Ok(None),
+        None => {
+            return Err(SnmError::ParsePackageManagerError {
+                raw_package_manager: raw_package_manager.to_string(),
+            });
+        }
     }
 }
