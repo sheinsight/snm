@@ -28,9 +28,6 @@ pub enum SnmError {
     #[error("Not found: {0}")]
     NotFoundResourceError(String),
 
-    #[error("Not found package.json {0}")]
-    NotFoundPackageJsonError(PathBuf),
-
     #[error("Package manager version not match, expected: {expected}, actual: {actual}")]
     NotMatchPackageManagerError {
         raw_command: String,
@@ -62,17 +59,11 @@ pub enum SnmError {
     #[error("Parse package manager error , raw is {0}")]
     ParsePackageManagerError(String),
 
-    #[error("Unsupported command: {raw_command}")]
-    UnsupportedCommandError { raw_command: String },
-
     #[error("Duplicate lock file error")]
     DuplicateLockFileError { lock_file_vec: Vec<String> },
 
     #[error("{stderr}")]
     SNMBinaryProxyFail { stderr: String },
-
-    #[error("Cannot find command: {command}")]
-    CannotFindDefaultCommand { command: String },
 
     #[error("Shasum error: {file_path} , expect: {expect} , actual: {actual}")]
     ShasumError {
@@ -87,55 +78,6 @@ pub enum SnmError {
 
 pub fn friendly_error_message(error: SnmError) {
     match error {
-        SnmError::BuildConfigError(_) => {
-            eprintln!(
-                r##"
-        👹  Build snm config error
-
-            The following is a list of configurations supported by snm:
-
-            SNM_STRICT: 
-
-                Whether to enable strict mode, default is false.
-                In strict mode, 
-                Must be a .node-version file in current_dir and the correct version number configured.
-                Must be a package.json in current_dir with the correct configuration of packageManager, for example: npm@8.0.0
-
-            SNM_NODE_BIN_DIR: 
-
-                The directory where the node binary is stored, default is node_bin.
-
-            SNM_DOWNLOAD_DIR: 
-
-                The directory where the downloaded file is stored, default is downloads.
-
-            SNM_NODE_MODULES_DIR: 
-
-                The directory where the node_modules is stored, default is node_modules.
-
-            SNM_NODE_DIST_URL: 
-
-                The download address of the node binary, the default is https://nodejs.org/dist .
-
-            SNM_GITHUB_RESOURCE_HOST: 
-
-                The download address of the node binary, the default is https://raw.githubusercontent.com .
-
-            SNM_NODE_INSTALL_STRATEGY: 
-
-                The installation strategy of the node binary, the default is auto. You can choose ask, panic, auto.
-
-            SNM_DOWNLOAD_TIMEOUT_SECS: 
-
-                The download timeout time, the default is 60s.
-
-            SNM_PACKAGE_MANAGER_INSTALL_STRATEGY: 
-
-                The installation strategy of the package manager, the default is auto. You can choose ask, panic, auto.
-
-            "##
-            );
-        }
         SnmError::ParsePackageManagerError(raw) => {
             eprintln!(
                 r##"
@@ -223,16 +165,6 @@ pub fn friendly_error_message(error: SnmError) {
                 actual.red()
             );
         }
-        SnmError::UnsupportedCommandError { raw_command } => {
-            eprintln!(
-                r##"
-        👹  You exec command is unsupported
-
-            {}
-                "##,
-                raw_command
-            );
-        }
         SnmError::DuplicateLockFileError { lock_file_vec } => {
             eprintln!(
                 r##"
@@ -289,14 +221,13 @@ pub fn friendly_error_message(error: SnmError) {
             );
         }
         SnmError::HttpStatusCodeUnOk
-        | SnmError::NotFoundPackageJsonError(_)
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
         | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
-        | SnmError::CannotFindDefaultCommand { command: _ }
         | SnmError::ZipError(_)
+        | SnmError::BuildConfigError(_)
         | SnmError::IOError(_) => {
             let msg = format!("{}", error.to_string());
             // panic!("{msg}");

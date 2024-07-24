@@ -70,7 +70,6 @@ brew install snm
 
 | 配置项                        | 默认值                            | 功能描述                        |
 | ----------------------------- | --------------------------------- | ------------------------------- |
-| SNM_STRICT                    | false                             | 严格模式开关                    |
 | SNM_NODE_BIN_DIR              | node_bin                          | node 的二进制存储目录           |
 | SNM_DOWNLOAD_DIR              | downloads                         | 文件的下载目录                  |
 | SNM_NODE_MODULES_DIR          | node_modules                      | npm 、pnpm、yarn 的模块存储目录 |
@@ -78,25 +77,7 @@ brew install snm
 | SNM_DOWNLOAD_TIMEOUT_SECS     | 60                                | 下载超时时间 ( 单位为 `秒` )    |
 | SNM_NODE_GITHUB_RESOURCE_HOST | https://raw.githubusercontent.com | GITHUB_RESOURCE 地址            |
 | SNM_NODE_INSTALL_STRATEGY     | auto                              | node 的安装策略                 |
-
-### SNM_STRICT
-
-#### 我们一般建议在 CI 环境中打包严格模式，当你配置为 true 时，你需要遵守以下约定
-
-- 关于 Node
-  - 你执行命令的目录中必须包含 `.node-version` 文件并正确指定版本
-- 关于 packageManager
-  - 你执行命令的目录中必须包含 `package.json` 文件且正确配置 `packageManager` 字段。
-  - 在你单条命令的所有生命周期内，只要牵扯到使用包管理器执行 `install` 、 `run` 命令，则必须保证使用相同的包管理器。
-
-#### 我们一般建议在本地环境关闭严格模式，当你配置为 false 时你需要注意以下问题
-
-- 关于 Node
-  - 如果存在 `.node-version` , 那么将遵循你配置的版本去执行。
-  - 如果不存在 `.node-version` , 那么将使用默认的 node 执行 , 你应该使用 `snm node default <version>` 指定一个默认版本
-- 关于 packageManager
-  - 如果 `package.json` 中存在 `packageManager` 配置 , 那么将遵循你配置的包管理器去执行，如果你使用的命令不符合，将会抛出错误。
-  - 如果不存在 `package.json` 文件或 `package.json` 中不存在 `packageManager` 配置，那么将使用默认的包管理器执行。
+| SNM_NODE_WHITE_LIST           | ""                                | node 白名单版本                 |
 
 ### SNM_NODE_BIN_DIR
 
@@ -129,5 +110,8 @@ snm 获取 node 最新版本信息的地址 , 并且我们的下载前缀也会�
 node 的安装策略，可选值范围如下：
 
 - ask ( 询问用户是否需要安装，这也是默认值 )
-- panic ( 如果本地不存在该版本则直接报错 )
 - auto （ 静默安装 ）
+
+### SNM_NODE_WHITE_LIST
+
+可执行的 node 白名单列表
