@@ -90,9 +90,11 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
         r##"
 {:<3}{}.
 
+{:<3}{}
+
 {}
     "##,
-        "👹", message, description
+        "👹", message, "📋", "Explain", description
     )
 }
 
