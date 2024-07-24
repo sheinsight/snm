@@ -72,6 +72,13 @@ pub enum SnmError {
         node_white_list: Vec<String>,
     },
 
+    #[error("Unsupported package manager: {name}")]
+    UnsupportedPackageManagerError {
+        raw: String,
+        name: String,
+        supported: Vec<String>,
+    },
+
     #[error("Not found command: {bin_name}")]
     NotFoundCommandError { bin_name: String },
 
@@ -243,6 +250,29 @@ pub fn friendly_error_message(error: SnmError) {
                 vec![
                     vec!["Only the following list is supported:".to_string()],
                     node_white_list
+                        .iter()
+                        .map(|item| format!("- {}", item).to_string())
+                        .collect::<Vec<String>>(),
+                ]
+                .concat(),
+            );
+            eprintln!("{}", message);
+        }
+        SnmError::UnsupportedPackageManagerError {
+            raw,
+            name,
+            supported,
+        } => {
+            let message = create_error_message(
+                format!("Unsupported packageManager {}", name.bold().bright_red()),
+                vec![
+                    vec![
+                        format!(
+                            "The raw package manager configuration is {}, Only the following list is supported:",
+                            raw.bold().bright_red()
+                        ),
+                    ],
+                    supported
                         .iter()
                         .map(|item| format!("- {}", item).to_string())
                         .collect::<Vec<String>>(),
