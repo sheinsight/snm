@@ -109,7 +109,7 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
 
 pub fn friendly_error_message(error: SnmError) {
     match error {
-        SnmError::SNMBinaryProxyFail { stderr } => {
+        SnmError::SNMBinaryProxyFail { stderr: _ } => {
             // TODO 🤔 how to show ?
         }
         SnmError::NoDefaultNodeBinary => {
