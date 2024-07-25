@@ -1,7 +1,7 @@
 use std::{
     env,
     ffi::OsStr,
-    process::{exit, Command, Stdio},
+    process::{Command, Stdio},
 };
 
 use crate::snm_error::SnmError;
@@ -32,8 +32,6 @@ where
         return Err(SnmError::SNMBinaryProxyFail {
             stderr: String::from_utf8_lossy(&output.stderr).to_string(),
         });
-        // TODO
-        // exit(1);
     }
 
     print!("{}", String::from_utf8_lossy(&output.stdout).to_string());

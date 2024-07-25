@@ -110,17 +110,23 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
 pub fn friendly_error_message(error: SnmError) {
     match error {
         SnmError::SNMBinaryProxyFail { stderr } => {
-            eprintln!(
-                r##"
-        👹  SNM proxy error info:
-
-            {}
-            "##,
-                stderr
-            )
+            // TODO 🤔 how to show ?
         }
         SnmError::NoDefaultNodeBinary => {
-            eprintln!(r##"[error]: No default node binary"##);
+            let message = create_error_message(
+                format!("No executable default Node found"),
+                vec![
+                    fmtln!(
+                        "Please use {} set default node",
+                        "snm node default [node version]".bold().bright_green()
+                    ),
+                    fmtln!(
+                        "Or use {}",
+                        "echo [node version] > .node-version".bold().bright_green()
+                    ),
+                ],
+            );
+            eprintln!("{}", message);
         }
         SnmError::ParsePackageManagerError {
             raw_package_manager,
@@ -191,7 +197,6 @@ pub fn friendly_error_message(error: SnmError) {
             );
             eprintln!("{}", message);
         }
-
         SnmError::NotFoundCommandError { bin_name } => {
             let message = create_error_message(
                 format!("Not found command {}", bin_name.bold().red()),
