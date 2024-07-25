@@ -1,7 +1,7 @@
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 use snm_utils::snm_error::SnmError;
 use std::path::Path;
 use std::time::Duration;
@@ -50,12 +50,6 @@ impl DownloadBuilder {
         download_url: &str,
         abs_path: P,
     ) -> Result<P, SnmError> {
-        // let response = Client::new().head(download_url).send().await?;
-
-        // if response.status() == StatusCode::NOT_FOUND {
-        //     return Err(SnmError::NotFoundResourceError(download_url.to_string()));
-        // }
-
         let mut attempts = 0;
 
         while attempts < (self.retries + 1) {
@@ -91,7 +85,9 @@ impl DownloadBuilder {
         if abs_path_ref.exists() {
             match self.write_strategy {
                 WriteStrategy::Error => {
-                    return Err(SnmError::FileAlreadyExists(abs_path_ref.to_path_buf()));
+                    return Err(SnmError::FileAlreadyExists {
+                        file_path: abs_path_ref.to_path_buf(),
+                    });
                 }
                 WriteStrategy::WriteAfterDelete => {
                     std::fs::remove_file(&abs_path_ref)?;
@@ -112,10 +108,6 @@ impl DownloadBuilder {
                 .timeout(Duration::from_secs(60))
                 .send()
                 .await?;
-
-            if response.status() == StatusCode::NOT_FOUND {
-                return Err(SnmError::NotFoundResourceError(download_url.to_string()));
-            }
 
             if !response.status().is_success() {
                 return Err(SnmError::HttpStatusCodeUnOk);

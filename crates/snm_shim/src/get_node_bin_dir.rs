@@ -9,7 +9,6 @@ use tracing::{instrument, Level};
 #[instrument(level = Level::TRACE, ret)]
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
-
     let snm_config = parse_snm_config(&dir)?;
 
     let snm_node = NodeAtom::new(snm_config.clone());
@@ -82,8 +81,6 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
         }
     }
     let binary = snm_node.get_runtime_binary_dir_string(version.as_str())?;
-
-    // let binary_dir_string = ensure_binary_path(&snm_node, &version).await?;
 
     Ok(binary)
 }

@@ -15,6 +15,7 @@
         "crossterm",
         "dialoguer",
         "flate",
+        "fmtln",
         "hasher",
         "indicatif",
         "outpath",

@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, path::PathBuf
 
 use regex::{Match, Regex};
 use serde::Deserialize;
-use snm_utils::snm_error::SnmError;
+use snm_utils::{constant::PACKAGE_MANAGER, snm_error::SnmError};
 
 use crate::{
     package_manager_meta::{PackageManager, PackageManagerDownloadHash},
@@ -107,13 +107,11 @@ fn parse_package_manager(raw_package_manager: &str) -> Result<Option<PackageMana
                         raw_package_manager: raw_package_manager.to_string(),
                     })?;
 
-            let package_manager_vec = vec!["pnpm", "yarn", "npm"];
-
-            if package_manager_vec.contains(&name.as_str()).not() {
+            if PACKAGE_MANAGER.contains(&name.as_str()).not() {
                 return Err(SnmError::UnsupportedPackageManagerError {
                     name: name.to_string(),
                     raw: raw_package_manager.to_string(),
-                    supported: package_manager_vec.iter().map(|s| s.to_string()).collect(),
+                    supported: PACKAGE_MANAGER.iter().map(|s| s.to_string()).collect(),
                 });
             }
 

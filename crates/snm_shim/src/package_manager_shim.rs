@@ -8,7 +8,7 @@ use std::{
 use snm_atom::{atom::AtomTrait as _, package_manager_atom::PackageManagerAtom};
 use snm_config::parse_snm_config;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_utils::{exec::exec_cli, snm_error::SnmError};
+use snm_utils::{constant::RESTRICTED_LIST, exec::exec_cli, snm_error::SnmError};
 
 use crate::get_node_bin_dir::get_node_bin_dir;
 
@@ -30,8 +30,6 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmErro
     let snm_config = parse_snm_config(&dir)?;
 
     let snm_package_manage = PackageManagerAtom::new(prefix, snm_config.clone());
-
-    let restricted_list = vec!["install", "i", "run"];
 
     let bin_dirs = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
         tracing::trace!(
@@ -74,7 +72,7 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmErro
             let binary = snm_package_manage.get_runtime_binary_dir_string(version.as_str())?;
 
             vec![node_dir.clone(), binary]
-        } else if restricted_list.contains(&command.as_str()) {
+        } else if RESTRICTED_LIST.contains(&command.as_str()) {
             return Err(SnmError::NotMatchPackageManagerError {
                 raw_command: args_all.join(" ").to_string(),
                 expect: package_manager.name,

@@ -2,6 +2,8 @@ use colored::*;
 use std::{path::PathBuf, process::exit};
 use thiserror::Error;
 
+use crate::fmtln;
+
 #[derive(Error, Debug)]
 pub enum SnmError {
     #[error("Build config error: {0}")]
@@ -25,9 +27,6 @@ pub enum SnmError {
     #[error("Deserialize error: {0}")]
     DeserializeError(#[from] serde_json::Error),
 
-    #[error("Not found: {0}")]
-    NotFoundResourceError(String),
-
     #[error("Http status code not ok")]
     HttpStatusCodeUnOk,
 
@@ -37,14 +36,11 @@ pub enum SnmError {
     #[error("Get workspace dir error")]
     GetWorkspaceError,
 
-    #[error("Not found valid version")]
-    NotFoundValidNodeVersionDeclaration,
-
     #[error("No default node binary")]
     NoDefaultNodeBinary,
 
-    #[error("File already exists {0}")]
-    FileAlreadyExists(PathBuf),
+    #[error("File already exists {file_path}")]
+    FileAlreadyExists { file_path: PathBuf },
 
     #[error("Exceeded maximum retry attempts: {0}")]
     ExceededMaxRetries(String),
@@ -97,7 +93,7 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
         .iter()
         .map(|value| format!("{:<4}{}", "", value))
         .collect::<Vec<String>>()
-        .join("\r\n".repeat(2).as_str());
+        .join("\r\n".repeat(1).as_str());
 
     format!(
         r##"
@@ -106,13 +102,26 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
 {:<3}{}
 
 {}
-    "##,
+"##,
         "👹", message, "📋", "Explain", description
     )
 }
 
 pub fn friendly_error_message(error: SnmError) {
     match error {
+        SnmError::SNMBinaryProxyFail { stderr } => {
+            eprintln!(
+                r##"
+        👹  SNM proxy error info:
+
+            {}
+            "##,
+                stderr
+            )
+        }
+        SnmError::NoDefaultNodeBinary => {
+            eprintln!(r##"[error]: No default node binary"##);
+        }
         SnmError::ParsePackageManagerError {
             raw_package_manager,
         } => {
@@ -135,22 +144,13 @@ pub fn friendly_error_message(error: SnmError) {
         SnmError::ExceededMaxRetries(url) => {
             let message = create_error_message(
                 "Exceeded max retries".to_string(),
-                vec![format!(
-                    "The download failed after {} retries.",
-                    url.to_string().bold().red()
-                )],
+                vec![
+                    fmtln!("URL {}", url.to_string().bold().red()),
+                    fmtln!("The download failed after 3 retries.",),
+                    fmtln!("Please check the network connection and the download URL",),
+                ],
             );
             eprintln!("{}", message);
-        }
-        SnmError::NotFoundResourceError(url) => {
-            eprintln!(
-                r##"
-        👹  Not found resource
-
-            The resource {} was not found. 
-            "##,
-                url.to_string().bold().red()
-            );
         }
         SnmError::GetHomeDirError => {
             eprintln!(
@@ -181,22 +181,17 @@ pub fn friendly_error_message(error: SnmError) {
             "##
             );
         }
-        SnmError::FileAlreadyExists(path_buf) => {
-            eprintln!(
-                r##"
-        👹  File already exists
-
-            The file {} already exists. 
-            "##,
-                path_buf.to_string_lossy().bold().red()
+        SnmError::FileAlreadyExists { file_path } => {
+            let message = create_error_message(
+                "File already exists".to_string(),
+                vec![format!(
+                    "The file {} already exists.",
+                    file_path.to_string_lossy().bold().red()
+                )],
             );
+            eprintln!("{}", message);
         }
-        SnmError::NotFoundValidNodeVersionDeclaration => {
-            eprintln!(r##"[error]: Not found valid node version declaration"##);
-        }
-        SnmError::NoDefaultNodeBinary => {
-            eprintln!(r##"[error]: No default node binary"##);
-        }
+
         SnmError::NotFoundCommandError { bin_name } => {
             let message = create_error_message(
                 format!("Not found command {}", bin_name.bold().red()),
@@ -221,16 +216,6 @@ pub fn friendly_error_message(error: SnmError) {
                 ],
             );
             eprintln!("{}", message);
-        }
-        SnmError::SNMBinaryProxyFail { stderr } => {
-            eprintln!(
-                r##"
-        👹  SNM proxy error info:
-
-            {}
-            "##,
-                stderr
-            )
         }
         SnmError::ShasumError {
             file_path,
@@ -272,7 +257,7 @@ pub fn friendly_error_message(error: SnmError) {
             let message = create_error_message(
                 format!("Unsupported node {}", version.bold().bright_red()),
                 vec![
-                    vec!["Only the following list is supported:".to_string()],
+                    vec![fmtln!("{}", "Only the following list is supported:")],
                     node_white_list
                         .iter()
                         .map(|item| format!("- {}", item).to_string())
@@ -291,10 +276,7 @@ pub fn friendly_error_message(error: SnmError) {
                 format!("Unsupported packageManager {}", name.bold().bright_red()),
                 vec![
                     vec![
-                        format!(
-                            "The raw package manager configuration is {}, Only the following list is supported:",
-                            raw.bold().bright_red()
-                        ),
+                        fmtln!("The raw package manager configuration is {}, Only the following list is supported:", raw.bold().bright_red()),
                     ],
                     supported
                         .iter()
