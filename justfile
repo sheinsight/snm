@@ -1,7 +1,7 @@
 
 build:
     echo "Building the project..."
-    cargo b
+    cargo b --verbose --release 
 
 prerelease:
     echo "Building the project for release..."
