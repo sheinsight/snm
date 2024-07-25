@@ -28,13 +28,6 @@ pub enum SnmError {
     #[error("Not found: {0}")]
     NotFoundResourceError(String),
 
-    #[error("Package manager version not match, expected: {expect}, actual: {actual}")]
-    NotMatchPackageManagerError {
-        raw_command: String,
-        expect: String,
-        actual: String,
-    },
-
     #[error("Http status code not ok")]
     HttpStatusCodeUnOk,
 
@@ -72,18 +65,31 @@ pub enum SnmError {
         node_white_list: Vec<String>,
     },
 
+    #[error("Not found command: {bin_name}")]
+    NotFoundCommandError { bin_name: String },
+
+    #[error("Not found package.json file")]
+    NotFoundPackageJsonFileError {},
+
+    #[error("Not found package manager config")]
+    NotFondPackageManagerConfigError {},
+
+    #[error("{raw_package_manager}")]
+    ParsePackageManagerError { raw_package_manager: String },
+
+    #[error("Package manager version not match, expected: {expect}, actual: {actual}")]
+    NotMatchPackageManagerError {
+        raw_command: String,
+        expect: String,
+        actual: String,
+    },
+
     #[error("Unsupported package manager: {name}")]
     UnsupportedPackageManagerError {
         raw: String,
         name: String,
         supported: Vec<String>,
     },
-
-    #[error("Not found command: {bin_name}")]
-    NotFoundCommandError { bin_name: String },
-
-    #[error("{raw_package_manager}")]
-    ParsePackageManagerError { raw_package_manager: String },
 }
 
 pub fn create_error_message(message: String, descriptions: Vec<String>) -> String {
@@ -238,6 +244,24 @@ pub fn friendly_error_message(error: SnmError) {
                     format!("Expect {}", expect.bold().green()),
                     format!("Actual {}", actual.bold().red()),
                 ],
+            );
+            eprintln!("{}", message);
+        }
+        SnmError::NotFoundPackageJsonFileError {} => {
+            let message = create_error_message(
+                "Not found package.json file".to_string(),
+                vec![format!(
+                    "Please check the current directory, whether the package.json file exists."
+                )],
+            );
+            eprintln!("{}", message);
+        }
+        SnmError::NotFondPackageManagerConfigError {} => {
+            let message = create_error_message(
+                "Not found packageManager config".to_string(),
+                vec![format!(
+                    "Please check the package.json file, whether the packageManager field exists."
+                )],
             );
             eprintln!("{}", message);
         }
