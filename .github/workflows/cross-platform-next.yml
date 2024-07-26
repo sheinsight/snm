@@ -99,7 +99,7 @@ jobs:
 
   e2e-testing:
     name: E2E testing
-    needs: unit-testing
+    needs: build-release
     strategy:
       matrix:
         include:
