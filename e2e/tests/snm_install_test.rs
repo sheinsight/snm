@@ -38,7 +38,11 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
 
     let original_path = var("PATH")?;
 
-    let new_path: String = format!("{}:{}", c.display().to_string(), original_path);
+    let new_path: String = format!(
+        "{}:{}",
+        c.join("tests").display().to_string(),
+        original_path
+    );
 
     println!("New path: {}", new_path);
 
