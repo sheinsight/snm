@@ -138,27 +138,9 @@ jobs:
         shell: bash
         run: |
           ls -R
-          tar –xvf ${{ matrix.target }}.tar.gz
+          tar -xvf ${{ matrix.target }}.tar.gz -C e2e/tests
+          cd e2e/tests
           ls -R
-
-      - name: Build binary
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --release --target ${{ matrix.target }}
-      - name: Strip binary (Linux and macOS only)
-        if: matrix.os != 'windows-latest'
-        run: |
-          for file in snm node npm npx pnpm pnpx yarn; do
-            strip "target/${{ matrix.target }}/release/$file"
-          done
-      - name: Move binary to e2e
-        run: |
-          mkdir -p artifacts
-          mv target/${{ matrix.target }}/release/* e2e/tests
-      - name: e2e tests
-        run: |
-          cargo test --package e2e -- --nocapture
 
     
   # coverage:
