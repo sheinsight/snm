@@ -32,22 +32,22 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
 
     let dir = tempdir()?.path().to_path_buf();
 
-    let c: std::path::PathBuf = current_dir()?;
+    let path_dir = current_dir()?.join("tests");
 
-    println!("Current dir: {:?}", c);
+    println!("Current dir: {:?}", path_dir);
 
-    let original_path = var("PATH")?;
+    // let original_path = var("PATH")?;
 
-    let new_path: String = format!(
-        "{}:{}",
-        c.join("tests").display().to_string(),
-        original_path
-    );
+    // let new_path: String = format!(
+    //     "{}:{}",
+    //     c.join("tests").display().to_string(),
+    //     original_path
+    // );
 
-    println!("New path: {}", new_path);
+    // println!("New path: {}", original_path);
 
     let envs = vec![
-        ("PATH", new_path),
+        ("PATH", path_dir.display().to_string()),
         ("SNM_HOME_DIR", dir.display().to_string()),
     ];
 
