@@ -49,6 +49,7 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
     let envs = vec![
         ("PATH", path_dir.display().to_string()),
         ("SNM_HOME_DIR", dir.display().to_string()),
+        ("SNM_NODE_INSTALL_STRATEGY", "auto".to_string()),
     ];
 
     let install_output = exec(&format!("snm node install {}", node_version), &envs)?;
