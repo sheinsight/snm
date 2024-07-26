@@ -1,7 +1,7 @@
 use std::{
     env::{current_dir, var},
     error::Error,
-    process::{Command, Output, Stdio},
+    process::{Command, Output},
 };
 
 use tempfile::tempdir;
@@ -11,8 +11,6 @@ fn exec(shell: &str, envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error
         .split(" ")
         .map(|item| item.trim())
         .collect::<Vec<&str>>();
-
-    let x = shell_vec.split_first();
 
     if let Some((bin_name, args)) = shell_vec.split_first() {
         let output = Command::new(bin_name)
