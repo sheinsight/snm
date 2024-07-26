@@ -55,9 +55,9 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
 
     let res = exec("snm node list", &envs)?;
 
-    let x = String::from_utf8(res.stdout)?;
-
-    assert!(x.contains(node_version));
+    let stdout = String::from_utf8(res.stdout)?;
+    println!("stdout: {}", &stdout);
+    assert!(stdout.contains(node_version));
 
     Ok(())
 }
