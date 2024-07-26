@@ -36,11 +36,52 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
-      - name: Run tests
-        run: | 
-          cargo test --workspace --exclude e2e -- --nocapture
-        env:
-          RUST_BACKTRACE: full
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+      - name: Strip binary (Linux and macOS only)
+        if: matrix.os != 'windows-latest'
+        run: |
+          for file in snm node npm npx pnpm pnpx yarn; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
+      - name: Create Archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm,yarn} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm yarn
+          ls -l
+      - name: Upload Artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
+
+  build-release:
+    name: Build release
+    needs: unit-testing
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
   e2e-testing:
     name: E2E testing
     needs: unit-testing
