@@ -36,6 +36,35 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
+      - name: Run tests
+        run: | 
+          cargo test --workspace --exclude e2e -- --nocapture
+        env:
+          RUST_BACKTRACE: full
+      
+
+  build-release:
+    name: Build release
+    needs: unit-testing
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
       - name: Build binary
         uses: actions-rs/cargo@v1
         with:
@@ -59,28 +88,6 @@ jobs:
         with:
           name: ${{ matrix.target }}
           path: ${{ matrix.target }}.tar.gz
-
-  build-release:
-    name: Build release
-    needs: unit-testing
-    strategy:
-      matrix:
-        include:
-            # Linux targets
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          # Windows targets
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            target: i686-pc-windows-msvc
-          # macOS targets
-          - os: macos-14
-            target: aarch64-apple-darwin
-          - os: macos-13
-            target: x86_64-apple-darwin
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
 
   e2e-testing:
     name: E2E testing
