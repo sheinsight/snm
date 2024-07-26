@@ -40,6 +40,8 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
 
     let new_path: String = format!("{}:{}", c.display().to_string(), original_path);
 
+    println!("New path: {}", new_path);
+
     let envs = vec![
         ("PATH", new_path),
         ("SNM_HOME_DIR", dir.display().to_string()),
