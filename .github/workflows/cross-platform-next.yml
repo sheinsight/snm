@@ -131,7 +131,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with: 
-          name: ${{ matrix.target }}.tar.gz
+          name: ${{ matrix.target }}
+          path: .
 
       - name: Unzip downloaded files
         shell: bash
