@@ -49,7 +49,7 @@ jobs:
       - name: Run tests
         run: | 
           cargo b 
-          cargo t -- --nocapture
+          cargo test --workspace --exclude e2e -- --nocapture
         env:
           RUST_BACKTRACE: full
 
@@ -62,9 +62,19 @@ jobs:
       - name: Strip binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
-          for file in snm node npm npx pnpm pnpx; do
+          for file in snm node npm npx pnpm pnpx yarn; do
             strip "target/${{ matrix.target }}/release/$file"
           done
+
+      - name: Move binary to e2e
+        run: |
+          mkdir -p artifacts
+          mv target/${{ matrix.target }}/release/* e2e/tests
+
+      - name: e2e tests
+        run: |
+          cargo test --package e2e -- --nocapture
+
   coverage:
     name: Collect test coverage
     runs-on: ubuntu-latest

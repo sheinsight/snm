@@ -36,16 +36,6 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
 
     println!("Current dir: {:?}", path_dir);
 
-    // let original_path = var("PATH")?;
-
-    // let new_path: String = format!(
-    //     "{}:{}",
-    //     c.join("tests").display().to_string(),
-    //     original_path
-    // );
-
-    // println!("New path: {}", original_path);
-
     let envs = vec![
         ("PATH", path_dir.display().to_string()),
         ("SNM_HOME_DIR", dir.display().to_string()),
