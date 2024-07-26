@@ -51,13 +51,29 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
         ("SNM_HOME_DIR", dir.display().to_string()),
     ];
 
-    exec(format!("snm node install {}", node_version).as_str(), &envs)?;
+    let install_output = exec(&format!("snm node install {}", node_version), &envs)?;
+    println!(
+        "Install stdout: {}",
+        String::from_utf8_lossy(&install_output.stdout)
+    );
+    println!(
+        "Install stderr: {}",
+        String::from_utf8_lossy(&install_output.stderr)
+    );
 
-    let res = exec("snm node list", &envs)?;
-
-    let stdout = String::from_utf8(res.stdout)?;
-    println!("stdout: {}", &stdout);
-    assert!(stdout.contains(node_version));
+    let list_output = exec("snm node list", &envs)?;
+    let stdout = String::from_utf8(list_output.stdout)?;
+    println!("List stdout: {}", &stdout);
+    println!(
+        "List stderr: {}",
+        String::from_utf8_lossy(&list_output.stderr)
+    );
+    assert!(
+        stdout.contains(node_version),
+        "Expected to find node version {} in stdout, but got: {}",
+        node_version,
+        stdout
+    );
 
     Ok(())
 }
