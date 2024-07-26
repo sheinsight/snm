@@ -127,6 +127,19 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with: 
+          name: ${{ matrix.target }}
+
+      - name: Unzip downloaded files
+        shell: bash
+        run: |
+          ls -R
+          tar –xvf ${{ matrix.target }}.tar.gz
+          ls -R
+          
       - name: Build binary
         uses: actions-rs/cargo@v1
         with:
