@@ -6,22 +6,37 @@ use std::{
 
 use tempfile::tempdir;
 
-fn run_command(args: &[&str], envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error>> {
-    let output = Command::new("snm")
-        .envs(envs.clone())
-        .args(args)
-        // .stdout(Stdio::inherit())
-        // .stderr(Stdio::inherit())
-        // .stdin(Stdio::inherit())
-        .output()?;
-    Ok(output)
+fn exec(shell: &str, envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error>> {
+    let shell_vec = shell
+        .split(" ")
+        .map(|item| item.trim())
+        .collect::<Vec<&str>>();
+
+    let x = shell_vec.split_first();
+
+    if let Some((bin_name, args)) = shell_vec.split_first() {
+        let output = Command::new(bin_name)
+            .envs(envs.clone())
+            .args(args)
+            // .stdout(Stdio::inherit())
+            // .stderr(Stdio::inherit())
+            // .stdin(Stdio::inherit())
+            .output()?;
+        Ok(output)
+    } else {
+        Err("Invalid shell command".into())
+    }
 }
 
 #[test]
-fn test_parse_no_node_version_file() -> Result<(), Box<dyn Error>> {
+fn test_install_node() -> Result<(), Box<dyn Error>> {
+    let node_version = "16.0.0";
+
     let dir = tempdir()?.path().to_path_buf();
 
-    let c = current_dir()?;
+    let c: std::path::PathBuf = current_dir()?;
+
+    println!("Current dir: {:?}", c);
 
     let original_path = var("PATH")?;
 
@@ -32,14 +47,13 @@ fn test_parse_no_node_version_file() -> Result<(), Box<dyn Error>> {
         ("SNM_HOME_DIR", dir.display().to_string()),
     ];
 
-    run_command(&["node", "install", "16.0.0"], &envs)?;
+    exec(format!("snm node install {}", node_version).as_str(), &envs)?;
 
-    // 列出已安装的 Node.js 版本
-    let res = run_command(&["node", "list"], &envs)?;
+    let res = exec("snm node list", &envs)?;
 
     let x = String::from_utf8(res.stdout)?;
 
-    assert!(x.contains("16.0.0"));
+    assert!(x.contains(node_version));
 
     Ok(())
 }
