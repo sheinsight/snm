@@ -5,7 +5,44 @@ on:
     types: [published]
 
 jobs:
-  build-and-test:
+
+  unit-testing:
+    name: Unit testing
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+      - name: Run tests
+        run: | 
+          cargo test --workspace --exclude e2e -- --nocapture
+        env:
+          RUST_BACKTRACE: full
+
+  build:
+    needs: unit-testing
     strategy:
       matrix:
         include:
@@ -37,13 +74,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
       - name: Install Dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y openssl pkg-config libssl-dev musl-tools
-
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -51,25 +86,17 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
-
-      - name: Run Tests
-        run: cargo test
-        env:
-          RUST_BACKTRACE: full
-
       - name: Build Binary
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
-
       - name: Strip Binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
           for file in snm node npm npx pnpm pnpx yarn; do
             strip "target/${{ matrix.target }}/release/$file"
           done
-
       - name: Create Archive
         shell: bash
         run: |
@@ -77,7 +104,6 @@ jobs:
           cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm,yarn} archive/
           tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm yarn
           ls -l
-
       - name: Calculate SHA256 Checksum
         run: |
           echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
@@ -88,21 +114,66 @@ jobs:
           fi
           cat ${{ matrix.target }}.sha256
         shell: bash
-
       - name: Upload Artifacts tar.gz
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: ${{ matrix.target }}.tar.gz
-
       - name: Upload Artifacts sha256
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}.sha256
           path: ${{ matrix.target }}.sha256
 
+      e2e-testing:
+        name: E2E testing
+        needs: build
+        strategy:
+          matrix:
+            include:
+                # Linux targets
+              - os: ubuntu-latest
+                target: x86_64-unknown-linux-gnu
+              # Windows targets
+              - os: windows-latest
+                target: x86_64-pc-windows-msvc
+              - os: windows-latest
+                target: i686-pc-windows-msvc
+              # macOS targets
+              - os: macos-14
+                target: aarch64-apple-darwin
+              - os: macos-13
+                target: x86_64-apple-darwin
+          fail-fast: false
+        runs-on: ${{ matrix.os }}
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v3
+          - name: Install Rust
+            uses: actions-rs/toolchain@v1
+            with:
+              profile: minimal
+              override: true
+              target: ${{ matrix.target }}
 
-  publish-github-release:
+          - name: Download artifacts
+            uses: actions/download-artifact@v4
+            with: 
+              name: ${{ matrix.target }}
+              path: .
+
+          - name: Tar downloaded files
+            shell: bash
+            run: |
+              tar -xvf ${{ matrix.target }}.tar.gz -C e2e/tests
+              cd e2e/tests
+              ls -R
+          - name: e2e tests
+            run: |
+              cargo test --package e2e -- --nocapture
+
+
+  publish:
     name: Publish To Github Release
     runs-on: ubuntu-latest
     needs: build-and-test
