@@ -13,8 +13,12 @@ dev:
 
 qtest:
     echo "Running tests..."
-    cargo qtest
+    cargo test --workspace --exclude e2e -- --nocapture
 
 test:
     echo "Running tests..."
-    cargo t -- --nocapture
+    cargo test --workspace --exclude e2e -- --nocapture
+
+e2e:
+    echo "Running end-to-end tests..."
+    cargo test --package e2e -- --nocapture
