@@ -79,6 +79,7 @@ jobs:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
       - name: Display binary size
+        shell: bash
         run: |
           ls -l target/${{ matrix.target }}/release/*
           du -h target/${{ matrix.target }}/release/*
