@@ -6,9 +6,11 @@ use std::{
 
 use tempfile::tempdir;
 
-#[cfg(windows)]
-const SNM_CMD: &str = "snm.exe";
-#[cfg(not(windows))]
+// #[cfg(windows)]
+// const SNM_CMD: &str = "snm.exe";
+// #[cfg(not(windows))]
+// const SNM_CMD: &str = "snm";
+
 const SNM_CMD: &str = "snm";
 
 fn exec(shell: &str, envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error>> {

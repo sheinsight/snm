@@ -141,6 +141,7 @@ jobs:
           cd e2e/tests
           ls -R
       - name: e2e tests
+        shell: bash
         run: |
           cargo test --package e2e -- --nocapture
 
