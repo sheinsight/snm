@@ -1,5 +1,5 @@
 use std::{
-    env::{current_dir, var},
+    env::current_dir,
     error::Error,
     process::{Command, Output},
 };
@@ -16,9 +16,6 @@ fn exec(shell: &str, envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error
         let output = Command::new(bin_name)
             .envs(envs.clone())
             .args(args)
-            // .stdout(Stdio::inherit())
-            // .stderr(Stdio::inherit())
-            // .stdin(Stdio::inherit())
             .output()?;
         Ok(output)
     } else {
