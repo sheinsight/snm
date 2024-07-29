@@ -1,10 +1,4 @@
-use std::{
-    env::current_dir,
-    error::Error,
-    fs,
-    path::PathBuf,
-    process::{Command, Output},
-};
+use std::{env::current_dir, error::Error, fs};
 
 use e2e::exec_builder::ExecBuilder;
 use tempfile::tempdir;
@@ -15,40 +9,6 @@ use tempfile::tempdir;
 // const SNM_CMD: &str = "snm";
 
 const SNM_CMD: &str = "snm";
-
-fn exec(
-    shell: &str,
-    current: &PathBuf,
-    envs: &Vec<(&str, String)>,
-) -> Result<String, Box<dyn Error>> {
-    let shell_vec = shell
-        .split(" ")
-        .map(|item| item.trim())
-        .collect::<Vec<&str>>();
-
-    if let Some((bin_name, args)) = shell_vec.split_first() {
-        let output = Command::new(bin_name)
-            .envs(envs.clone())
-            .args(args)
-            .current_dir(current)
-            .output()?;
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-        println!(
-            r##"
-Exec shell: {}
-Stdout: {}
-Stderr: {}
-        "##,
-            shell, stdout, stderr
-        );
-        Ok(stdout)
-    } else {
-        Err("Invalid shell command".into())
-    }
-}
 
 #[test]
 fn should_auto_install() -> Result<(), Box<dyn Error>> {
