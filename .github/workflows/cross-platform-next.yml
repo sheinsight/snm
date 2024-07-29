@@ -78,6 +78,10 @@ jobs:
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
+      - name: Display binary size
+        run: |
+          ls -l target/${{ matrix.target }}/release/*
+          du -h target/${{ matrix.target }}/release/*
       - name: Strip binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
