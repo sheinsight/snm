@@ -1,4 +1,4 @@
-name: Cross-platform CI
+name: CrossPlatform
 
 on:
   push:
@@ -7,90 +7,166 @@ on:
     branches: [dev]
 
 jobs:
-  build-and-test:
+  unit-testing:
+    name: Unit testing
     strategy:
       matrix:
         include:
             # Linux targets
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          # - os: ubuntu-latest
-          #   target: i686-unknown-linux-gnu
-          # - os: ubuntu-latest
-          #   target: aarch64-unknown-linux-gnu
-          
           # Windows targets
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             target: i686-pc-windows-msvc
-          
           # macOS targets
           - os: macos-14
             target: aarch64-apple-darwin
           - os: macos-13
             target: x86_64-apple-darwin
       fail-fast: false
-
     runs-on: ${{ matrix.os }}
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
           profile: minimal
           override: true
           target: ${{ matrix.target }}
-
       - name: Run tests
         run: | 
-          cargo b 
           cargo test --workspace --exclude e2e -- --nocapture
         env:
           RUST_BACKTRACE: full
+      
 
+  build-release:
+    name: Build release
+    needs: unit-testing
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # Windows targets
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          # - os: windows-latest
+          #   target: i686-pc-windows-msvc
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
       - name: Build binary
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
-
+      - name: Display binary size
+        shell: bash
+        run: |
+          ls -l target/${{ matrix.target }}/release/*
+          du -h target/${{ matrix.target }}/release/*
       - name: Strip binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
           for file in snm node npm npx pnpm pnpx yarn; do
             strip "target/${{ matrix.target }}/release/$file"
           done
-
-      - name: Move binary to e2e
+      - name: Create Archive
+        shell: bash
         run: |
-          mkdir -p artifacts
-          mv target/${{ matrix.target }}/release/* e2e/tests
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm,yarn} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm yarn
+          ls -l
+      - name: Upload Artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
 
+  e2e-testing:
+    name: E2E testing
+    needs: build-release
+    strategy:
+      matrix:
+        include:
+            # Linux targets
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with: 
+          name: ${{ matrix.target }}
+          path: .
+
+      - name: Tar downloaded files
+        shell: bash
+        run: |
+          tar -xvf ${{ matrix.target }}.tar.gz -C e2e/tests
+          cd e2e/tests
+          ls -R
       - name: e2e tests
+        shell: bash
         run: |
           cargo test --package e2e -- --nocapture
 
-  coverage:
-    name: Collect test coverage
-    runs-on: ubuntu-latest
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust
-        run: rustup update stable
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Generate code coverage
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: lcov.info
-          fail_ci_if_error: true
+    
+  # coverage:
+  #   name: Collect test coverage
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     CARGO_TERM_COLOR: always
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install Rust
+  #       run: rustup update stable
+  #     - name: Install cargo-llvm-cov
+  #       uses: taiki-e/install-action@cargo-llvm-cov
+  #     - name: Generate code coverage
+  #       run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+  #     - name: Upload coverage to Codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+  #         files: lcov.info
+  #         fail_ci_if_error: true
