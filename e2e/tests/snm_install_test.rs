@@ -6,6 +6,11 @@ use std::{
 
 use tempfile::tempdir;
 
+#[cfg(windows)]
+const SNM_CMD: &str = "snm.exe";
+#[cfg(not(windows))]
+const SNM_CMD: &str = "snm";
+
 fn exec(shell: &str, envs: &Vec<(&str, String)>) -> Result<Output, Box<dyn Error>> {
     let shell_vec = shell
         .split(" ")
@@ -39,7 +44,7 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
         ("SNM_NODE_INSTALL_STRATEGY", "auto".to_string()),
     ];
 
-    let install_output = exec(&format!("snm node install {}", node_version), &envs)?;
+    let install_output = exec(&format!("{} node install {}", SNM_CMD, node_version), &envs)?;
     println!(
         "Install stdout: {}",
         String::from_utf8_lossy(&install_output.stdout)
@@ -49,7 +54,7 @@ fn test_install_node() -> Result<(), Box<dyn Error>> {
         String::from_utf8_lossy(&install_output.stderr)
     );
 
-    let list_output = exec("snm node list", &envs)?;
+    let list_output = exec(&format!("{} node list", SNM_CMD), &envs)?;
     let stdout = String::from_utf8(list_output.stdout)?;
     println!("List stdout: {}", &stdout);
     println!(
