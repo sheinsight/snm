@@ -110,35 +110,6 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
 pub fn hack(error: SnmError) {
     let white_list = env::var("SNM_NODE_WHITE_LIST").unwrap();
     match error {
-        SnmError::BuildConfigError(_)
-        | SnmError::IOError(_)
-        | SnmError::DialoguerError(_)
-        | SnmError::NetworkError(_)
-        | SnmError::VarError(_)
-        | SnmError::ZipError(_)
-        | SnmError::DeserializeError(_)
-        | SnmError::HttpStatusCodeUnOk
-        | SnmError::GetHomeDirError
-        | SnmError::GetWorkspaceError
-        | SnmError::SNMBinaryProxyFail { stderr: _ }
-        | SnmError::FileAlreadyExists { file_path: _ }
-        | SnmError::NotFoundCommandError { bin_name: _ } => {
-            let msg = format!(
-                r##"
-错误: 这不是一个预期内的错误
-
-方案:
-    无
-
-解释:
-    无      
-    
-注意:
-    无
-            "##,
-            );
-            eprintln!("[error]: {}", msg);
-        }
         SnmError::NoDefaultNodeBinary => {
             let message = format!(
                 r##"
@@ -356,6 +327,36 @@ pub fn hack(error: SnmError) {
             );
             eprintln!("{}", message);
         }
+
+        SnmError::BuildConfigError(_)
+        | SnmError::IOError(_)
+        | SnmError::DialoguerError(_)
+        | SnmError::NetworkError(_)
+        | SnmError::VarError(_)
+        | SnmError::ZipError(_)
+        | SnmError::DeserializeError(_)
+        | SnmError::HttpStatusCodeUnOk
+        | SnmError::GetHomeDirError
+        | SnmError::GetWorkspaceError
+        | SnmError::SNMBinaryProxyFail { stderr: _ }
+        | SnmError::FileAlreadyExists { file_path: _ }
+        | SnmError::NotFoundCommandError { bin_name: _ } => {
+            //             let msg = format!(
+            //                 r##"
+            // 错误:这不是一个预期内的错误
+
+            // 方案:
+            //     无
+
+            // 解释:
+            //     无
+
+            // 注意:
+            //     无
+            //             "##,
+            //             );
+            eprintln!("{}", error.to_string());
+        }
     }
 }
 
@@ -564,6 +565,7 @@ pub fn friendly_error_message(error: SnmError) {
             );
             eprintln!("{}", message);
         }
+
         SnmError::HttpStatusCodeUnOk
         | SnmError::GetWorkspaceError
         | SnmError::DeserializeError(_)
