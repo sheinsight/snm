@@ -109,6 +109,7 @@ pub fn create_error_message(message: String, descriptions: Vec<String>) -> Strin
 
 pub fn hack(error: SnmError) {
     let white_list = env::var("SNM_NODE_WHITE_LIST").unwrap();
+
     match error {
         SnmError::NoDefaultNodeBinary => {
             let message = format!(
@@ -328,19 +329,54 @@ pub fn hack(error: SnmError) {
             eprintln!("{}", message);
         }
 
-        SnmError::BuildConfigError(_)
-        | SnmError::IOError(_)
-        | SnmError::DialoguerError(_)
+        SnmError::NotFoundCommandError { bin_name } => {
+            let message = format!(
+                r##"
+错误: 没有找到命令 {}
+
+方案:
+    请检查你输入的命令是否正确，如果正确请检查你的环境变量是否配置正确。
+
+解释:
+    当前环境没有找到你输入的命令，这可能是因为你输入的命令不正确或者你的环境变量没有配置正确。
+
+注意:
+    请注意你输入的命令是否正确，如果正确请检查你的环境变量是否配置正确。
+            "##,
+                bin_name
+            );
+            eprintln!("{}", message);
+        }
+
+        SnmError::SNMBinaryProxyFail { stderr: _ } => {
+            let message = format!(
+                r##"
+错误: snm 二进制代理失败
+
+方案:
+    阅读错误日志，查看其他错误
+
+解释:
+    通常这是由其他错误引起的，并不是直接性的错误原因，你可以查看错误日志，查看其他错误。
+
+注意:
+    无
+            "##,
+            );
+            eprintln!("{}", message);
+        }
+
+        SnmError::HttpStatusCodeUnOk
+        | SnmError::GetWorkspaceError
+        | SnmError::DeserializeError(_)
         | SnmError::NetworkError(_)
+        | SnmError::DialoguerError(_)
         | SnmError::VarError(_)
         | SnmError::ZipError(_)
-        | SnmError::DeserializeError(_)
-        | SnmError::HttpStatusCodeUnOk
+        | SnmError::BuildConfigError(_)
+        | SnmError::IOError(_)
         | SnmError::GetHomeDirError
-        | SnmError::GetWorkspaceError
-        | SnmError::SNMBinaryProxyFail { stderr: _ }
-        | SnmError::FileAlreadyExists { file_path: _ }
-        | SnmError::NotFoundCommandError { bin_name: _ } => {
+        | SnmError::FileAlreadyExists { file_path: _ } => {
             //             let msg = format!(
             //                 r##"
             // 错误:这不是一个预期内的错误
@@ -355,7 +391,7 @@ pub fn hack(error: SnmError) {
             //     无
             //             "##,
             //             );
-            eprintln!("{}", error.to_string());
+            eprintln!("error {}", error.to_string());
         }
     }
 }
