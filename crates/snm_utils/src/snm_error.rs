@@ -557,27 +557,14 @@ pub fn friendly_error_message(error: SnmError) {
             version,
             node_white_list,
         } => {
-            let list_message = node_white_list
-                .iter()
-                .map(|item| format!("- {}", item).to_string())
-                .collect::<Vec<String>>();
-
             let message = create_error_message(
-                format!("不支持 {}", version.bold().bright_red()),
+                format!("Unsupported node {}", version.bold().bright_red()),
                 vec![
-                    vec![fmtln!("{}", "只支持以下列表:")],
-                    list_message,
-                    vec!["\r\n".to_string()],
-                    vec![
-                        "🤔 如何设置当前项目的 node 版本".to_string(),
-                        "请先检查项目根目录是否存在 .node-version 文件".to_string(),
-                        "如果不存在，请新建 .node-version 文件".to_string(),
-                        "在 .node-version 文件中写入你的 node 版本".to_string(),
-                        "请注意不支持简写版本号，例: 14 。务必保证版本号写全".to_string(),
-                        "务必保证版本号写全，例: 14.17.0。".to_string(),
-                        "请注意以上提示种所说的 14 以及 14.17.0 仅仅只是举例".to_string(),
-                        "你需要保证你写的版本号在支持的列表内。".to_string(),
-                    ],
+                    vec![fmtln!("{}", "Only the following list is supported:")],
+                    node_white_list
+                        .iter()
+                        .map(|item| format!("- {}", item).to_string())
+                        .collect::<Vec<String>>(),
                 ]
                 .concat(),
             );
