@@ -1,6 +1,6 @@
 [package]
 name = "snm"
-version = "0.0.1-115"
+version = "0.0.1-116"
 edition = "2021"
 authors = ["ityuany"]
 
