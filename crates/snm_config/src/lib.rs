@@ -59,6 +59,8 @@ pub struct SnmConfig {
 
     cache_dir: Option<String>,
 
+    lang: Option<String>,
+
     node_modules_dir: Option<String>,
 
     node_dist_url: Option<String>,
@@ -101,6 +103,10 @@ impl SnmConfig {
             Some(dir) => base_dir.join(dir),
             None => base_dir.join(default),
         })
+    }
+
+    pub fn get_lang(&self) -> Option<String> {
+        self.lang.clone()
     }
 
     pub fn get_runtime_node_version(&self) -> Option<String> {
@@ -260,6 +266,7 @@ mod tests {
         env::set_var("SNM_STRICT", "true");
         env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
+        env::set_var("SNM_LANG", "en");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
         env::set_var("SNM_CACHE_DIR", "cache_demo");
         env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
@@ -278,6 +285,7 @@ mod tests {
             SnmConfig {
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
+                lang: Some("en".to_string()),
                 cache_dir: Some("cache_demo".to_string()),
                 node_modules_dir: Some("node_modules_demo".to_string()),
                 node_dist_url: Some("https://nodejs.org/dist".to_string()),
