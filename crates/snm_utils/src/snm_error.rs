@@ -351,21 +351,7 @@ pub fn hack(error: SnmError) {
         }
 
         SnmError::SNMBinaryProxyFail { stderr: _ } => {
-            let message = format!(
-                r##"
-错误: snm 二进制代理失败
-
-方案:
-    阅读错误日志，查看其他错误
-
-解释:
-    通常这是由其他错误引起的，并不是直接性的错误原因，你可以查看错误日志，查看其他错误。
-
-注意:
-    无
-            "##,
-            );
-            eprintln!("{}", message);
+            // Don't do anything.
         }
 
         SnmError::HttpStatusCodeUnOk
@@ -408,7 +394,7 @@ pub fn friendly_error_message(error: SnmError) {
 
     match error {
         SnmError::SNMBinaryProxyFail { stderr: _ } => {
-            // TODO 🤔 how to show ?
+            // Don't do anything.
         }
         SnmError::NoDefaultNodeBinary => {
             let message = create_error_message(
