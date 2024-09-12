@@ -1,6 +1,6 @@
 [package]
 name = "snm_shim"
-version = "0.0.1-94"
+version = "0.0.1-119"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 colored = "2.1.0"
 env_logger = "0.11.2"
-snm_node = { path = "../snm_node" }
-snm_core = { path = "../snm_core" }
 snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
-snm_current_dir = { path = "../snm_current_dir" }
-snm_package_manager = { path = "../snm_package_manager" }
 snm_download_builder ={ path = "../snm_download_builder" }
+snm_atom ={ path = "../snm_atom"}
+color-backtrace = "0.6.1"
+tracing = "0.1"
+tracing-subscriber = "0.3"

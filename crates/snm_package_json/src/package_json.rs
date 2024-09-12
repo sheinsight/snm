@@ -1,8 +1,8 @@
-use std::{collections::HashMap, fs::File, io::BufReader, path::PathBuf};
+use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, path::PathBuf};
 
-use regex::Regex;
+use regex::{Match, Regex};
 use serde::Deserialize;
-use snm_utils::snm_error::SnmError;
+use snm_utils::{constant::PACKAGE_MANAGER, snm_error::SnmError};
 
 use crate::{
     package_manager_meta::{PackageManager, PackageManagerDownloadHash},
@@ -90,44 +90,55 @@ fn parse_package_manager(raw_package_manager: &str) -> Result<Option<PackageMana
     let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
     let regex = Regex::new(regex_str).unwrap();
 
+    let map_none = |item: Match| {
+        if item.is_empty() {
+            None
+        } else {
+            Some(item.as_str().to_string())
+        }
+    };
+
     match regex.captures(raw_package_manager) {
         Some(caps) => {
-            let name = if let Some(m) = caps.name("name") {
-                if m.is_empty() {
-                    return Err(SnmError::ParsePackageManagerError(
-                        raw_package_manager.to_string(),
-                    ));
-                }
-                m.as_str().to_string()
-            } else {
-                return Err(SnmError::ParsePackageManagerError(
-                    raw_package_manager.to_string(),
-                ));
-            };
+            let name =
+                caps.name("name")
+                    .and_then(map_none)
+                    .ok_or(SnmError::ParsePackageManagerError {
+                        raw_package_manager: raw_package_manager.to_string(),
+                    })?;
 
-            let version = if let Some(m) = caps.name("version") {
-                if m.is_empty() {
-                    return Err(SnmError::ParsePackageManagerError(
-                        raw_package_manager.to_string(),
-                    ));
-                }
-                m.as_str().to_string()
-            } else {
-                return Err(SnmError::ParsePackageManagerError(
-                    raw_package_manager.to_string(),
-                ));
-            };
+            if PACKAGE_MANAGER.contains(&name.as_str()).not() {
+                return Err(SnmError::UnsupportedPackageManagerError {
+                    name: name.to_string(),
+                    raw: raw_package_manager.to_string(),
+                    supported: PACKAGE_MANAGER.iter().map(|s| s.to_string()).collect(),
+                });
+            }
+
+            let version = caps.name("version").and_then(map_none).ok_or(
+                SnmError::ParsePackageManagerError {
+                    raw_package_manager: raw_package_manager.to_string(),
+                },
+            )?;
+
+            let hash_name = caps.name("hash_method").and_then(map_none);
+
+            let hash_value = caps.name("hash_value").and_then(map_none);
 
             return Ok(Some(PackageManager {
                 raw: raw_package_manager.to_string(),
                 name,
                 version,
                 hash: Some(PackageManagerDownloadHash {
-                    value: caps.name("hash_value").map(|x| x.as_str().to_string()),
-                    name: caps.name("hash_method").map(|x| x.as_str().to_string()),
+                    value: hash_value,
+                    name: hash_name,
                 }),
             }));
         }
-        None => return Ok(None),
+        None => {
+            return Err(SnmError::ParsePackageManagerError {
+                raw_package_manager: raw_package_manager.to_string(),
+            });
+        }
     }
 }

@@ -1,0 +1,20 @@
+[package]
+name = "snm_atom"
+version = "0.0.1-119"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sha1 = "0.10.0"
+sha2 = "0.10.2"
+futures = "0.3"
+semver = "1.0.23"
+serde_json = "1.0"
+futures-util = "0.3.30"
+snm_utils = { path = "../snm_utils" }
+snm_config = { path = "../snm_config" }
+snm_tarball = { path = "../snm_tarball" }
+snm_package_json = { path = "../snm_package_json" }
+snm_download_builder ={ path = "../snm_download_builder" }
+reqwest = { version = "0.12.3", features = ["json", "blocking", "stream","native-tls-vendored"] }

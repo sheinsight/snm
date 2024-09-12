@@ -9,7 +9,6 @@ use std::{env, path::PathBuf};
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
     Ask,
-    Panic,
     Auto,
 }
 
@@ -17,7 +16,6 @@ impl InstallStrategy {
     pub fn from_str(s: &str) -> Self {
         match s {
             "ask" => InstallStrategy::Ask,
-            "panic" => InstallStrategy::Panic,
             "auto" => InstallStrategy::Auto,
             _ => {
                 let msg = format!(
@@ -32,23 +30,36 @@ impl InstallStrategy {
     pub fn as_str(&self) -> &'static str {
         match self {
             InstallStrategy::Ask => "ask",
-            InstallStrategy::Panic => "panic",
             InstallStrategy::Auto => "auto",
         }
     }
 }
 
+const SNM_HOME_DIR_KEY: &str = "SNM_HOME_DIR";
 const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
-pub struct SnmConfig {
-    strict: Option<bool>,
+pub struct Ini {
+    default_node: Option<String>,
 
+    default_npm: Option<String>,
+
+    default_pnpm: Option<String>,
+
+    default_yarn: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
+pub struct SnmConfig {
     node_bin_dir: Option<String>,
 
     download_dir: Option<String>,
+
+    cache_dir: Option<String>,
+
+    lang: Option<String>,
 
     node_modules_dir: Option<String>,
 
@@ -58,9 +69,9 @@ pub struct SnmConfig {
 
     node_install_strategy: Option<InstallStrategy>,
 
-    download_timeout_secs: Option<u64>,
+    node_white_list: Option<String>,
 
-    package_manager_install_strategy: Option<InstallStrategy>,
+    download_timeout_secs: Option<u64>,
 
     npm_registry: Option<String>,
 
@@ -69,15 +80,20 @@ pub struct SnmConfig {
     snm_package_json: Option<PackageJson>,
 
     snm_node_version: Option<NodeVersion>,
+    // #[serde(skip)]
+    // ini: Ini,
 }
 
 impl SnmConfig {
     fn get_base_dir(&self) -> Result<PathBuf, SnmError> {
-        match dirs::home_dir() {
-            Some(home_dir) => Ok(home_dir.join(".snm")),
-            None => {
-                return Err(SnmError::GetHomeDirError);
-            }
+        match env::var(SNM_HOME_DIR_KEY) {
+            Ok(dir) => Ok(PathBuf::from(dir)),
+            Err(_) => match dirs::home_dir() {
+                Some(dir) => Ok(dir.join(".snm")),
+                None => {
+                    return Err(SnmError::GetHomeDirError);
+                }
+            },
         }
     }
 
@@ -89,11 +105,12 @@ impl SnmConfig {
         })
     }
 
+    pub fn get_lang(&self) -> Option<String> {
+        self.lang.clone()
+    }
+
     pub fn get_runtime_node_version(&self) -> Option<String> {
-        match env::var(SNM_NODE_VERSION_ENV_KEY) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        }
+        env::var(SNM_NODE_VERSION_ENV_KEY).ok()
     }
 
     pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
@@ -136,8 +153,11 @@ impl SnmConfig {
         }
     }
 
-    pub fn get_strict(&self) -> bool {
-        self.strict.unwrap_or(false)
+    pub fn get_node_white_list(&self) -> Vec<String> {
+        if let Some(white_list) = &self.node_white_list {
+            return white_list.split(",").map(|s| s.to_string()).collect();
+        }
+        return vec![].to_vec();
     }
 
     pub fn get_node_bin_dir(&self) -> Result<PathBuf, SnmError> {
@@ -146,6 +166,10 @@ impl SnmConfig {
 
     pub fn get_download_dir(&self) -> Result<PathBuf, SnmError> {
         self.get_dir(&self.download_dir, "downloads")
+    }
+
+    pub fn get_cache_dir(&self) -> Result<PathBuf, SnmError> {
+        self.get_dir(&self.cache_dir, "cache")
     }
 
     pub fn get_node_modules_dir(&self) -> Result<PathBuf, SnmError> {
@@ -178,12 +202,6 @@ impl SnmConfig {
             .clone()
             .unwrap_or(InstallStrategy::Ask)
     }
-
-    pub fn get_package_manager_install_strategy(&self) -> InstallStrategy {
-        self.package_manager_install_strategy
-            .clone()
-            .unwrap_or(InstallStrategy::Ask)
-    }
 }
 
 pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
@@ -193,10 +211,7 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let mut config: SnmConfig = config.try_deserialize()?;
 
-    let registry = match parse_npmrc(workspace) {
-        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
-        None => None,
-    };
+    let registry = read_npmrc(&workspace);
 
     let node_version = parse_node_version(workspace)?;
 
@@ -215,12 +230,31 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
         }
     }
 
+    // let file = config.get_base_dir()?.join("snm.ini");
+
+    // if file.exists().not() {
+    //     File::create(&file)?;
+    // }
+
+    // let ini: Ini = Config::builder()
+    //     .add_source(config::File::from(file))
+    //     .build()?
+    //     .try_deserialize()?;
+
+    // config.ini = ini;
     config.npm_registry = registry;
     config.workspace = Some(workspace.to_string_lossy().to_string());
     config.snm_node_version = node_version;
     config.snm_package_json = package_json;
 
     Ok(config)
+}
+
+fn read_npmrc(workspace: &PathBuf) -> Option<String> {
+    match parse_npmrc(workspace) {
+        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
+        None => None,
+    }
 }
 
 #[cfg(test)]
@@ -232,7 +266,9 @@ mod tests {
         env::set_var("SNM_STRICT", "true");
         env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");
+        env::set_var("SNM_LANG", "en");
         env::set_var("SNM_NODE_MODULES_DIR", "node_modules_demo");
+        env::set_var("SNM_CACHE_DIR", "cache_demo");
         env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
         env::set_var("SNM_DOWNLOAD_TIMEOUT_SECS", "60");
         env::set_var(
@@ -240,22 +276,23 @@ mod tests {
             "https://raw.githubusercontent.com",
         );
         env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
-        env::set_var("SNM_PACKAGE_MANAGER_INSTALL_STRATEGY", "auto");
+        env::set_var("SNM_NODE_WHITE_LIST", "1.1.0,1.2.0");
 
         let config = parse_snm_config(&current_dir().unwrap()).unwrap();
 
         assert_eq!(
             config,
             SnmConfig {
-                strict: Some(true),
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
+                lang: Some("en".to_string()),
+                cache_dir: Some("cache_demo".to_string()),
                 node_modules_dir: Some("node_modules_demo".to_string()),
                 node_dist_url: Some("https://nodejs.org/dist".to_string()),
                 node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
                 node_install_strategy: Some(InstallStrategy::Auto),
+                node_white_list: Some("1.1.0,1.2.0".to_string()),
                 download_timeout_secs: Some(60),
-                package_manager_install_strategy: Some(InstallStrategy::Auto),
                 npm_registry: None,
                 workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
                 snm_node_version: None,

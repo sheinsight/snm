@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "name": "debug npx",
+          "type": "lldb",
+          "request": "launch",
+          "program": "${workspaceFolder}/target/debug/npx",
+          "args": ["@napi-rs/cli","new"],
+          "cwd": "${workspaceFolder}",
+          "preLaunchTask": "cargo build",
+          "stopOnEntry": false,
+          "sourceLanguages": ["rust"]
+      },
+      {
+        "name": "debug npm -v",
+        "type": "lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/target/debug/npx",
+        "args": ["@napi-rs/cli","new"],
+        "cwd": "${workspaceFolder}",
+        "preLaunchTask": "cargo build",
+        "stopOnEntry": false,
+        "sourceLanguages": ["rust"]
+    }
+  ]
+}

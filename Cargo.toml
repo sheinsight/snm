@@ -1,12 +1,8 @@
 [workspace]
 members = [
     "crates/cli",
-    "crates/snm_node",
-    "crates/snm_core",
-    "crates/snm_package_manager", 
     "crates/snm_package_json", 
     "crates/snm_npmrc", 
-    "crates/snm_current_dir", 
     "crates/snm_config", 
     "crates/snm_utils", 
     "crates/snm_node_version", 
@@ -18,7 +14,11 @@ members = [
     "crates/cli_pnpx", 
     "crates/cli_node", 
     "crates/snm_tarball", 
-    "crates/snm_ni" , "crates/cli_yarn","crates/dev-tools" ]
+    "crates/snm_ni" , 
+    "crates/cli_yarn",
+    "crates/dev-tools", 
+    "crates/snm_atom"
+, "e2e"]
 
 resolver = "2"
 

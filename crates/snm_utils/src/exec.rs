@@ -1,29 +1,40 @@
 use std::{
+    env,
     ffi::OsStr,
     process::{Command, Stdio},
 };
 
-pub fn exec_cli<T: AsRef<OsStr>, I, S>(bin_name: T, args: I)
+use crate::snm_error::SnmError;
+
+pub fn exec_cli<T: AsRef<OsStr>, I, S>(
+    dir: Vec<String>,
+    bin_name: T,
+    args: I,
+) -> Result<(), SnmError>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
+    let original_path = env::var("PATH")?;
+
+    let new_path: String = format!("{}:{}", dir.join(":"), original_path);
+
     let output = Command::new(bin_name)
         .args(args)
+        .env("PATH", new_path)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .stdin(Stdio::inherit())
         .spawn()
-        .and_then(|process| process.wait_with_output());
+        .and_then(|process| process.wait_with_output())?;
 
-    if let Ok(res) = output {
-        if !res.status.success() {
-            let err_msg = format!("snm proxy execute failed : {:?}", res);
-            panic!("{err_msg}");
-        } else {
-            println!("{}", String::from_utf8_lossy(&res.stdout).to_string())
-        }
-    } else {
-        panic!("snm proxy execute failed");
+    if !output.status.success() {
+        return Err(SnmError::SNMBinaryProxyFail {
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+        });
     }
+
+    print!("{}", String::from_utf8_lossy(&output.stdout).to_string());
+
+    Ok(())
 }

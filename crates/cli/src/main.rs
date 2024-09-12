@@ -1,15 +1,16 @@
+use std::env::current_dir;
+
 use clap::Parser;
+// use node_manager::NodeManager;
 use snm::{execute_cli::execute_cli, SnmCli};
 use snm_config::parse_snm_config;
-use snm_current_dir::current_dir;
-use snm_utils::{
-    color_backtrace,
-    snm_error::{friendly_error_message, SnmError},
-};
+use snm_utils::snm_error::{friendly_error_message, SnmError};
+
+pub mod node_manager;
 
 #[tokio::main]
 async fn main() {
-    color_backtrace::install();
+    // color_backtrace::install();
 
     if let Err(error) = run().await {
         friendly_error_message(error);
