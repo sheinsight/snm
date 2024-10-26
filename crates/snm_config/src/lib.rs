@@ -42,17 +42,6 @@ const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
-pub struct Ini {
-    default_node: Option<String>,
-
-    default_npm: Option<String>,
-
-    default_pnpm: Option<String>,
-
-    default_yarn: Option<String>,
-}
-
-#[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
     node_bin_dir: Option<String>,
 
@@ -81,8 +70,6 @@ pub struct SnmConfig {
     snm_package_json: Option<PackageJson>,
 
     snm_node_version: Option<String>,
-    // #[serde(skip)]
-    // ini: Ini,
 }
 
 impl SnmConfig {
