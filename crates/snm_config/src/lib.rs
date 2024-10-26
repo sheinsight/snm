@@ -1,7 +1,7 @@
 use config::{Config, Environment};
 use serde::Deserialize;
 use snm_node_version::{parse_node_version, NodeVersion};
-use snm_npmrc::Npmrc;
+use snm_npmrc::NpmrcReader;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 use std::{env, path::PathBuf};
@@ -211,7 +211,7 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let mut config: SnmConfig = config.try_deserialize()?;
 
-    let npmrc = Npmrc::from(&workspace);
+    let npmrc = NpmrcReader::from(&workspace);
 
     let registry = npmrc.read_registry_with_default();
 

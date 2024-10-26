@@ -1,6 +1,6 @@
 use std::env::{self, current_dir};
 
-use snm_npmrc::Npmrc;
+use snm_npmrc::NpmrcReader;
 
 #[test]
 fn test() {
@@ -21,7 +21,7 @@ fn test() {
             .to_string(),
     );
 
-    let npmrc = Npmrc::from(&c);
+    let npmrc = NpmrcReader::from(&c);
 
     let registry = npmrc.read_registry_with_default();
     assert_eq!(registry, "https://project.com".to_string());
