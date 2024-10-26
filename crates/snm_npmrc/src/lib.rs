@@ -1,4 +1,7 @@
-use std::{env, path::PathBuf};
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
 use config::{Config, File, FileFormat};
 
@@ -13,7 +16,7 @@ pub struct NpmrcReader {
 }
 
 impl NpmrcReader {
-    pub fn from(workspace: &PathBuf) -> Self {
+    pub fn from<P: AsRef<Path>>(workspace: P) -> Self {
         let home_dir = match env::var_os("HOME") {
             Some(home_dir) => home_dir,
             None => return Self { config: None },
@@ -31,7 +34,7 @@ impl NpmrcReader {
                         .map(|p| p.join(FILE_NAME))
                         .unwrap_or_default(),
                     PathBuf::from(&home_dir).join(FILE_NAME),
-                    PathBuf::from(workspace).join(FILE_NAME),
+                    workspace.as_ref().to_path_buf().join(FILE_NAME),
                 ]
             }
             #[cfg(not(target_os = "windows"))]
@@ -42,7 +45,7 @@ impl NpmrcReader {
                         .join("etc")
                         .join(ETC_FILE_NAME),
                     PathBuf::from(&home_dir).join(FILE_NAME),
-                    PathBuf::from(workspace).join(FILE_NAME),
+                    workspace.as_ref().to_path_buf().join(FILE_NAME),
                 ]
             }
         };

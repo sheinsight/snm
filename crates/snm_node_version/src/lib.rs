@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, path::PathBuf};
+use std::{fs::read_to_string, path::Path};
 
 const FILE_NAME: &str = ".node-version";
 pub struct NodeVersionReader {
@@ -6,8 +6,8 @@ pub struct NodeVersionReader {
 }
 
 impl NodeVersionReader {
-    pub fn from(workspace: &PathBuf) -> Self {
-        let file_path = workspace.join(FILE_NAME);
+    pub fn from<P: AsRef<Path>>(workspace: P) -> Self {
+        let file_path = workspace.as_ref().join(FILE_NAME);
 
         let version = if file_path.exists() {
             if let Ok(raw) = read_to_string(&file_path) {
