@@ -1,7 +1,7 @@
 use config::{Config, Environment};
 use serde::Deserialize;
 use snm_node_version::{parse_node_version, NodeVersion};
-use snm_npmrc::parse_npmrc;
+use snm_npmrc::Npmrc;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
 use std::{env, path::PathBuf};
@@ -211,7 +211,9 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let mut config: SnmConfig = config.try_deserialize()?;
 
-    let registry = read_npmrc(&workspace);
+    let npmrc = Npmrc::from(&workspace);
+
+    let registry = npmrc.read_registry_with_default();
 
     let node_version = parse_node_version(workspace)?;
 
@@ -242,19 +244,12 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
     //     .try_deserialize()?;
 
     // config.ini = ini;
-    config.npm_registry = registry;
+    config.npm_registry = Some(registry);
     config.workspace = Some(workspace.to_string_lossy().to_string());
     config.snm_node_version = node_version;
     config.snm_package_json = package_json;
 
     Ok(config)
-}
-
-fn read_npmrc(workspace: &PathBuf) -> Option<String> {
-    match parse_npmrc(workspace) {
-        Some(npmrc_config) => npmrc_config.get_string("registry").ok(),
-        None => None,
-    }
 }
 
 #[cfg(test)]
@@ -293,7 +288,7 @@ mod tests {
                 node_install_strategy: Some(InstallStrategy::Auto),
                 node_white_list: Some("1.1.0,1.2.0".to_string()),
                 download_timeout_secs: Some(60),
-                npm_registry: None,
+                npm_registry: Some("https://registry.npmjs.org/".to_string()),
                 workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
                 snm_node_version: None,
                 snm_package_json: None,

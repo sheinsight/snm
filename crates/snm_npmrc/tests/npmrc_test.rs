@@ -1,6 +1,6 @@
 use std::env::{self, current_dir};
 
-use snm_npmrc::parse_npmrc;
+use snm_npmrc::Npmrc;
 
 #[test]
 fn test() {
@@ -21,18 +21,11 @@ fn test() {
             .to_string(),
     );
 
-    if let Some(config) = parse_npmrc(&c) {
-        let registry = match config.get_string("registry") {
-            Ok(registry) => registry,
-            Err(_) => "error".to_string(),
-        };
-        assert_eq!(registry, "https://project.com".to_string());
+    let npmrc = Npmrc::from(&c);
 
-        let cache = match config.get_string("cache") {
-            Ok(registry) => registry,
-            Err(_) => "error".to_string(),
-        };
+    let registry = npmrc.read_registry_with_default();
+    assert_eq!(registry, "https://project.com".to_string());
 
-        assert_eq!(cache, "~/.hello".to_string());
-    }
+    let cache = npmrc.read("cache");
+    assert_eq!(cache, Some("~/.hello".to_string()));
 }
