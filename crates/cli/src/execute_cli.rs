@@ -1,5 +1,5 @@
 use snm_atom::node_atom::NodeAtom;
-use snm_config::SnmConfig;
+use snm_config::EnvSnmConfig;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_utils::exec::exec_cli;
@@ -37,7 +37,7 @@ fn handle_command(transform: &dyn CommandArgsCreatorTrait, command: SnmCommands)
     }
 }
 
-pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> Result<(), SnmError> {
+pub async fn execute_cli(cli: SnmCli, snm_config: EnvSnmConfig) -> Result<(), SnmError> {
     match cli.command {
         // manage start
         SnmCommands::Node { command } => {

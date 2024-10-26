@@ -1,7 +1,7 @@
 use std::{fs, ops::Not as _, path::PathBuf, pin::Pin};
 
 use futures_util::Future;
-use snm_config::SnmConfig;
+use snm_config::EnvSnmConfig;
 use snm_utils::snm_error::SnmError;
 pub trait AtomTrait {
     fn get_download_url(&self, v: &str) -> String;
@@ -36,7 +36,7 @@ pub trait AtomTrait {
 
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError>;
 
-    fn get_snm_config(&self) -> &SnmConfig;
+    fn get_snm_config(&self) -> &EnvSnmConfig;
 
     fn read_runtime_dir_name_vec(&self) -> Result<(Vec<String>, Option<String>), SnmError> {
         let runtime_dir_path_buf = self.get_runtime_base_dir_path_buf()?;

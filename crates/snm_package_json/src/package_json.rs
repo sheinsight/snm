@@ -1,4 +1,10 @@
-use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, path::PathBuf};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::BufReader,
+    ops::Not,
+    path::{Path, PathBuf},
+};
 
 use regex::{Match, Regex};
 use serde::Deserialize;
@@ -12,19 +18,28 @@ use crate::{
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct PackageJson {
     pub package_manager: Option<PackageManager>,
-
     pub name: Option<String>,
-
     pub version: Option<String>,
-
     pub bin: HashMap<String, PathBuf>,
-
     pub raw: PackageJsonRaw,
-
     pub raw_file_path: PathBuf,
-
     pub raw_workspace: PathBuf,
 }
+
+// impl PackageJson {
+//     fn from<P: AsRef<Path>>(workspace: P) -> Result<(), SnmError> {
+//         let raw_file_path = workspace.as_ref().join("package.json");
+//         let package_manager = raw_file_path
+//             .exists()
+//             .then(|| File::open(&raw_file_path))
+//             .and_then(|f| f.ok())
+//             .and_then(|f| Some(BufReader::new(f)))
+//             .and_then(|f| Some(serde_json::from_reader::<_, PackageJsonRaw>(f)))
+//             .and_then(|f| f.ok());
+
+//         Ok(())
+//     }
+// }
 
 pub fn parse_package_json(workspace: &PathBuf) -> Result<Option<PackageJson>, SnmError> {
     let raw_file_path = workspace.join("package.json");

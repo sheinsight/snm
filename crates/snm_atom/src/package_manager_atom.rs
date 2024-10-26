@@ -3,7 +3,7 @@ use semver::{Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
-use snm_config::SnmConfig;
+use snm_config::EnvSnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_package_json::parse_package_json;
 use snm_tarball::decompress;
@@ -20,12 +20,12 @@ use std::{
 };
 
 pub struct PackageManagerAtom {
-    snm_config: SnmConfig,
+    snm_config: EnvSnmConfig,
     library_name: String,
 }
 
 impl PackageManagerAtom {
-    pub fn new(library_name: &str, snm_config: SnmConfig) -> Self {
+    pub fn new(library_name: &str, snm_config: EnvSnmConfig) -> Self {
         Self {
             library_name: library_name.to_string(),
             snm_config,
@@ -206,7 +206,7 @@ impl AtomTrait for PackageManagerAtom {
         Ok(())
     }
 
-    fn get_snm_config(&self) -> &SnmConfig {
+    fn get_snm_config(&self) -> &EnvSnmConfig {
         &self.snm_config
     }
 }

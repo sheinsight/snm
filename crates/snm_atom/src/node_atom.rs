@@ -5,7 +5,7 @@ use crate::conditional_compiler::get_tarball_ext;
 use futures::*;
 use sha2::Digest;
 use sha2::Sha256;
-use snm_config::SnmConfig;
+use snm_config::EnvSnmConfig;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
@@ -18,11 +18,11 @@ use std::{
 };
 
 pub struct NodeAtom {
-    snm_config: SnmConfig,
+    snm_config: EnvSnmConfig,
 }
 
 impl NodeAtom {
-    pub fn new(snm_config: SnmConfig) -> Self {
+    pub fn new(snm_config: EnvSnmConfig) -> Self {
         Self { snm_config }
     }
 
@@ -159,7 +159,7 @@ impl AtomTrait for NodeAtom {
         decompress(&input_file_path_buf, &output_dir_path_buf)
     }
 
-    fn get_snm_config(&self) -> &SnmConfig {
+    fn get_snm_config(&self) -> &EnvSnmConfig {
         &self.snm_config
     }
 }

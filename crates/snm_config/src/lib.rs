@@ -5,7 +5,10 @@ use snm_node_version::NodeVersionReader;
 use snm_npmrc::NpmrcReader;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
-use std::{env, path::PathBuf};
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum InstallStrategy {
@@ -41,8 +44,60 @@ const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
-#[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
+    pub node_bin_dir: String,
+    pub download_dir: String,
+    pub cache_dir: String,
+    pub lang: String,
+    pub node_modules_dir: String,
+    pub node_dist_url: String,
+    pub node_github_resource_host: String,
+    pub node_install_strategy: InstallStrategy,
+    pub node_white_list: String,
+    pub download_timeout_secs: u64,
+    pub npm_registry: String,
+}
+
+impl SnmConfig {
+    fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
+        let config = Config::builder()
+            .add_source(Environment::with_prefix("SNM"))
+            .build()?;
+
+        let config: EnvSnmConfig = config.try_deserialize()?;
+
+        let npm_registry = NpmrcReader::from(&workspace).read_registry_with_default();
+
+        let node_version = NodeVersionReader::from(&workspace).read_version();
+
+        if let Some(ref v) = node_version {
+            env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
+        }
+
+        Ok(Self {
+            node_bin_dir: config.node_bin_dir.unwrap_or("node_bin".to_string()),
+            download_dir: config.download_dir.unwrap_or("downloads".to_string()),
+            cache_dir: config.cache_dir.unwrap_or("cache".to_string()),
+            lang: config.lang.unwrap_or("en".to_string()),
+            node_modules_dir: config
+                .node_modules_dir
+                .unwrap_or("node_modules".to_string()),
+            node_dist_url: config
+                .node_dist_url
+                .unwrap_or("https://nodejs.org/dist".to_string()),
+            node_github_resource_host: config
+                .node_github_resource_host
+                .unwrap_or("https://raw.githubusercontent.com".to_string()),
+            node_install_strategy: config.node_install_strategy.unwrap_or(InstallStrategy::Ask),
+            node_white_list: config.node_white_list.unwrap_or("".to_string()),
+            download_timeout_secs: config.download_timeout_secs.unwrap_or(30),
+            npm_registry: npm_registry,
+        })
+    }
+}
+
+#[derive(Debug, Default, Deserialize, PartialEq, Eq, Clone)]
+pub struct EnvSnmConfig {
     node_bin_dir: Option<String>,
 
     download_dir: Option<String>,
@@ -72,7 +127,7 @@ pub struct SnmConfig {
     snm_node_version: Option<String>,
 }
 
-impl SnmConfig {
+impl EnvSnmConfig {
     fn get_base_dir(&self) -> Result<PathBuf, SnmError> {
         match env::var(SNM_HOME_DIR_KEY) {
             Ok(dir) => Ok(PathBuf::from(dir)),
@@ -192,12 +247,12 @@ impl SnmConfig {
     }
 }
 
-pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
+pub fn parse_snm_config(workspace: &PathBuf) -> Result<EnvSnmConfig, SnmError> {
     let config = Config::builder()
         .add_source(Environment::with_prefix("SNM"))
         .build()?;
 
-    let mut config: SnmConfig = config.try_deserialize()?;
+    let mut config: EnvSnmConfig = config.try_deserialize()?;
 
     let npmrc = NpmrcReader::from(&workspace);
 
@@ -265,7 +320,7 @@ mod tests {
 
         assert_eq!(
             config,
-            SnmConfig {
+            EnvSnmConfig {
                 node_bin_dir: Some("node_bin_demo".to_string()),
                 download_dir: Some("downloads_demo".to_string()),
                 lang: Some("en".to_string()),
