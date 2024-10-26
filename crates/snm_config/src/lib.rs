@@ -1,6 +1,7 @@
 use config::{Config, Environment};
 use serde::Deserialize;
-use snm_node_version::{parse_node_version, NodeVersion};
+use snm_node_version::NodeVersionReader;
+// use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::NpmrcReader;
 use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
 use snm_utils::snm_error::SnmError;
@@ -79,7 +80,7 @@ pub struct SnmConfig {
 
     snm_package_json: Option<PackageJson>,
 
-    snm_node_version: Option<NodeVersion>,
+    snm_node_version: Option<String>,
     // #[serde(skip)]
     // ini: Ini,
 }
@@ -134,9 +135,9 @@ impl SnmConfig {
         })
     }
 
-    pub fn get_snm_node_version(&self) -> Option<NodeVersion> {
-        self.snm_node_version.clone()
-    }
+    // pub fn get_snm_node_version(&self) -> Option<String> {
+    //     self.snm_node_version.clone()
+    // }
 
     pub fn get_snm_package_json(&self) -> Option<PackageJson> {
         self.snm_package_json.clone()
@@ -215,12 +216,12 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<SnmConfig, SnmError> {
 
     let registry = npmrc.read_registry_with_default();
 
-    let node_version = parse_node_version(workspace)?;
+    let node_version_reader = NodeVersionReader::from(workspace);
+
+    let node_version = node_version_reader.read_version();
 
     if let Some(ref v) = node_version {
-        if let Some(v) = v.get_version() {
-            env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
-        }
+        env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
     }
 
     let package_json = parse_package_json(workspace)?;
