@@ -26,21 +26,6 @@ pub struct PackageJson {
     pub raw_workspace: PathBuf,
 }
 
-// impl PackageJson {
-//     fn from<P: AsRef<Path>>(workspace: P) -> Result<(), SnmError> {
-//         let raw_file_path = workspace.as_ref().join("package.json");
-//         let package_manager = raw_file_path
-//             .exists()
-//             .then(|| File::open(&raw_file_path))
-//             .and_then(|f| f.ok())
-//             .and_then(|f| Some(BufReader::new(f)))
-//             .and_then(|f| Some(serde_json::from_reader::<_, PackageJsonRaw>(f)))
-//             .and_then(|f| f.ok());
-
-//         Ok(())
-//     }
-// }
-
 pub fn parse_package_json(workspace: &PathBuf) -> Result<Option<PackageJson>, SnmError> {
     let raw_file_path = workspace.join("package.json");
 
