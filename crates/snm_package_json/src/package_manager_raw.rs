@@ -63,16 +63,10 @@ impl PackageJsonRaw {
             Bin::Map(map) => map
                 .into_iter()
                 .filter_map(|(k, v)| {
-                    if let Some(path) = workspace
-                        .as_ref()
-                        .join(v.replace('/', MAIN_SEPARATOR_STR))
-                        .canonicalize()
-                        .ok()
-                    {
-                        Some((k.to_string(), path))
-                    } else {
-                        None
-                    }
+                    Some((
+                        k.to_string(),
+                        workspace.as_ref().join(v.replace('/', MAIN_SEPARATOR_STR)),
+                    ))
                 })
                 .collect(),
         }
@@ -137,5 +131,67 @@ impl PackageJsonRaw {
             Bin::Str(s) => Some(s.clone()),
             Bin::Map(map) => map.get(name).map(|s| s.clone()),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_package_manager_with_pnpm() {
+        let pm = PackageJsonRaw::parse_package_manager("pnpm@9.0.0");
+        assert!(pm.is_some());
+        if let Some(pm) = pm {
+            assert_eq!(&pm.name, "pnpm");
+            assert_eq!(&pm.version, "9.0.0");
+        }
+    }
+
+    #[test]
+    fn test_parse_package_manager_with_pnpm_and_hash() {
+        let pm = PackageJsonRaw::parse_package_manager("pnpm@9.0.0+sha.1234567890");
+        assert!(pm.is_some());
+
+        if let Some(pm) = pm {
+            let hash = pm.hash.unwrap();
+            assert_eq!(&pm.name, "pnpm");
+            assert_eq!(&pm.version, "9.0.0");
+            assert_eq!(hash.name.as_deref(), Some("sha"));
+            assert_eq!(hash.value.as_deref(), Some("1234567890"));
+        }
+    }
+
+    #[test]
+    fn test_parse_package_manager_with_npm() {
+        let pm = PackageJsonRaw::parse_package_manager("npm@10.0.0");
+        assert!(pm.is_some());
+
+        if let Some(pm) = pm {
+            assert_eq!(&pm.name, "npm");
+            assert_eq!(&pm.version, "10.0.0");
+        }
+    }
+
+    #[test]
+    fn test_parse_bin() {
+        let bin = PackageJsonRaw::parse_bin(".", &Bin::Map(HashMap::new()));
+        assert_eq!(bin, HashMap::new());
+    }
+
+    #[test]
+    fn test_parse_bin_with_path() {
+        let mut bin = HashMap::new();
+        bin.insert("pnpm".to_string(), "pnpm".to_string());
+        bin.insert("pnpx".to_string(), "pnpx".to_string());
+        let internal_bin = PackageJsonRaw::parse_bin("/usr/local/bin", &Bin::Map(bin));
+        assert_eq!(
+            *internal_bin.get("pnpm").unwrap(),
+            PathBuf::from("/usr/local/bin/pnpm")
+        );
+        assert_eq!(
+            *internal_bin.get("pnpx").unwrap(),
+            PathBuf::from("/usr/local/bin/pnpx")
+        );
     }
 }
