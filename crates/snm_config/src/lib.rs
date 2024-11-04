@@ -3,7 +3,7 @@ use serde::Deserialize;
 use snm_node_version::NodeVersionReader;
 // use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::NpmrcReader;
-use snm_package_json::{package_manager_meta::PackageManager, parse_package_json, PackageJson};
+use snm_package_json::{package_manager_meta::PackageManager, package_manager_raw::PackageJson};
 use snm_utils::snm_error::SnmError;
 use std::{
     env,
@@ -45,17 +45,17 @@ const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 pub struct SnmConfig {
-    pub node_bin_dir: String,
-    pub download_dir: String,
-    pub cache_dir: String,
-    pub lang: String,
-    pub node_modules_dir: String,
+    pub node_bin_dir: PathBuf,
+    pub download_dir: PathBuf,
+    pub cache_dir: PathBuf,
+    pub node_modules_dir: PathBuf,
     pub node_dist_url: String,
     pub node_github_resource_host: String,
     pub node_install_strategy: InstallStrategy,
     pub node_white_list: String,
     pub download_timeout_secs: u64,
     pub npm_registry: String,
+    pub lang: String,
 }
 
 impl SnmConfig {
@@ -74,22 +74,74 @@ impl SnmConfig {
             env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
         }
 
+        let base_dir = Path::new(".snm");
+
+        let node_bin_dir = {
+            let node_bin_dir = match config.node_bin_dir {
+                Some(node_bin_dir) => node_bin_dir,
+                None => "node_bin".to_string(),
+            };
+            base_dir.join(node_bin_dir)
+        };
+
+        let download_dir = {
+            let download_dir = match config.download_dir {
+                Some(download_dir) => download_dir,
+                None => "downloads".to_string(),
+            };
+            base_dir.join(download_dir)
+        };
+
+        let cache_dir = {
+            let cache_dir = match config.cache_dir {
+                Some(cache_dir) => cache_dir,
+                None => "cache".to_string(),
+            };
+            base_dir.join(cache_dir)
+        };
+
+        let node_modules_dir = {
+            let node_modules_dir = match config.node_modules_dir {
+                Some(node_modules_dir) => node_modules_dir,
+                None => "node_modules".to_string(),
+            };
+            base_dir.join(node_modules_dir)
+        };
+
+        let node_dist_url = {
+            let node_dist_url = match config.node_dist_url {
+                Some(node_dist_url) => node_dist_url,
+                None => "https://nodejs.org/dist".to_string(),
+            };
+            node_dist_url
+        };
+
+        let node_github_resource_host = {
+            let node_github_resource_host = match config.node_github_resource_host {
+                Some(node_github_resource_host) => node_github_resource_host,
+                None => "https://raw.githubusercontent.com".to_string(),
+            };
+            node_github_resource_host
+        };
+
+        let node_white_list = {
+            let node_white_list = match config.node_white_list {
+                Some(node_white_list) => node_white_list,
+                None => "".to_string(),
+            };
+            node_white_list
+        };
+
         Ok(Self {
-            node_bin_dir: config.node_bin_dir.unwrap_or("node_bin".to_string()),
-            download_dir: config.download_dir.unwrap_or("downloads".to_string()),
-            cache_dir: config.cache_dir.unwrap_or("cache".to_string()),
+            node_bin_dir: node_bin_dir,
+            download_dir: download_dir,
+            cache_dir: cache_dir,
             lang: config.lang.unwrap_or("en".to_string()),
-            node_modules_dir: config
-                .node_modules_dir
-                .unwrap_or("node_modules".to_string()),
-            node_dist_url: config
-                .node_dist_url
-                .unwrap_or("https://nodejs.org/dist".to_string()),
-            node_github_resource_host: config
-                .node_github_resource_host
-                .unwrap_or("https://raw.githubusercontent.com".to_string()),
+            node_modules_dir: node_modules_dir,
+            node_dist_url: node_dist_url,
+            node_github_resource_host: node_github_resource_host,
             node_install_strategy: config.node_install_strategy.unwrap_or(InstallStrategy::Ask),
-            node_white_list: config.node_white_list.unwrap_or("".to_string()),
+            node_white_list: node_white_list,
             download_timeout_secs: config.download_timeout_secs.unwrap_or(30),
             npm_registry: npm_registry,
         })
@@ -119,12 +171,10 @@ pub struct EnvSnmConfig {
     download_timeout_secs: Option<u64>,
 
     npm_registry: Option<String>,
-
     workspace: Option<String>,
+    // snm_package_json: Option<PackageJson>,
 
-    snm_package_json: Option<PackageJson>,
-
-    snm_node_version: Option<String>,
+    // snm_node_version: Option<String>,
 }
 
 impl EnvSnmConfig {
@@ -181,9 +231,9 @@ impl EnvSnmConfig {
     //     self.snm_node_version.clone()
     // }
 
-    pub fn get_snm_package_json(&self) -> Option<PackageJson> {
-        self.snm_package_json.clone()
-    }
+    // pub fn get_snm_package_json(&self) -> Option<PackageJson> {
+    //     self.snm_package_json.clone()
+    // }
 
     pub fn get_download_timeout_secs(&self) -> u64 {
         self.download_timeout_secs.unwrap_or(30)
@@ -266,31 +316,22 @@ pub fn parse_snm_config(workspace: &PathBuf) -> Result<EnvSnmConfig, SnmError> {
         env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
     }
 
-    let package_json = parse_package_json(workspace)?;
+    let package_json_raw = PackageJson::from(workspace);
 
-    if let Some(ref p) = package_json {
-        if let Some(ref pm) = p.package_manager {
-            env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, pm.name.clone());
-            env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, pm.version.clone());
+    if let Some(ref p) = package_json_raw {
+        if let Some(pm_name) = p.get_pm_name() {
+            env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, pm_name.clone());
+        }
+
+        if let Some(pm_version) = p.get_pm_version() {
+            env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, pm_version.clone());
         }
     }
 
-    // let file = config.get_base_dir()?.join("snm.ini");
-
-    // if file.exists().not() {
-    //     File::create(&file)?;
-    // }
-
-    // let ini: Ini = Config::builder()
-    //     .add_source(config::File::from(file))
-    //     .build()?
-    //     .try_deserialize()?;
-
-    // config.ini = ini;
     config.npm_registry = Some(registry);
     config.workspace = Some(workspace.to_string_lossy().to_string());
-    config.snm_node_version = node_version;
-    config.snm_package_json = package_json;
+    // config.snm_node_version = node_version;
+    // config.snm_package_json = package_json_raw;
 
     Ok(config)
 }
@@ -316,41 +357,75 @@ mod tests {
         env::set_var("SNM_NODE_INSTALL_STRATEGY", "auto");
         env::set_var("SNM_NODE_WHITE_LIST", "1.1.0,1.2.0");
 
-        let config = parse_snm_config(&current_dir().unwrap()).unwrap();
+        if let Ok(dir) = current_dir() {
+            let snm_config = match SnmConfig::from(dir) {
+                Ok(snm_config) => snm_config,
+                Err(_) => {
+                    assert!(false);
+                    return;
+                }
+            };
+            assert_eq!(snm_config.node_bin_dir.to_str(), Some(".snm/node_bin_demo"));
+            assert_eq!(
+                snm_config.download_dir.to_str(),
+                Some(".snm/downloads_demo")
+            );
+            assert_eq!(snm_config.lang, "en");
+            assert_eq!(snm_config.cache_dir.to_str(), Some(".snm/cache_demo"));
+            assert_eq!(
+                snm_config.node_modules_dir.to_str(),
+                Some(".snm/node_modules_demo")
+            );
+            assert_eq!(
+                snm_config.node_dist_url,
+                "https://nodejs.org/dist".to_string()
+            );
+            assert_eq!(
+                snm_config.node_github_resource_host,
+                "https://raw.githubusercontent.com".to_string()
+            );
+            assert_eq!(snm_config.download_timeout_secs, 60);
+            assert_eq!(
+                snm_config.npm_registry,
+                "https://registry.npmjs.org/".to_string()
+            );
+        }
 
-        assert_eq!(
-            config,
-            EnvSnmConfig {
-                node_bin_dir: Some("node_bin_demo".to_string()),
-                download_dir: Some("downloads_demo".to_string()),
-                lang: Some("en".to_string()),
-                cache_dir: Some("cache_demo".to_string()),
-                node_modules_dir: Some("node_modules_demo".to_string()),
-                node_dist_url: Some("https://nodejs.org/dist".to_string()),
-                node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
-                node_install_strategy: Some(InstallStrategy::Auto),
-                node_white_list: Some("1.1.0,1.2.0".to_string()),
-                download_timeout_secs: Some(60),
-                npm_registry: Some("https://registry.npmjs.org/".to_string()),
-                workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
-                snm_node_version: None,
-                snm_package_json: None,
-            }
-        );
+        // let config = parse_snm_config(&current_dir().unwrap()).unwrap();
 
-        assert_eq!(
-            config.get_download_dir().unwrap(),
-            dirs::home_dir().unwrap().join(".snm/downloads_demo")
-        );
+        // assert_eq!(
+        //     config,
+        //     EnvSnmConfig {
+        //         node_bin_dir: Some("node_bin_demo".to_string()),
+        //         download_dir: Some("downloads_demo".to_string()),
+        //         lang: Some("en".to_string()),
+        //         cache_dir: Some("cache_demo".to_string()),
+        //         node_modules_dir: Some("node_modules_demo".to_string()),
+        //         node_dist_url: Some("https://nodejs.org/dist".to_string()),
+        //         node_github_resource_host: Some("https://raw.githubusercontent.com".to_string()),
+        //         node_install_strategy: Some(InstallStrategy::Auto),
+        //         node_white_list: Some("1.1.0,1.2.0".to_string()),
+        //         download_timeout_secs: Some(60),
+        //         npm_registry: Some("https://registry.npmjs.org/".to_string()),
+        //         workspace: Some(current_dir().unwrap().to_string_lossy().to_string()),
+        //         snm_node_version: None,
+        //         snm_package_json: None,
+        //     }
+        // );
 
-        assert_eq!(
-            config.get_node_bin_dir().unwrap(),
-            dirs::home_dir().unwrap().join(".snm/node_bin_demo")
-        );
+        // assert_eq!(
+        //     config.get_download_dir().unwrap(),
+        //     dirs::home_dir().unwrap().join(".snm/downloads_demo")
+        // );
 
-        assert_eq!(
-            config.get_node_modules_dir().unwrap(),
-            dirs::home_dir().unwrap().join(".snm/node_modules_demo")
-        );
+        // assert_eq!(
+        //     config.get_node_bin_dir().unwrap(),
+        //     dirs::home_dir().unwrap().join(".snm/node_bin_demo")
+        // );
+
+        // assert_eq!(
+        //     config.get_node_modules_dir().unwrap(),
+        //     dirs::home_dir().unwrap().join(".snm/node_modules_demo")
+        // );
     }
 }

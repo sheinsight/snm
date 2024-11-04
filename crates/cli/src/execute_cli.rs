@@ -1,15 +1,15 @@
-use snm_atom::node_atom::NodeAtom;
-use snm_config::EnvSnmConfig;
-use snm_ni::trait_transform::IArgs;
-use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
-use snm_utils::exec::exec_cli;
-use snm_utils::snm_error::SnmError;
-
 use crate::fig::fig_spec_impl;
 use crate::manage_command::ManageCommands;
 use crate::node_manager::node_manager::{ListArgs, ListRemoteArgs, NodeManager};
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
+use snm_atom::node_atom::NodeAtom;
+use snm_config::EnvSnmConfig;
+use snm_ni::trait_transform::IArgs;
+use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
+use snm_package_json::package_manager_raw::PackageJson;
+use snm_utils::exec::exec_cli;
+use snm_utils::snm_error::SnmError;
 
 fn create_transform(name: &str, version: &str) -> Box<dyn CommandArgsCreatorTrait> {
     match name {
@@ -68,19 +68,18 @@ pub async fn execute_cli(cli: SnmCli, snm_config: EnvSnmConfig) -> Result<(), Sn
         | SnmCommands::X(_)
         | SnmCommands::E(_)
         | SnmCommands::R(_) => {
-            let package_json = snm_config
-                .get_snm_package_json()
-                .ok_or(SnmError::NotFoundPackageJsonFileError {})?;
+            if let Some(package_json) = PackageJson::from(snm_config.get_workspace()?) {
+                let (pm_name, pm_version) = package_json
+                    .get_pm_name()
+                    .zip(package_json.get_pm_version())
+                    .ok_or(SnmError::NotFondPackageManagerConfigError {})?;
 
-            let package_manager = package_json
-                .package_manager
-                .ok_or(SnmError::NotFondPackageManagerConfigError {})?;
+                let transform = create_transform(&pm_name, &pm_version);
 
-            let transform = create_transform(&package_manager.name, &package_manager.version);
+                let args = handle_command(&*transform.as_ref(), cli.command);
 
-            let args = handle_command(&*transform.as_ref(), cli.command);
-
-            exec_cli(vec![], package_manager.name, args)?;
+                exec_cli(vec![], pm_name, args)?;
+            }
         }
 
         SnmCommands::FigSpec => {

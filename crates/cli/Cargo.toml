@@ -31,10 +31,12 @@ snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
 snm_atom = { path = "../snm_atom" }
 snm_node_version = { path = "../snm_node_version" }
+snm_package_json = { path = "../snm_package_json" }
 snm_download_builder = { path = "../snm_download_builder" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["full"] }
 clap = { version = "4.5.7", features = ["derive","cargo"] }
+anyhow = "1.0.91"
 reqwest = { version = "0.12.3", features = ["json", "blocking", "stream","native-tls-vendored"] }
 
 [dev-dependencies]

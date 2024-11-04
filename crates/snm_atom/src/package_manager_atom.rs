@@ -5,7 +5,7 @@ use sha1::Digest;
 use sha1::Sha1;
 use snm_config::EnvSnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_package_json::parse_package_json;
+use snm_package_json::package_manager_raw::PackageJson;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
@@ -184,24 +184,24 @@ impl AtomTrait for PackageManagerAtom {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
         decompress(&input_file_path_buf, &output_dir_path_buf)?;
-        if let Some(package_json) = parse_package_json(&output_dir_path_buf)? {
+        if let Some(package_json) = PackageJson::from(&output_dir_path_buf) {
             let bin = output_dir_path_buf.join("bin");
             if bin.exists().not() {
                 fs::create_dir_all(&bin)?;
             }
-            for (k, v) in package_json.bin.iter() {
+            package_json.enumerate_bin(|k, v| {
                 let link_file = &bin.join(k);
                 if link_file.exists().not() {
                     #[cfg(unix)]
                     {
-                        std::os::unix::fs::symlink(v, link_file)?;
+                        std::os::unix::fs::symlink(v, link_file).unwrap();
                     }
                     #[cfg(windows)]
                     {
-                        std::os::windows::fs::symlink_dir(v, link_file)?;
+                        std::os::windows::fs::symlink_dir(v, link_file).unwrap();
                     }
                 }
-            }
+            });
         }
         Ok(())
     }

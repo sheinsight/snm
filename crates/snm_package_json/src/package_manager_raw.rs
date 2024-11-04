@@ -17,7 +17,7 @@ pub enum Bin {
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
-pub struct PackageJsonRaw {
+pub struct PackageJson {
     pub name: Option<String>,
 
     pub version: Option<String>,
@@ -34,8 +34,8 @@ pub struct PackageJsonRaw {
     internal_package_manager: Option<PackageManager>,
 }
 
-impl PackageJsonRaw {
-    fn from<P: AsRef<Path>>(workspace: P) -> Option<Self> {
+impl PackageJson {
+    pub fn from<P: AsRef<Path>>(workspace: P) -> Option<Self> {
         let raw_file_path = workspace.as_ref().join("package.json");
         let mut x: Option<Self> = raw_file_path
             .exists()
@@ -113,7 +113,7 @@ impl PackageJsonRaw {
     }
 }
 
-impl PackageJsonRaw {
+impl PackageJson {
     pub fn get_pm_name(&self) -> Option<String> {
         self.package_manager
             .as_deref()
@@ -126,11 +126,19 @@ impl PackageJsonRaw {
             .and_then(|s| s.split('@').nth(1).map(|s| s.to_string()))
     }
 
-    pub fn get_bin_with_name(&self, name: &str) -> Option<String> {
-        self.bin.as_ref().and_then(|bin| match bin {
-            Bin::Str(s) => Some(s.clone()),
-            Bin::Map(map) => map.get(name).map(|s| s.clone()),
-        })
+    pub fn get_bin_with_name(&self, name: &str) -> Option<PathBuf> {
+        let x = self.internal_bin.as_ref().and_then(|bin| bin.get(name));
+
+        x.as_deref().cloned()
+    }
+
+    pub fn enumerate_bin<F>(&self, f: F)
+    where
+        F: Fn(&str, &PathBuf),
+    {
+        for (k, v) in self.internal_bin.as_ref().unwrap() {
+            f(k, v)
+        }
     }
 }
 
@@ -140,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_parse_package_manager_with_pnpm() {
-        let pm = PackageJsonRaw::parse_package_manager("pnpm@9.0.0");
+        let pm = PackageJson::parse_package_manager("pnpm@9.0.0");
         assert!(pm.is_some());
         if let Some(pm) = pm {
             assert_eq!(&pm.name, "pnpm");
@@ -150,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_parse_package_manager_with_pnpm_and_hash() {
-        let pm = PackageJsonRaw::parse_package_manager("pnpm@9.0.0+sha.1234567890");
+        let pm = PackageJson::parse_package_manager("pnpm@9.0.0+sha.1234567890");
         assert!(pm.is_some());
 
         if let Some(pm) = pm {
@@ -164,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_parse_package_manager_with_npm() {
-        let pm = PackageJsonRaw::parse_package_manager("npm@10.0.0");
+        let pm = PackageJson::parse_package_manager("npm@10.0.0");
         assert!(pm.is_some());
 
         if let Some(pm) = pm {
@@ -175,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_parse_bin() {
-        let bin = PackageJsonRaw::parse_bin(".", &Bin::Map(HashMap::new()));
+        let bin = PackageJson::parse_bin(".", &Bin::Map(HashMap::new()));
         assert_eq!(bin, HashMap::new());
     }
 
@@ -184,7 +192,7 @@ mod tests {
         let mut bin = HashMap::new();
         bin.insert("pnpm".to_string(), "pnpm".to_string());
         bin.insert("pnpx".to_string(), "pnpx".to_string());
-        let internal_bin = PackageJsonRaw::parse_bin("/usr/local/bin", &Bin::Map(bin));
+        let internal_bin = PackageJson::parse_bin("/usr/local/bin", &Bin::Map(bin));
         assert_eq!(
             *internal_bin.get("pnpm").unwrap(),
             PathBuf::from("/usr/local/bin/pnpm")

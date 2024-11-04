@@ -11,6 +11,5 @@ pub struct PackageManager {
     pub name: String,
     pub version: String,
     pub hash: Option<PackageManagerDownloadHash>,
-
     pub raw: String,
 }
