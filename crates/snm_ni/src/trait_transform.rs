@@ -4,9 +4,9 @@ use clap::Parser;
 pub struct AArgs {
     #[arg(help = "The package spec to install.")]
     pub package_spec: String,
-    #[arg(short = 'P', long, help = "Save to dependencies")]
+    #[arg(long, help = "Save to dependencies")]
     pub save_prod: bool,
-    #[arg(long, help = "Save to peerDependencies")]
+    #[arg(short = 'P', long, help = "Save to peerDependencies")]
     pub save_peer: bool,
     #[arg(short = 'D', long, help = "Save to devDependencies")]
     pub save_dev: bool,

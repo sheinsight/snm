@@ -18,7 +18,7 @@ members = [
     "crates/cli_yarn",
     "crates/dev-tools", 
     "crates/snm_atom"
-, "e2e"]
+, "e2e", "demo"]
 
 resolver = "2"
 

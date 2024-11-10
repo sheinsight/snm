@@ -3,9 +3,9 @@ use semver::{Version, VersionReq};
 use serde_json::Value;
 use sha1::Digest;
 use sha1::Sha1;
-use snm_config::EnvSnmConfig;
+use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_package_json::package_manager_raw::PackageJson;
+use snm_package_json::package_json::PackageJson;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
@@ -20,12 +20,12 @@ use std::{
 };
 
 pub struct PackageManagerAtom {
-    snm_config: EnvSnmConfig,
+    snm_config: SnmConfig,
     library_name: String,
 }
 
 impl PackageManagerAtom {
-    pub fn new(library_name: &str, snm_config: EnvSnmConfig) -> Self {
+    pub fn new(library_name: &str, snm_config: SnmConfig) -> Self {
         Self {
             library_name: library_name.to_string(),
             snm_config,
@@ -36,7 +36,7 @@ impl PackageManagerAtom {
 impl AtomTrait for PackageManagerAtom {
     fn get_anchor_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_modules_dir()?
+            .node_modules_dir
             .join(&self.library_name)
             .join(v)
             .join("package.json")
@@ -46,7 +46,7 @@ impl AtomTrait for PackageManagerAtom {
     fn get_runtime_binary_dir_string(&self, version: &str) -> Result<String, SnmError> {
         Ok(self
             .snm_config
-            .get_node_modules_dir()?
+            .node_modules_dir
             .join(self.library_name.to_string())
             .join(&version)
             .join("bin")
@@ -55,7 +55,7 @@ impl AtomTrait for PackageManagerAtom {
     }
 
     fn get_download_url(&self, v: &str) -> String {
-        let npm_registry = self.snm_config.get_npm_registry();
+        let npm_registry = &self.snm_config.npm_registry;
 
         let req = VersionReq::parse(">1").unwrap();
 
@@ -77,7 +77,7 @@ impl AtomTrait for PackageManagerAtom {
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_download_dir()?
+            .download_dir
             .join(&self.library_name)
             .join(&v)
             .join(format!("{}@{}.tgz", &self.library_name, &v))
@@ -92,7 +92,7 @@ impl AtomTrait for PackageManagerAtom {
         };
 
         self.snm_config
-            .get_node_modules_dir()?
+            .node_modules_dir
             .join(&library_name)
             .join(&v)
             .to_ok()
@@ -100,7 +100,7 @@ impl AtomTrait for PackageManagerAtom {
 
     fn get_runtime_dir_for_default_path_buf(&self) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_modules_dir()?
+            .node_modules_dir
             .join(&self.library_name)
             .join("default")
             .to_ok()
@@ -108,7 +108,7 @@ impl AtomTrait for PackageManagerAtom {
 
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_modules_dir()?
+            .node_modules_dir
             .join(&self.library_name)
             .to_ok()
     }
@@ -118,7 +118,7 @@ impl AtomTrait for PackageManagerAtom {
         v: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<Option<String>, SnmError>> + Send + 'a>> {
         Box::pin(async move {
-            let cache_dir = self.snm_config.get_cache_dir()?;
+            let cache_dir = &self.snm_config.cache_dir;
 
             if cache_dir.exists().not() {
                 fs::create_dir_all(&cache_dir)?;
@@ -126,14 +126,14 @@ impl AtomTrait for PackageManagerAtom {
 
             let cache_file = cache_dir.join(format!("{}.json", &self.library_name));
 
-            let npm_registry = self.snm_config.get_npm_registry();
+            let npm_registry = &self.snm_config.npm_registry;
 
             let download_url = format!("{}/{}", npm_registry, &self.library_name);
 
             if cache_file.exists().not() {
                 DownloadBuilder::new()
                     .retries(3)
-                    .timeout(self.snm_config.get_download_timeout_secs())
+                    .timeout(self.snm_config.download_timeout_secs)
                     .write_strategy(WriteStrategy::WriteAfterDelete)
                     .download(&download_url, &cache_file)
                     .await?;
@@ -206,7 +206,7 @@ impl AtomTrait for PackageManagerAtom {
         Ok(())
     }
 
-    fn get_snm_config(&self) -> &EnvSnmConfig {
-        &self.snm_config
+    fn get_snm_config(&self) -> SnmConfig {
+        self.snm_config.clone()
     }
 }

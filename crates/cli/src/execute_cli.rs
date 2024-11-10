@@ -4,21 +4,21 @@ use crate::node_manager::node_manager::{ListArgs, ListRemoteArgs, NodeManager};
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 use snm_atom::node_atom::NodeAtom;
-use snm_config::EnvSnmConfig;
+use snm_config::SnmConfig;
 use snm_ni::trait_transform::IArgs;
 use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
-use snm_package_json::package_manager_raw::PackageJson;
+use snm_package_json::package_json::PackageJson;
 use snm_utils::exec::exec_cli;
 use snm_utils::snm_error::SnmError;
 
-fn create_transform(name: &str, version: &str) -> Box<dyn CommandArgsCreatorTrait> {
+fn create_transform(name: &str, version: &str) -> anyhow::Result<Box<dyn CommandArgsCreatorTrait>> {
     match name {
-        "npm" => Box::new(NpmArgsTransform {}),
-        "pnpm" => Box::new(PnpmArgsTransform {}),
-        "yarn" => Box::new(YarnArgsTransform {
+        "npm" => Ok(Box::new(NpmArgsTransform {})),
+        "pnpm" => Ok(Box::new(PnpmArgsTransform {})),
+        "yarn" => Ok(Box::new(YarnArgsTransform {
             version: version.to_string(),
-        }),
-        _ => panic!("Unsupported package manager: {}", name),
+        })),
+        _ => anyhow::bail!("Unsupported package manager: {}", name),
     }
 }
 
@@ -37,7 +37,7 @@ fn handle_command(transform: &dyn CommandArgsCreatorTrait, command: SnmCommands)
     }
 }
 
-pub async fn execute_cli(cli: SnmCli, snm_config: EnvSnmConfig) -> Result<(), SnmError> {
+pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
     match cli.command {
         // manage start
         SnmCommands::Node { command } => {
@@ -68,13 +68,15 @@ pub async fn execute_cli(cli: SnmCli, snm_config: EnvSnmConfig) -> Result<(), Sn
         | SnmCommands::X(_)
         | SnmCommands::E(_)
         | SnmCommands::R(_) => {
-            if let Some(package_json) = PackageJson::from(snm_config.get_workspace()?) {
+            if let Some(package_json) = PackageJson::from(snm_config.workspace) {
                 let (pm_name, pm_version) = package_json
-                    .get_pm_name()
-                    .zip(package_json.get_pm_version())
+                    .get_pm()
+                    .map(|pm| (pm.name().to_string(), pm.version().to_string()))
                     .ok_or(SnmError::NotFondPackageManagerConfigError {})?;
 
-                let transform = create_transform(&pm_name, &pm_version);
+                // package_json.get_package_manager()
+
+                let transform = create_transform(&pm_name, &pm_version)?;
 
                 let args = handle_command(&*transform.as_ref(), cli.command);
 

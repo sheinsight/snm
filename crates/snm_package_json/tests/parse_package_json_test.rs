@@ -1,6 +1,6 @@
 use std::env::current_dir;
 
-use snm_package_json::package_manager_raw::PackageJson;
+use snm_package_json::package_json::PackageJson;
 
 #[test]
 fn test_parse_for_bin() {
@@ -44,5 +44,5 @@ fn test_parse_package_manager() {
         None => unreachable!("Failed to parse package.json"),
     };
 
-    assert_eq!(package_json.get_pm_name().unwrap(), "pnpm".to_string());
+    assert_eq!(package_json.get_pm().unwrap().name(), "pnpm".to_string());
 }

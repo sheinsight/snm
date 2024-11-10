@@ -1,7 +1,7 @@
 use std::{env::current_dir, fs, ops::Not as _};
 
 use snm_atom::{atom::AtomTrait, node_atom::NodeAtom};
-use snm_config::parse_snm_config;
+use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::snm_error::SnmError;
 use tracing::{instrument, Level};
@@ -9,23 +9,28 @@ use tracing::{instrument, Level};
 #[instrument(level = Level::TRACE, ret)]
 pub async fn get_node_bin_dir() -> Result<String, SnmError> {
     let dir = current_dir()?;
-    let snm_config = parse_snm_config(&dir)?;
+
+    let snm_config = SnmConfig::from(dir)?;
 
     let snm_node = NodeAtom::new(snm_config.clone());
-    let version = if let Some(version) = snm_config.get_runtime_node_version() {
+
+    let version = if let Ok(version) = snm_config.get_runtime_node_version() {
         version
     } else {
         let (_, version) = snm_node.read_runtime_dir_name_vec()?;
         version.ok_or(SnmError::NoDefaultNodeBinary)?
     };
 
-    let node_white_list = snm_config.get_node_white_list();
+    let node_white_list = &snm_config.node_white_list;
 
     if node_white_list.is_empty().not() {
         if node_white_list.contains(&version).not() {
             return Err(SnmError::UnsupportedNodeVersionError {
                 version,
-                node_white_list,
+                node_white_list: node_white_list
+                    .split(',')
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>(),
             });
         }
     }
@@ -41,7 +46,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
         DownloadBuilder::new()
             .retries(3)
-            .timeout(snm_node.get_snm_config().get_download_timeout_secs())
+            .timeout(snm_node.get_snm_config().download_timeout_secs)
             .write_strategy(WriteStrategy::WriteAfterDelete)
             .download(&download_url, &downloaded_file_path_buf)
             .await?;

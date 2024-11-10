@@ -97,7 +97,7 @@ where
     }
 
     async fn get_node_list_remote(&self) -> Result<Vec<NodeModel>, SnmError> {
-        let host = self.node_atom.get_snm_config().get_node_dist_url();
+        let host = self.node_atom.get_snm_config().node_dist_url;
         let node_list_url = format!("{}/index.json", host);
 
         let client = reqwest::Client::new();
@@ -113,10 +113,7 @@ where
     }
 
     async fn get_node_schedule(&self) -> Result<Vec<NodeSchedule>, SnmError> {
-        let host = self
-            .node_atom
-            .get_snm_config()
-            .get_node_github_resource_host();
+        let host = self.node_atom.get_snm_config().node_github_resource_host;
 
         let node_schedule_url = format!("{}/nodejs/Release/main/schedule.json", host);
 
@@ -224,7 +221,7 @@ where
             fs::remove_file(&downloaded_file_path_buf)?;
         }
 
-        let node_install_strategy = self.node_atom.get_snm_config().get_node_install_strategy();
+        let node_install_strategy = self.node_atom.get_snm_config().node_install_strategy;
 
         if anchor_file.exists() {
             let confirm = Confirm::new()

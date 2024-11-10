@@ -1,12 +1,11 @@
 use config::{Config, Environment};
 use serde::Deserialize;
 use snm_node_version::NodeVersionReader;
-// use snm_node_version::{parse_node_version, NodeVersion};
 use snm_npmrc::NpmrcReader;
-use snm_package_json::{package_manager_meta::PackageManager, package_manager_raw::PackageJson};
+use snm_package_json::pm::PackageManager;
 use snm_utils::snm_error::SnmError;
 use std::{
-    env,
+    env::{self, VarError},
     path::{Path, PathBuf},
 };
 
@@ -44,6 +43,7 @@ const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
 const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
     pub node_bin_dir: PathBuf,
     pub download_dir: PathBuf,
@@ -55,11 +55,22 @@ pub struct SnmConfig {
     pub node_white_list: String,
     pub download_timeout_secs: u64,
     pub npm_registry: String,
+    pub workspace: PathBuf,
     pub lang: String,
 }
 
 impl SnmConfig {
-    fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
+    pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
+        let name: String = env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY).ok()?;
+        let version: String = env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY).ok()?;
+        PackageManager::parse(&format!("{name}@{version}"))
+    }
+
+    pub fn get_runtime_node_version(&self) -> Result<String, VarError> {
+        env::var(SNM_NODE_VERSION_ENV_KEY)
+    }
+
+    pub fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
         let config = Config::builder()
             .add_source(Environment::with_prefix("SNM"))
             .build()?;
@@ -74,65 +85,35 @@ impl SnmConfig {
             env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
         }
 
-        let base_dir = Path::new(".snm");
+        let base_dir = env::var(SNM_HOME_DIR_KEY)
+            .map(PathBuf::from)
+            .or_else(|_| dirs::home_dir().ok_or(SnmError::GetHomeDirError))
+            .map(|dir| dir.join(".snm"))?;
 
-        let node_bin_dir = {
-            let node_bin_dir = match config.node_bin_dir {
-                Some(node_bin_dir) => node_bin_dir,
-                None => "node_bin".to_string(),
-            };
-            base_dir.join(node_bin_dir)
-        };
+        let node_bin_dir = base_dir.join(config.node_bin_dir.unwrap_or(String::from("node_bin")));
 
-        let download_dir = {
-            let download_dir = match config.download_dir {
-                Some(download_dir) => download_dir,
-                None => "downloads".to_string(),
-            };
-            base_dir.join(download_dir)
-        };
+        let download_dir = base_dir.join(config.download_dir.unwrap_or(String::from("downloads")));
 
-        let cache_dir = {
-            let cache_dir = match config.cache_dir {
-                Some(cache_dir) => cache_dir,
-                None => "cache".to_string(),
-            };
-            base_dir.join(cache_dir)
-        };
+        let cache_dir = base_dir.join(config.cache_dir.unwrap_or(String::from("cache")));
 
-        let node_modules_dir = {
-            let node_modules_dir = match config.node_modules_dir {
-                Some(node_modules_dir) => node_modules_dir,
-                None => "node_modules".to_string(),
-            };
-            base_dir.join(node_modules_dir)
-        };
+        let node_modules_dir = base_dir.join(
+            config
+                .node_modules_dir
+                .unwrap_or(String::from("node_modules")),
+        );
 
-        let node_dist_url = {
-            let node_dist_url = match config.node_dist_url {
-                Some(node_dist_url) => node_dist_url,
-                None => "https://nodejs.org/dist".to_string(),
-            };
-            node_dist_url
-        };
+        let node_dist_url = config
+            .node_dist_url
+            .unwrap_or(String::from("https://nodejs.org/dist"));
 
-        let node_github_resource_host = {
-            let node_github_resource_host = match config.node_github_resource_host {
-                Some(node_github_resource_host) => node_github_resource_host,
-                None => "https://raw.githubusercontent.com".to_string(),
-            };
-            node_github_resource_host
-        };
+        let node_github_resource_host = config
+            .node_github_resource_host
+            .unwrap_or(String::from("https://raw.githubusercontent.com"));
 
-        let node_white_list = {
-            let node_white_list = match config.node_white_list {
-                Some(node_white_list) => node_white_list,
-                None => "".to_string(),
-            };
-            node_white_list
-        };
+        let node_white_list = config.node_white_list.unwrap_or(String::from(""));
 
         Ok(Self {
+            workspace: workspace.as_ref().to_path_buf(),
             node_bin_dir: node_bin_dir,
             download_dir: download_dir,
             cache_dir: cache_dir,
@@ -171,169 +152,8 @@ pub struct EnvSnmConfig {
     download_timeout_secs: Option<u64>,
 
     npm_registry: Option<String>,
+
     workspace: Option<String>,
-    // snm_package_json: Option<PackageJson>,
-
-    // snm_node_version: Option<String>,
-}
-
-impl EnvSnmConfig {
-    fn get_base_dir(&self) -> Result<PathBuf, SnmError> {
-        match env::var(SNM_HOME_DIR_KEY) {
-            Ok(dir) => Ok(PathBuf::from(dir)),
-            Err(_) => match dirs::home_dir() {
-                Some(dir) => Ok(dir.join(".snm")),
-                None => {
-                    return Err(SnmError::GetHomeDirError);
-                }
-            },
-        }
-    }
-
-    fn get_dir(&self, dir: &Option<String>, default: &str) -> Result<PathBuf, SnmError> {
-        let base_dir = self.get_base_dir()?;
-        Ok(match dir {
-            Some(dir) => base_dir.join(dir),
-            None => base_dir.join(default),
-        })
-    }
-
-    pub fn get_lang(&self) -> Option<String> {
-        self.lang.clone()
-    }
-
-    pub fn get_runtime_node_version(&self) -> Option<String> {
-        env::var(SNM_NODE_VERSION_ENV_KEY).ok()
-    }
-
-    pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
-        let name = match env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY) {
-            Ok(v) => v,
-            Err(_) => {
-                return None;
-            }
-        };
-        let version = match env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY) {
-            Ok(v) => v,
-            Err(_) => {
-                return None;
-            }
-        };
-        Some(PackageManager {
-            name,
-            version,
-            hash: None,
-            raw: "".to_string(),
-        })
-    }
-
-    // pub fn get_snm_node_version(&self) -> Option<String> {
-    //     self.snm_node_version.clone()
-    // }
-
-    // pub fn get_snm_package_json(&self) -> Option<PackageJson> {
-    //     self.snm_package_json.clone()
-    // }
-
-    pub fn get_download_timeout_secs(&self) -> u64 {
-        self.download_timeout_secs.unwrap_or(30)
-    }
-
-    pub fn get_workspace(&self) -> Result<PathBuf, SnmError> {
-        match &self.workspace {
-            Some(workspace) => Ok(PathBuf::from(workspace)),
-            None => Err(SnmError::GetWorkspaceError),
-        }
-    }
-
-    pub fn get_node_white_list(&self) -> Vec<String> {
-        if let Some(white_list) = &self.node_white_list {
-            return white_list.split(",").map(|s| s.to_string()).collect();
-        }
-        return vec![].to_vec();
-    }
-
-    pub fn get_node_bin_dir(&self) -> Result<PathBuf, SnmError> {
-        self.get_dir(&self.node_bin_dir, "node_bin")
-    }
-
-    pub fn get_download_dir(&self) -> Result<PathBuf, SnmError> {
-        self.get_dir(&self.download_dir, "downloads")
-    }
-
-    pub fn get_cache_dir(&self) -> Result<PathBuf, SnmError> {
-        self.get_dir(&self.cache_dir, "cache")
-    }
-
-    pub fn get_node_modules_dir(&self) -> Result<PathBuf, SnmError> {
-        self.get_dir(&self.node_modules_dir, "node_modules")
-    }
-
-    pub fn get_npm_registry(&self) -> String {
-        match &self.npm_registry {
-            Some(npm_registry) => npm_registry.clone(),
-            None => "https://registry.npmjs.org/".to_string(),
-        }
-    }
-
-    pub fn get_node_dist_url(&self) -> String {
-        match &self.node_dist_url {
-            Some(node_dist_url) => node_dist_url.clone(),
-            None => "https://nodejs.org/dist".to_string(),
-        }
-    }
-
-    pub fn get_node_github_resource_host(&self) -> String {
-        match &self.node_github_resource_host {
-            Some(node_github_resource_host) => node_github_resource_host.clone(),
-            None => "https://raw.githubusercontent.com".to_string(),
-        }
-    }
-
-    pub fn get_node_install_strategy(&self) -> InstallStrategy {
-        self.node_install_strategy
-            .clone()
-            .unwrap_or(InstallStrategy::Ask)
-    }
-}
-
-pub fn parse_snm_config(workspace: &PathBuf) -> Result<EnvSnmConfig, SnmError> {
-    let config = Config::builder()
-        .add_source(Environment::with_prefix("SNM"))
-        .build()?;
-
-    let mut config: EnvSnmConfig = config.try_deserialize()?;
-
-    let npmrc = NpmrcReader::from(&workspace);
-
-    let registry = npmrc.read_registry_with_default();
-
-    let node_version_reader = NodeVersionReader::from(workspace);
-
-    let node_version = node_version_reader.read_version();
-
-    if let Some(ref v) = node_version {
-        env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
-    }
-
-    let package_json_raw = PackageJson::from(workspace);
-
-    if let Some(ref p) = package_json_raw {
-        if let Some(pm_name) = p.get_pm_name() {
-            env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, pm_name.clone());
-        }
-
-        if let Some(pm_version) = p.get_pm_version() {
-            env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, pm_version.clone());
-        }
-    }
-
-    config.npm_registry = Some(registry);
-    config.workspace = Some(workspace.to_string_lossy().to_string());
-    // config.snm_node_version = node_version;
-    // config.snm_package_json = package_json_raw;
-
-    Ok(config)
 }
 
 #[cfg(test)]
@@ -342,6 +162,7 @@ mod tests {
     use std::env::{self, current_dir};
     #[test]
     fn test_parse_config() {
+        env::set_var(SNM_HOME_DIR_KEY, "");
         env::set_var("SNM_STRICT", "true");
         env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
         env::set_var("SNM_DOWNLOAD_DIR", "downloads_demo");

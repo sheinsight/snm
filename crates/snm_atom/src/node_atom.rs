@@ -5,7 +5,7 @@ use crate::conditional_compiler::get_tarball_ext;
 use futures::*;
 use sha2::Digest;
 use sha2::Sha256;
-use snm_config::EnvSnmConfig;
+use snm_config::SnmConfig;
 use snm_tarball::decompress;
 use snm_utils::snm_error::SnmError;
 use snm_utils::to_ok::ToOk;
@@ -18,11 +18,11 @@ use std::{
 };
 
 pub struct NodeAtom {
-    snm_config: EnvSnmConfig,
+    snm_config: SnmConfig,
 }
 
 impl NodeAtom {
-    pub fn new(snm_config: EnvSnmConfig) -> Self {
+    pub fn new(snm_config: SnmConfig) -> Self {
         Self { snm_config }
     }
 
@@ -30,7 +30,7 @@ impl NodeAtom {
         &self,
         node_version: &str,
     ) -> Result<HashMap<String, String>, SnmError> {
-        let host = self.snm_config.get_node_dist_url();
+        let host = &self.snm_config.node_dist_url;
         let url = format!("{}/v{}/SHASUMS256.txt", host, node_version);
 
         let sha256_str = reqwest::get(&url).await?.text().await?;
@@ -52,7 +52,7 @@ impl NodeAtom {
 impl AtomTrait for NodeAtom {
     fn get_anchor_file_path_buf(&self, version: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_node_bin_dir()?
+            .node_bin_dir
             .join(&version)
             .join("bin")
             .join("node")
@@ -78,14 +78,14 @@ impl AtomTrait for NodeAtom {
     }
 
     fn get_download_url(&self, v: &str) -> String {
-        let host = self.snm_config.get_node_dist_url();
+        let host = &self.snm_config.node_dist_url;
         let download_url = format!("{}/v{}/{}", &host, &v, self.get_downloaded_file_name(v));
         download_url
     }
 
     fn get_downloaded_file_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
         self.snm_config
-            .get_download_dir()?
+            .download_dir
             .join("node")
             .join(v)
             .join(format!(
@@ -99,15 +99,15 @@ impl AtomTrait for NodeAtom {
     }
 
     fn get_runtime_dir_path_buf(&self, v: &str) -> Result<PathBuf, SnmError> {
-        self.snm_config.get_node_bin_dir()?.join(&v).to_ok()
+        self.snm_config.node_bin_dir.join(&v).to_ok()
     }
 
     fn get_runtime_dir_for_default_path_buf(&self) -> Result<PathBuf, SnmError> {
-        self.snm_config.get_node_bin_dir()?.join("default").to_ok()
+        self.snm_config.node_bin_dir.join("default").to_ok()
     }
 
     fn get_runtime_base_dir_path_buf(&self) -> Result<PathBuf, SnmError> {
-        self.snm_config.get_node_bin_dir()
+        Ok(self.snm_config.node_bin_dir.clone())
     }
 
     fn get_expect_shasum<'a>(
@@ -159,7 +159,7 @@ impl AtomTrait for NodeAtom {
         decompress(&input_file_path_buf, &output_dir_path_buf)
     }
 
-    fn get_snm_config(&self) -> &EnvSnmConfig {
-        &self.snm_config
+    fn get_snm_config(&self) -> SnmConfig {
+        self.snm_config.clone()
     }
 }

@@ -1,32 +1,27 @@
-use std::env::current_dir;
-
 use clap::Parser;
-// use node_manager::NodeManager;
 use snm::{execute_cli::execute_cli, SnmCli};
-use snm_config::{parse_snm_config, SnmConfig};
-use snm_utils::snm_error::{friendly_error_message, SnmError};
+use snm_config::SnmConfig;
+use std::{env::current_dir, process::ExitCode};
 
 pub mod node_manager;
 
 #[tokio::main]
-async fn main() {
-    // color_backtrace::install();
-
-    if let Err(error) = run().await {
-        friendly_error_message(error);
+async fn main() -> ExitCode {
+    match run().await {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            ExitCode::FAILURE
+        }
     }
 }
 
-async fn run() -> Result<(), SnmError> {
+async fn run() -> anyhow::Result<()> {
     let dir = current_dir()?;
 
-    // let snm_config = SnmConfig::from(dir)?;
-
-    let snm_config = parse_snm_config(&dir)?;
+    let snm_config = SnmConfig::from(dir)?;
 
     let cli = SnmCli::parse();
 
-    execute_cli(cli, snm_config).await?;
-
-    Ok(())
+    execute_cli(cli, snm_config).await
 }
