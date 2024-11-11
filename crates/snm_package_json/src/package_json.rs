@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::{
     collections::HashMap,
+    env,
     fs::File,
     io::BufReader,
     path::{Path, PathBuf, MAIN_SEPARATOR_STR},
@@ -36,24 +37,25 @@ pub struct PackageJson {
 impl PackageJson {
     pub fn from<P: AsRef<Path>>(workspace: P) -> Option<Self> {
         let raw_file_path = workspace.as_ref().join("package.json");
-        let mut x: Option<Self> = raw_file_path
+        raw_file_path
             .exists()
             .then(|| File::open(&raw_file_path).ok())
             .flatten()
             .map(BufReader::new)
-            .and_then(|reader| serde_json::from_reader(reader).ok());
+            .and_then(|reader| serde_json::from_reader(reader).ok())
+            .map(|mut raw: Self| {
+                // 处理 bin
+                raw.bin.as_ref().map(|bin| {
+                    raw.internal_bin = Some(Self::parse_bin(&workspace, bin));
+                });
 
-        if let Some(ref mut raw) = x {
-            if let Some(bin) = &raw.bin {
-                raw.internal_bin = Some(Self::parse_bin(&workspace, &bin));
-            }
+                // 处理 package_manager
+                raw.package_manager.as_ref().map(|pm| {
+                    raw.internal_package_manager = PackageManager::parse(pm);
+                });
 
-            if let Some(pm) = &raw.package_manager {
-                raw.internal_package_manager = PackageManager::parse(pm);
-            }
-        }
-
-        x
+                raw
+            })
     }
 
     fn parse_bin<P: AsRef<Path>>(workspace: P, bin: &Bin) -> HashMap<String, PathBuf> {

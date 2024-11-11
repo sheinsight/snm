@@ -8,6 +8,7 @@ use std::{
 use snm_atom::{atom::AtomTrait as _, package_manager_atom::PackageManagerAtom};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
+use snm_package_json::package_json::PackageJson;
 use snm_utils::{constant::RESTRICTED_LIST, exec::exec_cli, snm_error::SnmError};
 
 use crate::get_node_bin_dir::get_node_bin_dir;
@@ -27,11 +28,13 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmErro
 
     let dir = current_dir()?;
 
-    let snm_config = SnmConfig::from(dir)?;
+    let snm_config = SnmConfig::from(&dir)?;
+
+    let package_json = PackageJson::from(&dir).unwrap();
 
     let snm_package_manage = PackageManagerAtom::new(prefix, snm_config.clone());
 
-    let bin_dirs = if let Some(package_manager) = snm_config.get_runtime_package_manager() {
+    let bin_dirs = if let Some(package_manager) = package_json.get_pm() {
         tracing::trace!(
             "There is a package manager in the entry process that is currently in use."
         );

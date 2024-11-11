@@ -1,3 +1,5 @@
+use std::env;
+
 use regex::Regex;
 use serde::Deserialize;
 
@@ -11,6 +13,10 @@ use crate::{
     },
     pm_metadata::PackageManagerMetadata,
 };
+
+pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
+pub const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
+pub const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum PackageManager {
@@ -78,6 +84,11 @@ impl PackageManager {
     }
 
     pub fn parse(raw: &str) -> Option<Self> {
+        let raw = match env::var(SNM_PACKAGE_MANAGER_ENV_KEY) {
+            Ok(env_raw) => env_raw,
+            Err(_) => raw.to_string(),
+        };
+
         let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
 
         let regex = match Regex::new(regex_str) {
@@ -88,10 +99,10 @@ impl PackageManager {
             }
         };
 
-        let captures = match regex.captures(raw) {
+        let captures = match regex.captures(&raw) {
             Some(caps) => caps,
             None => {
-                eprintln!("Failed to capture package manager: {}", raw);
+                eprintln!("Failed to capture package manager: {}", &raw);
                 return None;
             }
         };
@@ -101,23 +112,18 @@ impl PackageManager {
                 .map(|name| captures.name(name).map(|s| s.as_str().to_string()));
 
         let package_manager = match (name, version, hash_method, hash_value) {
-            (Some(name), Some(version), None, None) => Self::from(PackageManagerMetadata {
-                name,
-                version,
-                hash_name: None,
-                hash_value: None,
-            }),
-            (Some(name), Some(version), Some(hash_method), Some(hash_value)) => {
+            (Some(name), Some(version), hash_method, hash_value) => {
+                env::set_var(SNM_PACKAGE_MANAGER_ENV_KEY, raw);
+                // env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, name.clone());
+                // env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, version.clone());
                 Self::from(PackageManagerMetadata {
                     name,
                     version,
-                    hash_name: Some(hash_method),
-                    hash_value: Some(hash_value),
+                    hash_name: hash_method,
+                    hash_value: hash_value,
                 })
             }
-            _ => {
-                return None;
-            }
+            _ => return None,
         };
 
         Some(package_manager)

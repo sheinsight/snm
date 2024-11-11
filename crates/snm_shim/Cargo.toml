@@ -12,6 +12,7 @@ snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
 snm_download_builder ={ path = "../snm_download_builder" }
 snm_atom ={ path = "../snm_atom"}
+snm_package_json = { path = "../snm_package_json" }
 color-backtrace = "0.6.1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
