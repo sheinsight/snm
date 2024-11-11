@@ -22,20 +22,20 @@ fn create_transform(name: &str, version: &str) -> anyhow::Result<Box<dyn Command
     }
 }
 
-fn handle_command(transform: &dyn CommandArgsCreatorTrait, command: SnmCommands) -> Vec<String> {
-    match command {
-        // snm command start
-        SnmCommands::I(args) => transform.i(args),
-        SnmCommands::C(_) => transform.i(IArgs {
-            frozen_lockfile: true,
-        }),
-        SnmCommands::A(args) => transform.a(args),
-        SnmCommands::X(args) => transform.x(args),
-        SnmCommands::E(args) => transform.e(args),
-        SnmCommands::R(args) => transform.r(args),
-        _ => unreachable!("unreachable"),
-    }
-}
+// fn handle_command(transform: &dyn CommandArgsCreatorTrait, command: SnmCommands) -> Vec<String> {
+//     match command {
+//         // snm command start
+//         SnmCommands::I(args) => transform.i(args),
+//         SnmCommands::C(_) => transform.i(IArgs {
+//             frozen_lockfile: true,
+//         }),
+//         SnmCommands::A(args) => transform.a(args),
+//         SnmCommands::X(args) => transform.x(args),
+//         SnmCommands::E(args) => transform.e(args),
+//         SnmCommands::R(args) => transform.r(args),
+//         _ => unreachable!("unreachable"),
+//     }
+// }
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
     match cli.command {
@@ -62,25 +62,32 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             }
         }
         // manage end
-        SnmCommands::I(_)
-        | SnmCommands::C(_)
-        | SnmCommands::A(_)
-        | SnmCommands::X(_)
-        | SnmCommands::E(_)
-        | SnmCommands::R(_) => {
+        SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) => {
             if let Some(package_json) = PackageJson::from(snm_config.workspace) {
-                let (pm_name, pm_version) = package_json
-                    .get_pm()
-                    .map(|pm| (pm.name().to_string(), pm.version().to_string()))
-                    .ok_or(SnmError::NotFondPackageManagerConfigError {})?;
+                // let (pm_name, pm_version) = package_json
+                //     .get_pm()
+                //     .map(|pm| (pm.name().to_string(), pm.version().to_string()))
+                //     .ok_or(SnmError::NotFondPackageManagerConfigError {})?;
+
+                if let Some(pm) = package_json.get_pm() {
+                    let command = match cli.command {
+                        // SnmCommands::Node { command } => todo!(),
+                        SnmCommands::I(iargs) => pm.install(iargs),
+                        SnmCommands::C(iargs) => pm.install(iargs),
+                        SnmCommands::A(aargs) => pm.add(aargs),
+                        // SnmCommands::FigSpec => todo!(),
+                        _ => unreachable!("unreachable"),
+                    };
+                    println!("{:?}", command.iter().join(" "));
+                }
 
                 // package_json.get_package_manager()
 
-                let transform = create_transform(&pm_name, &pm_version)?;
+                // let transform = create_transform(&pm_name, &pm_version)?;
 
-                let args = handle_command(&*transform.as_ref(), cli.command);
+                // let args = handle_command(&*transform.as_ref(), cli.command);
 
-                exec_cli(vec![], pm_name, args)?;
+                // exec_cli(vec![], pm_name, args)?;
             }
         }
 

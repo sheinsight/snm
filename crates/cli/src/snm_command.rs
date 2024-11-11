@@ -1,7 +1,7 @@
 use clap::Subcommand;
-use snm_ni::trait_transform::{AArgs, EArgs, IArgs, RArgs, XArgs};
-
+// use snm_ni::trait_transform::{AArgs, EArgs, RArgs, XArgs};
 use super::manage_command::ManageCommands;
+use snm_package_json::ops::ops::{AddArgs, InstallArgs, RemoveArgs};
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
@@ -12,23 +12,22 @@ pub enum SnmCommands {
     },
 
     #[command(about = "Used to install all dependencies for a project.")]
-    I(IArgs),
+    I(InstallArgs),
 
     #[command(about = "Alias to snm install --frozen-lockfile.")]
-    C(IArgs),
+    C(InstallArgs),
 
     #[command(about = "Add a package and any packages that it depends on.")]
-    A(AArgs),
+    A(AddArgs),
 
-    #[command(about = "Hot load a package, and runs whatever default command binary it exposes..")]
-    X(XArgs),
+    // #[command(about = "Hot load a package, and runs whatever default command binary it exposes..")]
+    // X(XArgs),
 
-    #[command(about = "Run a command from a local package.")]
-    E(EArgs),
+    // #[command(about = "Run a command from a local package.")]
+    // E(EArgs),
 
-    #[command(about = "Run some script.")]
-    R(RArgs),
-
+    // #[command(about = "Run some script.")]
+    // R(RArgs),
     #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,
 }
