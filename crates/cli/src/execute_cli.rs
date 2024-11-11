@@ -77,8 +77,14 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                         SnmCommands::A(aargs) => pm.add(aargs),
                         // SnmCommands::FigSpec => todo!(),
                         _ => unreachable!("unreachable"),
-                    };
-                    println!("{:?}", command.iter().join(" "));
+                    }?;
+                    // println!("{:?}", command.iter().join(" "));
+
+                    let args = command.iter().skip(1).collect::<Vec<_>>();
+
+                    println!("{} {:?}", pm.name(), args);
+
+                    exec_cli(vec![], pm.name(), args)?;
                 }
 
                 // package_json.get_package_manager()
