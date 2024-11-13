@@ -40,8 +40,6 @@ impl InstallStrategy {
 
 const SNM_HOME_DIR_KEY: &str = "SNM_HOME_DIR";
 const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
-const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
-const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
@@ -60,12 +58,6 @@ pub struct SnmConfig {
 }
 
 impl SnmConfig {
-    // pub fn get_runtime_package_manager(&self) -> Option<PackageManager> {
-    //     let name: String = env::var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY).ok()?;
-    //     let version: String = env::var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY).ok()?;
-    //     PackageManager::parse(&format!("{name}@{version}"))
-    // }
-
     pub fn get_runtime_node_version(&self) -> Result<String, VarError> {
         env::var(SNM_NODE_VERSION_ENV_KEY)
     }

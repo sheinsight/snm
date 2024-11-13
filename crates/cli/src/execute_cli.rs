@@ -5,7 +5,6 @@ use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 use snm_atom::node_atom::NodeAtom;
 use snm_config::SnmConfig;
-use snm_ni::{CommandArgsCreatorTrait, NpmArgsTransform, PnpmArgsTransform, YarnArgsTransform};
 use snm_package_json::ops::ops::InstallArgs;
 use snm_package_json::package_json::PackageJson;
 use snm_utils::exec::exec_cli;

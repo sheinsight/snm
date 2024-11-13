@@ -15,8 +15,6 @@ use crate::{
 };
 
 pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
-pub const SNM_PACKAGE_MANAGER_NAME_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_NAME";
-pub const SNM_PACKAGE_MANAGER_VERSION_ENV_KEY: &str = "SNM_PACKAGE_MANAGER_VERSION";
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum PackageManager {
@@ -83,6 +81,12 @@ impl PackageManager {
         self.metadata().hash_value.as_deref()
     }
 
+    pub fn from_env() -> Option<Self> {
+        env::var(SNM_PACKAGE_MANAGER_ENV_KEY)
+            .ok()
+            .and_then(|raw| Self::parse(&raw))
+    }
+
     pub fn parse(raw: &str) -> Option<Self> {
         let raw = match env::var(SNM_PACKAGE_MANAGER_ENV_KEY) {
             Ok(env_raw) => env_raw,
@@ -114,8 +118,6 @@ impl PackageManager {
         let package_manager = match (name, version, hash_method, hash_value) {
             (Some(name), Some(version), hash_method, hash_value) => {
                 env::set_var(SNM_PACKAGE_MANAGER_ENV_KEY, raw);
-                // env::set_var(SNM_PACKAGE_MANAGER_NAME_ENV_KEY, name.clone());
-                // env::set_var(SNM_PACKAGE_MANAGER_VERSION_ENV_KEY, version.clone());
                 Self::from(PackageManagerMetadata {
                     name,
                     version,
