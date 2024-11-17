@@ -64,10 +64,17 @@ impl NpmrcReader {
     }
 
     pub fn read_registry_with_default(&self) -> String {
-        self.config
+        let registry = self
+            .config
             .as_ref()
             .and_then(|c| c.get_string("registry").ok())
-            .unwrap_or(DEFAULT_REGISTRY.to_string())
+            .unwrap_or(DEFAULT_REGISTRY.to_string());
+
+        if registry.ends_with('/') {
+            registry[..registry.len() - 1].to_string()
+        } else {
+            registry
+        }
     }
 
     pub fn read(&self, key: &str) -> Option<String> {

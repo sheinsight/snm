@@ -7,7 +7,7 @@ use super::{
 };
 
 pub struct YarnCommandLine<'a> {
-    pub metadata: &'a PackageManagerMetadata,
+    pub metadata: &'a PackageManagerMetadata<'a>,
 }
 
 impl<'a> YarnCommandLine<'a> {

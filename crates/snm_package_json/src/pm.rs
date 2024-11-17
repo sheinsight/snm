@@ -1,7 +1,17 @@
-use std::env;
+use std::{
+    env,
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf, MAIN_SEPARATOR_STR},
+};
 
-use regex::Regex;
-use serde::Deserialize;
+use anyhow::{bail, Context};
+use colored::Colorize;
+use flate2::read::GzDecoder;
+use sha1::{Digest, Sha1};
+use snm_config::SnmConfig;
+use snm_download_builder::{DownloadBuilder, WriteStrategy};
+use tar::Archive;
 
 use crate::{
     ops::{
@@ -11,32 +21,31 @@ use crate::{
         yarn::YarnCommandLine,
         yarn_berry::YarnBerryCommandLine,
     },
-    pm_metadata::PackageManagerMetadata,
+    package_json::PackageJson,
+    pm_metadata::{PackageManagerMetadata, SNM_PACKAGE_MANAGER_ENV_KEY},
 };
 
-pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
-
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
-pub enum PackageManager {
-    Npm(PackageManagerMetadata),
-    Yarn(PackageManagerMetadata),
-    YarnBerry(PackageManagerMetadata),
-    Pnpm(PackageManagerMetadata),
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum PackageManager<'a> {
+    Npm(PackageManagerMetadata<'a>),
+    Yarn(PackageManagerMetadata<'a>),
+    YarnBerry(PackageManagerMetadata<'a>),
+    Pnpm(PackageManagerMetadata<'a>),
 }
 
-impl From<PackageManagerMetadata> for PackageManager {
-    fn from(metadata: PackageManagerMetadata) -> Self {
+impl<'a> From<PackageManagerMetadata<'a>> for PackageManager<'a> {
+    fn from(metadata: PackageManagerMetadata<'a>) -> Self {
         match metadata.name.as_str() {
             "npm" => Self::Npm(metadata),
             "yarn" => Self::Yarn(metadata),
-            "yarn@berry" => Self::YarnBerry(metadata),
+            "@yarnpkg/cli-dist" => Self::YarnBerry(metadata),
             "pnpm" => Self::Pnpm(metadata),
             _ => unreachable!(),
         }
     }
 }
 
-impl PackageManager {
+impl<'a> PackageManager<'a> {
     fn execute<F, T>(&self, f: F) -> T
     where
         F: Fn(&dyn PackageManagerOps) -> T,
@@ -58,8 +67,8 @@ impl PackageManager {
     }
 }
 
-impl PackageManager {
-    fn metadata(&self) -> &PackageManagerMetadata {
+impl<'a> PackageManager<'a> {
+    fn metadata(&self) -> &PackageManagerMetadata<'a> {
         match self {
             Self::Npm(a) | Self::Yarn(a) | Self::YarnBerry(a) | Self::Pnpm(a) => a,
         }
@@ -81,64 +90,229 @@ impl PackageManager {
         self.metadata().hash_value.as_deref()
     }
 
-    pub fn from_env() -> Option<Self> {
-        env::var(SNM_PACKAGE_MANAGER_ENV_KEY)
-            .ok()
-            .and_then(|raw| Self::parse(&raw))
+    pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+        let raw = env::var(SNM_PACKAGE_MANAGER_ENV_KEY)?;
+        Self::parse(&raw, config)
     }
 
-    pub fn parse(raw: &str) -> Option<Self> {
-        let raw = match env::var(SNM_PACKAGE_MANAGER_ENV_KEY) {
-            Ok(env_raw) => env_raw,
-            Err(_) => raw.to_string(),
+    pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+        Self::parse(raw, config)
+    }
+
+    pub fn parse(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+        let metadata = PackageManagerMetadata::from(&raw, config)?;
+
+        let package_manager = Self::from(metadata);
+
+        Ok(package_manager)
+    }
+}
+
+impl<'a> PackageManager<'a> {
+    pub async fn get_bin(&self, version: &str, prefix: &str) -> anyhow::Result<String> {
+        let metadata = self.metadata();
+
+        if metadata.bin_name != prefix {
+            bail!(format!(
+                "Package manager mismatch, expect: {} , actual: {}",
+                prefix.green(),
+                metadata.bin_name.red()
+            ));
         };
 
-        let regex_str = r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$";
+        let pkg_dir = metadata
+            .config
+            .node_modules_dir
+            .join(&metadata.name)
+            .join(version);
 
-        let regex = match Regex::new(regex_str) {
-            Ok(regex) => regex,
-            Err(_) => {
-                eprintln!("Failed to create regex for package manager: {}", regex_str);
-                return None;
+        let pkg = pkg_dir.join("package.json");
+
+        if pkg.try_exists()? {
+            let json = PackageJson::from(pkg_dir)?;
+            let bin_path_buf = json.get_bin_with_name(prefix)?;
+            let dir = bin_path_buf
+                .parent()
+                .with_context(|| format!("Bin not found: {}", prefix))?;
+            return Ok(dir.to_string_lossy().into_owned());
+        };
+
+        let downloaded_file_path_buf = self.download(version).await?;
+
+        self.verify_shasum(&downloaded_file_path_buf, version)
+            .await?;
+
+        let decompressed_dir_path_buf = metadata
+            .config
+            .node_modules_dir
+            .join(&metadata.name)
+            .join(version);
+
+        self.decompress_download_file(&downloaded_file_path_buf, &decompressed_dir_path_buf)?;
+
+        // TODO get bin dir
+        let json = PackageJson::from(decompressed_dir_path_buf)?;
+
+        let file = json.get_bin_with_name(prefix)?;
+
+        let bin_dir = file
+            .parent()
+            .with_context(|| format!("Bin not found: {}", prefix))?;
+
+        Ok(bin_dir.to_string_lossy().into_owned())
+    }
+
+    async fn download(&self, version: &str) -> anyhow::Result<PathBuf> {
+        let metadata = self.metadata();
+
+        let download_url = self.get_download_url(version);
+
+        let downloaded_file_path_buf = metadata
+            .config
+            .download_dir
+            .join(&metadata.name)
+            .join(version)
+            .join(format!("{}-{}.tgz", &metadata.name, version));
+
+        DownloadBuilder::new()
+            .retries(3)
+            .timeout(metadata.config.download_timeout_secs)
+            .write_strategy(WriteStrategy::WriteAfterDelete)
+            .download(&download_url, &downloaded_file_path_buf)
+            .await?;
+
+        Ok(downloaded_file_path_buf)
+    }
+
+    async fn verify_shasum<T: AsRef<Path>>(
+        &self,
+        file_path: T,
+        version: &str,
+    ) -> anyhow::Result<()> {
+        let expect_shasum = self.get_expect_shasum(version).await?;
+
+        let actual_shasum = self.get_actual_shasum(file_path)?;
+
+        if expect_shasum != actual_shasum {
+            bail!("SHASUM mismatch");
+        }
+
+        Ok(())
+    }
+
+    async fn get_expect_shasum(&self, version: &str) -> anyhow::Result<String> {
+        let url = self.get_expect_shasum_url(version);
+
+        let resp = reqwest::get(&url)
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        resp.get("dist")
+            .and_then(|item| item.get("shasum"))
+            .and_then(|item| item.as_str())
+            .map(|item| item.to_string())
+            .with_context(|| format!("Invalid SHASUM line format"))
+    }
+
+    pub fn get_expect_shasum_url(&self, version: &str) -> String {
+        let metadata = self.metadata();
+        // https://registry.npmjs.org/react/0.0.1
+        // https://registry.npmjs.org/@yarnpkg/cli-dist/2.4.1
+        format!(
+            "{host}/{library_name}/{version}",
+            host = &metadata.config.npm_registry,
+            library_name = &metadata.name,
+            version = version
+        )
+    }
+
+    fn get_actual_shasum<T: AsRef<Path>>(
+        &self,
+        downloaded_file_path_buf: T,
+    ) -> anyhow::Result<String> {
+        let file = File::open(downloaded_file_path_buf)?;
+        let mut reader = BufReader::new(file);
+        let mut hasher = Sha1::new();
+        std::io::copy(&mut reader, &mut hasher)?;
+        Ok(format!("{:x}", hasher.finalize()))
+    }
+
+    fn decompress_download_file<P: AsRef<Path>>(
+        &self,
+        input_file_path_buf: P,
+        output_dir_path_buf: P,
+    ) -> anyhow::Result<()> {
+        let temp_dir = output_dir_path_buf.as_ref().join("temp");
+        std::fs::create_dir_all(&temp_dir)?;
+
+        let tar_gz = File::open(input_file_path_buf)?;
+        let tar = GzDecoder::new(tar_gz);
+        let mut archive = Archive::new(tar);
+        archive.unpack(&temp_dir)?;
+
+        // 获取解压后的第一个目录
+        let entry = std::fs::read_dir(&temp_dir)?
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("No files found"))??;
+
+        // 移动文件
+        for entry in std::fs::read_dir(entry.path())? {
+            let entry = entry?;
+            let target = output_dir_path_buf.as_ref().join(entry.file_name());
+            std::fs::rename(entry.path(), target)?;
+        }
+
+        // 清理临时目录
+        std::fs::remove_dir_all(&temp_dir)?;
+
+        let json = PackageJson::from(&output_dir_path_buf)?;
+
+        json.enumerate_bin(|k, v| {
+            let dir = v.parent().unwrap();
+            let link_file = dir.join(k);
+            if !link_file.exists() {
+                #[cfg(unix)]
+                std::os::unix::fs::symlink(v, link_file).unwrap();
+                #[cfg(windows)]
+                std::os::windows::fs::symlink_file(v, link_file).unwrap();
             }
-        };
+        });
 
-        let captures = match regex.captures(&raw) {
-            Some(caps) => caps,
-            None => {
-                eprintln!("Failed to capture package manager: {}", &raw);
-                return None;
-            }
-        };
+        Ok(())
+    }
 
-        let [name, version, hash_method, hash_value] =
-            ["name", "version", "hash_method", "hash_value"]
-                .map(|name| captures.name(name).map(|s| s.as_str().to_string()));
+    fn get_download_url(&self, version: &str) -> String {
+        let metadata = self.metadata();
+        let npm_registry = &metadata.config.npm_registry;
 
-        let package_manager = match (name, version, hash_method, hash_value) {
-            (Some(name), Some(version), hash_method, hash_value) => {
-                env::set_var(SNM_PACKAGE_MANAGER_ENV_KEY, raw);
-                Self::from(PackageManagerMetadata {
-                    name,
-                    version,
-                    hash_name: hash_method,
-                    hash_value: hash_value,
-                })
-            }
-            _ => return None,
-        };
+        // 使用 rsplit_once 直接获取最后一个部分，避免创建 Vec
+        let file_name = metadata
+            .name
+            .rsplit_once('/')
+            .map_or(metadata.name.clone(), |(_, name)| name.to_owned());
 
-        Some(package_manager)
+        format!(
+            "{host}/{name}/-/{file}-{version}.tgz",
+            host = npm_registry,
+            name = metadata.name,
+            file = file_name
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
 
     #[test]
     fn test_parse_package_manager_with_pnpm() {
-        let pm = PackageManager::parse("pnpm@9.0.0").expect("Should parse PNPM package manager");
+        let config = SnmConfig::from(PathBuf::from(".")).unwrap();
+
+        let pm = PackageManager::parse("pnpm@9.0.0", &config)
+            .expect("Should parse PNPM package manager");
 
         assert!(matches!(pm, PackageManager::Pnpm(_)));
 
@@ -153,25 +327,25 @@ mod tests {
 
     #[test]
     fn test_parse_package_manager_with_pnpm_and_hash() {
-        let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890");
-        assert!(pm.is_some());
+        let config = SnmConfig::from(PathBuf::from(".")).unwrap();
 
-        if let Some(pm) = pm {
-            assert_eq!(pm.name(), "pnpm");
-            assert_eq!(pm.version(), "9.0.0");
-            assert_eq!(pm.hash_name().as_deref(), Some("sha"));
-            assert_eq!(pm.hash_value().as_deref(), Some("1234567890"));
-        }
+        let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890", &config)
+            .expect("Should parse PNPM package manager");
+
+        assert_eq!(pm.name(), "pnpm");
+        assert_eq!(pm.version(), "9.0.0");
+        assert_eq!(pm.hash_name().as_deref(), Some("sha"));
+        assert_eq!(pm.hash_value().as_deref(), Some("1234567890"));
     }
 
     #[test]
     fn test_parse_package_manager_with_npm() {
-        let pm = PackageManager::parse("npm@10.0.0");
-        assert!(pm.is_some());
+        let config = SnmConfig::from(PathBuf::from(".")).unwrap();
 
-        if let Some(pm) = pm {
-            assert_eq!(pm.name(), "npm");
-            assert_eq!(pm.version(), "10.0.0");
-        }
+        let pm =
+            PackageManager::parse("npm@10.0.0", &config).expect("Should parse NPM package manager");
+
+        assert_eq!(pm.name(), "npm");
+        assert_eq!(pm.version(), "10.0.0");
     }
 }

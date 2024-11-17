@@ -1,11 +1,9 @@
 use config::{Config, Environment};
 use serde::Deserialize;
-use snm_node_version::NodeVersionReader;
 use snm_npmrc::NpmrcReader;
-use snm_package_json::pm::PackageManager;
 use snm_utils::snm_error::SnmError;
 use std::{
-    env::{self, VarError},
+    env::{self},
     path::{Path, PathBuf},
 };
 
@@ -39,7 +37,7 @@ impl InstallStrategy {
 }
 
 const SNM_HOME_DIR_KEY: &str = "SNM_HOME_DIR";
-const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
+// const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct SnmConfig {
@@ -58,10 +56,6 @@ pub struct SnmConfig {
 }
 
 impl SnmConfig {
-    pub fn get_runtime_node_version(&self) -> Result<String, VarError> {
-        env::var(SNM_NODE_VERSION_ENV_KEY)
-    }
-
     pub fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
         let config = Config::builder()
             .add_source(Environment::with_prefix("SNM"))
@@ -70,12 +64,6 @@ impl SnmConfig {
         let config: EnvSnmConfig = config.try_deserialize()?;
 
         let npm_registry = NpmrcReader::from(&workspace).read_registry_with_default();
-
-        let node_version = NodeVersionReader::from(&workspace).read_version();
-
-        if let Some(ref v) = node_version {
-            env::set_var(SNM_NODE_VERSION_ENV_KEY, v);
-        }
 
         let base_dir = env::var(SNM_HOME_DIR_KEY)
             .map(PathBuf::from)

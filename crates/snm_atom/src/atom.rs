@@ -57,11 +57,14 @@ pub trait AtomTrait {
 
                 if file_name.eq("default") {
                     if let Some(o) = fs::read_link(dir_entry.path()).ok() {
-                        if let Some(last) =
-                            o.components().last().and_then(|x| x.as_os_str().to_str())
-                        {
-                            default_dir = Some(String::from(last));
-                        }
+                        let version = o.file_name().map(|s| s.to_string_lossy().into_owned());
+                        default_dir = version;
+                        // if let Some(last) =
+                        //     o.components().last().and_then(|x| x.as_os_str().to_str())
+                        // {
+
+                        //     println!("default_dir: {:?}", o);
+                        // }
                     }
 
                     return None;

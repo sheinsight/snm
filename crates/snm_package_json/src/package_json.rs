@@ -1,3 +1,4 @@
+use anyhow::Context;
 use serde::Deserialize;
 use std::{
     collections::HashMap,
@@ -23,19 +24,18 @@ pub struct PackageJson {
     version: Option<String>,
 
     #[serde(rename = "packageManager")]
-    package_manager: Option<String>,
+    pub package_manager: Option<String>,
 
     bin: Option<Bin>,
 
     #[serde(skip)]
     internal_bin: Option<HashMap<String, PathBuf>>,
-
-    #[serde(skip)]
-    internal_package_manager: Option<PackageManager>,
+    // #[serde(skip)]
+    // internal_package_manager: Option<PackageManager>,
 }
 
 impl PackageJson {
-    pub fn from<P: AsRef<Path>>(workspace: P) -> Option<Self> {
+    pub fn from<P: AsRef<Path>>(workspace: P) -> anyhow::Result<Self> {
         let raw_file_path = workspace.as_ref().join("package.json");
         raw_file_path
             .exists()
@@ -50,12 +50,13 @@ impl PackageJson {
                 });
 
                 // 处理 package_manager
-                raw.package_manager.as_ref().map(|pm| {
-                    raw.internal_package_manager = PackageManager::parse(pm);
-                });
+                // raw.package_manager.as_ref().map(|pm| {
+                //     raw.internal_package_manager = PackageManager::parse(pm);
+                // });
 
                 raw
             })
+            .with_context(|| format!("Failed to parse package.json: {}", raw_file_path.display()))
     }
 
     fn parse_bin<P: AsRef<Path>>(workspace: P, bin: &Bin) -> HashMap<String, PathBuf> {
@@ -75,14 +76,15 @@ impl PackageJson {
 }
 
 impl PackageJson {
-    pub fn get_pm(&self) -> Option<PackageManager> {
-        self.internal_package_manager.as_ref().cloned()
-    }
+    // pub fn get_pm(&self) -> Option<PackageManager> {
+    //     self.internal_package_manager.as_ref().cloned()
+    // }
 
-    pub fn get_bin_with_name(&self, name: &str) -> Option<PathBuf> {
-        let x = self.internal_bin.as_ref().and_then(|bin| bin.get(name));
-
-        x.as_deref().cloned()
+    pub fn get_bin_with_name(&self, name: &str) -> anyhow::Result<PathBuf> {
+        self.internal_bin
+            .as_ref()
+            .and_then(|bin| bin.get(name).cloned())
+            .with_context(|| format!("Bin not found: {}", name))
     }
 
     pub fn enumerate_bin<F>(&self, f: F)

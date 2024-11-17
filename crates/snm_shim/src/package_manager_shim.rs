@@ -1,100 +1,93 @@
-use std::{
-    env::{self, current_dir},
-    fs,
-    ops::Not,
-    path::PathBuf,
-};
+use std::env::{self, current_dir};
 
-use snm_atom::{atom::AtomTrait as _, package_manager_atom::PackageManagerAtom};
+use anyhow::bail;
 use snm_config::SnmConfig;
-use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_package_json::{package_json::PackageJson, pm::PackageManager};
-use snm_utils::{constant::RESTRICTED_LIST, exec::exec_cli, snm_error::SnmError};
+use snm_utils::{constant::RESTRICTED_LIST, exec::exec_cli};
 
-use crate::get_node_bin_dir::get_node_bin_dir;
-
-pub async fn package_manager(prefix: &str, bin_name: &str) -> Result<(), SnmError> {
-    color_backtrace::install();
-
-    tracing_subscriber::fmt::init();
-
-    let node_dir = get_node_bin_dir().await?;
-
+pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()> {
     let args_all: Vec<String> = env::args().collect();
 
-    let command = &args_all[1];
+    let cwd = current_dir()?;
+
+    let snm_config = SnmConfig::from(&cwd)?;
+
+    let json = PackageJson::from(&cwd)?;
+
+    let package_manager = match PackageManager::from_env(&snm_config) {
+        Ok(pm) => pm,
+        Err(_) => match json.package_manager {
+            Some(raw) => PackageManager::from_str(&raw, &snm_config).unwrap(),
+            None => bail!("No package manager found"),
+        },
+    };
+
+    let version = package_manager.version();
+
+    let bin_dir = package_manager.get_bin(version, prefix).await?;
 
     let args: Vec<String> = std::env::args().skip(1).collect();
 
-    let dir = current_dir()?;
+    // let bin_dirs = if let Some(pm) = package_manager {
+    //     let snm_package_manage = PackageManagerAtom::new(prefix, snm_config.clone());
 
-    let snm_config = SnmConfig::from(&dir)?;
+    //     if pm.name() == prefix {
+    //         let version = pm.version();
 
-    let bin_dirs = if let Some(pm) =
-        PackageManager::from_env().or(PackageJson::from(&dir).and_then(|json| json.get_pm()))
-    {
-        tracing::trace!(
-            "There is a package manager in the entry process that is currently in use."
-        );
-        let snm_package_manage = PackageManagerAtom::new(prefix, snm_config.clone());
+    //         if snm_package_manage
+    //             .get_anchor_file_path_buf(&version)?
+    //             .exists()
+    //             .not()
+    //         {
+    //             let download_url = snm_package_manage.get_download_url(&version);
 
-        if pm.name() == prefix {
-            let version = pm.version();
+    //             let downloaded_file_path_buf =
+    //                 snm_package_manage.get_downloaded_file_path_buf(&version)?;
 
-            if snm_package_manage
-                .get_anchor_file_path_buf(&version)?
-                .exists()
-                .not()
-            {
-                let download_url = snm_package_manage.get_download_url(&version);
+    //             DownloadBuilder::new()
+    //                 .retries(3)
+    //                 .timeout(snm_package_manage.get_snm_config().download_timeout_secs)
+    //                 .write_strategy(WriteStrategy::WriteAfterDelete)
+    //                 .download(&download_url, &downloaded_file_path_buf)
+    //                 .await?;
 
-                let downloaded_file_path_buf =
-                    snm_package_manage.get_downloaded_file_path_buf(&version)?;
+    //             let runtime_dir_path_buf = snm_package_manage.get_runtime_dir_path_buf(&version)?;
 
-                DownloadBuilder::new()
-                    .retries(3)
-                    .timeout(snm_package_manage.get_snm_config().download_timeout_secs)
-                    .write_strategy(WriteStrategy::WriteAfterDelete)
-                    .download(&download_url, &downloaded_file_path_buf)
-                    .await?;
+    //             snm_package_manage
+    //                 .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
 
-                let runtime_dir_path_buf = snm_package_manage.get_runtime_dir_path_buf(&version)?;
+    //             if let Some(parent) = downloaded_file_path_buf.parent() {
+    //                 fs::remove_dir_all(parent)?;
+    //             }
+    //         }
 
-                snm_package_manage
-                    .decompress_download_file(&downloaded_file_path_buf, &runtime_dir_path_buf)?;
+    //         let binary = snm_package_manage.get_runtime_binary_dir_string(version)?;
 
-                if let Some(parent) = downloaded_file_path_buf.parent() {
-                    fs::remove_dir_all(parent)?;
-                }
-            }
+    //         vec![node_dir.clone(), binary]
+    //     } else if RESTRICTED_LIST.contains(&command.as_str()) {
+    //         bail!(SnmError::NotMatchPackageManagerError {
+    //             raw_command: args_all.join(" ").to_string(),
+    //             expect: pm.name().to_string(),
+    //             actual: prefix.to_string(),
+    //         });
+    //     } else {
+    //         vec![node_dir.clone()]
+    //     }
+    // } else {
+    //     vec![node_dir.clone()]
+    // };
 
-            let binary = snm_package_manage.get_runtime_binary_dir_string(version)?;
+    // let exists = bin_dirs
+    //     .iter()
+    //     .any(|dir| PathBuf::from(dir).join(bin_name).exists());
 
-            vec![node_dir.clone(), binary]
-        } else if RESTRICTED_LIST.contains(&command.as_str()) {
-            return Err(SnmError::NotMatchPackageManagerError {
-                raw_command: args_all.join(" ").to_string(),
-                expect: pm.name().to_string(),
-                actual: prefix.to_string(),
-            });
-        } else {
-            vec![node_dir.clone()]
-        }
-    } else {
-        vec![node_dir.clone()]
-    };
+    // if exists.not() {
+    //     bail!(SnmError::NotFoundCommandError {
+    //         bin_name: bin_name.to_string(),
+    //     });
+    // }
 
-    let exists = bin_dirs
-        .iter()
-        .any(|dir| PathBuf::from(dir).join(bin_name).exists());
-
-    if exists.not() {
-        return Err(SnmError::NotFoundCommandError {
-            bin_name: bin_name.to_string(),
-        });
-    }
-
-    exec_cli(bin_dirs, bin_name, &args)?;
+    exec_cli(vec![bin_dir], bin_name, &args)?;
 
     Ok(())
 }

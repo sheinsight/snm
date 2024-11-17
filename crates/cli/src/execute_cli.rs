@@ -3,10 +3,12 @@ use crate::manage_command::ManageCommands;
 use crate::node_manager::node_manager::{ListArgs, ListRemoteArgs, NodeManager};
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
+use anyhow::bail;
 use snm_atom::node_atom::NodeAtom;
 use snm_config::SnmConfig;
 use snm_package_json::ops::ops::InstallArgs;
 use snm_package_json::package_json::PackageJson;
+use snm_package_json::pm::PackageManager;
 use snm_utils::exec::exec_cli;
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
@@ -35,8 +37,9 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         }
         // manage end
         SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) => {
-            if let Some(package_json) = PackageJson::from(snm_config.workspace) {
-                if let Some(pm) = package_json.get_pm() {
+            if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {
+                if let Some(pm) = package_json.package_manager {
+                    let pm = PackageManager::from_str(&pm, &snm_config)?;
                     let command = match cli.command {
                         // SnmCommands::Node { command } => todo!(),
                         SnmCommands::I(iargs) => pm.install(iargs),
@@ -52,6 +55,8 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                     let args = command.iter().skip(1).collect::<Vec<_>>();
 
                     exec_cli(vec![], pm.name(), args)?;
+                } else {
+                    bail!("No package manager found");
                 }
             }
         }

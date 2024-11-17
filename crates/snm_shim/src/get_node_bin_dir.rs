@@ -1,39 +1,35 @@
-use std::{env::current_dir, fs, ops::Not as _};
+use std::{fs, ops::Not as _};
 
+use anyhow::bail;
 use snm_atom::{atom::AtomTrait, node_atom::NodeAtom};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
+use snm_node_version::NodeVersionReader;
 use snm_utils::snm_error::SnmError;
-use tracing::{instrument, Level};
 
-#[instrument(level = Level::TRACE, ret)]
-pub async fn get_node_bin_dir() -> Result<String, SnmError> {
-    let dir = current_dir()?;
-
-    let snm_config = SnmConfig::from(dir)?;
-
-    let snm_node = NodeAtom::new(snm_config.clone());
-
-    let version = if let Ok(version) = snm_config.get_runtime_node_version() {
-        version
-    } else {
-        let (_, version) = snm_node.read_runtime_dir_name_vec()?;
-        version.ok_or(SnmError::NoDefaultNodeBinary)?
-    };
-
-    let node_white_list = &snm_config.node_white_list;
-
-    if node_white_list.is_empty().not() {
-        if node_white_list.contains(&version).not() {
-            return Err(SnmError::UnsupportedNodeVersionError {
-                version,
-                node_white_list: node_white_list
-                    .split(',')
-                    .map(|s| s.to_string())
-                    .collect::<Vec<String>>(),
-            });
-        }
+pub fn check_node_v(config: SnmConfig, v: String) -> anyhow::Result<()> {
+    if config.node_white_list.is_empty() {
+        return Ok(());
     }
+    if config.node_white_list.contains(&v) {
+        return Ok(());
+    }
+    bail!(SnmError::UnsupportedNodeVersionError {
+        version: v,
+        node_white_list: config
+            .node_white_list
+            .split(',')
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>(),
+    });
+}
+
+pub async fn get_node_bin_dir(config: SnmConfig) -> anyhow::Result<String> {
+    let snm_node = NodeAtom::new(config.clone());
+
+    let version = NodeVersionReader::from_env(&config)?.read_version();
+
+    check_node_v(config, version.clone())?;
 
     if snm_node
         .get_anchor_file_path_buf(version.as_str())?
@@ -63,7 +59,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
         if actual.is_none() || expect.is_none() {
             fs::remove_file(&downloaded_file_path_buf)?;
-            return Err(SnmError::ShasumError {
+            bail!(SnmError::ShasumError {
                 file_path: downloaded_file_path_buf.display().to_string(),
                 expect: "None".to_string(),
                 actual: "None".to_string(),
@@ -72,7 +68,7 @@ pub async fn get_node_bin_dir() -> Result<String, SnmError> {
 
         if actual.eq(&expect).not() {
             fs::remove_file(&downloaded_file_path_buf)?;
-            return Err(SnmError::ShasumError {
+            bail!(SnmError::ShasumError {
                 file_path: downloaded_file_path_buf.display().to_string(),
                 expect: expect.unwrap_or("None".to_string()),
                 actual: actual.unwrap_or("None".to_string()),

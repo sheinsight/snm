@@ -184,7 +184,7 @@ impl AtomTrait for PackageManagerAtom {
         output_dir_path_buf: &PathBuf,
     ) -> Result<(), SnmError> {
         decompress(&input_file_path_buf, &output_dir_path_buf)?;
-        if let Some(package_json) = PackageJson::from(&output_dir_path_buf) {
+        if let Some(package_json) = PackageJson::from(&output_dir_path_buf).ok() {
             let bin = output_dir_path_buf.join("bin");
             if bin.exists().not() {
                 fs::create_dir_all(&bin)?;

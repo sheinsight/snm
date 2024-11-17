@@ -13,3 +13,4 @@ path = "src/main.rs"
 snm_shim ={ path = "../snm_shim" }
 snm_utils = { path = "../snm_utils" }
 tokio = { version = "1.0.0", features = ["full"] }
+anyhow = "1.0.74"

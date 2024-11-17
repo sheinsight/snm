@@ -7,7 +7,7 @@ use super::{
 };
 
 pub struct PnpmCommandLine<'a> {
-    pub metadata: &'a PackageManagerMetadata,
+    pub metadata: &'a PackageManagerMetadata<'a>,
 }
 
 impl<'a> PnpmCommandLine<'a> {

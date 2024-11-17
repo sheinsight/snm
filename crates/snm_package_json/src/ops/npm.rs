@@ -7,7 +7,7 @@ use super::{
 };
 
 pub struct NpmCommandLine<'a> {
-    pub metadata: &'a PackageManagerMetadata,
+    pub metadata: &'a PackageManagerMetadata<'a>,
 }
 
 impl<'a> NpmCommandLine<'a> {
