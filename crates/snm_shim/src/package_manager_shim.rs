@@ -4,7 +4,7 @@ use anyhow::{bail, Context};
 use snm_config::SnmConfig;
 use snm_node_version::NodeVersionReader;
 use snm_package_json::{package_json::PackageJson, pm::PackageManager};
-use snm_utils::{constant::RESTRICTED_LIST, exec::exec_cli};
+use snm_utils::exec::exec_cli;
 
 pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()> {
     let args_all: Vec<String> = env::args().collect();

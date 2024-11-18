@@ -1,6 +1,6 @@
 use std::env;
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use semver::{Version, VersionReq};

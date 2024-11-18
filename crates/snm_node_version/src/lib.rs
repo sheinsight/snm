@@ -254,7 +254,6 @@ impl<'a> NodeVersionReader<'a> {
                 let mut archive = ZipArchive::new(file)?;
                 archive.extract(&temp_dir)?;
             }
-            _ => bail!("Unsupported tarball format"),
         }
 
         // 获取解压后的第一个目录

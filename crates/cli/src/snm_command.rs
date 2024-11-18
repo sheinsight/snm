@@ -5,12 +5,6 @@ use snm_package_json::ops::ops::{AddArgs, InstallArgs, RemoveArgs};
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
-    #[command(about = "Manage node versions.")]
-    Node {
-        #[command(subcommand)]
-        command: ManageCommands,
-    },
-
     #[command(about = "Used to install all dependencies for a project.")]
     I(InstallArgs),
 
@@ -31,6 +25,12 @@ pub enum SnmCommands {
 
     // #[command(about = "Run some script.")]
     // R(RArgs),
+    #[command(about = "Manage node versions.")]
+    Node {
+        #[command(subcommand)]
+        command: ManageCommands,
+    },
+
     #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,
 }

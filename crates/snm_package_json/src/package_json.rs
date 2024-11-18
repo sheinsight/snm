@@ -2,13 +2,10 @@ use anyhow::Context;
 use serde::Deserialize;
 use std::{
     collections::HashMap,
-    env,
     fs::File,
     io::BufReader,
     path::{Path, PathBuf, MAIN_SEPARATOR_STR},
 };
-
-use crate::pm::PackageManager;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(untagged)]

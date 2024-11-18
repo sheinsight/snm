@@ -14,10 +14,18 @@ pub mod execute_cli;
         name = crate_name!(),
         author = crate_authors!(),
         version = crate_version!(),
-        about = "snm = ni + fnm + corepack"
+        about = "snm = ni + fnm + corepack",
+        disable_version_flag = true,
+        disable_help_subcommand = true
     )
 ]
 pub struct SnmCli {
     #[command(subcommand)]
     pub command: SnmCommands,
+    #[arg(
+        short = 'v',
+        long = "version",
+        action = clap::ArgAction::Version
+    )]
+    version: Option<bool>,
 }
