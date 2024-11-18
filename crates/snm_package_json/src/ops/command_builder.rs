@@ -5,7 +5,7 @@ use super::flag::Flag;
 pub struct CommandBuilder {
     name: String,
     command: String,
-    package_spec: Option<String>,
+    package_spec: Vec<String>,
     exclu_opts: Vec<Flag>,
     addon_opts: Vec<Flag>,
 }
@@ -15,14 +15,14 @@ impl CommandBuilder {
         Self {
             name,
             command: command.to_string(),
-            package_spec: None,
+            package_spec: Vec::new(),
             exclu_opts: Vec::new(),
             addon_opts: Vec::new(),
         }
     }
 
-    pub fn with_args(mut self, args: String) -> Self {
-        self.package_spec = Some(args);
+    pub fn with_args(mut self, args: Vec<String>) -> Self {
+        self.package_spec = args;
         self
     }
 
@@ -40,8 +40,8 @@ impl CommandBuilder {
         let mut cmd = vec![self.name, self.command];
 
         // 添加包名（如果有）
-        if let Some(spec) = self.package_spec {
-            cmd.push(spec);
+        if !self.package_spec.is_empty() {
+            cmd.extend(self.package_spec);
         }
 
         // 处理互斥标志

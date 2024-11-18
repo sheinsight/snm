@@ -12,7 +12,7 @@ pub struct InstallArgs {
 #[derive(Parser, Debug, Clone)]
 pub struct AddArgs {
     #[arg(help = "The package spec to install.")]
-    pub package_spec: String,
+    pub package_spec: Vec<String>,
     #[arg(short = 'P', long, help = "Save into dependencies")]
     pub save_prod: bool,
     #[arg(long, help = "Save into peerDependencies")]
@@ -28,7 +28,7 @@ pub struct AddArgs {
 #[derive(Parser, Debug, Clone)]
 pub struct RemoveArgs {
     #[arg(help = "The package spec to remove.")]
-    pub package_spec: String,
+    pub package_spec: Vec<String>,
 }
 
 pub trait PackageManagerOps {
