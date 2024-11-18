@@ -36,18 +36,19 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             }
         }
         // manage end
-        SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) => {
+        SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) | SnmCommands::D(_) => {
             if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {
                 if let Some(pm) = package_json.package_manager {
                     let pm = PackageManager::from_str(&pm, &snm_config)?;
                     let command = match cli.command {
                         // SnmCommands::Node { command } => todo!(),
-                        SnmCommands::I(iargs) => pm.install(iargs),
-                        SnmCommands::C(iargs) => pm.install(InstallArgs {
+                        SnmCommands::I(args) => pm.install(args),
+                        SnmCommands::C(args) => pm.install(InstallArgs {
                             frozen_lockfile: true,
-                            ..iargs
+                            ..args
                         }),
-                        SnmCommands::A(aargs) => pm.add(aargs),
+                        SnmCommands::A(args) => pm.add(args),
+                        SnmCommands::D(args) => pm.remove(args),
                         // SnmCommands::FigSpec => todo!(),
                         _ => unreachable!("unreachable"),
                     }?;

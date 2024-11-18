@@ -53,6 +53,7 @@ pub struct SnmConfig {
     pub npm_registry: String,
     pub workspace: PathBuf,
     pub lang: String,
+    pub restricted_list: Vec<String>,
 }
 
 impl SnmConfig {
@@ -92,7 +93,15 @@ impl SnmConfig {
 
         let node_white_list = config.node_white_list.unwrap_or(String::from(""));
 
+        let restricted_list = {
+            let map = |v: String| -> Vec<String> {
+                v.split(',').map(|s| s.to_string()).collect::<Vec<String>>()
+            };
+            config.restricted_list.map(map).unwrap_or(Vec::new())
+        };
+
         Ok(Self {
+            restricted_list,
             workspace: workspace.as_ref().to_path_buf(),
             node_bin_dir: node_bin_dir,
             download_dir: download_dir,
@@ -118,6 +127,8 @@ pub struct EnvSnmConfig {
     cache_dir: Option<String>,
 
     lang: Option<String>,
+
+    restricted_list: Option<String>,
 
     node_modules_dir: Option<String>,
 

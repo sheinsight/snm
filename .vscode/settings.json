@@ -23,6 +23,7 @@
         "premajor",
         "reqwest",
         "rexpect",
+        "rsplit",
         "SHASUMS",
         "tempdir",
         "tempfile",

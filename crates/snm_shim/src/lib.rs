@@ -1,4 +1,4 @@
-mod get_node_bin_dir;
+// mod get_node_bin_dir;
 mod node_shim;
 mod package_manager_shim;
 

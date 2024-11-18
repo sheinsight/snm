@@ -20,6 +20,9 @@ pub enum SnmCommands {
     #[command(about = "Add a package and any packages that it depends on.")]
     A(AddArgs),
 
+    #[command(about = "Remove a package.")]
+    D(RemoveArgs),
+
     // #[command(about = "Hot load a package, and runs whatever default command binary it exposes..")]
     // X(XArgs),
 

@@ -2,7 +2,7 @@ use std::{
     env,
     fs::File,
     io::BufReader,
-    path::{Path, PathBuf, MAIN_SEPARATOR_STR},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{bail, Context};
@@ -16,7 +16,7 @@ use tar::Archive;
 use crate::{
     ops::{
         npm::NpmCommandLine,
-        ops::{AddArgs, InstallArgs, PackageManagerOps},
+        ops::{AddArgs, InstallArgs, PackageManagerOps, RemoveArgs},
         pnpm::PnpmCommandLine,
         yarn::YarnCommandLine,
         yarn_berry::YarnBerryCommandLine,
@@ -65,6 +65,10 @@ impl<'a> PackageManager<'a> {
     pub fn add(&self, args: AddArgs) -> anyhow::Result<Vec<String>> {
         self.execute(|pm| pm.add(args.clone()))
     }
+
+    pub fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
+        self.execute(|pm| pm.remove(args.clone()))
+    }
 }
 
 impl<'a> PackageManager<'a> {
@@ -109,16 +113,30 @@ impl<'a> PackageManager<'a> {
 }
 
 impl<'a> PackageManager<'a> {
-    pub async fn get_bin(&self, version: &str, prefix: &str) -> anyhow::Result<String> {
+    pub async fn get_bin(
+        &self,
+        version: &str,
+        actual_bin_name: &str,
+        command: &str,
+    ) -> anyhow::Result<String> {
         let metadata = self.metadata();
 
-        if metadata.bin_name != prefix {
-            bail!(format!(
-                "Package manager mismatch, expect: {} , actual: {}",
-                prefix.green(),
-                metadata.bin_name.red()
-            ));
-        };
+        if metadata.bin_name != actual_bin_name {
+            if metadata
+                .config
+                .restricted_list
+                .contains(&command.to_string())
+            {
+                bail!(
+                    "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
+                    metadata.bin_name.green(),
+                    actual_bin_name.red(),
+                    metadata.config.restricted_list.join(", ").black(),
+                );
+            } else {
+                return Ok(String::new());
+            }
+        }
 
         let pkg_dir = metadata
             .config
@@ -130,10 +148,10 @@ impl<'a> PackageManager<'a> {
 
         if pkg.try_exists()? {
             let json = PackageJson::from(pkg_dir)?;
-            let bin_path_buf = json.get_bin_with_name(prefix)?;
+            let bin_path_buf = json.get_bin_with_name(actual_bin_name)?;
             let dir = bin_path_buf
                 .parent()
-                .with_context(|| format!("Bin not found: {}", prefix))?;
+                .with_context(|| format!("Bin not found: {}", actual_bin_name))?;
             return Ok(dir.to_string_lossy().into_owned());
         };
 
@@ -153,11 +171,11 @@ impl<'a> PackageManager<'a> {
         // TODO get bin dir
         let json = PackageJson::from(decompressed_dir_path_buf)?;
 
-        let file = json.get_bin_with_name(prefix)?;
+        let file = json.get_bin_with_name(actual_bin_name)?;
 
         let bin_dir = file
             .parent()
-            .with_context(|| format!("Bin not found: {}", prefix))?;
+            .with_context(|| format!("Bin not found: {}", actual_bin_name))?;
 
         Ok(bin_dir.to_string_lossy().into_owned())
     }
