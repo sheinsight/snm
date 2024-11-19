@@ -58,11 +58,7 @@ pub struct SnmConfig {
 
 impl SnmConfig {
     pub fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
-        let config = Config::builder()
-            .add_source(Environment::with_prefix("SNM"))
-            .build()?;
-
-        let config: EnvSnmConfig = config.try_deserialize()?;
+        let config = EnvSnmConfig::parse()?;
 
         let npm_registry = NpmrcReader::from(&workspace).read_registry_with_default();
 
@@ -147,6 +143,17 @@ pub struct EnvSnmConfig {
     workspace: Option<String>,
 }
 
+impl EnvSnmConfig {
+    pub fn parse() -> Result<Self, SnmError> {
+        let config = Config::builder()
+            .add_source(Environment::with_prefix("SNM"))
+            .build()?;
+
+        let config: EnvSnmConfig = config.try_deserialize()?;
+        Ok(config)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,7 +206,7 @@ mod tests {
             assert_eq!(snm_config.download_timeout_secs, 60);
             assert_eq!(
                 snm_config.npm_registry,
-                "https://registry.npmjs.org/".to_string()
+                "https://registry.npmjs.org".to_string()
             );
         }
 
