@@ -24,7 +24,8 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                     node_manager.set_default(version.as_str()).await?;
                 }
                 ManageCommands::Install { version } => {
-                    node_manager.install(version.as_str()).await?;
+                    // node_manager.install(version.as_str()).await?;
+                    nm.install(version.as_str()).await?;
                 }
                 ManageCommands::Uninstall { version } => {
                     node_manager.un_install(version.as_str()).await?;
@@ -32,10 +33,9 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                 ManageCommands::List(args) => {
                     // node_manager.list(ListArgs { offline }).await?;
                     nm.list(args).await?;
-                }
-                ManageCommands::ListRemote { all } => {
-                    node_manager.list_remote(ListRemoteArgs { all }).await?;
-                }
+                } // ManageCommands::ListRemote { all } => {
+                  //     node_manager.list_remote(ListRemoteArgs { all }).await?;
+                  // }
             }
         }
         // manage end

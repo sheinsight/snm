@@ -20,14 +20,14 @@ pub enum ManageCommands {
     },
     /// List installed npm versions
     List(ListArgs),
-    /// List remote npm versions
-    ListRemote {
-        #[arg(
-            short,
-            long,
-            // default_value = "true",
-            help = "List all available versions"
-        )]
-        all: bool,
-    },
+    // List remote npm versions
+    // ListRemote {
+    //     #[arg(
+    //         short,
+    //         long,
+    //         // default_value = "true",
+    //         help = "List all available versions"
+    //     )]
+    //     all: bool,
+    // },
 }
