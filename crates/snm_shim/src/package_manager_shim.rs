@@ -25,9 +25,7 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
         },
     };
 
-    let node_version_reader = NodeVersionReader::from_env(&snm_config)
-        .or_else(|_| NodeVersionReader::from(&cwd, &snm_config))
-        .or_else(|_| NodeVersionReader::from_default(&snm_config))
+    let node_version_reader = NodeVersionReader::try_from(&snm_config)
         .with_context(|| "Failed to determine Node.js version")?;
 
     let node_bin_dir = node_version_reader.get_bin().await?;

@@ -12,9 +12,7 @@ pub async fn node(bin_name: &str) -> anyhow::Result<()> {
 
     let bin_args: Vec<String> = std::env::args().skip(1).collect();
 
-    let node_version_reader = NodeVersionReader::from_env(&config)
-        .or_else(|_| NodeVersionReader::from(&cwd, &config))
-        .or_else(|_| NodeVersionReader::from_default(&config))
+    let node_version_reader = NodeVersionReader::try_from(&config)
         .with_context(|| "Failed to determine Node.js version")?;
 
     let node_bin_dir = node_version_reader.get_bin().await?;

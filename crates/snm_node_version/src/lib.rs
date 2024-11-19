@@ -15,41 +15,29 @@ use tar::Archive;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
 
+mod archive_extension;
+
+use crate::archive_extension::ArchiveExtension;
+
 const FILE_NAME: &str = ".node-version";
 
 const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 
 #[derive(Debug)]
-enum ArchiveFormat {
-    Tgz,
-    Xz,
-    Zip,
-}
-
-impl ArchiveFormat {
-    fn from_path<T: AsRef<Path>>(path: T) -> anyhow::Result<Self> {
-        let ext = path
-            .as_ref()
-            .extension()
-            .and_then(|s| s.to_str())
-            .with_context(|| "Invalid file extension")?;
-
-        match ext {
-            "tgz" | "gz" => Ok(Self::Tgz),
-            "xz" => Ok(Self::Xz),
-            "zip" => Ok(Self::Zip),
-            _ => bail!("Unsupported archive format: {}", ext),
-        }
-    }
-}
 pub struct NodeVersionReader<'a> {
     pub version: String,
     pub config: &'a SnmConfig,
 }
 
 impl<'a> NodeVersionReader<'a> {
-    pub fn from<P: AsRef<Path>>(cwd: P, config: &'a SnmConfig) -> anyhow::Result<Self> {
-        let file_path = cwd.as_ref().join(FILE_NAME);
+    pub fn try_from(config: &'a SnmConfig) -> anyhow::Result<Self> {
+        Self::from_env(config)
+            .or_else(|_| Self::from(config))
+            .or_else(|_| Self::from_default(config))
+    }
+
+    fn from(config: &'a SnmConfig) -> anyhow::Result<Self> {
+        let file_path = config.workspace.join(FILE_NAME);
 
         let version =
             Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
@@ -57,13 +45,12 @@ impl<'a> NodeVersionReader<'a> {
         Ok(Self { version, config })
     }
 
-    // TODO 从环境变量中读取版本号
-    pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+    fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
         let version = env::var(SNM_NODE_VERSION_ENV_KEY)?;
         Ok(Self { version, config })
     }
 
-    pub fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
+    fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
         if !config.node_bin_dir.try_exists()? {
             bail!("Node binary directory does not exist");
         }
@@ -76,10 +63,6 @@ impl<'a> NodeVersionReader<'a> {
             .map(|s| s.to_string_lossy().into_owned())
             .with_context(|| "Invalid default version link")?;
         Ok(Self { version, config })
-    }
-
-    pub fn read_version(&self) -> String {
-        self.version.clone()
     }
 
     fn read_version_file<T: AsRef<Path>>(version_path: T) -> Option<String> {
@@ -232,24 +215,24 @@ impl<'a> NodeVersionReader<'a> {
         downloaded_file_path_buf: T,
         output_dir: U,
     ) -> anyhow::Result<()> {
-        let format = ArchiveFormat::from_path(&downloaded_file_path_buf)?;
+        let format = ArchiveExtension::from_path(&downloaded_file_path_buf)?;
         let file = File::open(&downloaded_file_path_buf)?;
 
         let temp_dir = output_dir.as_ref().join("temp");
         std::fs::create_dir_all(&temp_dir)?;
         match format {
-            ArchiveFormat::Tgz => {
+            ArchiveExtension::Tgz => {
                 let decoder = GzDecoder::new(file);
                 let mut archive = Archive::new(decoder);
                 archive.unpack(&temp_dir)?;
             }
-            ArchiveFormat::Xz => {
+            ArchiveExtension::Xz => {
                 // 处理 xz
                 let xz = XzDecoder::new(file);
                 let mut archive = Archive::new(xz);
                 archive.unpack(&temp_dir)?;
             }
-            ArchiveFormat::Zip => {
+            ArchiveExtension::Zip => {
                 // 处理 zip
                 let mut archive = ZipArchive::new(file)?;
                 archive.extract(&temp_dir)?;
