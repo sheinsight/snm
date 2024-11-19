@@ -1,4 +1,5 @@
 use clap::Subcommand;
+use snm_node_version::ListArgs;
 
 #[derive(Subcommand, Debug)]
 pub enum ManageCommands {
@@ -18,10 +19,7 @@ pub enum ManageCommands {
         version: String,
     },
     /// List installed npm versions
-    List {
-        #[arg(long, help = "Only show lts version")]
-        offline: bool,
-    },
+    List(ListArgs),
     /// List remote npm versions
     ListRemote {
         #[arg(

@@ -15,7 +15,9 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
     match cli.command {
         // manage start
         SnmCommands::Node { command } => {
-            let node_atom = NodeAtom::new(snm_config);
+            // let node = SNode::try_from(&snm_config)?;
+            let nm = snm_node_version::manager::NodeManager::new(&snm_config);
+            let node_atom = NodeAtom::new(snm_config.clone());
             let node_manager = NodeManager::new(&node_atom);
             match command {
                 ManageCommands::Default { version } => {
@@ -27,8 +29,9 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                 ManageCommands::Uninstall { version } => {
                     node_manager.un_install(version.as_str()).await?;
                 }
-                ManageCommands::List { offline } => {
-                    node_manager.list(ListArgs { offline }).await?;
+                ManageCommands::List(args) => {
+                    // node_manager.list(ListArgs { offline }).await?;
+                    nm.list(args).await?;
                 }
                 ManageCommands::ListRemote { all } => {
                     node_manager.list_remote(ListRemoteArgs { all }).await?;

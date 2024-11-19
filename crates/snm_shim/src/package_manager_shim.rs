@@ -2,7 +2,7 @@ use std::env::{self, current_dir};
 
 use anyhow::{bail, Context};
 use snm_config::SnmConfig;
-use snm_node_version::NodeVersionReader;
+use snm_node_version::SNode;
 use snm_package_json::{package_json::PackageJson, pm::PackageManager};
 use snm_utils::exec::exec_cli;
 
@@ -25,8 +25,8 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
         },
     };
 
-    let node_version_reader = NodeVersionReader::try_from(&snm_config)
-        .with_context(|| "Failed to determine Node.js version")?;
+    let node_version_reader =
+        SNode::try_from(&snm_config).with_context(|| "Failed to determine Node.js version")?;
 
     let node_bin_dir = node_version_reader.get_bin().await?;
 

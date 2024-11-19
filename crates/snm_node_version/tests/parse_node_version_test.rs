@@ -1,7 +1,7 @@
 use std::env::{self, current_dir};
 
 use snm_config::SnmConfig;
-use snm_node_version::NodeVersionReader;
+use snm_node_version::SNode;
 
 #[test]
 fn test_parse_no_node_version_file() -> Result<(), Box<dyn std::error::Error>> {
@@ -12,7 +12,7 @@ fn test_parse_no_node_version_file() -> Result<(), Box<dyn std::error::Error>> {
         .join("features")
         .join("no_node_version_file");
     let snm_config = SnmConfig::from(&workspace)?;
-    let node_version_reader = NodeVersionReader::try_from(&snm_config);
+    let node_version_reader = SNode::try_from(&snm_config);
     assert!(node_version_reader.is_err());
     Ok(())
 }
@@ -27,7 +27,7 @@ fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>
         .join("no_content");
 
     let snm_config = SnmConfig::from(&workspace)?;
-    let node_version_reader = NodeVersionReader::try_from(&snm_config);
+    let node_version_reader = SNode::try_from(&snm_config);
 
     assert!(node_version_reader.is_err());
 
@@ -43,7 +43,7 @@ fn test_parse_node_version_start_with_v() -> Result<(), Box<dyn std::error::Erro
         .join("node_version_start_width_v");
 
     let snm_config = SnmConfig::from(&workspace)?;
-    let node_version_reader = NodeVersionReader::try_from(&snm_config)?;
+    let node_version_reader = SNode::try_from(&snm_config)?;
 
     assert_eq!(node_version_reader.version, "20.0.1");
 

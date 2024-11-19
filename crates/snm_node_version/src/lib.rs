@@ -2,11 +2,14 @@ use std::{
     env,
     fs::{read_to_string, File},
     io::BufReader,
+    ops::Not,
     path::{Path, PathBuf},
 };
 
 use anyhow::{bail, Context};
 use flate2::read::GzDecoder;
+use manager::NodeManager;
+use serde::{Deserialize, Deserializer, Serialize};
 use sha2::{Digest, Sha256};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
@@ -16,6 +19,8 @@ use xz2::read::XzDecoder;
 use zip::ZipArchive;
 
 mod archive_extension;
+pub mod manager;
+pub use manager::*;
 
 use crate::archive_extension::ArchiveExtension;
 
@@ -24,12 +29,12 @@ const FILE_NAME: &str = ".node-version";
 const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 
 #[derive(Debug)]
-pub struct NodeVersionReader<'a> {
-    pub version: String,
+pub struct SNode<'a> {
+    pub version: Option<String>,
     pub config: &'a SnmConfig,
 }
 
-impl<'a> NodeVersionReader<'a> {
+impl<'a> SNode<'a> {
     pub fn try_from(config: &'a SnmConfig) -> anyhow::Result<Self> {
         Self::from_env(config)
             .or_else(|_| Self::from(config))
@@ -42,12 +47,18 @@ impl<'a> NodeVersionReader<'a> {
         let version =
             Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
 
-        Ok(Self { version, config })
+        Ok(Self {
+            version: Some(version),
+            config,
+        })
     }
 
     fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
         let version = env::var(SNM_NODE_VERSION_ENV_KEY)?;
-        Ok(Self { version, config })
+        Ok(Self {
+            version: Some(version),
+            config,
+        })
     }
 
     fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -62,7 +73,11 @@ impl<'a> NodeVersionReader<'a> {
             .file_name()
             .map(|s| s.to_string_lossy().into_owned())
             .with_context(|| "Invalid default version link")?;
-        Ok(Self { version, config })
+
+        Ok(Self {
+            version: Some(version),
+            config,
+        })
     }
 
     fn read_version_file<T: AsRef<Path>>(version_path: T) -> Option<String> {
@@ -81,9 +96,12 @@ impl<'a> NodeVersionReader<'a> {
     }
 }
 
-impl<'a> NodeVersionReader<'a> {
+impl<'a> SNode<'a> {
     pub async fn get_bin(&self) -> anyhow::Result<String> {
-        let version = &self.version;
+        let version = self
+            .version
+            .as_deref()
+            .context("No valid node version found")?;
 
         self.check_v(&version)?;
 
