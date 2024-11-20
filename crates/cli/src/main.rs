@@ -3,8 +3,6 @@ use snm::{execute_cli::execute_cli, SnmCli};
 use snm_config::SnmConfig;
 use std::{env::current_dir, process::ExitCode};
 
-pub mod node_manager;
-
 #[tokio::main]
 async fn main() -> ExitCode {
     match run().await {

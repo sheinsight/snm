@@ -3,7 +3,6 @@ use snm_command::SnmCommands;
 
 pub mod fig;
 pub mod manage_command;
-pub mod node_manager;
 pub mod snm_command;
 
 pub mod execute_cli;
