@@ -20,15 +20,17 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             let node_atom = NodeAtom::new(snm_config.clone());
             let node_manager = NodeManager::new(&node_atom);
             match command {
-                ManageCommands::Default { version } => {
-                    node_manager.set_default(version.as_str()).await?;
+                ManageCommands::Default(args) => {
+                    // node_manager.set_default(version.as_str()).await?;
+                    nm.set_default(args).await?;
                 }
-                ManageCommands::Install { version } => {
+                ManageCommands::Install(args) => {
                     // node_manager.install(version.as_str()).await?;
-                    nm.install(version.as_str()).await?;
+                    nm.install(args).await?;
                 }
-                ManageCommands::Uninstall { version } => {
-                    node_manager.un_install(version.as_str()).await?;
+                ManageCommands::Uninstall(args) => {
+                    // node_manager.un_install(version.as_str()).await?;
+                    nm.uninstall(args).await?;
                 }
                 ManageCommands::List(args) => {
                     // node_manager.list(ListArgs { offline }).await?;
