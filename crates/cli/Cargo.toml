@@ -25,7 +25,6 @@ dialoguer = "0.11.0"
 env_logger = "0.11.2"
 clap_complete = "4.5.1"
 clap_complete_fig = "4.5.0"
-snm_ni = { path = "../snm_ni" }
 snm_shim = { path = "../snm_shim" }
 snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
