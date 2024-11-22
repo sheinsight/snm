@@ -1,6 +1,6 @@
 use std::env::{self, current_dir};
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 use snm_config::SnmConfig;
 use snm_node_version::SNode;
 use snm_package_json::{package_json::PackageJson, pm::PackageManager};
@@ -15,24 +15,21 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
 
     let snm_config = SnmConfig::from(&cwd)?;
 
-    let json = PackageJson::from(&cwd)?;
-
-    let package_manager = match PackageManager::from_env(&snm_config) {
-        Ok(pm) => pm,
-        Err(_) => match json.package_manager {
-            Some(raw) => PackageManager::from_str(&raw, &snm_config).unwrap(),
-            None => bail!("No package manager found"),
+    let bin_dir = match PackageJson::from(&cwd) {
+        Ok(json) => match json.package_manager {
+            Some(pm_raw) => match PackageManager::try_from_env(&pm_raw, &snm_config) {
+                Ok(pm) => pm.get_bin(pm.version(), prefix, command).await?,
+                Err(_) => String::new(),
+            },
+            None => String::new(),
         },
+        Err(_) => String::new(),
     };
 
     let node_version_reader =
         SNode::try_from(&snm_config).with_context(|| "Failed to determine Node.js version")?;
 
     let node_bin_dir = node_version_reader.get_bin().await?;
-
-    let version = package_manager.version();
-
-    let bin_dir = package_manager.get_bin(version, prefix, command).await?;
 
     let args: Vec<String> = std::env::args().skip(1).collect();
 

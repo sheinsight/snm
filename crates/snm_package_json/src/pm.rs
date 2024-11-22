@@ -94,6 +94,10 @@ impl<'a> PackageManager<'a> {
         self.metadata().hash_value.as_deref()
     }
 
+    pub fn try_from_env(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+        Self::from_env(config).or_else(|_| Self::from_str(raw, config))
+    }
+
     pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
         let raw = env::var(SNM_PACKAGE_MANAGER_ENV_KEY)?;
         Self::parse(&raw, config)
