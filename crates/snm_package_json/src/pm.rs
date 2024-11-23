@@ -97,8 +97,14 @@ impl<'a> PackageManager<'a> {
         self.metadata().hash_value.as_deref()
     }
 
-    pub fn try_from_env(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
-        Self::from_env(config).or_else(|_| Self::from_str(raw, config))
+    pub fn try_from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+        Self::from_env(config).or_else(|_| match PackageJson::from(&config.workspace) {
+            Ok(json) => match json.package_manager {
+                Some(raw) => Self::parse(&raw, config),
+                None => bail!("packageManager config not found in package.json"),
+            },
+            Err(err) => bail!(err),
+        })
     }
 
     pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {

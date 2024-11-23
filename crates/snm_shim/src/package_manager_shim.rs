@@ -4,7 +4,7 @@ use anyhow::{bail, Context};
 use colored::Colorize;
 use snm_config::SnmConfig;
 use snm_node_version::SNode;
-use snm_package_json::{package_json::PackageJson, pm::PackageManager};
+use snm_package_json::pm::PackageManager;
 use snm_utils::exec::exec_cli;
 
 pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()> {
@@ -15,19 +15,9 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
     let snm_config = SnmConfig::from(&cwd)?;
 
     let pm_bin_dir = {
-        let json = PackageJson::from(&cwd);
-        if snm_config.strict && json.is_err() {
-            bail!("Currently using strict mode, but there is no package.json file in the current directory");
-        }
+        let pm = PackageManager::try_from_env(&snm_config).ok();
 
-        let pm_raw = json.ok().and_then(|json| json.package_manager);
-        if snm_config.strict && pm_raw.is_none() {
-            bail!("packageManager config not found in package.json");
-        }
-
-        let pm = pm_raw.and_then(|raw| PackageManager::try_from_env(&raw, &snm_config).ok());
-
-        let x = match pm {
+        let path = match pm {
             Some(pm) => {
                 if &prefix == &pm.name() {
                     pm.get_bin(pm.version(), prefix).await?
@@ -45,7 +35,7 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
             None => bail!("Failed to determine package manager"),
         };
 
-        vec![x]
+        vec![path]
     };
 
     let node_bin_dir = {
