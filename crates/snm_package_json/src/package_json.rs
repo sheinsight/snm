@@ -73,10 +73,6 @@ impl PackageJson {
 }
 
 impl PackageJson {
-    // pub fn get_pm(&self) -> Option<PackageManager> {
-    //     self.internal_package_manager.as_ref().cloned()
-    // }
-
     pub fn get_bin_with_name(&self, name: &str) -> anyhow::Result<PathBuf> {
         self.internal_bin
             .as_ref()

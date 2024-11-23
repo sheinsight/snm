@@ -6,7 +6,6 @@ use std::{
 };
 
 use anyhow::{bail, Context};
-use colored::Colorize;
 use flate2::read::GzDecoder;
 use sha1::{Digest, Sha1};
 use snm_config::SnmConfig;
@@ -35,7 +34,7 @@ pub enum PackageManager<'a> {
 
 impl<'a> From<PackageManagerMetadata<'a>> for PackageManager<'a> {
     fn from(metadata: PackageManagerMetadata<'a>) -> Self {
-        match metadata.name.as_str() {
+        match metadata.library_name.as_str() {
             "npm" => Self::Npm(metadata),
             "yarn" => Self::Yarn(metadata),
             "@yarnpkg/cli-dist" => Self::YarnBerry(metadata),
@@ -78,6 +77,10 @@ impl<'a> PackageManager<'a> {
         }
     }
 
+    pub fn library_name(&self) -> &str {
+        self.metadata().library_name.as_str()
+    }
+
     pub fn name(&self) -> &str {
         self.metadata().name.as_str()
     }
@@ -117,35 +120,13 @@ impl<'a> PackageManager<'a> {
 }
 
 impl<'a> PackageManager<'a> {
-    pub async fn get_bin(
-        &self,
-        version: &str,
-        actual_bin_name: &str,
-        command: &str,
-    ) -> anyhow::Result<String> {
+    pub async fn get_bin(&self, version: &str, actual_bin_name: &str) -> anyhow::Result<String> {
         let metadata = self.metadata();
-
-        if metadata.bin_name != actual_bin_name {
-            if metadata
-                .config
-                .restricted_list
-                .contains(&command.to_string())
-            {
-                bail!(
-                    "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
-                    metadata.bin_name.green(),
-                    actual_bin_name.red(),
-                    metadata.config.restricted_list.join(", ").black(),
-                );
-            } else {
-                return Ok(String::new());
-            }
-        }
 
         let pkg_dir = metadata
             .config
             .node_modules_dir
-            .join(&metadata.name)
+            .join(&metadata.library_name)
             .join(version);
 
         let pkg = pkg_dir.join("package.json");
@@ -153,9 +134,7 @@ impl<'a> PackageManager<'a> {
         if pkg.try_exists()? {
             let json = PackageJson::from(pkg_dir)?;
             let bin_path_buf = json.get_bin_with_name(actual_bin_name)?;
-            let dir = bin_path_buf
-                .parent()
-                .with_context(|| format!("Bin not found: {}", actual_bin_name))?;
+            let dir = bin_path_buf.parent().context("No parent dir")?;
             return Ok(dir.to_string_lossy().into_owned());
         };
 
@@ -167,7 +146,7 @@ impl<'a> PackageManager<'a> {
         let decompressed_dir_path_buf = metadata
             .config
             .node_modules_dir
-            .join(&metadata.name)
+            .join(&metadata.library_name)
             .join(version);
 
         self.decompress_download_file(&downloaded_file_path_buf, &decompressed_dir_path_buf)?;
@@ -177,9 +156,7 @@ impl<'a> PackageManager<'a> {
 
         let file = json.get_bin_with_name(actual_bin_name)?;
 
-        let bin_dir = file
-            .parent()
-            .with_context(|| format!("Bin not found: {}", actual_bin_name))?;
+        let bin_dir = file.parent().context("No parent dir")?;
 
         Ok(bin_dir.to_string_lossy().into_owned())
     }
@@ -192,9 +169,9 @@ impl<'a> PackageManager<'a> {
         let downloaded_file_path_buf = metadata
             .config
             .download_dir
-            .join(&metadata.name)
+            .join(&metadata.library_name)
             .join(version)
-            .join(format!("{}-{}.tgz", &metadata.name, version));
+            .join(format!("{}-{}.tgz", &metadata.library_name, version));
 
         DownloadBuilder::new()
             .retries(3)
@@ -244,7 +221,7 @@ impl<'a> PackageManager<'a> {
         format!(
             "{host}/{library_name}/{version}",
             host = &metadata.config.npm_registry,
-            library_name = &metadata.name,
+            library_name = &metadata.library_name,
             version = version
         )
     }
@@ -310,14 +287,14 @@ impl<'a> PackageManager<'a> {
 
         // 使用 rsplit_once 直接获取最后一个部分，避免创建 Vec
         let file_name = metadata
-            .name
+            .library_name
             .rsplit_once('/')
-            .map_or(metadata.name.clone(), |(_, name)| name.to_owned());
+            .map_or(metadata.library_name.clone(), |(_, name)| name.to_owned());
 
         format!(
             "{host}/{name}/-/{file}-{version}.tgz",
             host = npm_registry,
-            name = metadata.name,
+            name = metadata.library_name,
             file = file_name
         )
     }
@@ -343,7 +320,7 @@ mod tests {
             _ => panic!("Expected Pnpm variant"),
         };
 
-        assert_eq!(info.name, "pnpm");
+        assert_eq!(info.library_name, "pnpm");
         assert_eq!(info.version, "9.0.0");
     }
 
@@ -354,7 +331,7 @@ mod tests {
         let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890", &config)
             .expect("Should parse PNPM package manager");
 
-        assert_eq!(pm.name(), "pnpm");
+        assert_eq!(pm.library_name(), "pnpm");
         assert_eq!(pm.version(), "9.0.0");
         assert_eq!(pm.hash_name().as_deref(), Some("sha"));
         assert_eq!(pm.hash_value().as_deref(), Some("1234567890"));
@@ -367,7 +344,7 @@ mod tests {
         let pm =
             PackageManager::parse("npm@10.0.0", &config).expect("Should parse NPM package manager");
 
-        assert_eq!(pm.name(), "npm");
+        assert_eq!(pm.library_name(), "npm");
         assert_eq!(pm.version(), "10.0.0");
     }
 }

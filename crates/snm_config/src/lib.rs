@@ -54,6 +54,7 @@ pub struct SnmConfig {
     pub workspace: PathBuf,
     pub lang: String,
     pub restricted_list: Vec<String>,
+    pub strict: bool,
 }
 
 impl SnmConfig {
@@ -96,6 +97,8 @@ impl SnmConfig {
             config.restricted_list.map(map).unwrap_or(Vec::new())
         };
 
+        let strict = config.strict.unwrap_or(false);
+
         Ok(Self {
             restricted_list,
             workspace: workspace.as_ref().to_path_buf(),
@@ -110,6 +113,7 @@ impl SnmConfig {
             node_white_list: node_white_list,
             download_timeout_secs: config.download_timeout_secs.unwrap_or(30),
             npm_registry: npm_registry,
+            strict: strict,
         })
     }
 }
@@ -141,6 +145,8 @@ pub struct EnvSnmConfig {
     npm_registry: Option<String>,
 
     workspace: Option<String>,
+
+    strict: Option<bool>,
 }
 
 impl EnvSnmConfig {

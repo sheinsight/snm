@@ -50,7 +50,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
 
                     let args = command.iter().skip(1).collect::<Vec<_>>();
 
-                    exec_cli(vec![], pm.name(), args)?;
+                    exec_cli(vec![], pm.library_name(), args)?;
                 } else {
                     bail!("No package manager found");
                 }

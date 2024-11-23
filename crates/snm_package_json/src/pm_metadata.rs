@@ -8,12 +8,12 @@ use snm_config::SnmConfig;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata<'a> {
-    pub name: String,
+    pub library_name: String,
     pub version: String,
     pub hash_name: Option<String>,
     pub hash_value: Option<String>,
     pub config: &'a SnmConfig,
-    pub bin_name: String,
+    pub name: String,
 }
 
 pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
@@ -59,12 +59,12 @@ impl<'a> PackageManagerMetadata<'a> {
         env::set_var(SNM_PACKAGE_MANAGER_ENV_KEY, raw);
 
         Ok(Self {
-            name: library_name.to_owned(),
+            library_name: library_name.to_owned(),
             version,
             hash_name,
             hash_value,
             config,
-            bin_name: name,
+            name,
         })
     }
 }

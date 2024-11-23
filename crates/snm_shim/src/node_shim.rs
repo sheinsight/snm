@@ -17,6 +17,8 @@ pub async fn node(bin_name: &str) -> anyhow::Result<()> {
 
     let node_bin_dir = node_version_reader.get_bin().await?;
 
+    println!("bin_name: {} , bin_args: {:?}", bin_name, bin_args);
+
     exec_cli(vec![node_bin_dir], bin_name, &bin_args)?;
 
     Ok(())
