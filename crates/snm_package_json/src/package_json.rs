@@ -27,8 +27,6 @@ pub struct PackageJson {
 
     #[serde(skip)]
     internal_bin: Option<HashMap<String, PathBuf>>,
-    // #[serde(skip)]
-    // internal_package_manager: Option<PackageManager>,
 }
 
 impl PackageJson {

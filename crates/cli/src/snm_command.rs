@@ -32,4 +32,7 @@ pub enum SnmCommands {
 
     #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,
+
+    #[command(name = "setup", about = "Setup snm.")]
+    SetUp,
 }

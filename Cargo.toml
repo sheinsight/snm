@@ -7,14 +7,8 @@ members = [
     "crates/snm_utils", 
     "crates/snm_node_version", 
     "crates/snm_download_builder", 
-    "crates/snm_shim", 
-    "crates/cli_npm", 
-    "crates/cli_npx", 
-    "crates/cli_pnpm", 
-    "crates/cli_pnpx", 
-    "crates/cli_node", 
+    "crates/snm_shim",  
     "crates/snm_tarball", 
-    "crates/cli_yarn",
     "crates/dev-tools"
 , "e2e", "demo"]
 

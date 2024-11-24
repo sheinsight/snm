@@ -1,3 +1,5 @@
+use std::env::{current_dir, current_exe};
+
 use crate::fig::fig_spec_impl;
 use crate::manage_command::ManageCommands;
 use crate::snm_command::SnmCommands;
@@ -59,6 +61,30 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
 
         SnmCommands::FigSpec => {
             fig_spec_impl()?;
+        }
+        SnmCommands::SetUp => {
+            let exe = current_exe()?;
+            let exe_dir = exe.parent().unwrap();
+            let dir = current_dir()?;
+
+            const SHIM_TARGETS: &[&str] = &["npm", "npx", "yarn", "pnpm", "pnpx", "node"];
+
+            let source = exe_dir.join("snm-shim");
+            for target in SHIM_TARGETS {
+                let target = exe_dir.join(target);
+                if target.try_exists()? {
+                    std::fs::remove_file(&target)?;
+                }
+                // println!("{} -> {}", source.display(), target.display());
+                #[cfg(unix)]
+                {
+                    std::os::unix::fs::symlink(&source, &target)?;
+                }
+                #[cfg(windows)]
+                {
+                    std::os::windows::fs::symlink_dir(&source, &target)?;
+                }
+            }
         }
     }
 

@@ -9,6 +9,11 @@ use snm_utils::exec::exec_cli;
 
 pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
+    println!(
+        "args: {:?} {}",
+        &args,
+        args.iter().find(|item| *item == "-g").is_some()
+    );
     let command = args.get(1).context("command not found")?;
 
     let cwd = current_dir()?;
@@ -32,7 +37,13 @@ pub async fn package_manager(prefix: &str, bin_name: &str) -> anyhow::Result<()>
                     String::new()
                 }
             }
-            None => bail!("Failed to determine package manager"),
+            None => {
+                if snm_config.strict {
+                    bail!("Failed to determine package manager")
+                } else {
+                    String::new()
+                }
+            }
         };
 
         vec![path]

@@ -6,7 +6,6 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Context;
 use colored::*;
 use dialoguer::Confirm;
 use itertools::Itertools;
