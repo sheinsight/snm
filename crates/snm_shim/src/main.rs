@@ -1,6 +1,6 @@
 use std::env;
 
-use anyhow::bail;
+use anyhow::{bail, Context};
 use node_shim::node;
 use package_manager_shim::package_manager;
 mod node_shim;
@@ -10,22 +10,16 @@ mod package_manager_shim;
 async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    let bin_name = args[0].clone();
+    let actual_bin_name = args.get(0).context("bin name not found")?;
 
-    if bin_name == "npm" {
-        package_manager("npm", "npm").await?;
-    } else if bin_name == "npx" {
-        package_manager("npm", "npx").await?;
-    } else if bin_name == "pnpm" {
-        package_manager("pnpm", "pnpm").await?;
-    } else if bin_name == "pnpx" {
-        package_manager("pnpm", "pnpx").await?;
-    } else if bin_name == "yarn" {
-        package_manager("yarn", "yarn").await?;
-    } else if bin_name == "node" {
-        node("node").await?;
+    const PM: [&str; 5] = ["npm", "npx", "pnpm", "pnpx", "yarn"];
+
+    if PM.contains(&actual_bin_name.as_str()) {
+        package_manager().await?;
+    } else if actual_bin_name == "node" {
+        node().await?;
     } else {
-        bail!("Unknown command: {}", bin_name);
+        bail!("Unknown command: {}", actual_bin_name);
     }
 
     Ok(())

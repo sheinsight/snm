@@ -1,22 +1,21 @@
 use std::{
     env::{self, current_exe},
-    ffi::OsStr,
     path::Path,
     process::{Command, Stdio},
 };
 
-use anyhow::{bail, Error};
+use anyhow::{bail, Context, Error};
 
-pub fn exec_cli<I, S>(dir: Vec<String>, bin_name: &str, args: I) -> anyhow::Result<()>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<OsStr>,
-{
+pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
+    let bin_name = args.get(0).context("bin name not found")?.to_owned();
+
     let exe = current_exe()?;
 
     let exe_name = exe
         .file_name()
-        .ok_or(Error::msg("exe file name not found"))?;
+        .ok_or(Error::msg("exe file name not found"))?
+        .to_string_lossy()
+        .into_owned();
 
     let exe_dir = exe.parent().ok_or(Error::msg("exe parent dir not found"))?;
 
@@ -45,7 +44,7 @@ where
                 .map(|entry| entry.path())
                 .filter(|path| path != &exe)
                 .filter_map(|path| path.file_name().map(|n| n.to_owned()))
-                .find(|name| name == bin_name)
+                .find(|name| name.to_string_lossy().to_string() == bin_name)
                 .is_some()
         });
 
@@ -59,9 +58,11 @@ where
     //     .map(|path| path.display().to_string())
     //     .collect::<Vec<String>>();
 
-    if !has_binary.is_some() {
+    if !has_binary.is_some() && exe_name == bin_name {
         bail!("command not found: {}", bin_name);
     }
+
+    let args = args.iter().skip(1).collect::<Vec<_>>();
 
     Command::new(&bin_name)
         .args(args)

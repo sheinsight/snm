@@ -6,6 +6,7 @@ use std::{
 };
 
 use anyhow::{bail, Context};
+use colored::Colorize;
 use flate2::read::GzDecoder;
 use sha1::{Digest, Sha1};
 use snm_config::SnmConfig;
@@ -126,8 +127,35 @@ impl<'a> PackageManager<'a> {
 }
 
 impl<'a> PackageManager<'a> {
-    pub async fn get_bin(&self, version: &str, actual_bin_name: &str) -> anyhow::Result<String> {
+    pub async fn get_bin(&self, args: &Vec<String>) -> anyhow::Result<String> {
+        let actual_bin_name = args.get(0).context("bin name not found")?;
+
+        let actual_bin_name = if actual_bin_name == "pnpx" {
+            "pnpm"
+        } else if actual_bin_name == "npx" {
+            "npm"
+        } else {
+            actual_bin_name
+        };
+
+        let command = args.get(1).context("command not found")?;
+
         let metadata = self.metadata();
+
+        let version = self.version();
+
+        if metadata.config.restricted_list.contains(command) {
+            bail!(
+                "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
+                self.library_name().green(),
+                actual_bin_name.red(),
+                self.metadata().config.restricted_list.join(", ").black()
+            );
+        }
+
+        if self.name() != actual_bin_name {
+            return Ok(String::new());
+        }
 
         let pkg_dir = metadata
             .config
@@ -157,7 +185,6 @@ impl<'a> PackageManager<'a> {
 
         self.decompress_download_file(&downloaded_file_path_buf, &decompressed_dir_path_buf)?;
 
-        // TODO get bin dir
         let json = PackageJson::from(decompressed_dir_path_buf)?;
 
         let file = json.get_bin_with_name(actual_bin_name)?;

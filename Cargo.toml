@@ -7,8 +7,7 @@ members = [
     "crates/snm_utils", 
     "crates/snm_node_version", 
     "crates/snm_download_builder", 
-    "crates/snm_shim",  
-    "crates/snm_tarball", 
+    "crates/snm_shim",
     "crates/dev-tools"
 , "e2e", "demo"]
 

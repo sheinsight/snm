@@ -1,4 +1,4 @@
-use std::env::{current_dir, current_exe};
+use std::env::current_exe;
 
 use crate::fig::fig_spec_impl;
 use crate::manage_command::ManageCommands;
@@ -37,7 +37,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {
                 if let Some(pm) = package_json.package_manager {
                     let pm = PackageManager::from_str(&pm, &snm_config)?;
-                    let command = match cli.command {
+                    let args = match cli.command {
                         // SnmCommands::Node { command } => todo!(),
                         SnmCommands::I(args) => pm.install(args),
                         SnmCommands::C(args) => pm.install(InstallArgs {
@@ -50,9 +50,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                         _ => unreachable!("unreachable"),
                     }?;
 
-                    let args = command.iter().skip(1).collect::<Vec<_>>();
-
-                    exec_cli(vec![], pm.library_name(), args)?;
+                    exec_cli(vec![], args)?;
                 } else {
                     bail!("No package manager found");
                 }
@@ -65,7 +63,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         SnmCommands::SetUp => {
             let exe = current_exe()?;
             let exe_dir = exe.parent().unwrap();
-            let dir = current_dir()?;
 
             const SHIM_TARGETS: &[&str] = &["npm", "npx", "yarn", "pnpm", "pnpx", "node"];
 
@@ -75,7 +72,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                 if target.try_exists()? {
                     std::fs::remove_file(&target)?;
                 }
-                // println!("{} -> {}", source.display(), target.display());
                 #[cfg(unix)]
                 {
                     std::os::unix::fs::symlink(&source, &target)?;

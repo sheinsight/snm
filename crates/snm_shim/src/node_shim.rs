@@ -5,7 +5,7 @@ use snm_config::SnmConfig;
 use snm_node_version::SNode;
 use snm_utils::exec::exec_cli;
 
-pub async fn node(bin_name: &str) -> anyhow::Result<()> {
+pub async fn node() -> anyhow::Result<()> {
     let cwd = current_dir()?;
 
     let config = SnmConfig::from(&cwd)?;
@@ -17,9 +17,7 @@ pub async fn node(bin_name: &str) -> anyhow::Result<()> {
 
     let node_bin_dir = node_version_reader.get_bin().await?;
 
-    println!("bin_name: {} , bin_args: {:?}", bin_name, bin_args);
-
-    exec_cli(vec![node_bin_dir], bin_name, &bin_args)?;
+    exec_cli(vec![node_bin_dir], bin_args)?;
 
     Ok(())
 }
