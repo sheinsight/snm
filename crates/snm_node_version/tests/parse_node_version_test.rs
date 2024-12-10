@@ -45,7 +45,7 @@ fn test_parse_node_version_start_with_v() -> Result<(), Box<dyn std::error::Erro
     let snm_config = SnmConfig::from(&workspace)?;
     let node_version_reader = SNode::try_from(&snm_config)?;
 
-    assert_eq!(node_version_reader.version, "20.0.1");
+    assert_eq!(node_version_reader.version, Some("20.0.1".to_string()));
 
     Ok(())
 }
