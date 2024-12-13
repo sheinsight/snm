@@ -32,6 +32,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
                 }
             }
         }
+        SnmCommands::Pnpm { command } => todo!(),
         // manage end
         SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) | SnmCommands::D(_) => {
             if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {

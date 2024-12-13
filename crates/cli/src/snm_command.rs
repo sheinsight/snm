@@ -30,6 +30,12 @@ pub enum SnmCommands {
         command: ManageCommands,
     },
 
+    #[command(about = "Manage package manager.")]
+    Pnpm {
+        #[command(subcommand)]
+        command: ManageCommands,
+    },
+
     #[command(about = "write fig spec to autocomplete build directory.")]
     FigSpec,
 

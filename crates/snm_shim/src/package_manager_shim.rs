@@ -21,7 +21,14 @@ pub async fn package_manager() -> anyhow::Result<()> {
         .get_bin()
         .await?;
 
-    exec_cli(vec![pm_bin_dir, node_bin_dir], args)?;
+    exec_cli(
+        vec![node_bin_dir],
+        vec![
+            "node".to_string(),
+            pm_bin_dir.to_string_lossy().to_string(),
+            args.iter().skip(1).map(|s| s.to_string()).collect(),
+        ],
+    )?;
 
     Ok(())
 }
