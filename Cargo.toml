@@ -5,7 +5,7 @@ members = [
     "crates/snm_npmrc", 
     "crates/snm_config", 
     "crates/snm_utils", 
-    "crates/snm_node_version", 
+    "crates/snm_node", 
     "crates/snm_download_builder", 
     "crates/snm_shim",
     "crates/dev-tools"
@@ -28,4 +28,7 @@ ignore-filename-regex = [
     ".*target/.*",
      ".*ordered-multimap-0.6.0/.*"
 ]
+
+[workspace.dependencies]
+dialoguer = "0.11.0"
  

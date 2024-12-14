@@ -4,7 +4,7 @@
         "./crates/snm_npmrc/Cargo.toml",
         "./crates/snm_config/Cargo.toml",
         "./crates/snm_utils/Cargo.toml",
-        "./crates/snm_node_version/Cargo.toml",
+        "./crates/snm_node/Cargo.toml",
     ],
     "cSpell.words": [
         "aarch",

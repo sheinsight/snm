@@ -42,11 +42,11 @@ pub struct InstallArgs {
     pub version: String,
 }
 
-pub struct NodeManager<'a> {
+pub struct NodeFactory<'a> {
     config: &'a SnmConfig,
 }
 
-impl<'a> NodeManager<'a> {
+impl<'a> NodeFactory<'a> {
     pub fn new(config: &'a SnmConfig) -> Self {
         Self { config }
     }

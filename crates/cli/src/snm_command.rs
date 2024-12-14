@@ -1,6 +1,9 @@
-use super::manage_command::ManageCommands;
+use super::manage_command::NodeManageCommands;
 use clap::Subcommand;
-use snm_package_json::ops::ops::{AddArgs, InstallArgs, RemoveArgs};
+use snm_package_json::{
+    factory::PackageManagerFactoryCommands,
+    ops::ops::{AddArgs, InstallArgs, RemoveArgs},
+};
 
 #[derive(Subcommand, Debug)]
 pub enum SnmCommands {
@@ -27,13 +30,30 @@ pub enum SnmCommands {
     #[command(about = "Manage node versions.")]
     Node {
         #[command(subcommand)]
-        command: ManageCommands,
+        command: NodeManageCommands,
     },
 
     #[command(about = "Manage package manager.")]
     Pnpm {
         #[command(subcommand)]
-        command: ManageCommands,
+        command: PackageManagerFactoryCommands,
+    },
+
+    #[command(about = "Manage yarn.")]
+    Yarn {
+        #[command(subcommand)]
+        command: PackageManagerFactoryCommands,
+    },
+
+    // #[command(about = "Manage yarn berry.")]
+    // YarnBerry {
+    //     #[command(subcommand)]
+    //     command: PackageManagerFactoryCommands,
+    // },
+    #[command(about = "Manage npm.")]
+    Npm {
+        #[command(subcommand)]
+        command: PackageManagerFactoryCommands,
     },
 
     #[command(about = "write fig spec to autocomplete build directory.")]

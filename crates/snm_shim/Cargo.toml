@@ -17,6 +17,6 @@ snm_utils = { path = "../snm_utils" }
 snm_config = { path = "../snm_config" }
 snm_download_builder ={ path = "../snm_download_builder" }
 snm_package_json = { path = "../snm_package_json" }
-snm_node_version = { path = "../snm_node_version" }
+snm_node = { path = "../snm_node" }
 anyhow = "1.0.79"
 tokio = { version = "1.0.0", features = ["full"] }

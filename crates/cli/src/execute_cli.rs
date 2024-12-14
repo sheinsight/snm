@@ -1,38 +1,70 @@
 use std::env::current_exe;
 
 use crate::fig::fig_spec_impl;
-use crate::manage_command::ManageCommands;
+use crate::manage_command::NodeManageCommands;
 use crate::snm_command::SnmCommands;
 use crate::SnmCli;
 use anyhow::bail;
 use snm_config::SnmConfig;
+use snm_package_json::factory::{PackageManagerFactory, PackageManagerFactoryCommands};
 use snm_package_json::ops::ops::InstallArgs;
 use snm_package_json::package_json::PackageJson;
 use snm_package_json::pm::PackageManager;
+
+use snm_package_json::pm_metadata::PackageManagerMetadata;
 use snm_utils::exec::exec_cli;
+
+async fn handle_package_manager(
+    pm_name: &str,
+    command: &PackageManagerFactoryCommands,
+    config: &SnmConfig,
+) -> anyhow::Result<()> {
+    let version = match command {
+        PackageManagerFactoryCommands::Install(args) => &args.version,
+        PackageManagerFactoryCommands::Default(args) => &args.version,
+        PackageManagerFactoryCommands::Uninstall(args) => &args.version,
+    };
+
+    let metadata = PackageManagerMetadata::from_str(&format!("{}@{}", pm_name, version), config)?;
+    let pm = PackageManagerFactory::new(&metadata);
+
+    match command {
+        PackageManagerFactoryCommands::Install(_) => pm.install().await,
+        PackageManagerFactoryCommands::Default(_) => pm.set_default().await,
+        PackageManagerFactoryCommands::Uninstall(_) => pm.uninstall().await,
+    }
+}
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
     match cli.command {
         // manage start
         SnmCommands::Node { command } => {
-            let nm = snm_node_version::manager::NodeManager::new(&snm_config);
+            let nm = snm_node::factory::NodeFactory::new(&snm_config);
 
             match command {
-                ManageCommands::Default(args) => {
+                NodeManageCommands::Default(args) => {
                     nm.set_default(args).await?;
                 }
-                ManageCommands::Install(args) => {
+                NodeManageCommands::Install(args) => {
                     nm.install(args).await?;
                 }
-                ManageCommands::Uninstall(args) => {
+                NodeManageCommands::Uninstall(args) => {
                     nm.uninstall(args).await?;
                 }
-                ManageCommands::List(args) => {
+                NodeManageCommands::List(args) => {
                     nm.list(args).await?;
                 }
             }
         }
-        SnmCommands::Pnpm { command } => todo!(),
+        SnmCommands::Pnpm { command } => {
+            handle_package_manager("pnpm", &command, &snm_config).await?
+        }
+        SnmCommands::Yarn { command } => {
+            handle_package_manager("yarn", &command, &snm_config).await?
+        }
+        SnmCommands::Npm { command } => {
+            handle_package_manager("npm", &command, &snm_config).await?
+        }
         // manage end
         SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) | SnmCommands::D(_) => {
             if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {

@@ -1,6 +1,6 @@
 mod downloader;
+pub mod factory;
 pub mod ops;
 pub mod package_json;
 pub mod pm;
-pub mod pm_factory;
 pub mod pm_metadata;

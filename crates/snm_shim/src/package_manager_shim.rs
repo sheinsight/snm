@@ -2,7 +2,7 @@ use std::env::{self, current_dir};
 
 use anyhow::Context;
 use snm_config::SnmConfig;
-use snm_node_version::SNode;
+use snm_node::SNode;
 use snm_package_json::pm::PackageManager;
 use snm_utils::exec::exec_cli;
 

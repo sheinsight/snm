@@ -21,7 +21,7 @@ const YARN_PACKAGE: &str = "yarn";
 const YARNPKG_PACKAGE: &str = "@yarnpkg/cli-dist";
 
 impl<'a> PackageManagerMetadata<'a> {
-    pub fn from(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+    pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
         static REGEX: Lazy<Regex> = Lazy::new(|| {
             Regex::new(r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$")
                 .expect("Invalid regex pattern")

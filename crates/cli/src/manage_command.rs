@@ -1,24 +1,13 @@
 use clap::Subcommand;
-use snm_node_version::{DefaultArgs, InstallArgs, ListArgs, UninstallArgs};
 
 #[derive(Subcommand, Debug)]
-pub enum ManageCommands {
+pub enum NodeManageCommands {
     /// Set default npm version
-    Default(DefaultArgs),
+    Default(snm_node::factory::DefaultArgs),
     /// Install npm
-    Install(InstallArgs),
+    Install(snm_node::factory::InstallArgs),
     /// Uninstall npm
-    Uninstall(UninstallArgs),
+    Uninstall(snm_node::factory::UninstallArgs),
     /// List installed npm versions
-    List(ListArgs),
-    // List remote npm versions
-    // ListRemote {
-    //     #[arg(
-    //         short,
-    //         long,
-    //         // default_value = "true",
-    //         help = "List all available versions"
-    //     )]
-    //     all: bool,
-    // },
+    List(snm_node::factory::ListArgs),
 }

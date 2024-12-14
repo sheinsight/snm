@@ -6,8 +6,8 @@ use snm_config::SnmConfig;
 
 use snm_utils::snm_error::SnmError;
 mod archive_extension;
-pub mod manager;
-pub use manager::*;
+pub mod factory;
+pub use factory::*;
 mod downloader;
 
 const FILE_NAME: &str = ".node-version";
