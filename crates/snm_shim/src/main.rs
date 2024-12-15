@@ -2,9 +2,9 @@ use std::env;
 
 use anyhow::{bail, Context};
 use node_shim::node;
-use package_manager_shim::package_manager;
+use pm_shim::package_manager;
 mod node_shim;
-mod package_manager_shim;
+mod pm_shim;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -15,7 +15,7 @@ async fn main() -> anyhow::Result<()> {
     const PM: [&str; 5] = ["npm", "npx", "pnpm", "pnpx", "yarn"];
 
     if PM.contains(&actual_bin_name.as_str()) {
-        package_manager().await?;
+        package_manager(actual_bin_name).await?;
     } else if actual_bin_name == "node" {
         node().await?;
     } else {

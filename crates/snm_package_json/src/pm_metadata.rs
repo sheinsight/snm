@@ -10,10 +10,23 @@ use snm_config::SnmConfig;
 pub struct PackageManagerMetadata<'a> {
     pub library_name: String,
     pub version: String,
-    pub hash_name: Option<String>,
-    pub hash_value: Option<String>,
+    // pub hash_name: Option<String>,
+    // pub hash_value: Option<String>,
+    pub hash: Option<PackageManagerHash>,
     pub config: &'a SnmConfig,
     pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct PackageManagerHash {
+    pub method: String,
+    pub value: String,
+}
+
+impl PackageManagerHash {
+    pub fn new(method: String, value: String) -> Self {
+        Self { method, value }
+    }
 }
 
 pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
@@ -40,8 +53,14 @@ impl<'a> PackageManagerMetadata<'a> {
             .map(|m| m.as_str().to_string())
             .with_context(|| "Missing version")?;
 
-        let hash_name = captures.name("hash_method").map(|s| s.as_str().to_string());
-        let hash_value = captures.name("hash_value").map(|s| s.as_str().to_string());
+        let hash = captures
+            .name("hash_method")
+            .and_then(|method| {
+                captures
+                    .name("hash_value")
+                    .map(|value| (method.as_str().to_string(), value.as_str().to_string()))
+            })
+            .map(|(method, value)| PackageManagerHash::new(method, value));
 
         let library_name = if name != YARN_PACKAGE {
             &name
@@ -61,8 +80,7 @@ impl<'a> PackageManagerMetadata<'a> {
         Ok(Self {
             library_name: library_name.to_owned(),
             version,
-            hash_name,
-            hash_value,
+            hash,
             config,
             name,
         })

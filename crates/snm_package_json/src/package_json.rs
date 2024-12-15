@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{bail, Context};
 use serde::Deserialize;
 use std::{
     collections::HashMap,
@@ -32,6 +32,7 @@ pub struct PackageJson {
 impl PackageJson {
     pub fn from<P: AsRef<Path>>(workspace: P) -> anyhow::Result<Self> {
         let raw_file_path = workspace.as_ref().join("package.json");
+
         raw_file_path
             .exists()
             .then(|| File::open(&raw_file_path).ok())

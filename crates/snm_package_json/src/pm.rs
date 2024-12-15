@@ -13,7 +13,7 @@ use crate::{
         yarn_berry::YarnBerryCommandLine,
     },
     package_json::PackageJson,
-    pm_metadata::{PackageManagerMetadata, SNM_PACKAGE_MANAGER_ENV_KEY},
+    pm_metadata::{PackageManagerHash, PackageManagerMetadata, SNM_PACKAGE_MANAGER_ENV_KEY},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -81,12 +81,8 @@ impl<'a> PackageManager<'a> {
         self.metadata().version.as_str()
     }
 
-    pub fn hash_name(&self) -> Option<&str> {
-        self.metadata().hash_name.as_deref()
-    }
-
-    pub fn hash_value(&self) -> Option<&str> {
-        self.metadata().hash_value.as_deref()
+    pub fn hash(&self) -> Option<&PackageManagerHash> {
+        self.metadata().hash.as_ref()
     }
 
     pub fn try_from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -99,17 +95,8 @@ impl<'a> PackageManager<'a> {
         PackageJson::from(&config.workspace)
             .ok()
             .and_then(|json| json.package_manager)
-            .map_or_else(
-                || Self::from_default(config),
-                |raw| Self::parse(&raw, config),
-            )
-    }
-
-    pub fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
-        if config.strict {
-            bail!("The strict mode is not supported for default package manager");
-        }
-        todo!("Get default package manager")
+            .and_then(|raw| Self::parse(&raw, config).ok())
+            .with_context(|| "Failed to determine package manager")
     }
 
     pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -119,6 +106,33 @@ impl<'a> PackageManager<'a> {
 
     pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
         Self::parse(raw, config)
+    }
+
+    pub fn from_default(actual_bin_name: &str, config: &'a SnmConfig) -> anyhow::Result<PathBuf> {
+        let actual_bin_name = if actual_bin_name == "npx" {
+            "npm"
+        } else if actual_bin_name == "pnpx" {
+            "pnpm"
+        } else {
+            actual_bin_name
+        };
+
+        if config.strict {
+            bail!("The strict mode is not supported for default package manager");
+        }
+
+        let wk = config
+            .node_modules_dir
+            .join(actual_bin_name)
+            .join("default");
+
+        let json = PackageJson::from(wk)?;
+
+        return json.get_bin_with_name(actual_bin_name);
+
+        // let metadata = PackageManagerMetadata::from_str(&json.package_manager.unwrap(), config)?;
+
+        // Ok(Self::from(metadata))
     }
 
     pub fn parse(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -225,8 +239,8 @@ mod tests {
 
         assert_eq!(pm.library_name(), "pnpm");
         assert_eq!(pm.version(), "9.0.0");
-        assert_eq!(pm.hash_name().as_deref(), Some("sha"));
-        assert_eq!(pm.hash_value().as_deref(), Some("1234567890"));
+        assert_eq!(pm.hash().unwrap().method, "sha");
+        assert_eq!(pm.hash().unwrap().value, "1234567890");
     }
 
     #[test]

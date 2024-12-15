@@ -1,7 +1,7 @@
 use std::env::{self, current_dir};
 
 use snm_config::SnmConfig;
-use snm_node_version::SNode;
+use snm_node::SNode;
 
 #[test]
 fn test_parse_no_node_version_file() -> Result<(), Box<dyn std::error::Error>> {
