@@ -8,8 +8,10 @@ members = [
     "crates/snm_node", 
     "crates/snm_download_builder", 
     "crates/snm_shim",
-    "crates/dev-tools"
-, "e2e", "demo"]
+    "crates/dev-tools",
+    "e2e",
+    "demo"
+]
 
 resolver = "2"
 
