@@ -1,25 +1,11 @@
 pub mod exec_builder;
 
-use std::{
-    env::current_dir,
-    path::PathBuf,
-    process::{Command, Stdio},
-};
-
+use duct::cmd;
+use std::path::PathBuf;
 use tempfile::tempdir;
+use textwrap::dedent;
 
-fn get_debug_dir() -> PathBuf {
-    // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
-    let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-    // 向上一级找到项目根目录
-    let root_dir = e2e_dir.parent().expect("Failed to get root dir");
-
-    // 进入 target/debug 目录
-    root_dir.join("target").join("debug")
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SnmEnv<T: AsRef<str> = String> {
     HomeDir(T),
     Strict(T),
@@ -65,44 +51,142 @@ impl<T: AsRef<str>> SnmEnv<T> {
     }
 }
 
-#[macro_export]
-macro_rules! exec {
-  (cwd: [$($path:expr),+], command: $command:expr, $(env: |$param:ident| => $block:expr,)?) => {{
-        let cwd = current_dir()?
-            .join("tests")
-            .join("fixtures")
-            $(.join($path))*;
+pub struct Args<'a, const N: usize> {
+    pub cwd: [&'a str; N],
+    pub env: Vec<SnmEnv>,
+}
 
+pub struct CommandBuilder {
+    name: String,
+    envs: Vec<(String, String)>,
+    cwd: PathBuf,
+    counter: usize,
+}
+
+impl CommandBuilder {
+    pub fn with_envs(name: &str, cwd: PathBuf, custom_envs: Vec<SnmEnv>) -> anyhow::Result<Self> {
         let tmp_dir = tempdir()?.into_path();
-
-        let debug_dir = get_debug_dir();
-
-        let mut envs:Vec<SnmEnv> = vec![
-          SnmEnv::HomeDir(tmp_dir.display().to_string()),
-          SnmEnv::Path(debug_dir.to_str().unwrap().to_string()),
+        let env_path = env!("PATH");
+        let debug_dir = Self::get_debug_dir().to_str().unwrap().to_string();
+        let mut envs: Vec<SnmEnv> = vec![
+            SnmEnv::Path(format!("{}:{}", debug_dir, env_path)),
+            SnmEnv::HomeDir(tmp_dir.display().to_string()),
         ];
+        envs.extend(custom_envs);
+        Ok(Self {
+            name: name.to_string(),
+            envs: envs.into_iter().map(|e| e.as_tuple()).collect::<Vec<_>>(),
+            cwd: cwd,
+            counter: 0,
+        })
+    }
 
-        $(
-            let custom_envs: Vec<SnmEnv> = (|$param: PathBuf| $block)(tmp_dir.clone());
-            envs.extend(custom_envs);
-        )?
+    pub fn get_debug_dir() -> PathBuf {
+        // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
+        let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
-        let envs: Vec<_> = envs.into_iter().map(|e| e.as_tuple()).collect::<Vec<_>>();
+        // 向上一级找到项目根目录
+        let root_dir = e2e_dir.parent().expect("Failed to get root dir");
 
-        let output = Command::new("node")
-            .args(["-v"])
-            .envs(envs)
-            .current_dir(cwd)
-            .output()?; // 直接执行命令
+        // 进入 target/debug 目录
+        root_dir.join("target").join("debug")
+    }
+
+    pub fn exec(&self, command: &str) -> anyhow::Result<String> {
+        let expr = if cfg!(target_os = "windows") {
+            cmd!("cmd", "/C", command)
+        } else {
+            cmd!("sh", "-c", command)
+        };
+
+        let output = expr
+            .full_env(self.envs.clone())
+            // .env(envs) // 设置环境变量
+            .dir(self.cwd.clone()) // 设置工作目录
+            .stdout_capture()
+            .stderr_capture() // 同时捕获输出
+            .unchecked()
+            .run()?;
 
         if !output.status.success() {
-            // 如果命令执行失败，返回错误信息
-            anyhow::bail!(
-                "Command failed: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            return Ok(String::from_utf8(output.stderr.clone())?.trim().to_string());
         }
 
-        String::from_utf8(output.stdout)?.trim().to_string()  // 添加 trim()
-    }};
+        Ok(String::from_utf8(output.stdout.clone())?.trim().to_string())
+    }
+
+    pub fn snapshot<F>(&mut self, command: &str, f: F) -> anyhow::Result<&mut Self>
+    where
+        F: Fn(&PathBuf, &str, &str),
+    {
+        self.counter += 1;
+        let current_dir = std::env::current_dir()?
+            .join("tests")
+            .join("snapshots")
+            .join(self.name.clone());
+        let res = self.exec(command)?;
+        let res = dedent(&format!(
+            r#"
+                        is: {}
+                        os: {}
+                        "#,
+            command, res
+        ));
+        let name = format!("{}_{}", self.name, self.counter);
+        f(&current_dir, &name, &res);
+        // insta::with_settings!({
+        //     snapshot_path => current_dir,  // 指定快照目录
+        // }, {
+        //     insta::assert_snapshot!(
+        //         format!("{}_{}", self.name, self.counter),
+        //         dedent(&format!(
+        //             r#"
+        //                 is: {}
+        //                 os: {}
+        //                 "#,
+        //             command,
+        //             res
+        //         ))
+        //     );
+        // });
+
+        Ok(self)
+    }
+}
+
+#[macro_export]
+macro_rules! assert_snapshot {
+    (
+        $(#[$attr:meta])*
+        $test_name:ident,
+        cwd: $cwd:expr,
+        envs: $envs:expr,
+        commands: [
+            $($cmd:expr),* $(,)?
+        ]
+    ) => {
+        $(#[$attr])*
+        async fn $test_name() -> anyhow::Result<()> {
+            let cwd = $cwd;
+            e2e::CommandBuilder::with_envs(
+                stringify!($test_name),
+                cwd,
+                $envs,
+            )?
+            $(
+                .snapshot($cmd, |snapshot_path, name, res| {
+                    insta::with_settings!({
+                        snapshot_path => snapshot_path,  // 指定快照目录
+                    }, {
+                        insta::assert_snapshot!(
+                            name,
+                            res
+                        );
+                    })
+                })?
+            )*;
+
+            Ok(())
+        }
+    };
 }

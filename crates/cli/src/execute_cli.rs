@@ -13,6 +13,7 @@ use snm_package_json::pm::PackageManager;
 
 use snm_package_json::pm_metadata::PackageManagerMetadata;
 use snm_utils::exec::exec_cli;
+use tokio::fs;
 
 async fn handle_package_manager(
     pm_name: &str,

@@ -104,13 +104,15 @@ impl<'a> NodeFactory<'a> {
             if confirm {
                 fs::remove_dir_all(&node_dir)?;
             } else {
-                exit(1);
+                exit(0);
             }
         }
 
         NodeDownloader::new(self.config)
             .download(&args.version)
             .await?;
+
+        println!("🎉 Node v{} is installed", &args.version.bright_green());
 
         Ok(())
     }
@@ -134,7 +136,11 @@ impl<'a> NodeFactory<'a> {
                 );
             }
         }
+
         fs::remove_dir_all(&node_dir)?;
+
+        println!("🎉 Node v{} is uninstalled", &args.version.bright_green());
+
         Ok(())
     }
 
@@ -159,17 +165,28 @@ impl<'a> NodeFactory<'a> {
         let local_node_list = self
             .config
             .node_bin_dir
-            .read_dir()?
-            .filter_map(|dir| dir.ok())
-            .map(|dir| dir.path())
-            .filter(|path| path.is_dir())
-            .filter_map(|path| {
-                path.file_name()
-                    .map(|name| name.to_string_lossy().into_owned())
+            .read_dir()
+            .ok()
+            .and_then(|dir| {
+                let responses = dir
+                    .filter_map(|dir| dir.ok())
+                    .map(|dir| dir.path())
+                    .filter(|path| path.is_dir())
+                    .filter_map(|path| {
+                        path.file_name()
+                            .map(|name| name.to_string_lossy().into_owned())
+                    })
+                    .filter(|v| v.eq("default").not())
+                    .sorted_by_cached_key(|v| Version::parse(v).ok())
+                    .collect::<Vec<String>>();
+
+                if responses.is_empty() {
+                    return None;
+                }
+
+                Some(responses)
             })
-            .filter(|v| v.eq("default").not())
-            .sorted_by_cached_key(|v| Version::parse(v).ok())
-            .collect::<Vec<String>>();
+            .unwrap_or_default();
 
         if args.compact {
             local_node_list.into_iter().for_each(|v| {

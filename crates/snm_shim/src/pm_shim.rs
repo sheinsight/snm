@@ -16,12 +16,7 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
 
     let snm_config = SnmConfig::from(&cwd)?;
 
-    let node_bin_dir = SNode::try_from(&snm_config)
-        .with_context(|| "Failed to determine Node.js version")?
-        .get_bin()
-        .await?;
-
-    println!("actual_bin_name: {}", actual_bin_name);
+    let node_bin_dir = SNode::try_from(&snm_config)?.get_bin().await?;
 
     let pm_bin_file = match PackageManager::try_from_env(&snm_config) {
         Ok(pm) => pm.get_bin(&args).await?,
@@ -33,13 +28,14 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
 
     if pm_bin_file == PathBuf::from(actual_bin_name) {
         // 存在死循环
-        exec_cli(
-            vec![node_bin_dir.clone()],
-            vec![
-                pm_bin_file.to_string_lossy().to_string(),
-                args.iter().skip(1).map(|s| s.to_string()).collect(),
-            ],
-        )?;
+        anyhow::bail!("Can't find command {} ", actual_bin_name);
+        // exec_cli(
+        //     vec![node_bin_dir.clone()],
+        //     vec![
+        //         pm_bin_file.to_string_lossy().to_string(),
+        //         args.iter().skip(1).map(|s| s.to_string()).collect(),
+        //     ],
+        // )?;
     } else {
         exec_cli(
             vec![node_bin_dir.clone()],

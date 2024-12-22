@@ -7,3 +7,6 @@ edition = "2021"
 tempfile = "3.3"
 tokio = { version = "1.39.0", features = ["full"] }
 anyhow = "1.0.7"
+insta = { workspace = true }
+duct = { workspace = true }
+textwrap = { workspace = true }

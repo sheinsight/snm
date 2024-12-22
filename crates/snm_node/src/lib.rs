@@ -23,13 +23,17 @@ pub struct SNode<'a> {
 impl<'a> SNode<'a> {
     pub fn try_from(config: &'a SnmConfig) -> anyhow::Result<Self> {
         Self::from_env(config)
-            .or_else(|_| Self::from(config))
-            .or_else(|_| Self::from_default(config))
+            .or_else(|_| Self::from_config_file(config))
+            .or_else(|_| {
+                if config.strict {
+                    bail!("In strict mode, a .node-version file must be configured in the current directory.");
+                }
+                Self::from_default(config)
+            })
     }
 
-    fn from(config: &'a SnmConfig) -> anyhow::Result<Self> {
+    fn from_config_file(config: &'a SnmConfig) -> anyhow::Result<Self> {
         let file_path = config.workspace.join(FILE_NAME);
-
         let version =
             Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
 
@@ -48,11 +52,11 @@ impl<'a> SNode<'a> {
     }
 
     fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
-        if !config.node_bin_dir.try_exists()? {
-            bail!("Node binary directory does not exist");
-        }
-
         let default_dir = config.node_bin_dir.join("default");
+
+        if !default_dir.try_exists()? {
+            bail!("No default Node.js version found");
+        }
 
         let version = default_dir
             .read_link()?

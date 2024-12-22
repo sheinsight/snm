@@ -1,0 +1,7 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+is: node -v
+os: v20.0.0

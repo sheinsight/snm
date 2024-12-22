@@ -4,6 +4,7 @@ use snm_npmrc::NpmrcReader;
 use snm_utils::snm_error::SnmError;
 use std::{
     env::{self},
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -68,17 +69,37 @@ impl SnmConfig {
             .or_else(|_| dirs::home_dir().ok_or(SnmError::GetHomeDirError))
             .map(|dir| dir.join(".snm"))?;
 
+        if !base_dir.try_exists()? {
+            fs::create_dir_all(&base_dir)?;
+        }
+
         let node_bin_dir = base_dir.join(config.node_bin_dir.unwrap_or(String::from("node_bin")));
+
+        if !node_bin_dir.try_exists()? {
+            fs::create_dir_all(&node_bin_dir)?;
+        }
 
         let download_dir = base_dir.join(config.download_dir.unwrap_or(String::from("downloads")));
 
+        if !download_dir.try_exists()? {
+            fs::create_dir_all(&download_dir)?;
+        }
+
         let cache_dir = base_dir.join(config.cache_dir.unwrap_or(String::from("cache")));
+
+        if !cache_dir.try_exists()? {
+            fs::create_dir_all(&cache_dir)?;
+        }
 
         let node_modules_dir = base_dir.join(
             config
                 .node_modules_dir
                 .unwrap_or(String::from("node_modules")),
         );
+
+        if !node_modules_dir.try_exists()? {
+            fs::create_dir_all(&node_modules_dir)?;
+        }
 
         let node_dist_url = config
             .node_dist_url

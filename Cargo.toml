@@ -33,4 +33,7 @@ ignore-filename-regex = [
 
 [workspace.dependencies]
 dialoguer = "0.11.0"
+insta = "1.36.1"
+duct = "0.13.7"
+textwrap = "0.16.0"
  
