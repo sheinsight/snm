@@ -1,4 +1,8 @@
-use std::{env, fs::read_to_string, path::Path};
+use std::{
+    env,
+    fs::read_to_string,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
@@ -87,7 +91,7 @@ impl<'a> SNode<'a> {
 }
 
 impl<'a> SNode<'a> {
-    pub async fn get_bin(&self) -> anyhow::Result<String> {
+    pub async fn get_bin(&self) -> anyhow::Result<PathBuf> {
         let version = self
             .version
             .as_deref()
@@ -102,12 +106,12 @@ impl<'a> SNode<'a> {
         let node_bin_file = node_bin_dir.join("node");
 
         if node_bin_file.try_exists()? {
-            return Ok(node_bin_dir.to_string_lossy().into_owned());
+            return Ok(node_bin_dir);
         }
 
         NodeDownloader::new(self.config).download(version).await?;
 
-        Ok(node_bin_dir.to_string_lossy().into_owned())
+        Ok(node_bin_dir)
     }
 
     fn check_v(&self, version: &str) -> anyhow::Result<()> {

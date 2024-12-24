@@ -1,0 +1,7 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+is: snm pnpm default 9.0.0
+os: 🎉 pnpm v9.0.0 is now default

@@ -1,0 +1,7 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+is: yarn -v
+os: Error: Can't find command yarn

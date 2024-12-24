@@ -67,3 +67,62 @@ e2e::assert_snapshot! {
         "node -v",
     ]
 }
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_set_default_pnpm,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "snm pnpm install 9.0.0",
+        "snm pnpm default 9.0.0",
+        "pnpm -v",
+    ]
+}
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_set_default_npm_with_node_20,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "npm -v",
+        "snm npm install 9.0.0",
+        "snm npm default 9.0.0",
+        "npm -v",
+    ]
+}
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_set_default_yarn,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "yarn -v",
+        "snm yarn install 1.22.22",
+        "snm yarn default 1.22.22",
+        "yarn -v",
+    ]
+}
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_set_default_yarn4,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "yarn -v",
+        "snm yarn install 4.0.0",
+        "snm yarn default 4.0.0",
+        "yarn -v",
+    ]
+}

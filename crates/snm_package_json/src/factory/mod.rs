@@ -108,6 +108,11 @@ impl<'a> PackageManagerFactory<'a> {
             .download_pm(&metadata.version)
             .await?;
 
+        println!(
+            "🎉 {} v{} is installed",
+            &metadata.library_name, &metadata.version
+        );
+
         Ok(())
     }
 

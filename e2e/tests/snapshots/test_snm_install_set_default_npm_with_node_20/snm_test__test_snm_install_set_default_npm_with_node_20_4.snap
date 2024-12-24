@@ -1,0 +1,7 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+is: snm npm install 9.0.0
+os: 🎉 npm v9.0.0 is installed

@@ -1,0 +1,7 @@
+---
+source: e2e/tests/npm_test.rs
+expression: res
+snapshot_kind: text
+---
+is: npm -v
+os: Error: No default Node.js version found
