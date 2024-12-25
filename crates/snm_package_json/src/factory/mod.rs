@@ -34,7 +34,7 @@ impl<'a> PackageManagerFactory<'a> {
         let dir = metadata
             .config
             .node_modules_dir
-            .join(&metadata.library_name)
+            .join(&metadata.name)
             .join(&metadata.version);
 
         let file = dir.join("package.json");
@@ -54,7 +54,7 @@ impl<'a> PackageManagerFactory<'a> {
         let default_dir = metadata
             .config
             .node_modules_dir
-            .join(&metadata.library_name)
+            .join(&metadata.name)
             .join("default");
 
         if default_dir.try_exists()? {
@@ -72,7 +72,7 @@ impl<'a> PackageManagerFactory<'a> {
 
         println!(
             "🎉 {} v{} is now default",
-            &metadata.library_name, &metadata.version
+            &metadata.name, &metadata.version
         );
 
         Ok(())
@@ -84,7 +84,7 @@ impl<'a> PackageManagerFactory<'a> {
         let dir = metadata
             .config
             .node_modules_dir
-            .join(&metadata.library_name)
+            .join(&metadata.name)
             .join(&metadata.version);
 
         let file = dir.join("package.json");
@@ -108,10 +108,7 @@ impl<'a> PackageManagerFactory<'a> {
             .download_pm(&metadata.version)
             .await?;
 
-        println!(
-            "🎉 {} v{} is installed",
-            &metadata.library_name, &metadata.version
-        );
+        println!("🎉 {} v{} is installed", &metadata.name, &metadata.version);
 
         Ok(())
     }
@@ -122,13 +119,13 @@ impl<'a> PackageManagerFactory<'a> {
         let dir = metadata
             .config
             .node_modules_dir
-            .join(&metadata.library_name)
+            .join(&metadata.name)
             .join(&metadata.version);
 
         if dir.try_exists()?.not() {
             let msg = format!(
                 "🤔 {} v{} is not installed",
-                &metadata.library_name, &metadata.version
+                &metadata.name, &metadata.version
             );
             eprintln!("{}", msg.bright_red());
             return Ok(());

@@ -3,5 +3,7 @@ source: e2e/tests/snm_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 4
 is: snm yarn install 1.22.22
-os: 🎉 yarn v1.22.22 is installed
+
+🎉 yarn v1.22.22 is installed

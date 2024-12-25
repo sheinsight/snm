@@ -3,5 +3,7 @@ source: e2e/tests/node_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 4
 is: snm node list --compact
-os: -> 20.0.0
+
+-> 20.0.0

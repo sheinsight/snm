@@ -3,5 +3,7 @@ source: e2e/tests/snm_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 5
 is: pnpm -v
-os: 9.0.0
+
+9.0.0

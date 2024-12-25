@@ -3,5 +3,7 @@ source: e2e/tests/npm_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 1
 is: npm -v
-os: Error: No default Node.js version found
+
+Error: No default Node.js version found

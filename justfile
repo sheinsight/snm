@@ -22,4 +22,4 @@ test:
 e2e:
     echo "Running end-to-end tests..."
     # cargo test --package e2e -- --nocapture
-    cargo insta test --review
+    cargo insta test -p e2e --review    

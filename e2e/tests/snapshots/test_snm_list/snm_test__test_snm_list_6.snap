@@ -3,8 +3,10 @@ source: e2e/tests/snm_test.rs
 expression: res
 snapshot_kind: text
 ---
-                        is: snm node list --remote
-                        os: 4.0.0        npm 2.14.2           openssl 1.0.2d       died on 2018-04-30     Argon     
+id: 6
+is: snm node list --remote
+
+4.0.0        npm 2.14.2           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.0        npm 2.14.3           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.1        npm 2.14.4           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.2        npm 2.14.4           openssl 1.0.2d       died on 2018-04-30     Argon     

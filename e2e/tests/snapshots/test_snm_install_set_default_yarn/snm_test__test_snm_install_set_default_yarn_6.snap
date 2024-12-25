@@ -3,5 +3,7 @@ source: e2e/tests/snm_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 6
 is: yarn -v
-os: 1.22.22
+
+1.22.22

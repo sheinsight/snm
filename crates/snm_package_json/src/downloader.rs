@@ -31,7 +31,7 @@ impl<'a> PackageManagerDownloader<'a> {
 
         let decompressed_dir_path_buf = config
             .node_modules_dir
-            .join(&self.metadata.library_name)
+            .join(&self.metadata.name)
             .join(version);
 
         self.decompress_download_file(&downloaded_file_path_buf, &decompressed_dir_path_buf)?;

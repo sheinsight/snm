@@ -127,10 +127,11 @@ impl CommandBuilder {
         let res = self.exec(command)?;
         let res = dedent(&format!(
             r#"
-                        is: {}
-                        os: {}
-                        "#,
-            command, res
+id: {}
+is: {}
+
+{}"#,
+            self.counter, command, res
         ));
         let name = format!("{}_{}", self.name, self.counter);
         f(&current_dir, &name, &res);

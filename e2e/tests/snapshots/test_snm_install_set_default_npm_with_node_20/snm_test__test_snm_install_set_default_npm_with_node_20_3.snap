@@ -3,5 +3,7 @@ source: e2e/tests/snm_test.rs
 expression: res
 snapshot_kind: text
 ---
+id: 3
 is: npm -v
-os: 9.6.4
+
+9.6.4
