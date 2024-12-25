@@ -1,0 +1,11 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+id: 4
+is: npm install
+
+up to date, audited 4 packages in 570ms
+
+found 0 vulnerabilities

@@ -1,0 +1,9 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+id: 1
+is: snm node install 20.0.0
+
+🎉 Node v20.0.0 is installed

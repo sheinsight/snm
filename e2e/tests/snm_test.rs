@@ -126,3 +126,34 @@ e2e::assert_snapshot! {
         "yarn -v",
     ]
 }
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_with_node_20_npm,
+    cwd: current_dir()?.join("tests").join("fixtures").join("snm_i_with_node_npm"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "npm -v",
+        "npm install",
+        "npm list",
+    ]
+}
+
+e2e::assert_snapshot! {
+    #[tokio::test]
+    test_snm_install_with_outside_pnpm,
+    cwd: current_dir()?.join("tests").join("fixtures").join("test_snm_install_with_outside_pnpm"),
+    envs: vec![],
+    commands: [
+        "snm node install 20.0.0",
+        "snm node default 20.0.0",
+        "npm -v",
+        "snm npm install 9.0.0",
+        "snm npm default 9.0.0",
+        "npm -v",
+        "npm install",
+        "npm list",
+    ]
+}
