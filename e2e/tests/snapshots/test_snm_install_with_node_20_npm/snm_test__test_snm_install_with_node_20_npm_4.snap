@@ -4,8 +4,6 @@ expression: res
 snapshot_kind: text
 ---
 id: 4
-is: npm install
+is: node index.cjs
 
-up to date, audited 4 packages in 570ms
-
-found 0 vulnerabilities
+18.3.1
