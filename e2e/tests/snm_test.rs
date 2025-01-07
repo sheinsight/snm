@@ -1,8 +1,5 @@
 use e2e::SnmEnv;
-use std::{
-    env::current_dir,
-    path::{Path, PathBuf},
-};
+use std::{env::current_dir, path::PathBuf};
 
 e2e::assert_snapshot! {
   #[tokio::test]
@@ -161,7 +158,7 @@ async fn test_snm_install_with_node_20_npm() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn test_snm_install_with_outside_pnpm() -> anyhow::Result<()> {
+async fn test_snm_install_with_outside_npm() -> anyhow::Result<()> {
     let cwd = current_dir()?
         .join("tests")
         .join("fixtures")
@@ -188,6 +185,36 @@ async fn test_snm_install_with_outside_pnpm() -> anyhow::Result<()> {
     builder.exec("npm install")?;
 
     builder.snapshot("node index.cjs", f)?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_when_node_modules_has_other_pm() -> anyhow::Result<()> {
+    let cwd = current_dir()?
+        .join("tests")
+        .join("fixtures")
+        .join("test_when_node_modules_has_other_pm");
+
+    let f = |snapshot_path: &PathBuf, name: &str, res: &str| {
+        insta::with_settings!({
+            snapshot_path => snapshot_path,  // 指定快照目录
+        }, {
+            insta::assert_snapshot!(name, res);
+        })
+    };
+
+    let mut builder =
+        e2e::CommandBuilder::with_envs("test_when_node_modules_has_other_pm", cwd, vec![])?;
+
+    builder.snapshot("snm node install 20.0.0", f)?;
+    builder.snapshot("snm node default 20.0.0", f)?;
+    builder.snapshot("npm -v", f)?;
+    builder.snapshot("snm pnpm install 9.0.0", f)?;
+    builder.snapshot("snm pnpm default 9.0.0", f)?;
+    builder.snapshot("pnpm -v", f)?;
+
+    builder.snapshot("pnpm dev", f)?;
 
     Ok(())
 }
