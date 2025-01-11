@@ -72,7 +72,6 @@ jobs:
         with:
           profile: minimal
           override: true
-          toolchain: nightly-2025-01-11
           target: ${{ matrix.target }}
       - name: Build binary
         uses: actions-rs/cargo@v1
