@@ -70,8 +70,8 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
-          override: true
+          # profile: minimal
+          # override: true
           target: ${{ matrix.target }}
       - name: Build binary
         uses: actions-rs/cargo@v1
