@@ -1,5 +1,6 @@
-use e2e::SnmEnv;
 use std::env::current_dir;
+
+use e2e::SnmEnv;
 
 e2e::test1! {
     #[tokio::test]

@@ -1,7 +1,7 @@
 use std::{
-    fs::File,
-    io::BufReader,
-    path::{Path, PathBuf},
+  fs::File,
+  io::BufReader,
+  path::{Path, PathBuf},
 };
 
 use anyhow::{bail, Context};
@@ -18,173 +18,174 @@ use zip::ZipArchive;
 use crate::archive_extension::ArchiveExtension;
 
 pub struct NodeDownloader<'a> {
-    config: &'a SnmConfig,
+  config: &'a SnmConfig,
 }
 
 impl<'a> NodeDownloader<'a> {
-    pub fn new(config: &'a SnmConfig) -> Self {
-        Self { config }
+  pub fn new(config: &'a SnmConfig) -> Self {
+    Self { config }
+  }
+
+  pub async fn download(&self, version: &str) -> anyhow::Result<PathBuf> {
+    let downloaded_file = self.download_node(&version).await?;
+
+    self.verify_shasum(&downloaded_file, &version).await?;
+
+    let node_dir = self.config.node_bin_dir.join(&version);
+
+    self.decompress(&downloaded_file, &node_dir)?;
+
+    Ok(node_dir)
+  }
+
+  fn decompress<T: AsRef<Path>, U: AsRef<Path>>(
+    &self,
+    downloaded_file_path_buf: T,
+    output_dir: U,
+  ) -> anyhow::Result<()> {
+    let format = ArchiveExtension::from_path(&downloaded_file_path_buf)?;
+    let file = File::open(&downloaded_file_path_buf)?;
+
+    let temp_dir = output_dir.as_ref().join("temp");
+    std::fs::create_dir_all(&temp_dir)?;
+    match format {
+      ArchiveExtension::Tgz => {
+        let decoder = GzDecoder::new(file);
+        let mut archive = Archive::new(decoder);
+        archive.unpack(&temp_dir)?;
+      }
+      ArchiveExtension::Xz => {
+        // 处理 xz
+        let xz = XzDecoder::new(file);
+        let mut archive = Archive::new(xz);
+        archive.unpack(&temp_dir)?;
+      }
+      ArchiveExtension::Zip => {
+        // 处理 zip
+        let mut archive = ZipArchive::new(file)?;
+        archive.extract(&temp_dir)?;
+      }
     }
 
-    pub async fn download(&self, version: &str) -> anyhow::Result<PathBuf> {
-        let downloaded_file = self.download_node(&version).await?;
+    // 获取解压后的第一个目录
+    let entry = std::fs::read_dir(&temp_dir)?
+      .next()
+      .ok_or_else(|| anyhow::anyhow!("No files found"))??;
 
-        self.verify_shasum(&downloaded_file, &version).await?;
-
-        let node_dir = self.config.node_bin_dir.join(&version);
-
-        self.decompress(&downloaded_file, &node_dir)?;
-
-        Ok(node_dir)
+    // 移动文件
+    for entry in std::fs::read_dir(entry.path())? {
+      let entry = entry?;
+      let target = output_dir.as_ref().join(entry.file_name());
+      std::fs::rename(entry.path(), target)?;
     }
 
-    fn decompress<T: AsRef<Path>, U: AsRef<Path>>(
-        &self,
-        downloaded_file_path_buf: T,
-        output_dir: U,
-    ) -> anyhow::Result<()> {
-        let format = ArchiveExtension::from_path(&downloaded_file_path_buf)?;
-        let file = File::open(&downloaded_file_path_buf)?;
+    // 清理临时目录
+    std::fs::remove_dir_all(&temp_dir)?;
 
-        let temp_dir = output_dir.as_ref().join("temp");
-        std::fs::create_dir_all(&temp_dir)?;
-        match format {
-            ArchiveExtension::Tgz => {
-                let decoder = GzDecoder::new(file);
-                let mut archive = Archive::new(decoder);
-                archive.unpack(&temp_dir)?;
-            }
-            ArchiveExtension::Xz => {
-                // 处理 xz
-                let xz = XzDecoder::new(file);
-                let mut archive = Archive::new(xz);
-                archive.unpack(&temp_dir)?;
-            }
-            ArchiveExtension::Zip => {
-                // 处理 zip
-                let mut archive = ZipArchive::new(file)?;
-                archive.extract(&temp_dir)?;
-            }
+    Ok(())
+  }
+
+  async fn verify_shasum(&self, file_path: &PathBuf, version: &str) -> anyhow::Result<()> {
+    let actual = self.get_actual_shasum(file_path).await?;
+    let expected = self.get_expect_shasum(version).await?;
+
+    if actual != expected {
+      bail!("Node binary shasum mismatch");
+    }
+    Ok(())
+  }
+
+  async fn get_actual_shasum<T: AsRef<Path>>(
+    &self,
+    downloaded_file_path_buf: T,
+  ) -> anyhow::Result<String> {
+    let file = File::open(downloaded_file_path_buf)?;
+    let mut reader = BufReader::new(file);
+    let mut hasher = Sha256::new();
+    std::io::copy(&mut reader, &mut hasher)?;
+    Ok(format!("{:x}", hasher.finalize()))
+  }
+
+  async fn get_expect_shasum(&self, version: &str) -> anyhow::Result<String> {
+    let sha256_url = format!(
+      "{host}/v{version}/SHASUMS256.txt",
+      host = self.config.node_dist_url,
+      version = version
+    );
+
+    let file_name = self.get_file_name(version);
+
+    let sha256_str = reqwest::get(&sha256_url).await?.text().await?;
+
+    sha256_str
+      .lines()
+      .find_map(|line| {
+        let mut parts = line.split_whitespace();
+        match (parts.next(), parts.next()) {
+          (Some(sha256), Some(file)) if file == file_name => Some(sha256.to_owned()),
+          _ => None,
         }
+      })
+      .with_context(|| "Invalid Node SHASUM line format")
+  }
 
-        // 获取解压后的第一个目录
-        let entry = std::fs::read_dir(&temp_dir)?
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("No files found"))??;
+  async fn download_node(&self, version: &str) -> anyhow::Result<PathBuf> {
+    let download_url = self.get_download_url(version);
+    let downloaded_file_path_buf = self.get_downloaded_path_buf(version);
 
-        // 移动文件
-        for entry in std::fs::read_dir(entry.path())? {
-            let entry = entry?;
-            let target = output_dir.as_ref().join(entry.file_name());
-            std::fs::rename(entry.path(), target)?;
-        }
+    let response = reqwest::Client::builder()
+      .build()?
+      .head(&download_url)
+      .send()
+      .await?;
 
-        // 清理临时目录
-        std::fs::remove_dir_all(&temp_dir)?;
-
-        Ok(())
+    if response.status() == StatusCode::NOT_FOUND {
+      bail!(
+        "Node {version} version not found",
+        version = version.bright_red()
+      );
     }
 
-    async fn verify_shasum(&self, file_path: &PathBuf, version: &str) -> anyhow::Result<()> {
-        let actual = self.get_actual_shasum(file_path).await?;
-        let expected = self.get_expect_shasum(version).await?;
+    DownloadBuilder::new()
+      .retries(3)
+      .timeout(self.config.download_timeout_secs)
+      .write_strategy(WriteStrategy::WriteAfterDelete)
+      .download(&download_url, &downloaded_file_path_buf)
+      .await?;
 
-        if actual != expected {
-            bail!("Node binary shasum mismatch");
-        }
-        Ok(())
-    }
+    Ok(downloaded_file_path_buf)
+  }
 
-    async fn get_actual_shasum<T: AsRef<Path>>(
-        &self,
-        downloaded_file_path_buf: T,
-    ) -> anyhow::Result<String> {
-        let file = File::open(downloaded_file_path_buf)?;
-        let mut reader = BufReader::new(file);
-        let mut hasher = Sha256::new();
-        std::io::copy(&mut reader, &mut hasher)?;
-        Ok(format!("{:x}", hasher.finalize()))
-    }
+  fn get_downloaded_path_buf(&self, version: &str) -> PathBuf {
+    let file_name = self.get_file_name(version);
+    self
+      .config
+      .download_dir
+      .join("node")
+      .join(version)
+      .join(file_name)
+  }
 
-    async fn get_expect_shasum(&self, version: &str) -> anyhow::Result<String> {
-        let sha256_url = format!(
-            "{host}/v{version}/SHASUMS256.txt",
-            host = self.config.node_dist_url,
-            version = version
-        );
+  fn get_file_name(&self, version: &str) -> String {
+    format!(
+      "node-v{version}-{os}-{arch}.{ext}",
+      version = version,
+      os = snm_utils::consts::os(),
+      arch = snm_utils::consts::arch(),
+      ext = snm_utils::consts::ext()
+    )
+  }
 
-        let file_name = self.get_file_name(version);
-
-        let sha256_str = reqwest::get(&sha256_url).await?.text().await?;
-
-        sha256_str
-            .lines()
-            .find_map(|line| {
-                let mut parts = line.split_whitespace();
-                match (parts.next(), parts.next()) {
-                    (Some(sha256), Some(file)) if file == file_name => Some(sha256.to_owned()),
-                    _ => None,
-                }
-            })
-            .with_context(|| "Invalid Node SHASUM line format")
-    }
-
-    async fn download_node(&self, version: &str) -> anyhow::Result<PathBuf> {
-        let download_url = self.get_download_url(version);
-        let downloaded_file_path_buf = self.get_downloaded_path_buf(version);
-
-        let response = reqwest::Client::builder()
-            .build()?
-            .head(&download_url)
-            .send()
-            .await?;
-
-        if response.status() == StatusCode::NOT_FOUND {
-            bail!(
-                "Node {version} version not found",
-                version = version.bright_red()
-            );
-        }
-
-        DownloadBuilder::new()
-            .retries(3)
-            .timeout(self.config.download_timeout_secs)
-            .write_strategy(WriteStrategy::WriteAfterDelete)
-            .download(&download_url, &downloaded_file_path_buf)
-            .await?;
-
-        Ok(downloaded_file_path_buf)
-    }
-
-    fn get_downloaded_path_buf(&self, version: &str) -> PathBuf {
-        let file_name = self.get_file_name(version);
-        self.config
-            .download_dir
-            .join("node")
-            .join(version)
-            .join(file_name)
-    }
-
-    fn get_file_name(&self, version: &str) -> String {
-        format!(
-            "node-v{version}-{os}-{arch}.{ext}",
-            version = version,
-            os = snm_utils::consts::os(),
-            arch = snm_utils::consts::arch(),
-            ext = snm_utils::consts::ext()
-        )
-    }
-
-    fn get_download_url(&self, version: &str) -> String {
-        format!(
-            "{host}/v{version}/node-v{version}-{os}-{arch}.{ext}",
-            host = self.config.node_dist_url,
-            version = version,
-            os = snm_utils::consts::os(),
-            arch = snm_utils::consts::arch(),
-            ext = snm_utils::consts::ext()
-        )
-    }
+  fn get_download_url(&self, version: &str) -> String {
+    format!(
+      "{host}/v{version}/node-v{version}-{os}-{arch}.{ext}",
+      host = self.config.node_dist_url,
+      version = version,
+      os = snm_utils::consts::os(),
+      arch = snm_utils::consts::arch(),
+      ext = snm_utils::consts::ext()
+    )
+  }
 }
 
 // pub const fn get_tarball_ext() -> &'static str {

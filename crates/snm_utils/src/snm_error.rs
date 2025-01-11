@@ -1,119 +1,120 @@
-use colored::*;
 use std::{env, path::PathBuf, process::exit};
+
+use colored::*;
 use thiserror::Error;
 
 use crate::fmtln;
 
 #[derive(Error, Debug)]
 pub enum SnmError {
-    #[error("Build config error: {0}")]
-    BuildConfigError(#[from] config::ConfigError),
+  #[error("Build config error: {0}")]
+  BuildConfigError(#[from] config::ConfigError),
 
-    #[error("IO error: {0}")]
-    IOError(#[from] std::io::Error),
+  #[error("IO error: {0}")]
+  IOError(#[from] std::io::Error),
 
-    #[error("Dialoguer error: {0}")]
-    DialoguerError(#[from] dialoguer::Error),
+  #[error("Dialoguer error: {0}")]
+  DialoguerError(#[from] dialoguer::Error),
 
-    #[error("Network error: {0}")]
-    NetworkError(#[from] reqwest::Error),
+  #[error("Network error: {0}")]
+  NetworkError(#[from] reqwest::Error),
 
-    #[error("Get var error :{0}")]
-    VarError(#[from] std::env::VarError),
+  #[error("Get var error :{0}")]
+  VarError(#[from] std::env::VarError),
 
-    #[error("Zip error: {0}")]
-    ZipError(#[from] zip::result::ZipError),
+  #[error("Zip error: {0}")]
+  ZipError(#[from] zip::result::ZipError),
 
-    #[error("Deserialize error: {0}")]
-    DeserializeError(#[from] serde_json::Error),
+  #[error("Deserialize error: {0}")]
+  DeserializeError(#[from] serde_json::Error),
 
-    #[error("Http status code not ok")]
-    HttpStatusCodeUnOk,
+  #[error("Http status code not ok")]
+  HttpStatusCodeUnOk,
 
-    #[error("Get home dir error")]
-    GetHomeDirError,
+  #[error("Get home dir error")]
+  GetHomeDirError,
 
-    #[error("Get workspace dir error")]
-    GetWorkspaceError,
+  #[error("Get workspace dir error")]
+  GetWorkspaceError,
 
-    #[error("No default node binary")]
-    NoDefaultNodeBinary,
+  #[error("No default node binary")]
+  NoDefaultNodeBinary,
 
-    #[error("File already exists {file_path}")]
-    FileAlreadyExists { file_path: PathBuf },
+  #[error("File already exists {file_path}")]
+  FileAlreadyExists { file_path: PathBuf },
 
-    #[error("Exceeded maximum retry attempts: {0}")]
-    ExceededMaxRetries(String),
+  #[error("Exceeded maximum retry attempts: {0}")]
+  ExceededMaxRetries(String),
 
-    #[error("{stderr}")]
-    SNMBinaryProxyFail { stderr: String },
+  #[error("{stderr}")]
+  SNMBinaryProxyFail { stderr: String },
 
-    #[error("Shasum error: {file_path} , expect: {expect} , actual: {actual}")]
-    ShasumError {
-        file_path: String,
-        expect: String,
-        actual: String,
-    },
+  #[error("Shasum error: {file_path} , expect: {expect} , actual: {actual}")]
+  ShasumError {
+    file_path: String,
+    expect: String,
+    actual: String,
+  },
 
-    #[error("Unsupported node version: {version}")]
-    UnsupportedNodeVersionError {
-        version: String,
-        node_white_list: Vec<String>,
-    },
+  #[error("Unsupported node version: {version}")]
+  UnsupportedNodeVersionError {
+    version: String,
+    node_white_list: Vec<String>,
+  },
 
-    #[error("Not found command: {bin_name}")]
-    NotFoundCommandError { bin_name: String },
+  #[error("Not found command: {bin_name}")]
+  NotFoundCommandError { bin_name: String },
 
-    #[error("Not found package.json file")]
-    NotFoundPackageJsonFileError {},
+  #[error("Not found package.json file")]
+  NotFoundPackageJsonFileError {},
 
-    #[error("Not found package manager config")]
-    NotFondPackageManagerConfigError {},
+  #[error("Not found package manager config")]
+  NotFondPackageManagerConfigError {},
 
-    #[error("{raw_package_manager}")]
-    ParsePackageManagerError { raw_package_manager: String },
+  #[error("{raw_package_manager}")]
+  ParsePackageManagerError { raw_package_manager: String },
 
-    #[error("Package manager version not match, expected: {expect}, actual: {actual}")]
-    NotMatchPackageManagerError {
-        raw_command: String,
-        expect: String,
-        actual: String,
-    },
+  #[error("Package manager version not match, expected: {expect}, actual: {actual}")]
+  NotMatchPackageManagerError {
+    raw_command: String,
+    expect: String,
+    actual: String,
+  },
 
-    #[error("Unsupported package manager: {name}")]
-    UnsupportedPackageManagerError {
-        raw: String,
-        name: String,
-        supported: Vec<String>,
-    },
+  #[error("Unsupported package manager: {name}")]
+  UnsupportedPackageManagerError {
+    raw: String,
+    name: String,
+    supported: Vec<String>,
+  },
 }
 
 pub fn create_error_message(message: String, descriptions: Vec<String>) -> String {
-    let description = descriptions
-        .iter()
-        .map(|value| format!("{:<4}{}", "", value))
-        .collect::<Vec<String>>()
-        .join("\r\n".repeat(1).as_str());
+  let description = descriptions
+    .iter()
+    .map(|value| format!("{:<4}{}", "", value))
+    .collect::<Vec<String>>()
+    .join("\r\n".repeat(1).as_str());
 
-    format!(
-        r##"
+  format!(
+    r##"
 {:<3}{}.
 
 {:<3}{}
 
 {}
 "##,
-        "👹", message, "📋", "Explain", description
-    )
+    "👹", message, "📋", "Explain", description
+  )
 }
 
 pub fn hack(error: SnmError) {
-    let white_list = env::var("SNM_NODE_WHITE_LIST").unwrap();
+  let white_list = env::var("SNM_NODE_WHITE_LIST").unwrap();
 
-    match error {
-        SnmError::NoDefaultNodeBinary => {
-            let message = format!(
-                r##"
+  match error {
+    SnmError::NoDefaultNodeBinary => {
+      let message = format!(
+        r##"
 错误: 没有找到可执行的默认 Node
 
 方案：
@@ -134,17 +135,17 @@ pub fn hack(error: SnmError) {
      请注意 Node 的版本号需要写完整。 错误实例: 20, 正确实例: 20.11.1。
      中括号指的是  [ 或 ]
 "##,
-                if white_list.len() > 0 {
-                    format!("目前支持的 node 版本如下 {}", white_list)
-                } else {
-                    "".to_string()
-                }
-            );
-            eprintln!("{}", message);
+        if white_list.len() > 0 {
+          format!("目前支持的 node 版本如下 {}", white_list)
+        } else {
+          "".to_string()
         }
-        SnmError::ExceededMaxRetries(url) => {
-            let message = format!(
-                r##"
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ExceededMaxRetries(url) => {
+      let message = format!(
+        r##"
 错误: 超过最大重试次数
 
 方案:
@@ -160,17 +161,17 @@ pub fn hack(error: SnmError) {
 注意:
      中括号指的是  [ 或 ]
             "##,
-                url
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::ShasumError {
-            file_path,
-            expect,
-            actual,
-        } => {
-            let message = format!(
-                r##"
+        url
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ShasumError {
+      file_path,
+      expect,
+      actual,
+    } => {
+      let message = format!(
+        r##"
 错误: 检查shasum错误
 
 方案:
@@ -185,17 +186,17 @@ pub fn hack(error: SnmError) {
      目前的版本包管理器没有进行 shasum 校验，只有 Node 的版本文件才会进行 shasum 校验。
 
             "##,
-                file_path, expect, actual
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::UnsupportedNodeVersionError {
-            version,
-            node_white_list,
-        } => {
-            let v_str = node_white_list.join(", ");
-            let message = format!(
-                r##"
+        file_path, expect, actual
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::UnsupportedNodeVersionError {
+      version,
+      node_white_list,
+    } => {
+      let v_str = node_white_list.join(", ");
+      let message = format!(
+        r##"
 错误: 你配置的 Node 版本不受支持
 
 方案:
@@ -208,15 +209,15 @@ pub fn hack(error: SnmError) {
     请注意 Node 的版本号需要写完整。 错误实例: 20, 正确实例: 20.11.1。
     我们只支持 {} 列表中的版本。
             "##,
-                version,
-                node_white_list.join(", "),
-                v_str
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotFoundPackageJsonFileError {} => {
-            let message = format!(
-                r##"
+        version,
+        node_white_list.join(", "),
+        v_str
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotFoundPackageJsonFileError {} => {
+      let message = format!(
+        r##"
 错误: 没有找到 package.json 文件
 
 方案:
@@ -231,12 +232,12 @@ pub fn hack(error: SnmError) {
     请注意 package.json 文件的位置，必须在项目的根目录下。
     请注意 package.json 文件的内容，必须是一个合法的 JSON 格式文件。
 "##,
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotFondPackageManagerConfigError {} => {
-            let message = format!(
-                r##"
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotFondPackageManagerConfigError {} => {
+      let message = format!(
+        r##"
 错误: 没有找到 packageManager 配置
 
 方案:
@@ -252,14 +253,14 @@ pub fn hack(error: SnmError) {
     请注意 packageManager 字段的配置内容，版本号必须写全，不支持简写版本号，例如: 9
     中括号指的是  [ 或 ]
 "##,
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::ParsePackageManagerError {
-            raw_package_manager,
-        } => {
-            let message = format!(
-                r##"
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ParsePackageManagerError {
+      raw_package_manager,
+    } => {
+      let message = format!(
+        r##"
 错误: 解析 packageManager 配置错误
 
 方案:
@@ -276,17 +277,17 @@ pub fn hack(error: SnmError) {
     请注意 packageManager 字段的配置内容，版本号必须写全，不支持简写版本号，例如: 9
     中括号指的是  [ 或 ]
 "##,
-                raw_package_manager
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotMatchPackageManagerError {
-            raw_command,
-            expect,
-            actual,
-        } => {
-            let message = format!(
-                r##"
+        raw_package_manager
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotMatchPackageManagerError {
+      raw_command,
+      expect,
+      actual,
+    } => {
+      let message = format!(
+        r##"
 错误: 你执行的命令不符合 packageManager 配置
 
 方案: 
@@ -303,17 +304,13 @@ pub fn hack(error: SnmError) {
     请注意 packageManager 字段的配置内容，版本号必须写全，不支持简写版本号，错误示例: 9，正确示例: 9.0.0
 
             "##,
-                raw_command, expect, actual
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::UnsupportedPackageManagerError {
-            raw,
-            name,
-            supported,
-        } => {
-            let message = format!(
-                r##"
+        raw_command, expect, actual
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::UnsupportedPackageManagerError { raw, name, .. } => {
+      let message = format!(
+        r##"
 错误: packageManager 配置的包管理器不支持
 
 方案:
@@ -326,14 +323,14 @@ pub fn hack(error: SnmError) {
 注意:
     请注意 packageManager 字段的配置内容，必须是 npm、yarn、pnpm 三者之一
             "##,
-                raw, name, name
-            );
-            eprintln!("{}", message);
-        }
+        raw, name, name
+      );
+      eprintln!("{}", message);
+    }
 
-        SnmError::NotFoundCommandError { bin_name } => {
-            let message = format!(
-                r##"
+    SnmError::NotFoundCommandError { bin_name } => {
+      let message = format!(
+        r##"
 错误: 没有找到命令 {}
 
 方案:
@@ -345,106 +342,106 @@ pub fn hack(error: SnmError) {
 注意:
     请注意你输入的命令是否正确，如果正确请检查你的环境变量是否配置正确。
             "##,
-                bin_name
-            );
-            eprintln!("{}", message);
-        }
-
-        SnmError::SNMBinaryProxyFail { stderr: _ } => {
-            // Don't do anything.
-        }
-
-        SnmError::HttpStatusCodeUnOk
-        | SnmError::GetWorkspaceError
-        | SnmError::DeserializeError(_)
-        | SnmError::NetworkError(_)
-        | SnmError::DialoguerError(_)
-        | SnmError::VarError(_)
-        | SnmError::ZipError(_)
-        | SnmError::BuildConfigError(_)
-        | SnmError::IOError(_)
-        | SnmError::GetHomeDirError
-        | SnmError::FileAlreadyExists { file_path: _ } => {
-            //             let msg = format!(
-            //                 r##"
-            // 错误:这不是一个预期内的错误
-
-            // 方案:
-            //     无
-
-            // 解释:
-            //     无
-
-            // 注意:
-            //     无
-            //             "##,
-            //             );
-            eprintln!("error {}", error.to_string());
-        }
+        bin_name
+      );
+      eprintln!("{}", message);
     }
+
+    SnmError::SNMBinaryProxyFail { stderr: _ } => {
+      // Don't do anything.
+    }
+
+    SnmError::HttpStatusCodeUnOk
+    | SnmError::GetWorkspaceError
+    | SnmError::DeserializeError(_)
+    | SnmError::NetworkError(_)
+    | SnmError::DialoguerError(_)
+    | SnmError::VarError(_)
+    | SnmError::ZipError(_)
+    | SnmError::BuildConfigError(_)
+    | SnmError::IOError(_)
+    | SnmError::GetHomeDirError
+    | SnmError::FileAlreadyExists { file_path: _ } => {
+      //             let msg = format!(
+      //                 r##"
+      // 错误:这不是一个预期内的错误
+
+      // 方案:
+      //     无
+
+      // 解释:
+      //     无
+
+      // 注意:
+      //     无
+      //             "##,
+      //             );
+      eprintln!("error {}", error.to_string());
+    }
+  }
 }
 
 pub fn friendly_error_message(error: SnmError) {
-    if let Ok(lang) = env::var("SNM_LANG") {
-        if lang == "cn_zh" {
-            hack(error);
-            exit(1);
-        }
+  if let Ok(lang) = env::var("SNM_LANG") {
+    if lang == "cn_zh" {
+      hack(error);
+      exit(1);
     }
+  }
 
-    match error {
-        SnmError::SNMBinaryProxyFail { stderr: _ } => {
-            // Don't do anything.
-        }
-        SnmError::NoDefaultNodeBinary => {
-            let message = create_error_message(
-                format!("No executable default Node found"),
-                vec![
-                    fmtln!(
-                        "Please use {} set default node",
-                        "snm node default [node version]".bold().bright_green()
-                    ),
-                    fmtln!(
-                        "Or use {}",
-                        "echo [node version] > .node-version".bold().bright_green()
-                    ),
-                ],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::ParsePackageManagerError {
-            raw_package_manager,
-        } => {
-            let message = create_error_message(
-                "Parse package manager error".to_string(),
-                vec![
-                    format!(
-                        "Please check the raw package manager configuration: {}",
-                        raw_package_manager.bold().red()
-                    ),
-                    format!(
-                        "Should satisfy {}, Example: {}",
-                        "[packageManager]@[version]".bold().green(),
-                        "npm@9.0.0".bold().green()
-                    ),
-                ],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::ExceededMaxRetries(url) => {
-            let message = create_error_message(
-                "Exceeded max retries".to_string(),
-                vec![
-                    fmtln!("URL {}", url.to_string().bold().red()),
-                    fmtln!("The download failed after 3 retries.",),
-                    fmtln!("Please check the network connection and the download URL",),
-                ],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::GetHomeDirError => {
-            eprintln!(
-                r##"
+  match error {
+    SnmError::SNMBinaryProxyFail { stderr: _ } => {
+      // Don't do anything.
+    }
+    SnmError::NoDefaultNodeBinary => {
+      let message = create_error_message(
+        format!("No executable default Node found"),
+        vec![
+          fmtln!(
+            "Please use {} set default node",
+            "snm node default [node version]".bold().bright_green()
+          ),
+          fmtln!(
+            "Or use {}",
+            "echo [node version] > .node-version".bold().bright_green()
+          ),
+        ],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ParsePackageManagerError {
+      raw_package_manager,
+    } => {
+      let message = create_error_message(
+        "Parse package manager error".to_string(),
+        vec![
+          format!(
+            "Please check the raw package manager configuration: {}",
+            raw_package_manager.bold().red()
+          ),
+          format!(
+            "Should satisfy {}, Example: {}",
+            "[packageManager]@[version]".bold().green(),
+            "npm@9.0.0".bold().green()
+          ),
+        ],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ExceededMaxRetries(url) => {
+      let message = create_error_message(
+        "Exceeded max retries".to_string(),
+        vec![
+          fmtln!("URL {}", url.to_string().bold().red()),
+          fmtln!("The download failed after 3 retries.",),
+          fmtln!("Please check the network connection and the download URL",),
+        ],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::GetHomeDirError => {
+      eprintln!(
+        r##"
         👹  Get home dir failed
 
             I think the possible reasons are:
@@ -469,128 +466,129 @@ pub fn friendly_error_message(error: SnmError) {
 
             Note: This function's behavior differs from std::env::home_dir, which works incorrectly on Linux, macOS and Windows.
             "##
-            );
-        }
-        SnmError::FileAlreadyExists { file_path } => {
-            let message = create_error_message(
-                "File already exists".to_string(),
-                vec![format!(
-                    "The file {} already exists.",
-                    file_path.to_string_lossy().bold().red()
-                )],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotFoundCommandError { bin_name } => {
-            let message = create_error_message(
-                format!("Not found command {}", bin_name.bold().red()),
-                vec![format!(
-                    "The command {} is not found in the current environment.",
-                    bin_name.bold().red()
-                )],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotMatchPackageManagerError {
-            raw_command,
-            expect,
-            actual,
-        } => {
-            let message = create_error_message(
-                "Not match package manager".to_string(),
-                vec![
-                    format!("You input: {}", raw_command.bright_black()),
-                    format!("Expect {}", expect.green()),
-                    format!("Actual {}", actual.red()),
-                ],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::ShasumError {
-            file_path,
-            expect,
-            actual,
-        } => {
-            let message = create_error_message(
-                "Check shasum error".to_string(),
-                vec![
-                    format!("File path {}", file_path.bright_black()),
-                    format!("Expect {}", expect.bold().green()),
-                    format!("Actual {}", actual.bold().red()),
-                ],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotFoundPackageJsonFileError {} => {
-            let message = create_error_message(
-                "Not found package.json file".to_string(),
-                vec![format!(
-                    "Please check the current directory, whether the package.json file exists."
-                )],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::NotFondPackageManagerConfigError {} => {
-            let message = create_error_message(
-                "Not found packageManager config".to_string(),
-                vec![format!(
-                    "Please check the package.json file, whether the packageManager field exists."
-                )],
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::UnsupportedNodeVersionError {
-            version,
-            node_white_list,
-        } => {
-            let message = create_error_message(
-                format!("Unsupported node {}", version.bold().bright_red()),
-                vec![
-                    vec![fmtln!("{}", "Only the following list is supported:")],
-                    node_white_list
-                        .iter()
-                        .map(|item| format!("- {}", item).to_string())
-                        .collect::<Vec<String>>(),
-                ]
-                .concat(),
-            );
-            eprintln!("{}", message);
-        }
-        SnmError::UnsupportedPackageManagerError {
-            raw,
-            name,
-            supported,
-        } => {
-            let message = create_error_message(
-                format!("Unsupported packageManager {}", name.bold().bright_red()),
-                vec![
-                    vec![
-                        fmtln!("The raw package manager configuration is {}, Only the following list is supported:", raw.bold().bright_red()),
-                    ],
-                    supported
-                        .iter()
-                        .map(|item| format!("- {}", item).to_string())
-                        .collect::<Vec<String>>(),
-                ]
-                .concat(),
-            );
-            eprintln!("{}", message);
-        }
-
-        SnmError::HttpStatusCodeUnOk
-        | SnmError::GetWorkspaceError
-        | SnmError::DeserializeError(_)
-        | SnmError::NetworkError(_)
-        | SnmError::DialoguerError(_)
-        | SnmError::VarError(_)
-        | SnmError::ZipError(_)
-        | SnmError::BuildConfigError(_)
-        | SnmError::IOError(_) => {
-            let msg = format!("{}", error.to_string());
-            // panic!("{msg}");
-            eprintln!("[error]: {}", msg);
-        }
+      );
+    }
+    SnmError::FileAlreadyExists { file_path } => {
+      let message = create_error_message(
+        "File already exists".to_string(),
+        vec![format!(
+          "The file {} already exists.",
+          file_path.to_string_lossy().bold().red()
+        )],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotFoundCommandError { bin_name } => {
+      let message = create_error_message(
+        format!("Not found command {}", bin_name.bold().red()),
+        vec![format!(
+          "The command {} is not found in the current environment.",
+          bin_name.bold().red()
+        )],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotMatchPackageManagerError {
+      raw_command,
+      expect,
+      actual,
+    } => {
+      let message = create_error_message(
+        "Not match package manager".to_string(),
+        vec![
+          format!("You input: {}", raw_command.bright_black()),
+          format!("Expect {}", expect.green()),
+          format!("Actual {}", actual.red()),
+        ],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::ShasumError {
+      file_path,
+      expect,
+      actual,
+    } => {
+      let message = create_error_message(
+        "Check shasum error".to_string(),
+        vec![
+          format!("File path {}", file_path.bright_black()),
+          format!("Expect {}", expect.bold().green()),
+          format!("Actual {}", actual.bold().red()),
+        ],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotFoundPackageJsonFileError {} => {
+      let message = create_error_message(
+        "Not found package.json file".to_string(),
+        vec![format!(
+          "Please check the current directory, whether the package.json file exists."
+        )],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::NotFondPackageManagerConfigError {} => {
+      let message = create_error_message(
+        "Not found packageManager config".to_string(),
+        vec![format!(
+          "Please check the package.json file, whether the packageManager field exists."
+        )],
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::UnsupportedNodeVersionError {
+      version,
+      node_white_list,
+    } => {
+      let message = create_error_message(
+        format!("Unsupported node {}", version.bold().bright_red()),
+        vec![
+          vec![fmtln!("{}", "Only the following list is supported:")],
+          node_white_list
+            .iter()
+            .map(|item| format!("- {}", item).to_string())
+            .collect::<Vec<String>>(),
+        ]
+        .concat(),
+      );
+      eprintln!("{}", message);
+    }
+    SnmError::UnsupportedPackageManagerError {
+      raw,
+      name,
+      supported,
+    } => {
+      let message = create_error_message(
+        format!("Unsupported packageManager {}", name.bold().bright_red()),
+        vec![
+          vec![fmtln!(
+            "The raw package manager configuration is {}, Only the following list is supported:",
+            raw.bold().bright_red()
+          )],
+          supported
+            .iter()
+            .map(|item| format!("- {}", item).to_string())
+            .collect::<Vec<String>>(),
+        ]
+        .concat(),
+      );
+      eprintln!("{}", message);
     }
 
-    exit(1);
+    SnmError::HttpStatusCodeUnOk
+    | SnmError::GetWorkspaceError
+    | SnmError::DeserializeError(_)
+    | SnmError::NetworkError(_)
+    | SnmError::DialoguerError(_)
+    | SnmError::VarError(_)
+    | SnmError::ZipError(_)
+    | SnmError::BuildConfigError(_)
+    | SnmError::IOError(_) => {
+      let msg = format!("{}", error.to_string());
+      // panic!("{msg}");
+      eprintln!("[error]: {}", msg);
+    }
+  }
+
+  exit(1);
 }

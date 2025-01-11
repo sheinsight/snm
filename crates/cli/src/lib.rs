@@ -19,12 +19,12 @@ pub mod execute_cli;
     )
 ]
 pub struct SnmCli {
-    #[command(subcommand)]
-    pub command: SnmCommands,
-    #[arg(
+  #[command(subcommand)]
+  pub command: SnmCommands,
+  #[arg(
         short = 'v',
         long = "version",
         action = clap::ArgAction::Version
     )]
-    version: Option<bool>,
+  version: Option<bool>,
 }

@@ -8,19 +8,19 @@ mod pm_shim;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let args: Vec<String> = env::args().collect();
+  let args: Vec<String> = env::args().collect();
 
-    let actual_bin_name = args.get(0).context("bin name not found")?;
+  let actual_bin_name = args.get(0).context("bin name not found")?;
 
-    const PM: [&str; 5] = ["npm", "npx", "pnpm", "pnpx", "yarn"];
+  const PM: [&str; 5] = ["npm", "npx", "pnpm", "pnpx", "yarn"];
 
-    if PM.contains(&actual_bin_name.as_str()) {
-        package_manager(actual_bin_name).await?;
-    } else if actual_bin_name == "node" {
-        node().await?;
-    } else {
-        bail!("Unknown command: {}", actual_bin_name);
-    }
+  if PM.contains(&actual_bin_name.as_str()) {
+    package_manager(actual_bin_name).await?;
+  } else if actual_bin_name == "node" {
+    node().await?;
+  } else {
+    bail!("Unknown command: {}", actual_bin_name);
+  }
 
-    Ok(())
+  Ok(())
 }

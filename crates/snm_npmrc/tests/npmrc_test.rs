@@ -4,28 +4,28 @@ use snm_npmrc::NpmrcReader;
 
 #[test]
 fn test() {
-    let c = current_dir()
-        .unwrap()
-        .join("tests")
-        .join("features")
-        .join("project");
+  let c = current_dir()
+    .unwrap()
+    .join("tests")
+    .join("features")
+    .join("project");
 
-    env::set_var(
-        "PREFIX",
-        current_dir()
-            .unwrap()
-            .join("tests")
-            .join("features")
-            .join("global")
-            .display()
-            .to_string(),
-    );
+  env::set_var(
+    "PREFIX",
+    current_dir()
+      .unwrap()
+      .join("tests")
+      .join("features")
+      .join("global")
+      .display()
+      .to_string(),
+  );
 
-    let npmrc = NpmrcReader::from(&c);
+  let npmrc = NpmrcReader::from(&c);
 
-    let registry = npmrc.read_registry_with_default();
-    assert_eq!(registry, "https://project.com".to_string());
+  let registry = npmrc.read_registry_with_default();
+  assert_eq!(registry, "https://project.com".to_string());
 
-    let cache = npmrc.read("cache");
-    assert_eq!(cache, Some("~/.hello".to_string()));
+  let cache = npmrc.read("cache");
+  assert_eq!(cache, Some("~/.hello".to_string()));
 }
