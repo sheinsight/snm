@@ -1,7 +1,0 @@
----
-source: e2e/src/lib.rs
-expression: "dedent(&format!(r#\"\n                        is: {}\n                        os: {}\n                        \"#,\n            command, res))"
-snapshot_kind: text
----
-is: snm node list --compact
-os:

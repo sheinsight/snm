@@ -10,3 +10,7 @@ anyhow = "1.0.7"
 insta = { workspace = true }
 duct = { workspace = true }
 textwrap = { workspace = true }
+wiremock = { workspace = true }
+serde_json = { workspace = true }
+semver = "1.0.23"
+snm_utils = { path = "../crates/snm_utils" }

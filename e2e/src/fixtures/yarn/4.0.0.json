@@ -1,0 +1,67 @@
+{
+    "name": "@yarnpkg/cli-dist",
+    "version": "4.0.0",
+    "license": "BSD-2-Clause",
+    "_id": "@yarnpkg/cli-dist@4.0.0",
+    "maintainers": [
+        {
+            "name": "daniel15",
+            "email": "npm@d.sb"
+        },
+        {
+            "name": "sebmck",
+            "email": "npm@sebastian.barretomckenzie.com"
+        },
+        {
+            "name": "bestander",
+            "email": "bestander@gmail.com"
+        },
+        {
+            "name": "cpojer",
+            "email": "christoph.pojer@gmail.com"
+        },
+        {
+            "name": "arcanis",
+            "email": "nison.mael@gmail.com"
+        },
+        {
+            "name": "yarnbot",
+            "email": "nison.mael+yarnbot.npm@gmail.com"
+        }
+    ],
+    "bin": {
+        "yarn": "bin/yarn.js",
+        "yarnpkg": "bin/yarn.js"
+    },
+    "dist": {
+        "shasum": "f18cff585eee6aa85ade57753c87d9d7df26f6a2",
+        "tarball": "https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz",
+        "fileCount": 5,
+        "integrity": "sha512-QwC0IthvIfNSv5z33Yppq+nnpuPRc3y2vtzyZW9Y0RqWhV6zJ0BbfA1mWV39mEdCwtkFMXOQ0PRGqypbpI9Ptg==",
+        "signatures": [
+            {
+                "sig": "MEYCIQCTx9ITTwmC46ZhPGqVZjbmyTtS0g3zFS2cclClwxARAQIhAI2cy7BZwYwUjjO5dgzEhrwFkD1MWGbtlgnPc1YwEvgt",
+                "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+            }
+        ],
+        "unpackedSize": 2732449
+    },
+    "engines": {
+        "node": ">=18.12.0"
+    },
+    "_npmUser": {
+        "name": "yarnbot",
+        "email": "nison.mael+yarnbot.npm@gmail.com"
+    },
+    "repository": {
+        "url": "ssh://git@github.com/yarnpkg/berry.git",
+        "type": "git",
+        "directory": "packages/yarnpkg-cli"
+    },
+    "directories": {},
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+        "tmp": "tmp/cli-dist_4.0.0_1697993818931_0.09856609951371431",
+        "host": "s3://npm-registry-packages"
+    }
+}

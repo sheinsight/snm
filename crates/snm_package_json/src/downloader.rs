@@ -12,6 +12,16 @@ use tar::Archive;
 
 use crate::{package_json::PackageJson, pm_metadata::PackageManagerMetadata};
 
+#[derive(serde::Deserialize)]
+struct NpmResponse {
+    dist: Dist,
+}
+
+#[derive(serde::Deserialize)]
+struct Dist {
+    shasum: String,
+}
+
 pub struct PackageManagerDownloader<'a> {
     metadata: &'a PackageManagerMetadata<'a>,
 }
@@ -80,16 +90,9 @@ impl<'a> PackageManagerDownloader<'a> {
     async fn get_expect_shasum(&self, version: &str) -> anyhow::Result<String> {
         let url = self.get_expect_shasum_url(version);
 
-        let resp = reqwest::get(&url)
-            .await?
-            .json::<serde_json::Value>()
-            .await?;
+        let resp = reqwest::get(&url).await?.json::<NpmResponse>().await?;
 
-        resp.get("dist")
-            .and_then(|item| item.get("shasum"))
-            .and_then(|item| item.as_str())
-            .map(|item| item.to_string())
-            .with_context(|| format!("Invalid SHASUM line format"))
+        Ok(resp.dist.shasum)
     }
 
     fn get_expect_shasum_url(&self, version: &str) -> String {

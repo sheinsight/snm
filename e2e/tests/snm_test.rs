@@ -1,220 +1,225 @@
 use e2e::SnmEnv;
-use std::{env::current_dir, path::PathBuf};
+use std::env::current_dir;
 
-e2e::assert_snapshot! {
-  #[tokio::test]
-  test_snm_install_node,
-  cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: vec![],
-  commands: [
-    "snm node install 20.0.0",
-    "snm node list --compact",
-  ]
+e2e::test1! {
+    #[tokio::test]
+    test_snm_install_node,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node list --compact")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
-  #[tokio::test]
-  test_snm_uninstall_node,
-  cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: vec![],
-  commands: [
-    "snm node install 20.0.0",
-    "snm node list --compact",
-    "snm node uninstall 20.0.0",
-    "snm node list --compact",
-  ]
+e2e::test1! {
+    #[tokio::test]
+    test_snm_uninstall_node,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node list --compact")?;
+        builder.add_snapshot("snm node uninstall 20.0.0")?;
+        builder.add_snapshot("snm node list --compact")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
-  #[tokio::test]
-  test_snm_set_default_node,
-  cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: vec![],
-  commands: [
-    "snm node install 20.0.0",
-    "snm node default 20.0.0",
-    "node -v",
-  ]
+e2e::test1! {
+    #[tokio::test]
+    test_snm_set_default_node,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("node -v")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
-  #[tokio::test]
-  test_snm_list,
-  cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: vec![],
-  commands: [
-    "snm node install 20.0.0",
-    "snm node list",
-    "snm node default 20.0.0",
-    "snm node list",
-    "snm node list --compact",
-    "snm node list --remote",
-  ]
+e2e::test1! {
+    #[tokio::test]
+    test_snm_list,
+    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node list")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("snm node list")?;
+        builder.add_snapshot("snm node list --compact")?;
+        builder.add_snapshot("snm node list --remote")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
+e2e::test1! {
     #[tokio::test]
     test_snm_list_with_strict_mode,
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-    envs: vec![SnmEnv::Strict("true".to_string())],
-    commands: [
-        "snm node install 20.0.0",
-        "snm node list",
-        "snm node default 20.0.0",
-        "snm node list",
-        "snm node list --compact",
-        "snm node list --remote",
-        "node -v",
-    ]
+
+    envs:[SnmEnv::Strict("true".to_string())],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node list")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("snm node list")?;
+        builder.add_snapshot("snm node list --compact")?;
+        builder.add_snapshot("snm node list --remote")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
+e2e::test1! {
     #[tokio::test]
     test_snm_install_set_default_pnpm,
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-    envs: vec![],
-    commands: [
-        "snm node install 20.0.0",
-        "snm node default 20.0.0",
-        "snm pnpm install 9.0.0",
-        "snm pnpm default 9.0.0",
-        "pnpm -v",
-    ]
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("pnpm -v")?;
+        builder.add_snapshot("snm pnpm install 9.0.0")?;
+        builder.add_snapshot("snm pnpm default 9.0.0")?;
+        builder.add_snapshot("pnpm -v")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
+e2e::test1! {
     #[tokio::test]
     test_snm_install_set_default_npm_with_node_20,
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-    envs: vec![],
-    commands: [
-        "snm node install 20.0.0",
-        "snm node default 20.0.0",
-        "npm -v",
-        "snm npm install 9.0.0",
-        "snm npm default 9.0.0",
-        "npm -v",
-    ]
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.add_snapshot("snm npm install 9.0.0")?;
+        builder.add_snapshot("snm npm default 9.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
+e2e::test1! {
     #[tokio::test]
     test_snm_install_set_default_yarn,
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-    envs: vec![],
-    commands: [
-        "snm node install 20.0.0",
-        "snm node default 20.0.0",
-        "yarn -v",
-        "snm yarn install 1.22.22",
-        "snm yarn default 1.22.22",
-        "yarn -v",
-    ]
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("yarn -v")?;
+        builder.add_snapshot("snm yarn install 1.22.22")?;
+        builder.add_snapshot("snm yarn default 1.22.22")?;
+        builder.add_snapshot("yarn -v")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-e2e::assert_snapshot! {
+e2e::test1! {
     #[tokio::test]
     test_snm_install_set_default_yarn4,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-    envs: vec![],
-    commands: [
-        "snm node install 20.0.0",
-        "snm node default 20.0.0",
-        "yarn -v",
-        "snm yarn install 4.0.0",
-        "snm yarn default 4.0.0",
-        "yarn -v",
-    ]
+    cwd:current_dir()?.join("tests").join("fixtures").join("empty"),
+
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("yarn -v")?;
+        builder.add_snapshot("snm yarn install 4.0.0")?;
+        builder.add_snapshot("snm yarn default 4.0.0")?;
+        builder.add_snapshot("yarn -v")?;
+        builder.assert_snapshots(|name,res| {
+            insta::assert_snapshot!(name, res);
+        })?;
+    }
 }
 
-#[tokio::test]
-async fn test_snm_install_with_node_20_npm() -> anyhow::Result<()> {
-    let cwd = current_dir()?
-        .join("tests")
-        .join("fixtures")
-        .join("snm_i_with_node_npm");
+e2e::test1! {
+    #[tokio::test]
+    test_snm_install_with_node_20_npm,
+    cwd: current_dir()?.join("tests").join("fixtures").join("snm_i_with_node_npm"),
 
-    let f = |snapshot_path: &PathBuf, name: &str, res: &str| {
-        insta::with_settings!({
-            snapshot_path => snapshot_path,  // 指定快照目录
-        }, {
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.exec("npm install")?;
+        builder.add_snapshot("node index.cjs")?;
+        builder.assert_snapshots(|name,res| {
             insta::assert_snapshot!(name, res);
-        })
-    };
-
-    let mut builder =
-        e2e::CommandBuilder::with_envs("test_snm_install_with_node_20_npm", cwd, vec![])?;
-
-    builder
-        .snapshot("snm node install 20.0.0", f)?
-        .snapshot("snm node default 20.0.0", f)?
-        .snapshot("npm -v", f)?;
-
-    builder.exec("npm install")?;
-
-    builder.snapshot("node index.cjs", f)?;
-
-    Ok(())
+        })?;
+    }
 }
 
-#[tokio::test]
-async fn test_snm_install_with_outside_npm() -> anyhow::Result<()> {
-    let cwd = current_dir()?
-        .join("tests")
-        .join("fixtures")
-        .join("test_snm_install_with_outside_pnpm");
+e2e::test1! {
+    #[tokio::test]
+    test_snm_install_with_outside_npm,
+    cwd:current_dir()?
+    .join("tests")
+    .join("fixtures")
+    .join("test_snm_install_with_outside_pnpm"),
 
-    let f = |snapshot_path: &PathBuf, name: &str, res: &str| {
-        insta::with_settings!({
-            snapshot_path => snapshot_path,  // 指定快照目录
-        }, {
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.add_snapshot("snm node install 20.0.0")?;
+        builder.add_snapshot("snm node default 20.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.add_snapshot("snm npm install 9.0.0")?;
+        builder.add_snapshot("snm npm default 9.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.exec("npm install")?;
+        builder.add_snapshot("node index.cjs")?;
+        builder.assert_snapshots(|name,res| {
             insta::assert_snapshot!(name, res);
-        })
-    };
-
-    let mut builder =
-        e2e::CommandBuilder::with_envs("test_snm_install_with_outside_pnpm", cwd, vec![])?;
-
-    builder.snapshot("snm node install 20.0.0", f)?;
-    builder.snapshot("snm node default 20.0.0", f)?;
-    builder.snapshot("npm -v", f)?;
-    builder.snapshot("snm npm install 9.0.0", f)?;
-    builder.snapshot("snm npm default 9.0.0", f)?;
-    builder.snapshot("npm -v", f)?;
-
-    builder.exec("npm install")?;
-
-    builder.snapshot("node index.cjs", f)?;
-
-    Ok(())
+        })?;
+    }
 }
 
-#[tokio::test]
-async fn test_when_node_modules_has_other_pm() -> anyhow::Result<()> {
-    let cwd = current_dir()?
-        .join("tests")
-        .join("fixtures")
-        .join("test_when_node_modules_has_other_pm");
+e2e::test1! {
+    #[tokio::test]
+    test_when_node_modules_has_other_pm,
+    cwd: current_dir()?.join("tests").join("fixtures").join("test_when_node_modules_has_other_pm"),
 
-    let f = |snapshot_path: &PathBuf, name: &str, res: &str| {
-        insta::with_settings!({
-            snapshot_path => snapshot_path,  // 指定快照目录
-        }, {
+    envs:[],
+    |builder:e2e::CommandBuilder| => {
+        builder.exec("snm node install 20.0.0")?;
+        builder.exec("snm node default 20.0.0")?;
+        builder.exec("npm -v")?;
+        builder.add_snapshot("snm npm install 9.0.0")?;
+        builder.add_snapshot("snm npm default 9.0.0")?;
+        builder.add_snapshot("npm -v")?;
+        builder.assert_snapshots(|name,res| {
             insta::assert_snapshot!(name, res);
-        })
-    };
-
-    let mut builder =
-        e2e::CommandBuilder::with_envs("test_when_node_modules_has_other_pm", cwd, vec![])?;
-
-    builder.snapshot("snm node install 20.0.0", f)?;
-    builder.snapshot("snm node default 20.0.0", f)?;
-    builder.snapshot("npm -v", f)?;
-    builder.snapshot("snm pnpm install 9.0.0", f)?;
-    builder.snapshot("snm pnpm default 9.0.0", f)?;
-    builder.snapshot("pnpm -v", f)?;
-
-    builder.snapshot("pnpm dev", f)?;
-
-    Ok(())
+        })?;
+    }
 }

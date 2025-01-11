@@ -1,41 +1,39 @@
 [package]
-name = "snm"
-version = "0.0.1-119"
-edition = "2021"
 authors = ["ityuany"]
+edition = "2021"
+name    = "snm"
+version = "0.0.1-119"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
 name = "snm"
 path = "src/main.rs"
-  
+
 
 [dependencies]
-log = "0.4.20"
-dirs = "5.0.1"
-glob = "0.3.1"
-chrono = "0.4"
-regex = "1.10.4"
-colored = "2.1.0"
-semver = "1.0.21"
-serde_json = "1.0"
-termimad = "0.28.0"
-dialoguer = "0.11.0"
-env_logger = "0.11.2"
-clap_complete = "4.5.1"
-clap_complete_fig = "4.5.0"
-snm_shim = { path = "../snm_shim" }
-snm_utils = { path = "../snm_utils" }
-snm_config = { path = "../snm_config" }
-snm_node = { path = "../snm_node" }
-snm_package_json = { path = "../snm_package_json" }
+anyhow               = { workspace = true }
+chrono               = { workspace = true }
+clap                 = { version = "4.5.7", features = ["derive", "cargo"] }
+clap_complete        = "4.5.1"
+clap_complete_fig    = "4.5.0"
+colored              = "2.1.0"
+dialoguer            = "0.11.0"
+dirs                 = { workspace = true }
+env_logger           = "0.11.2"
+glob                 = "0.3.1"
+log                  = "0.4.20"
+regex                = "1.10.4"
+reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
+semver               = { workspace = true }
+serde                = { workspace = true, features = ["derive"] }
+serde_json           = { workspace = true }
+snm_config           = { path = "../snm_config" }
 snm_download_builder = { path = "../snm_download_builder" }
-serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.0.0", features = ["full"] }
-clap = { version = "4.5.7", features = ["derive","cargo"] }
-anyhow = "1.0.91"
-reqwest = { version = "0.12.3", features = ["json", "blocking", "stream","native-tls-vendored"] }
+snm_node             = { path = "../snm_node" }
+snm_package_json     = { path = "../snm_package_json" }
+snm_shim             = { path = "../snm_shim" }
+snm_utils            = { path = "../snm_utils" }
+tokio                = { workspace = true, features = ["full"] }
 
 [dev-dependencies]
-

@@ -1,0 +1,24 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+id: 1
+is: snm node install 20.0.0
+
+🎉 Node v20.0.0 is installed
+
+id: 2
+is: snm node default 20.0.0
+
+🎉 Node v20.0.0 is now default
+
+id: 3
+is: npm -v
+
+9.6.4
+
+id: 4
+is: node index.cjs
+
+18.3.1

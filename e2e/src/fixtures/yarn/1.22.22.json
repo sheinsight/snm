@@ -1,0 +1,88 @@
+{
+  "name": "yarn",
+  "installationMethod": "tar",
+  "version": "1.22.22",
+  "packageManager": "yarn@1.22.17",
+  "license": "BSD-2-Clause",
+  "preferGlobal": true,
+  "description": "📦🐈 Fast, reliable, and secure dependency management.",
+  "resolutions": {
+      "sshpk": "^1.14.2"
+  },
+  "engines": {
+      "node": ">=4.0.0"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git+https://github.com/yarnpkg/yarn.git"
+  },
+  "bin": {
+      "yarn": "bin/yarn.js",
+      "yarnpkg": "bin/yarn.js"
+  },
+  "scripts": {
+      "preinstall": ":; (node ./preinstall.js > /dev/null 2>&1 || true)"
+  },
+  "config": {
+      "commitizen": {
+          "path": "./node_modules/cz-conventional-changelog"
+      }
+  },
+  "gitHead": "740c38c3a962c30ddb344a919bbfb7065620714b",
+  "bugs": {
+      "url": "https://github.com/yarnpkg/yarn/issues"
+  },
+  "homepage": "https://github.com/yarnpkg/yarn#readme",
+  "_id": "yarn@1.22.22",
+  "_nodeVersion": "18.17.1",
+  "_npmVersion": "9.6.7",
+  "dist": {
+      "integrity": "sha512-prL3kGtyG7o9Z9Sv8IPfBNrWTDmXB4Qbes8A9rEzt6wkJV8mUvoirjU0Mp3GGAU06Y0XQyA3/2/RQFVuK7MTfg==",
+      "shasum": "ac34549e6aa8e7ead463a7407e1c7390f61a6610",
+      "tarball": "https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz",
+      "fileCount": 11,
+      "unpackedSize": 5340487,
+      "signatures": [
+          {
+              "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA",
+              "sig": "MEYCIQD8IYJ9/vVOO8pfUq+cj3OdBClW7fPnUosQ4TvgyO1XJAIhAOi8CE+iN39Td3aR4dJz2zLO6isnr+h44dxVeoYjDyta"
+          }
+      ]
+  },
+  "_npmUser": {
+      "name": "arcanis",
+      "email": "nison.mael@gmail.com"
+  },
+  "directories": {},
+  "maintainers": [
+      {
+          "name": "byk",
+          "email": "ben@byk.im"
+      },
+      {
+          "name": "bestander",
+          "email": "bestander@gmail.com"
+      },
+      {
+          "name": "sebmck",
+          "email": "npm@sebastian.barretomckenzie.com"
+      },
+      {
+          "name": "daniel15",
+          "email": "npm@d.sb"
+      },
+      {
+          "name": "arcanis",
+          "email": "nison.mael@gmail.com"
+      },
+      {
+          "name": "danbuild",
+          "email": "build@dan.cx"
+      }
+  ],
+  "_npmOperationalInternal": {
+      "host": "s3://npm-registry-packages",
+      "tmp": "tmp/yarn_1.22.22_1710020140662_0.30591268065031496"
+  },
+  "_hasShrinkwrap": false
+}

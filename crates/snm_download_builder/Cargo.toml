@@ -1,14 +1,14 @@
 [package]
-name = "snm_download_builder"
-version = "0.0.1-119"
 edition = "2021"
+name    = "snm_download_builder"
+version = "0.0.1-119"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-colored = "2.1.0"
-indicatif = "0.17.8"
+colored      = "2.1.0"
 futures-util = "0.3.30"
-tokio = { version = "1.36.0", features = ["full"] }
-reqwest = { version = "0.12.3", features = ["stream", "native-tls-vendored"] }
-snm_utils = { path = "../snm_utils" }
+indicatif    = "0.17.8"
+reqwest      = { version = "0.12.3", features = ["stream", "native-tls-vendored"] }
+snm_utils    = { path = "../snm_utils" }
+tokio        = { version = "1.36.0", features = ["full"] }

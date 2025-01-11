@@ -1,7 +1,0 @@
----
-source: e2e/src/lib.rs
-expression: "dedent(&format!(r#\"\n                        is: {}\n                        os: {}\n                        \"#,\n            command, res))"
-snapshot_kind: text
----
-is: snm node default 20.0.0
-os: 🎉 Node v20.0.0 is now default

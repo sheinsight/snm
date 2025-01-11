@@ -1,9 +1,0 @@
----
-source: e2e/tests/snm_test.rs
-expression: res
-snapshot_kind: text
----
-id: 5
-is: snm yarn default 1.22.22
-
-🎉 yarn v1.22.22 is now default

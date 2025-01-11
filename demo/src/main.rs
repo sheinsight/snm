@@ -1,3 +1,5 @@
+use std::env::consts::{ARCH, OS};
+
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -10,9 +12,11 @@ struct Cli {
 }
 
 fn main() {
-    let cli = Cli::parse();
-    println!("{:?}", cli.name);
-    if let Some(package_spec) = cli.package_spec {
-        println!("Hello, world! {}", package_spec);
-    }
+    // let cli = Cli::parse();
+    // println!("{:?}", cli.name);
+    // if let Some(package_spec) = cli.package_spec {
+    //     println!("Hello, world! {}", package_spec);
+    // }
+    println!("Architecture: {}", ARCH);
+    println!("OS: {}", OS);
 }

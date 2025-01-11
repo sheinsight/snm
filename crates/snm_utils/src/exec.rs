@@ -1,23 +1,22 @@
 use std::{
-    env::{self, current_dir, current_exe},
-    path::Path,
+    env::{self, current_exe},
     process::{Command, Stdio},
 };
 
-use anyhow::{bail, Context, Error};
+use anyhow::Context;
 
 pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
     let bin_name = args.get(0).context("bin name not found")?.to_owned();
 
     let exe = current_exe()?;
 
-    let exe_name = exe
-        .file_name()
-        .ok_or(Error::msg("exe file name not found"))?
-        .to_string_lossy()
-        .into_owned();
+    // let exe_name = exe
+    //     .file_name()
+    //     .ok_or(Error::msg("exe file name not found"))?
+    //     .to_string_lossy()
+    //     .into_owned();
 
-    let exe_dir = exe.parent().ok_or(Error::msg("exe parent dir not found"))?;
+    // let exe_dir = exe.parent().ok_or(Error::msg("exe parent dir not found"))?;
 
     let original_path = env::var("PATH")?;
 

@@ -1,7 +1,7 @@
 [package]
-name = "snm_shim"
-version = "0.0.1-119"
 edition = "2021"
+name    = "snm_shim"
+version = "0.0.1-119"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,12 +11,12 @@ name = "snm-shim"
 path = "src/main.rs"
 
 [dependencies]
-colored = "2.1.0"
-env_logger = "0.11.2"
-snm_utils = { path = "../snm_utils" }
-snm_config = { path = "../snm_config" }
-snm_download_builder ={ path = "../snm_download_builder" }
-snm_package_json = { path = "../snm_package_json" }
-snm_node = { path = "../snm_node" }
-anyhow = "1.0.79"
-tokio = { version = "1.0.0", features = ["full"] }
+anyhow               = "1.0.79"
+colored              = "2.1.0"
+env_logger           = "0.11.2"
+snm_config           = { path = "../snm_config" }
+snm_download_builder = { path = "../snm_download_builder" }
+snm_node             = { path = "../snm_node" }
+snm_package_json     = { path = "../snm_package_json" }
+snm_utils            = { path = "../snm_utils" }
+tokio                = { version = "1.0.0", features = ["full"] }

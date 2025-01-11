@@ -126,7 +126,7 @@ impl<'a> NodeDownloader<'a> {
                     _ => None,
                 }
             })
-            .with_context(|| "Invalid SHASUM line format")
+            .with_context(|| "Invalid Node SHASUM line format")
     }
 
     async fn download_node(&self, version: &str) -> anyhow::Result<PathBuf> {
@@ -169,9 +169,9 @@ impl<'a> NodeDownloader<'a> {
         format!(
             "node-v{version}-{os}-{arch}.{ext}",
             version = version,
-            os = get_os(),
-            arch = get_arch(),
-            ext = get_tarball_ext()
+            os = snm_utils::consts::os(),
+            arch = snm_utils::consts::arch(),
+            ext = snm_utils::consts::ext()
         )
     }
 
@@ -180,86 +180,86 @@ impl<'a> NodeDownloader<'a> {
             "{host}/v{version}/node-v{version}-{os}-{arch}.{ext}",
             host = self.config.node_dist_url,
             version = version,
-            os = get_os(),
-            arch = get_arch(),
-            ext = get_tarball_ext()
+            os = snm_utils::consts::os(),
+            arch = snm_utils::consts::arch(),
+            ext = snm_utils::consts::ext()
         )
     }
 }
 
-pub const fn get_tarball_ext() -> &'static str {
-    #[cfg(target_os = "windows")]
-    {
-        "zip"
-    }
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
-    {
-        "tar.xz"
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
-    {
-        "unknown"
-    }
-}
+// pub const fn get_tarball_ext() -> &'static str {
+//     #[cfg(target_os = "windows")]
+//     {
+//         "zip"
+//     }
+//     #[cfg(any(target_os = "linux", target_os = "macos"))]
+//     {
+//         "tar.xz"
+//     }
+//     #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+//     {
+//         "unknown"
+//     }
+// }
 
-pub const fn get_arch() -> &'static str {
-    #[cfg(target_arch = "x86")]
-    {
-        "x86"
-    }
-    #[cfg(target_arch = "x86_64")]
-    {
-        "x64"
-    }
-    #[cfg(target_arch = "arm")]
-    {
-        "armv7l"
-    }
-    #[cfg(target_arch = "aarch64")]
-    {
-        "arm64"
-    }
-    #[cfg(target_arch = "powerpc64")]
-    {
-        "ppc64"
-    }
-    #[cfg(target_arch = "powerpc64le")]
-    {
-        "ppc64le"
-    }
-    #[cfg(target_arch = "s390x")]
-    {
-        "s390x"
-    }
-    #[cfg(not(any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "powerpc64",
-        target_arch = "powerpc64le",
-        target_arch = "s390x"
-    )))]
-    {
-        "unknown"
-    }
-}
+// pub const fn get_arch() -> &'static str {
+//     #[cfg(target_arch = "x86")]
+//     {
+//         "x86"
+//     }
+//     #[cfg(target_arch = "x86_64")]
+//     {
+//         "x64"
+//     }
+//     #[cfg(target_arch = "arm")]
+//     {
+//         "armv7l"
+//     }
+//     #[cfg(target_arch = "aarch64")]
+//     {
+//         "arm64"
+//     }
+//     #[cfg(target_arch = "powerpc64")]
+//     {
+//         "ppc64"
+//     }
+//     #[cfg(target_arch = "powerpc64le")]
+//     {
+//         "ppc64le"
+//     }
+//     #[cfg(target_arch = "s390x")]
+//     {
+//         "s390x"
+//     }
+//     #[cfg(not(any(
+//         target_arch = "x86",
+//         target_arch = "x86_64",
+//         target_arch = "arm",
+//         target_arch = "aarch64",
+//         target_arch = "powerpc64",
+//         target_arch = "powerpc64le",
+//         target_arch = "s390x"
+//     )))]
+//     {
+//         "unknown"
+//     }
+// }
 
-pub const fn get_os() -> &'static str {
-    #[cfg(target_os = "macos")]
-    {
-        "darwin"
-    }
-    #[cfg(target_os = "windows")]
-    {
-        "win"
-    }
-    #[cfg(target_os = "linux")]
-    {
-        "linux"
-    }
-    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
-    {
-        "unknown"
-    }
-}
+// pub const fn get_os() -> &'static str {
+//     #[cfg(target_os = "macos")]
+//     {
+//         "darwin"
+//     }
+//     #[cfg(target_os = "windows")]
+//     {
+//         "win"
+//     }
+//     #[cfg(target_os = "linux")]
+//     {
+//         "linux"
+//     }
+//     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+//     {
+//         "unknown"
+//     }
+// }

@@ -1,9 +1,0 @@
----
-source: e2e/tests/snm_test.rs
-expression: res
-snapshot_kind: text
----
-id: 7
-is: node -v
-
-Error: In strict mode, a .node-version file must be configured in the current directory.

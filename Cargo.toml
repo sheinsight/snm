@@ -1,39 +1,43 @@
 [workspace]
 members = [
-    "crates/cli",
-    "crates/snm_package_json", 
-    "crates/snm_npmrc", 
-    "crates/snm_config", 
-    "crates/snm_utils", 
-    "crates/snm_node", 
-    "crates/snm_download_builder", 
-    "crates/snm_shim",
-    "crates/dev-tools",
-    "e2e",
-    "demo"
+  "crates/cli",
+  "crates/snm_package_json",
+  "crates/snm_npmrc",
+  "crates/snm_config",
+  "crates/snm_utils",
+  "crates/snm_node",
+  "crates/snm_download_builder",
+  "crates/snm_shim",
+  "crates/dev-tools",
+  "e2e",
+  "demo",
 ]
 
 resolver = "2"
 
 
 [profile.release]
-lto = true
-strip = "none"
-opt-level = "s"
 codegen-units = 1
-debug = 2
- 
+debug         = 2
+lto           = true
+opt-level     = "s"
+strip         = "none"
+
 
 [workspace.metadata.cargo-llvm-cov]
-ignore-filename-regex = [
-    ".*\\.cargo/registry/src/.*",
-    ".*target/.*",
-     ".*ordered-multimap-0.6.0/.*"
-]
+ignore-filename-regex = [".*\\.cargo/registry/src/.*", ".*target/.*", ".*ordered-multimap-0.6.0/.*"]
 
 [workspace.dependencies]
-dialoguer = "0.11.0"
-insta = "1.36.1"
-duct = "0.13.7"
-textwrap = "0.16.0"
- 
+anyhow     = "1.0.91"
+chrono     = "0.4.39"
+dialoguer  = "0.11.0"
+dirs       = "5.0.1"
+duct       = "0.13.7"
+insta      = "1.36.1"
+reqwest    = "0.12.3"
+semver     = "1.0.24"
+serde      = "1.0.217"
+serde_json = "1.0.135"
+textwrap   = "0.16.0"
+tokio      = "1.43.0"
+wiremock   = "0.6.2"

@@ -62,7 +62,9 @@ impl SnmConfig {
     pub fn from<P: AsRef<Path>>(workspace: P) -> Result<Self, SnmError> {
         let config = EnvSnmConfig::parse()?;
 
-        let npm_registry = NpmrcReader::from(&workspace).read_registry_with_default();
+        let npm_registry = config
+            .npm_registry
+            .unwrap_or_else(|| NpmrcReader::from(&workspace).read_registry_with_default());
 
         let base_dir = env::var(SNM_HOME_DIR_KEY)
             .map(PathBuf::from)
@@ -196,6 +198,7 @@ mod tests {
         env::set_var("SNM_CACHE_DIR", "cache_demo");
         env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
         env::set_var("SNM_DOWNLOAD_TIMEOUT_SECS", "60");
+        env::set_var("SNM_NPM_REGISTRY", "https://test.npmjs.org");
         env::set_var(
             "SNM_NODE_GITHUB_RESOURCE_HOST",
             "https://raw.githubusercontent.com",
@@ -233,7 +236,7 @@ mod tests {
             assert_eq!(snm_config.download_timeout_secs, 60);
             assert_eq!(
                 snm_config.npm_registry,
-                "https://registry.npmjs.org".to_string()
+                "https://test.npmjs.org".to_string()
             );
         }
 

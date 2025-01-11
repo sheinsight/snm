@@ -1,9 +1,0 @@
----
-source: e2e/tests/snm_test.rs
-expression: res
-snapshot_kind: text
----
-id: 4
-is: snm yarn install 4.0.0
-
-🎉 yarn v4.0.0 is installed

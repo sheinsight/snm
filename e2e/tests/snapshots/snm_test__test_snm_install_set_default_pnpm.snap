@@ -1,0 +1,34 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+id: 1
+is: snm node install 20.0.0
+
+🎉 Node v20.0.0 is installed
+
+id: 2
+is: snm node default 20.0.0
+
+🎉 Node v20.0.0 is now default
+
+id: 3
+is: pnpm -v
+
+Error: Can't find command pnpm
+
+id: 4
+is: snm pnpm install 9.0.0
+
+🎉 pnpm v9.0.0 is installed
+
+id: 5
+is: snm pnpm default 9.0.0
+
+🎉 pnpm v9.0.0 is now default
+
+id: 6
+is: pnpm -v
+
+9.0.0

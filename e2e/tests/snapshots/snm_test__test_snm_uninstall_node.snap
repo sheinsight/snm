@@ -1,0 +1,22 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+snapshot_kind: text
+---
+id: 1
+is: snm node install 20.0.0
+
+🎉 Node v20.0.0 is installed
+
+id: 2
+is: snm node list --compact
+
+20.0.0
+
+id: 3
+is: snm node uninstall 20.0.0
+
+🎉 Node v20.0.0 is uninstalled
+
+id: 4
+is: snm node list --compact

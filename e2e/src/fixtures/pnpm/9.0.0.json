@@ -1,0 +1,113 @@
+{
+  "name": "pnpm",
+  "version": "9.0.0",
+  "keywords": [
+      "pnpm9",
+      "dependency manager",
+      "install",
+      "installer",
+      "uninstall",
+      "remove",
+      "link",
+      "prune",
+      "shrinkwrap",
+      "lockfile",
+      "fast",
+      "rapid",
+      "efficient",
+      "package.json",
+      "packages",
+      "dependencies",
+      "symlinks",
+      "hardlinks",
+      "modules",
+      "npm",
+      "package manager",
+      "monorepo",
+      "multi-package",
+      "workspace:*"
+  ],
+  "license": "MIT",
+  "_id": "pnpm@9.0.0",
+  "maintainers": [
+      {
+          "name": "zkochan",
+          "email": "z@kochan.io"
+      },
+      {
+          "name": "pnpmuser",
+          "email": "publish-bot@pnpm.io"
+      }
+  ],
+  "homepage": "https://pnpm.io",
+  "bugs": {
+      "url": "https://github.com/pnpm/pnpm/issues"
+  },
+  "bin": {
+      "pnpm": "bin/pnpm.cjs",
+      "pnpx": "bin/pnpx.cjs"
+  },
+  "dist": {
+      "shasum": "91e316c667cd19b00fac72b674ae11b569211ff1",
+      "tarball": "https://registry.npmjs.org/pnpm/-/pnpm-9.0.0.tgz",
+      "fileCount": 880,
+      "integrity": "sha512-tBBnB8ciWxdIthWVlTzL6/+XtUrQXQAqo2NfYzucU81mb3zpuLxEcE8foEi5pJtVNxqy2enWZ9Hv4u8VFLzVEw==",
+      "signatures": [
+          {
+              "sig": "MEUCIAXX+sYHA9n5AmdrZo9NCPAYNVijEe7vwfKUrjq6+AvAAiEAhNOpPAwC6mKyrLHZh5UNxq7RbfBaG2mZmUN11tgjKIc=",
+              "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+          }
+      ],
+      "unpackedSize": 16815722
+  },
+  "main": "bin/pnpm.cjs",
+  "_from": "file:pnpm-9.0.0.tgz",
+  "unpkg": "dist/pnpm.cjs",
+  "engines": {
+      "node": ">=18.12"
+  },
+  "exports": {
+      ".": "./package.json"
+  },
+  "funding": "https://opencollective.com/pnpm",
+  "scripts": {
+      "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+      "test": "pnpm run compile && pnpm run _test",
+      "_test": "cross-env PNPM_REGISTRY_MOCK_PORT=7776 jest",
+      "start": "tsc --watch",
+      "bundle": "ts-node bundle.ts",
+      "compile": "tsc --build && pnpm run lint --fix && rimraf dist bin/nodes && pnpm run bundle && shx cp -r node-gyp-bin dist/node-gyp-bin && shx cp -r node_modules/@pnpm/tabtab/lib/templates dist/templates && shx cp -r node_modules/ps-list/vendor dist/vendor && shx cp pnpmrc dist/pnpmrc",
+      "_compile": "tsc --build",
+      "pretest:e2e": "rimraf node_modules/.bin/pnpm"
+  },
+  "_npmUser": {
+      "name": "pnpmuser",
+      "email": "publish-bot@pnpm.io"
+  },
+  "_resolved": "/tmp/a726f5005072ad646c43df1c2f634739/pnpm-9.0.0.tgz",
+  "_integrity": "sha512-tBBnB8ciWxdIthWVlTzL6/+XtUrQXQAqo2NfYzucU81mb3zpuLxEcE8foEi5pJtVNxqy2enWZ9Hv4u8VFLzVEw==",
+  "repository": {
+      "url": "git+https://github.com/pnpm/pnpm.git",
+      "type": "git"
+  },
+  "_npmVersion": "10.5.0",
+  "description": "Fast, disk space efficient package manager",
+  "directories": {
+      "test": "test"
+  },
+  "_nodeVersion": "18.20.1",
+  "preferGlobal": true,
+  "publishConfig": {
+      "tag": "next-9",
+      "executableFiles": [
+          "./dist/node-gyp-bin/node-gyp",
+          "./dist/node-gyp-bin/node-gyp.cmd",
+          "./dist/node_modules/node-gyp/bin/node-gyp.js"
+      ]
+  },
+  "_hasShrinkwrap": false,
+  "_npmOperationalInternal": {
+      "tmp": "tmp/pnpm_9.0.0_1713263222845_0.8966576809189117",
+      "host": "s3://npm-registry-packages"
+  }
+}

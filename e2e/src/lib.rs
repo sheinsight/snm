@@ -1,5 +1,5 @@
 pub mod exec_builder;
-
+pub mod http_mocker;
 use duct::cmd;
 use std::path::PathBuf;
 use tempfile::tempdir;
@@ -15,6 +15,7 @@ pub enum SnmEnv<T: AsRef<str> = String> {
     NodeModulesDir(T),
     CacheDir(T),
     NodeDistUrl(T),
+    NpmRegistry(T),
     DownloadTimeoutSecs(T),
     NodeGithubResourceHost(T),
     NodeInstallStrategy(T),
@@ -37,6 +38,7 @@ impl<T: AsRef<str>> SnmEnv<T> {
                 "SNM_DOWNLOAD_TIMEOUT_SECS".to_string(),
                 v.as_ref().to_string(),
             ),
+            Self::NpmRegistry(v) => ("SNM_NPM_REGISTRY".to_string(), v.as_ref().to_string()),
             Self::NodeGithubResourceHost(v) => (
                 "SNM_NODE_GITHUB_RESOURCE_HOST".to_string(),
                 v.as_ref().to_string(),
@@ -61,6 +63,7 @@ pub struct CommandBuilder {
     envs: Vec<(String, String)>,
     cwd: PathBuf,
     counter: usize,
+    snapshots: Vec<String>,
 }
 
 impl CommandBuilder {
@@ -78,6 +81,7 @@ impl CommandBuilder {
             envs: envs.into_iter().map(|e| e.as_tuple()).collect::<Vec<_>>(),
             cwd: cwd,
             counter: 0,
+            snapshots: vec![],
         })
     }
 
@@ -113,6 +117,37 @@ impl CommandBuilder {
         }
 
         Ok(String::from_utf8(output.stdout.clone())?.trim().to_string())
+    }
+
+    pub fn add_snapshot(&mut self, command: &str) -> anyhow::Result<&mut Self> {
+        self.counter += 1;
+        // let current_dir = std::env::current_dir()?
+        //     .join("tests")
+        //     .join("snapshots")
+        //     .join(self.name.clone());
+        let res = self.exec(command)?;
+        let res = dedent(&format!(
+            r#"
+id: {}
+is: {}
+
+{}"#,
+            self.counter, command, res
+        ));
+        // let name = format!("{}_{}", self.name, self.counter);
+        self.snapshots.push(res);
+        Ok(self)
+    }
+
+    pub fn assert_snapshots<F>(&self, f: F) -> anyhow::Result<()>
+    where
+        F: Fn(&str, &str),
+    {
+        let res = self.snapshots.join("\n");
+
+        f(&self.name, &res);
+
+        Ok(())
     }
 
     pub fn snapshot<F>(&mut self, command: &str, f: F) -> anyhow::Result<&mut Self>
@@ -153,6 +188,48 @@ is: {}
 
         Ok(self)
     }
+}
+
+#[macro_export]
+macro_rules! test1 {
+    (
+        $(#[$attr:meta])*
+        $test_name:ident,
+        cwd: $cwd:expr,
+        // node:[$($node:expr),* $(,)?],
+        // npm:[$($npm:expr),* $(,)?],
+        // pnpm:[$($pnpm:expr),* $(,)?],
+        // yarn:[$($yarn:expr),* $(,)?],
+        envs:[$($env:expr),* $(,)?],
+        |$builder:ident:$handler_type:ty| => $body:block
+    ) => {
+        $(#[$attr])*
+        async fn $test_name() -> anyhow::Result<()> {
+            let mock_server = e2e::http_mocker::HttpMocker::builder()
+                // $(.with_node(vec![$node]))*
+                // $(.with_npm(vec![$npm]))*
+                // $(.with_pnpm(vec![$pnpm]))*
+                // $(.with_yarn(vec![$yarn]))*
+                .build()
+                .await?;
+
+            let mut $builder = e2e::CommandBuilder::with_envs(
+                stringify!($test_name),
+                $cwd,
+                vec![
+                    e2e::SnmEnv::NodeDistUrl(mock_server.uri()),
+                    e2e::SnmEnv::NpmRegistry(mock_server.uri()),
+                    $($env,)*
+                ]
+            )?;
+
+            // let $snapshot = e2e::SnapshotBuilder::new();
+
+            $body
+
+            Ok(())
+        }
+    };
 }
 
 #[macro_export]
