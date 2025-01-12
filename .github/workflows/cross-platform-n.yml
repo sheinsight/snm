@@ -37,6 +37,9 @@ jobs:
           target: ${{ matrix.target }}
       - name: Run tests
         run: | 
+          pwd
+          ls -l
+          ls -R e2e/tests/fixtures
           cargo install just
           just setup
           just ready
