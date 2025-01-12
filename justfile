@@ -2,7 +2,7 @@
 
 
 setup:
-  cargo install cargo-binstall
+  cargo install --locked cargo-binstall
   # cargo binstall taplo-cli cargo-release cargo-insta cargo-deny cargo-watch -y 
   cargo install taplo-cli cargo-release cargo-insta cargo-deny cargo-watch 
   @echo '✅ Setup complete!'
