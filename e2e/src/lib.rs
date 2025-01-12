@@ -1,4 +1,4 @@
-pub mod exec_builder;
+// pub mod exec_builder;
 pub mod http_mocker;
 use std::path::PathBuf;
 
@@ -150,45 +150,6 @@ is: {}
 
     Ok(())
   }
-
-  pub fn snapshot<F>(&mut self, command: &str, f: F) -> anyhow::Result<&mut Self>
-  where
-    F: Fn(&PathBuf, &str, &str),
-  {
-    self.counter += 1;
-    let current_dir = std::env::current_dir()?
-      .join("tests")
-      .join("snapshots")
-      .join(self.name.clone());
-    let res = self.exec(command)?;
-    let res = dedent(&format!(
-      r#"
-id: {}
-is: {}
-
-{}"#,
-      self.counter, command, res
-    ));
-    let name = format!("{}_{}", self.name, self.counter);
-    f(&current_dir, &name, &res);
-    // insta::with_settings!({
-    //     snapshot_path => current_dir,  // 指定快照目录
-    // }, {
-    //     insta::assert_snapshot!(
-    //         format!("{}_{}", self.name, self.counter),
-    //         dedent(&format!(
-    //             r#"
-    //                 is: {}
-    //                 os: {}
-    //                 "#,
-    //             command,
-    //             res
-    //         ))
-    //     );
-    // });
-
-    Ok(self)
-  }
 }
 
 #[macro_export]
@@ -224,46 +185,11 @@ macro_rules! test1 {
                 ]
             )?;
 
+            $builder.exec("snm setup")?;
+
             // let $snapshot = e2e::SnapshotBuilder::new();
 
             $body
-
-            Ok(())
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! assert_snapshot {
-    (
-        $(#[$attr:meta])*
-        $test_name:ident,
-        cwd: $cwd:expr,
-        envs: $envs:expr,
-        commands: [
-            $($cmd:expr),* $(,)?
-        ]
-    ) => {
-        $(#[$attr])*
-        async fn $test_name() -> anyhow::Result<()> {
-            let cwd = $cwd;
-            e2e::CommandBuilder::with_envs(
-                stringify!($test_name),
-                cwd,
-                $envs,
-            )?
-            $(
-                .snapshot($cmd, |snapshot_path, name, res| {
-                    insta::with_settings!({
-                        snapshot_path => snapshot_path,  // 指定快照目录
-                    }, {
-                        insta::assert_snapshot!(
-                            name,
-                            res
-                        );
-                    })
-                })?
-            )*;
 
             Ok(())
         }
