@@ -38,6 +38,7 @@ jobs:
       - name: Run tests
         run: | 
           cargo install just
+          just setup
           just e2e
           cargo test --workspace --exclude e2e -- --nocapture
         env:
