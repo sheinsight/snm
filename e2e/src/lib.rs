@@ -167,6 +167,8 @@ macro_rules! test1 {
                 .build()
                 .await?;
 
+            println!("cwd------>>:{:?}",$cwd);
+
             let mut $builder = e2e::CommandBuilder::with_envs(
                 stringify!($test_name),
                 $cwd,
