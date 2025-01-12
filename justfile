@@ -12,7 +12,7 @@ ready:
   cargo c --verbose
   cargo b --verbose
   cargo t
-#   just ci-e2e
+  #just ci-e2e
   # just lint 
   @echo '✅ All passed!'
 
