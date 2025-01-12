@@ -52,4 +52,4 @@ e2e:
 
 ci-e2e:
     echo "Running end-to-end tests..."
-    cargo insta test -p e2e --update -- --nocapture
+    cargo insta test -p e2e -- --nocapture
