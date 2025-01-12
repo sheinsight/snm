@@ -158,20 +158,12 @@ macro_rules! test1 {
         $(#[$attr:meta])*
         $test_name:ident,
         cwd: $cwd:expr,
-        // node:[$($node:expr),* $(,)?],
-        // npm:[$($npm:expr),* $(,)?],
-        // pnpm:[$($pnpm:expr),* $(,)?],
-        // yarn:[$($yarn:expr),* $(,)?],
         envs:[$($env:expr),* $(,)?],
         |$builder:ident:$handler_type:ty| => $body:block
     ) => {
         $(#[$attr])*
         async fn $test_name() -> anyhow::Result<()> {
             let mock_server = e2e::http_mocker::HttpMocker::builder()?
-                // $(.with_node(vec![$node]))*
-                // $(.with_npm(vec![$npm]))*
-                // $(.with_pnpm(vec![$pnpm]))*
-                // $(.with_yarn(vec![$yarn]))*
                 .build()
                 .await?;
 
