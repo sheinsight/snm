@@ -52,7 +52,8 @@ impl HttpMocker {
   async fn setup_node_index(&self, mock_server: &wiremock::MockServer) -> anyhow::Result<()> {
     let file_path = self.fixtures.join("node").join("index.json");
 
-    let index_body = std::fs::read(file_path)?;
+    let index_body =
+      std::fs::read(&file_path).with_context(|| format!("Can not found {:?}", &file_path))?;
 
     wiremock::Mock::given(wiremock::matchers::any())
       .and(wiremock::matchers::path("index.json"))
@@ -86,8 +87,11 @@ impl HttpMocker {
           ext = snm_utils::consts::ext()
         )))
         .respond_with(
-          wiremock::ResponseTemplate::new(200)
-            .set_body_raw(std::fs::read(fixture_path)?, "application/x-xz"),
+          wiremock::ResponseTemplate::new(200).set_body_raw(
+            std::fs::read(&fixture_path)
+              .with_context(|| format!("Can not found {:?}", &fixture_path))?,
+            "application/x-xz",
+          ),
         )
         .mount(&mock_server)
         .await;
@@ -104,8 +108,11 @@ impl HttpMocker {
           version = v
         )))
         .respond_with(
-          wiremock::ResponseTemplate::new(200)
-            .set_body_raw(std::fs::read(shasums_path)?, "text/plain"),
+          wiremock::ResponseTemplate::new(200).set_body_raw(
+            std::fs::read(&shasums_path)
+              .with_context(|| format!("Can not found {:?}", &shasums_path))?,
+            "text/plain",
+          ),
         )
         .mount(&mock_server)
         .await;
@@ -132,7 +139,9 @@ impl HttpMocker {
         pm_name
       };
 
-      let json = std::fs::read_to_string(self.fixtures.join(pm_name).join(format!("{}.json", v)))?;
+      let p = self.fixtures.join(pm_name).join(format!("{}.json", v));
+
+      let json = std::fs::read_to_string(&p).with_context(|| format!("Can not found {:?}", &p))?;
 
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
@@ -144,12 +153,12 @@ impl HttpMocker {
         .mount(&mock_server)
         .await;
 
-      let tgz = std::fs::read(
-        self
-          .fixtures
-          .join(pm_name)
-          .join(format!("{}-{}.tgz", pm_name, v)),
-      )?;
+      let tgz_p = self
+        .fixtures
+        .join(pm_name)
+        .join(format!("{}-{}.tgz", pm_name, v));
+
+      let tgz = std::fs::read(&tgz_p).with_context(|| format!("Can not found {:?}", &tgz_p))?;
 
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
