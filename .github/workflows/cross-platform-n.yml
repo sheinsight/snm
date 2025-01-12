@@ -39,8 +39,8 @@ jobs:
         run: | 
           cargo install just
           just setup
+          just ready
           just ci-e2e
-          cargo test --workspace --exclude e2e -- --nocapture
         env:
           RUST_BACKTRACE: full
       
