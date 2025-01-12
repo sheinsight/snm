@@ -206,7 +206,7 @@ macro_rules! test1 {
     ) => {
         $(#[$attr])*
         async fn $test_name() -> anyhow::Result<()> {
-            let mock_server = e2e::http_mocker::HttpMocker::builder()
+            let mock_server = e2e::http_mocker::HttpMocker::builder()?
                 // $(.with_node(vec![$node]))*
                 // $(.with_npm(vec![$npm]))*
                 // $(.with_pnpm(vec![$pnpm]))*

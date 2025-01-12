@@ -1,17 +1,32 @@
+use std::{env::current_dir, path::PathBuf};
+
 use anyhow::Context;
 
-#[derive(Default)]
 pub struct HttpMocker {
   // mock_server: wiremock::MockServer,
   node_versions: Vec<String>,
   npm_versions: Vec<String>,
   pnpm_versions: Vec<String>,
   yarn_versions: Vec<String>,
+  os: &'static str,
+  arch: &'static str,
+  ext: &'static str,
+  fixtures: PathBuf,
 }
 
 impl HttpMocker {
-  pub fn builder() -> Self {
-    Self::default()
+  pub fn builder() -> anyhow::Result<Self> {
+    let fixtures = current_dir()?.join("src").join("fixtures");
+    Ok(Self {
+      node_versions: Default::default(),
+      npm_versions: Default::default(),
+      pnpm_versions: Default::default(),
+      yarn_versions: Default::default(),
+      os: snm_utils::consts::os(),
+      arch: snm_utils::consts::arch(),
+      ext: snm_utils::consts::ext(),
+      fixtures: fixtures,
+    })
   }
 
   pub fn with_node(mut self, versions: Vec<&str>) -> Self {
@@ -35,9 +50,9 @@ impl HttpMocker {
   }
 
   async fn setup_node_index(&self, mock_server: &wiremock::MockServer) -> anyhow::Result<()> {
-    let index_path = format!("src/fixtures/node/index.json");
+    let file_path = self.fixtures.join("node").join("index.json");
 
-    let index_body = std::fs::read(index_path)?;
+    let index_body = std::fs::read(file_path)?;
 
     wiremock::Mock::given(wiremock::matchers::any())
       .and(wiremock::matchers::path("index.json"))
@@ -53,13 +68,14 @@ impl HttpMocker {
     let node_versions = vec!["20.0.0".to_string()];
 
     for v in &node_versions {
-      let fixture_path = format!(
-        "src/fixtures/node/v{version}/node-v{version}-{os}-{arch}.{ext}",
-        version = v,
-        os = snm_utils::consts::os(),
-        arch = snm_utils::consts::arch(),
-        ext = snm_utils::consts::ext()
-      );
+      let fixture_path = self
+        .fixtures
+        .join("node")
+        .join(format!("v{}", v))
+        .join(format!(
+          "node-v{}-{}-{}.{}",
+          v, self.os, self.arch, self.ext
+        ));
 
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
@@ -76,7 +92,11 @@ impl HttpMocker {
         .mount(&mock_server)
         .await;
 
-      let shasums_path = format!("src/fixtures/node/v{version}/SHASUMS256.txt", version = v);
+      let shasums_path = self
+        .fixtures
+        .join("node")
+        .join(format!("v{}", v))
+        .join("SHASUMS256.txt");
 
       wiremock::Mock::given(wiremock::matchers::method("GET"))
         .and(wiremock::matchers::path(format!(
@@ -112,11 +132,7 @@ impl HttpMocker {
         pm_name
       };
 
-      let json = std::fs::read_to_string(format!(
-        "src/fixtures/{pm_name}/{version}.json",
-        pm_name = pm_name,
-        version = v
-      ))?;
+      let json = std::fs::read_to_string(self.fixtures.join(pm_name).join(format!("{}.json", v)))?;
 
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
@@ -128,11 +144,12 @@ impl HttpMocker {
         .mount(&mock_server)
         .await;
 
-      let tgz = std::fs::read(format!(
-        "src/fixtures/{pm_name}/{pm_name}-{version}.tgz",
-        pm_name = pm_name,
-        version = v
-      ))?;
+      let tgz = std::fs::read(
+        self
+          .fixtures
+          .join(pm_name)
+          .join(format!("{}-{}.tgz", pm_name, v)),
+      )?;
 
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
