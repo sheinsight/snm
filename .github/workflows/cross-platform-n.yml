@@ -37,6 +37,7 @@ jobs:
           target: ${{ matrix.target }}
       - name: Run tests
         run: | 
+          node -v
           cargo install just
           just setup
           just ready
