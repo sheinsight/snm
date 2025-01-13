@@ -78,6 +78,8 @@ impl HttpMocker {
           v, self.os, self.arch, self.ext
         ));
 
+      println!(" node fixture_path: {:?}", fixture_path);
+
       wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
           "/v{version}/node-v{version}-{os}-{arch}.{ext}",
