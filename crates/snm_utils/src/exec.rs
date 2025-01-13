@@ -18,6 +18,14 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
 
   // let exe_dir = exe.parent().ok_or(Error::msg("exe parent dir not found"))?;
 
+  // 获取 PATH 环境变量，处理 Windows 的特殊情况
+  #[cfg(target_os = "windows")]
+  let original_path = env::var_os("Path") // Windows 通常使用 "Path"
+    .or_else(|| env::var_os("PATH")) // 也试试 "PATH"
+    .map(|p| p.to_string_lossy().to_string())
+    .unwrap_or_default();
+
+  #[cfg(not(target_os = "windows"))]
   let original_path = env::var("PATH")?;
 
   #[cfg(target_os = "windows")]
