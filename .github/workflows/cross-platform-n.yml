@@ -48,10 +48,39 @@ jobs:
 
       - name: Check Node.js before setup
         run: |
-          echo "Checking Node.js before any setup:"
-          where node || true
-          node -v || true
-          echo "PATH=$PATH"
+            echo "=== Environment Debug Info ==="
+            echo "OS: $RUNNER_OS"
+            echo "Checking Node.js before any setup:"
+            
+            # 检查 node 位置
+            if [ "$RUNNER_OS" == "Windows" ]; then
+              echo "=== Windows specific info ==="
+              echo "Where node:"
+              where node || echo "node not found by where"
+              echo "Windows PATH: $env:PATH"
+              echo "Windows Path: $env:Path"
+            else
+              echo "=== Unix specific info ==="
+              echo "Which node:"
+              which node || echo "node not found by which"
+              echo "Node binary permissions:"
+              ls -l $(which node 2>/dev/null) || echo "Cannot get node permissions"
+            fi
+            
+            # 检查 node 版本
+            echo "=== Node version ==="
+            node -v || echo "node -v failed"
+            
+            # 显示完整的环境变量
+            echo "=== All Environment Variables ==="
+            env | sort
+            
+            # 检查重要目录
+            echo "=== Directory Structure ==="
+            echo "Current directory:"
+            pwd
+            echo "Directory contents:"
+            ls -la
 
       - name: Checkout code
         uses: actions/checkout@v3
