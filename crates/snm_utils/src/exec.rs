@@ -71,7 +71,8 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
 
   Command::new(&bin_name)
     .args(args)
-    .env("PATH", new_path)
+    .env("PATH", new_path.clone())
+    .env("Path", new_path.clone())
     .stdout(Stdio::inherit())
     .stderr(Stdio::inherit())
     .stdin(Stdio::inherit())
