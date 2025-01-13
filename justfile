@@ -3,7 +3,7 @@
 
 setup:
   cargo install --locked cargo-binstall
-  cargo binstall taplo-cli cargo-release cargo-insta cargo-deny cargo-watch -y 
+  cargo binstall taplo-cli cargo-release cargo-insta cargo-deny cargo-watch -y --force
   # cargo install taplo-cli cargo-release cargo-insta cargo-deny cargo-watch 
   @echo '✅ Setup complete!'
 
@@ -13,13 +13,13 @@ ready:
   cargo b --verbose
   cargo t
   #just ci-e2e
-  # just lint 
+  #just lint 
   @echo '✅ All passed!'
 
 fmt:
     cargo fmt --all -- --emit=files
     taplo fmt 
-    # pnpm format
+    #pnpm format
     @echo '✅ Format complete!'
 
 # lint:
