@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use snm_package_json::{
+use snm_pm::{
   factory::PackageManagerFactoryCommands,
   ops::ops::{AddArgs, InstallArgs, RemoveArgs},
 };

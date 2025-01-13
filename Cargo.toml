@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "crates/cli",
-  "crates/snm_package_json",
+  "crates/snm_pm",
   "crates/snm_npmrc",
   "crates/snm_config",
   "crates/snm_utils",

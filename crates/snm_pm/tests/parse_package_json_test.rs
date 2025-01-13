@@ -1,6 +1,6 @@
 use std::env::current_dir;
 
-use snm_package_json::package_json::PackageJson;
+use snm_pm::package_json::PackageJson;
 
 #[test]
 fn test_parse_for_bin() {

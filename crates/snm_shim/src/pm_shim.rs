@@ -5,7 +5,7 @@ use std::{
 
 use snm_config::SnmConfig;
 use snm_node::SNode;
-use snm_package_json::pm::PackageManager;
+use snm_pm::pm::PackageManager;
 use snm_utils::exec::exec_cli;
 
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];

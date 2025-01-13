@@ -2,11 +2,11 @@ use std::env::current_exe;
 
 use anyhow::bail;
 use snm_config::SnmConfig;
-use snm_package_json::factory::{PackageManagerFactory, PackageManagerFactoryCommands};
-use snm_package_json::ops::ops::InstallArgs;
-use snm_package_json::package_json::PackageJson;
-use snm_package_json::pm::PackageManager;
-use snm_package_json::pm_metadata::PackageManagerMetadata;
+use snm_pm::factory::{PackageManagerFactory, PackageManagerFactoryCommands};
+use snm_pm::ops::ops::InstallArgs;
+use snm_pm::package_json::PackageJson;
+use snm_pm::pm::PackageManager;
+use snm_pm::pm_metadata::PackageManagerMetadata;
 use snm_utils::exec::exec_cli;
 
 use crate::fig::fig_spec_impl;
