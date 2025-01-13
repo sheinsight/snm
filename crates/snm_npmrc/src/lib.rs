@@ -9,6 +9,7 @@ const DEFAULT_REGISTRY: &str = "https://registry.npmjs.org/";
 
 const FILE_NAME: &str = ".npmrc";
 
+#[allow(dead_code)]
 const ETC_FILE_NAME: &str = "npmrc";
 
 pub struct NpmrcReader {
@@ -21,8 +22,6 @@ impl NpmrcReader {
       Some(home_dir) => home_dir,
       None => return Self { config: None },
     };
-
-    let prefix = env::var_os("PREFIX").unwrap_or_default();
 
     let sources = {
       #[cfg(target_os = "windows")]
@@ -39,6 +38,7 @@ impl NpmrcReader {
       }
       #[cfg(not(target_os = "windows"))]
       {
+        let prefix = env::var_os("PREFIX").unwrap_or_default();
         vec![
           PathBuf::from("/")
             .join(&prefix)
