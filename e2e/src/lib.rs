@@ -77,10 +77,15 @@ impl CommandBuilder {
       .unwrap()
       .to_string();
 
-    let paths = std::env::join_paths([&debug_dir, env_path])?;
+    let path_separator = if cfg!(target_os = "windows") {
+      ";"
+    } else {
+      ":"
+    };
+    let new_path = format!("{}{}{}", debug_dir, path_separator, env_path);
 
     let mut envs: Vec<SnmEnv> = vec![
-      SnmEnv::Path(paths.to_str().unwrap().to_string()),
+      SnmEnv::Path(new_path),
       SnmEnv::HomeDir(tmp_dir.display().to_string()),
     ];
     envs.extend(custom_envs);
