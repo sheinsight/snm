@@ -114,7 +114,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         }
         #[cfg(windows)]
         {
-          std::os::windows::fs::symlink_dir(&source, &target)?;
+          std::os::windows::fs::symlink_file(&source, &target)?;
         }
       }
     }
