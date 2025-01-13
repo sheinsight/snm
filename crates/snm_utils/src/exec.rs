@@ -20,7 +20,15 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
 
   let original_path = env::var("PATH")?;
 
-  let new_path: String = format!("{}:{}", dir.join(":"), original_path);
+  #[cfg(target_os = "windows")]
+  let separator = ";";
+
+  #[cfg(not(target_os = "windows"))]
+  let separator = ":";
+
+  let new_path: String = format!("{}{}{}", dir.join(separator), separator, original_path);
+
+  // let new_path: String = format!("{}:{}", dir.join(":"), original_path);
 
   // let has_binary = new_path
   //     .split(':') // 使用字符而不是字符串
