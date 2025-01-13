@@ -71,9 +71,16 @@ impl CommandBuilder {
   pub fn with_envs(name: &str, cwd: PathBuf, custom_envs: Vec<SnmEnv>) -> anyhow::Result<Self> {
     let tmp_dir = tempdir()?.into_path();
     let env_path = env!("PATH");
-    let debug_dir = Self::get_debug_dir().to_str().unwrap().to_string();
+    // let debug_dir = Self::get_debug_dir().to_str().unwrap().to_string();
+    let debug_dir = dunce::canonicalize(Self::get_debug_dir())?
+      .to_str()
+      .unwrap()
+      .to_string();
+
+    let paths = std::env::join_paths([&debug_dir, env_path])?;
+
     let mut envs: Vec<SnmEnv> = vec![
-      SnmEnv::Path(format!("{}:{}", debug_dir, env_path)),
+      SnmEnv::Path(paths.to_str().unwrap().to_string()),
       SnmEnv::HomeDir(tmp_dir.display().to_string()),
     ];
     envs.extend(custom_envs);
@@ -99,6 +106,12 @@ impl CommandBuilder {
 
   pub fn exec(&self, command: &str) -> anyhow::Result<String> {
     let expr = if cfg!(target_os = "windows") {
+      // Windows 下需要添加 .exe 后缀
+      let command = if command.starts_with("snm") {
+        command.replace("snm", "snm.exe")
+      } else {
+        command.to_string()
+      };
       cmd!("cmd", "/C", command)
     } else {
       cmd!("sh", "-c", command)
