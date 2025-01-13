@@ -92,7 +92,7 @@ impl HttpMocker {
           wiremock::ResponseTemplate::new(200).set_body_raw(
             std::fs::read(&fixture_path)
               .with_context(|| format!("Can not found {:?}", &fixture_path))?,
-            "application/x-xz",
+            "application/octet-stream",
           ),
         )
         .mount(&mock_server)
@@ -169,7 +169,9 @@ impl HttpMocker {
           name2 = name.split("/").last().unwrap(),
           version = v
         )))
-        .respond_with(wiremock::ResponseTemplate::new(200).set_body_raw(tgz, "application/x-xz"))
+        .respond_with(
+          wiremock::ResponseTemplate::new(200).set_body_raw(tgz, "application/octet-stream"),
+        )
         .mount(&mock_server)
         .await;
     }
