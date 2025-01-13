@@ -93,8 +93,17 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
 
       const SHIM_TARGETS: &[&str] = &["npm", "npx", "yarn", "pnpm", "pnpx", "node"];
 
+      #[cfg(windows)]
+      let source = exe_dir.join("snm-shim.exe");
+      #[cfg(not(windows))]
       let source = exe_dir.join("snm-shim");
+
+      // let source = exe_dir.join("snm-shim");
       for target in SHIM_TARGETS {
+        // let target = exe_dir.join(target);
+        #[cfg(windows)]
+        let target = exe_dir.join(format!("{}.exe", target));
+        #[cfg(not(windows))]
         let target = exe_dir.join(target);
         if target.try_exists()? {
           std::fs::remove_file(&target)?;
