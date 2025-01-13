@@ -29,22 +29,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
-      - name: Clean Node.js environment
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          # 备份原始 PATH
-          $originalPath = $env:PATH
+      # - name: Clean Node.js environment
+      #   if: matrix.os == 'windows-latest'
+      #   shell: pwsh
+      #   run: |
+      #     # 备份原始 PATH
+      #     $originalPath = $env:PATH
           
-          # 从 PATH 中移除包含 nodejs 的路径
-          $newPath = ($originalPath.Split(';') | Where-Object { $_ -notmatch 'nodejs' }) -join ';'
+      #     # 从 PATH 中移除包含 nodejs 的路径
+      #     $newPath = ($originalPath.Split(';') | Where-Object { $_ -notmatch 'nodejs' }) -join ';'
           
-          # 设置新的 PATH
-          echo "PATH=$newPath" >> $env:GITHUB_ENV
+      #     # 设置新的 PATH
+      #     echo "PATH=$newPath" >> $env:GITHUB_ENV
           
-          # 验证 Node.js 是否已被移除
-          echo "Verifying Node.js removal:"
-          where.exe node 2>&1 || echo "Node.js not found (expected)"
+      #     # 验证 Node.js 是否已被移除
+      #     echo "Verifying Node.js removal:"
+      #     where.exe node 2>&1 || echo "Node.js not found (expected)"
 
       - name: Check Node.js before setup
         run: |
