@@ -1,6 +1,7 @@
 use std::{env::current_dir, path::PathBuf};
 
 use anyhow::Context;
+use wiremock::MockServer;
 
 pub struct HttpMocker {
   // mock_server: wiremock::MockServer,
@@ -180,6 +181,15 @@ impl HttpMocker {
 
   pub async fn build(&self) -> anyhow::Result<wiremock::MockServer> {
     let mock_server = wiremock::MockServer::start().await;
+
+    // 添加调试信息
+    println!("=== Mock Server Debug Info ===");
+    println!("URI: {}", mock_server.uri());
+    println!("Address: {}", mock_server.address());
+
+    // 测试服务器连接性
+    let test_response = reqwest::Client::new().get(mock_server.uri()).send().await;
+    println!("Connection test result: {:?}", test_response);
 
     self.setup_node_index(&mock_server).await?;
     self.setup_node(&mock_server).await?;

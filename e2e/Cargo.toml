@@ -15,3 +15,4 @@ serde_json = { workspace = true }
 semver = "1.0.23"
 snm_utils = { path = "../crates/snm_utils" }
 dunce = { workspace = true }
+reqwest = { workspace = true }
