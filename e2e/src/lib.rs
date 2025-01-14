@@ -110,6 +110,27 @@ impl CommandBuilder {
   }
 
   pub fn exec(&self, command: &str) -> anyhow::Result<String> {
+    if cfg!(target_os = "windows") {
+      let test_output = cmd!(
+        "powershell",
+        "-Command",
+        r#"
+          Write-Host 'Testing network in child process...'
+          Test-NetConnection -ComputerName 127.0.0.1 -Port 60961
+          netstat -an | Select-String '127.0.0.1:60961'
+      "#
+      )
+      .stdout_capture()
+      .stderr_capture()
+      .unchecked()
+      .run()?;
+
+      println!(
+        "Network test output: {}",
+        String::from_utf8_lossy(&test_output.stdout)
+      );
+    }
+
     let expr = if cfg!(target_os = "windows") {
       // Windows 下需要添加 .exe 后缀
       let command = if command.starts_with("snm") {
@@ -125,7 +146,6 @@ impl CommandBuilder {
     let output = expr
       .full_env(self.envs.clone())
       // .env(envs) // 设置环境变量
-      .env("WINSOCK_REGISTRY", "parent")
       .dir(self.cwd.clone()) // 设置工作目录
       .stdout_capture()
       .stderr_capture() // 同时捕获输出
