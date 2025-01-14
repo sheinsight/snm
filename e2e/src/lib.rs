@@ -125,6 +125,7 @@ impl CommandBuilder {
     let output = expr
       .full_env(self.envs.clone())
       // .env(envs) // 设置环境变量
+      .env("WINSOCK_REGISTRY", "parent")
       .dir(self.cwd.clone()) // 设置工作目录
       .stdout_capture()
       .stderr_capture() // 同时捕获输出
