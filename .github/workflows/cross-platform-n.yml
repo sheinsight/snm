@@ -53,7 +53,16 @@ jobs:
           Write-Host "Adding firewall rules..."
           New-NetFirewallRule -DisplayName "Allow Mock Server" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 0-65535
 
+          node -v
+          cargo install just
+          just setup
+          just ready
+          just ci-e2e
+        env:
+          RUST_BACKTRACE: full
+
       - name: Run tests
+        if: runner.os != 'Windows'
         run: | 
           node -v
           cargo install just
