@@ -13,7 +13,7 @@ colored              = "2.1.0"
 dialoguer            = { workspace = true }
 flate2               = "1.0.28"
 itertools            = "0.13.0"
-reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
+reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls"] }
 semver               = { workspace = true }
 serde                = { workspace = true, features = ["derive"] }
 serde_json           = { workspace = true }
