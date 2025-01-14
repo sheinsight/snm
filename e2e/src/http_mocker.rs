@@ -1,4 +1,4 @@
-use std::{env::current_dir, path::PathBuf};
+use std::{env::current_dir, path::PathBuf, time::Duration};
 
 use anyhow::Context;
 
@@ -207,7 +207,11 @@ impl HttpMocker {
     );
 
     // 测试服务器连接性
-    let test_response = reqwest::Client::new().get(node_url).send().await;
+    let test_response = reqwest::Client::new()
+      .get(node_url)
+      .timeout(Duration::from_secs(60))
+      .send()
+      .await;
     println!("Connection test result: {:?}", test_response);
 
     wiremock::Mock::given(wiremock::matchers::any())
