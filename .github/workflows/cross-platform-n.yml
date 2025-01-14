@@ -28,6 +28,19 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
+       # Windows 平台下关闭防火墙
+      - name: Disable Windows Firewall
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Current firewall status:"
+          netsh advfirewall show allprofiles
+          
+          Write-Host "Disabling all firewall profiles..."
+          Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+          
+          Write-Host "Firewall status after disable:"
+          netsh advfirewall show allprofiles
 
       # - name: Clean Node.js environment
       #   if: matrix.os == 'windows-latest'
