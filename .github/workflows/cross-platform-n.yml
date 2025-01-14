@@ -43,52 +43,7 @@ jobs:
           Write-Host "Firewall status after disable:"
           netsh advfirewall show allprofiles
 
-    # 在所有操作之前检查用户上下文
-      - name: Check User Context
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          Write-Host "Current user context:"
-          whoami
-          whoami /priv
-          
-          # 存储当前用户信息供后续使用
-          $env:CURRENT_USER = $(whoami)
-          echo "CURRENT_USER=$(whoami)" >> $env:GITHUB_ENV
-
-      - name: Run tests
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          Write-Host "Running tests as user: $env:CURRENT_USER"
-          # 确保使用相同的用户运行所有命令
-          $env:USERNAME = $env:CURRENT_USER
-          
-          node -v
-          cargo install just
-          just setup
-          just ready
-          just ci-e2e
-        env:
-          RUST_BACKTRACE: full
-
-      # - name: Clean Node.js environment
-      #   if: matrix.os == 'windows-latest'
-      #   shell: pwsh
-      #   run: |
-      #     # 备份原始 PATH
-      #     $originalPath = $env:PATH
-          
-      #     # 从 PATH 中移除包含 nodejs 的路径
-      #     $newPath = ($originalPath.Split(';') | Where-Object { $_ -notmatch 'nodejs' }) -join ';'
-          
-      #     # 设置新的 PATH
-      #     echo "PATH=$newPath" >> $env:GITHUB_ENV
-          
-      #     # 验证 Node.js 是否已被移除
-      #     echo "Verifying Node.js removal:"
-      #     where.exe node 2>&1 || echo "Node.js not found (expected)"
-
+   
       - name: Check Node.js before setup
         run: |
           echo "Checking Node.js before any setup:"
@@ -118,6 +73,35 @@ jobs:
           echo "Checking Node.js after Rust setup:"
           where node || true
           node -v || true
+
+      # 在所有操作之前检查用户上下文
+      - name: Check User Context
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Current user context:"
+          whoami
+          whoami /priv
+          
+          # 存储当前用户信息供后续使用
+          $env:CURRENT_USER = $(whoami)
+          echo "CURRENT_USER=$(whoami)" >> $env:GITHUB_ENV
+
+      - name: Run tests
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Running tests as user: $env:CURRENT_USER"
+          # 确保使用相同的用户运行所有命令
+          $env:USERNAME = $env:CURRENT_USER
+          
+          node -v
+          cargo install just
+          just setup
+          just ready
+          just ci-e2e
+        env:
+          RUST_BACKTRACE: full
 
       - name: Run tests
         run: | 
