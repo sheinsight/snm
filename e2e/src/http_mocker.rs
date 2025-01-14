@@ -1,7 +1,6 @@
 use std::{env::current_dir, path::PathBuf};
 
 use anyhow::Context;
-use wiremock::MockServer;
 
 pub struct HttpMocker {
   // mock_server: wiremock::MockServer,
