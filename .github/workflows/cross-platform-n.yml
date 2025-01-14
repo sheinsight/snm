@@ -28,6 +28,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
+
        # Windows 平台下关闭防火墙
       - name: Disable Windows Firewall
         if: runner.os == 'Windows'
@@ -41,6 +42,35 @@ jobs:
           
           Write-Host "Firewall status after disable:"
           netsh advfirewall show allprofiles
+
+    # 在所有操作之前检查用户上下文
+      - name: Check User Context
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Current user context:"
+          whoami
+          whoami /priv
+          
+          # 存储当前用户信息供后续使用
+          $env:CURRENT_USER = $(whoami)
+          echo "CURRENT_USER=$(whoami)" >> $env:GITHUB_ENV
+
+      - name: Run tests
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Running tests as user: $env:CURRENT_USER"
+          # 确保使用相同的用户运行所有命令
+          $env:USERNAME = $env:CURRENT_USER
+          
+          node -v
+          cargo install just
+          just setup
+          just ready
+          just ci-e2e
+        env:
+          RUST_BACKTRACE: full
 
       # - name: Clean Node.js environment
       #   if: matrix.os == 'windows-latest'
