@@ -186,10 +186,6 @@ impl HttpMocker {
     println!("URI: {}", mock_server.uri());
     println!("Address: {}", mock_server.address());
 
-    // 测试服务器连接性
-    let test_response = reqwest::Client::new().get(mock_server.uri()).send().await;
-    println!("Connection test result: {:?}", test_response);
-
     self.setup_node_index(&mock_server).await?;
     self.setup_node(&mock_server).await?;
 
@@ -200,6 +196,19 @@ impl HttpMocker {
     self.setup_pm(&mock_server, "npm", &npm_versions).await?;
     self.setup_pm(&mock_server, "pnpm", &pnpm_versions).await?;
     self.setup_pm(&mock_server, "yarn", &yarn_versions).await?;
+
+    let node_url = format!(
+      "{}/v{version}/node-v{version}-{os}-{arch}.{ext}",
+      mock_server.uri(),
+      version = "20.0.0",
+      os = snm_utils::consts::os(),
+      arch = snm_utils::consts::arch(),
+      ext = snm_utils::consts::ext()
+    );
+
+    // 测试服务器连接性
+    let test_response = reqwest::Client::new().get(node_url).send().await;
+    println!("Connection test result: {:?}", test_response);
 
     wiremock::Mock::given(wiremock::matchers::any())
       .respond_with(move |req: &wiremock::Request| {
