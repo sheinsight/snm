@@ -117,14 +117,7 @@ impl CommandBuilder {
       } else {
         command.to_string()
       };
-      // cmd!("cmd", "/C", command)
-      cmd!(
-        "powershell",
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        command
-      )
+      cmd!("cmd", "/C", command)
     } else {
       cmd!("sh", "-c", command)
     };
