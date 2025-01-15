@@ -5,9 +5,9 @@ use std::{
 };
 
 use anyhow::{bail, Context};
-use colored::Colorize;
+// use colored::Colorize;
 use flate2::read::GzDecoder;
-use reqwest::StatusCode;
+// use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
