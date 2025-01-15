@@ -16,6 +16,24 @@ pub enum WriteStrategy {
   Nothing,
 }
 
+#[cfg(target_os = "windows")]
+fn init_windows_network() -> Result<(), Box<dyn std::error::Error>> {
+  use std::sync::Once;
+  static INIT: Once = Once::new();
+
+  INIT.call_once(|| {
+    // 确保 WinSock 初始化
+    unsafe {
+      let mut wsa_data = std::mem::zeroed();
+      if winapi::um::winsock2::WSAStartup(0x202, &mut wsa_data) != 0 {
+        panic!("Failed to initialize WinSock");
+      }
+    }
+  });
+
+  Ok(())
+}
+
 pub struct DownloadBuilder {
   retries: u8,
   timeout: u64,
@@ -102,6 +120,10 @@ impl DownloadBuilder {
       if !parent.exists() {
         std::fs::create_dir_all(parent)?;
       }
+
+      // 在创建 reqwest client 之前调用
+      #[cfg(target_os = "windows")]
+      init_windows_network()?;
 
       #[cfg(target_os = "windows")]
       let client = reqwest::Client::builder()
