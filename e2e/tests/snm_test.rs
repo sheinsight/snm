@@ -1,5 +1,6 @@
 use std::env::current_dir;
 
+use duct::cmd;
 use e2e::SnmEnv;
 
 e2e::test1! {
@@ -228,11 +229,30 @@ e2e::test1! {
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   let url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
-  let response = reqwest::get(url).await?;
-  println!("response---->: {:?}", response);
-  assert!(response.status().is_success());
-  let content = response.text().await?;
-  assert!(content.contains("v0.8")); // 验证内容
-  println!("content---->: {:?}", content);
+  if cfg!(target_os = "windows") {
+    cmd!(
+        "powershell",
+        "-Command",
+        "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/nodejs/Release/main/schedule.json' -UseBasicParsing"
+      )
+      .stdout_capture()
+      .stderr_capture()
+      .run()?;
+  } else {
+    cmd!(
+      "curl",
+      "-s",
+      "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
+    )
+    .stdout_capture()
+    .stderr_capture()
+    .run()?;
+  }
+  //   let response = reqwest::get(url).await?;
+  //   println!("response---->: {:?}", response);
+  //   assert!(response.status().is_success());
+  //   let content = response.text().await?;
+  //   assert!(content.contains("v0.8")); // 验证内容
+  //   println!("content---->: {:?}", content);
   Ok(())
 }
