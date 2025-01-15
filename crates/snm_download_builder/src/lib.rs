@@ -178,6 +178,20 @@ impl DownloadBuilder {
         .build()?;
 
       let response = client
+        .head(download_url)
+        .timeout(Duration::from_secs(60))
+        .send()
+        .await?;
+
+      if !response.status().is_success() {
+        anyhow::bail!(
+          "Head request failed, Http status code not ok {} : {:?}",
+          response.status(),
+          response
+        );
+      }
+
+      let response = client
         .get(download_url)
         .timeout(Duration::from_secs(60))
         .send()
@@ -198,7 +212,7 @@ impl DownloadBuilder {
 
       if !response.status().is_success() {
         anyhow::bail!(
-          "Http status code not ok {} : {:?}",
+          "Get request failed, Http status code not ok {} : {:?}",
           response.status(),
           response
         );
