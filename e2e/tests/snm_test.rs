@@ -228,7 +228,7 @@ e2e::test1! {
 
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
-  let url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+  let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
   if cfg!(target_os = "windows") {
     cmd!(
         "powershell",
