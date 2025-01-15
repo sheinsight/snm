@@ -23,7 +23,7 @@ impl HttpMocker {
   async fn setup_node_index(&self, mock_server: &wiremock::MockServer) -> anyhow::Result<()> {
     let file_path_bug = self.fixtures.join("node").join("index.json");
 
-    let request_url = format!("index.json");
+    let request_url = format!("/index.json");
 
     println!(
       r#"
