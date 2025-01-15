@@ -25,13 +25,48 @@ fn init_windows_network() -> anyhow::Result<()> {
     // 确保 WinSock 初始化
     unsafe {
       let mut wsa_data = std::mem::zeroed();
-      if winapi::um::winsock2::WSAStartup(0x202, &mut wsa_data) != 0 {
-        panic!("Failed to initialize WinSock");
+      let result = winapi::um::winsock2::WSAStartup(0x202, &mut wsa_data);
+      if result != 0 {
+        let error = winapi::um::winsock2::WSAGetLastError();
+        panic!("Failed to initialize WinSock: error code {}", error);
       }
+      println!("WinSock initialized successfully");
+      println!(
+        "WinSock version: {}.{}",
+        wsa_data.wVersion & 0xFF,
+        wsa_data.wVersion >> 8
+      );
     }
   });
 
   Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn check_network_status() {
+  use std::process::Command;
+
+  println!("\nChecking network status before download:");
+
+  // 检查 TCP 连接
+  let output = Command::new("netstat")
+    .args(["-n", "-p", "TCP"])
+    .output()
+    .expect("Failed to execute netstat");
+  println!(
+    "Active TCP connections:\n{}",
+    String::from_utf8_lossy(&output.stdout)
+  );
+
+  // 检查本地端口
+  let output = Command::new("netstat")
+    .args(["-an", "|", "findstr", "LISTENING"])
+    .output()
+    .expect("Failed to execute netstat");
+  println!(
+    "Listening ports:\n{}",
+    String::from_utf8_lossy(&output.stdout)
+  );
 }
 
 pub struct DownloadBuilder {
@@ -121,6 +156,10 @@ impl DownloadBuilder {
         std::fs::create_dir_all(parent)?;
       }
 
+      // 在发送请求前调用
+      #[cfg(target_os = "windows")]
+      check_network_status();
+
       // 在创建 reqwest client 之前调用
       #[cfg(target_os = "windows")]
       init_windows_network()?;
@@ -139,10 +178,23 @@ impl DownloadBuilder {
         .build()?;
 
       let response = client
-        .post(download_url)
+        .get(download_url)
         .timeout(Duration::from_secs(60))
         .send()
-        .await?;
+        .await
+        .map_err(|e| {
+          println!("\nRequest failed:");
+          println!("URL: {}", download_url);
+          println!("Error: {:?}", e);
+
+          println!("Caused by: {:?}", e);
+
+          #[cfg(target_os = "windows")]
+          unsafe {
+            println!("WSA Error: {}", winapi::um::winsock2::WSAGetLastError());
+          }
+          e
+        })?;
 
       if !response.status().is_success() {
         anyhow::bail!(
