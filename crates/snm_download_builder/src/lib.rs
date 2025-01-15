@@ -59,14 +59,15 @@ impl DownloadBuilder {
         Ok(_) => {
           return Ok(abs_path);
         }
-        Err(_) => {
+        Err(err) => {
           attempts += 1;
 
           if attempts <= self.retries {
             eprintln!(
-              "Download failed, attempting retry {} . The URL is {} .",
+              "Download failed, attempting retry {} . The URL is {} . Error: {:?}",
               attempts.to_string().bright_yellow().bold(),
-              download_url.bright_red()
+              download_url.bright_red(),
+              err
             );
           }
           sleep(Duration::from_millis((self.retries + 10).into())).await;
@@ -81,14 +82,12 @@ impl DownloadBuilder {
     &mut self,
     download_url: &str,
     abs_path: P,
-  ) -> Result<P, SnmError> {
+  ) -> anyhow::Result<P> {
     let abs_path_ref = abs_path.as_ref();
     if abs_path_ref.exists() {
       match self.write_strategy {
         WriteStrategy::Error => {
-          return Err(SnmError::FileAlreadyExists {
-            file_path: abs_path_ref.to_path_buf(),
-          });
+          anyhow::bail!("File already exists: {}", abs_path_ref.display());
         }
         WriteStrategy::WriteAfterDelete => {
           std::fs::remove_file(&abs_path_ref)?;
