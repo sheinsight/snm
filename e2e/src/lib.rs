@@ -138,7 +138,7 @@ impl CommandBuilder {
       } else {
         command.to_string()
       };
-      cmd!("powershell", "-Command", command)
+      cmd!("cmd", "/C", command)
     } else {
       cmd!("sh", "-c", command)
     };
