@@ -138,7 +138,7 @@ impl CommandBuilder {
       } else {
         command.to_string()
       };
-      cmd!("cmd", "/C", command)
+      cmd!("powershell", "-Command", command)
     } else {
       cmd!("sh", "-c", command)
     };
@@ -219,6 +219,9 @@ macro_rules! test1 {
             )?;
 
             $builder.exec("snm setup")?;
+
+
+            mock_server.
 
             // let $snapshot = e2e::SnapshotBuilder::new();
 
