@@ -28,20 +28,20 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Test Network
-        if: runner.os == 'Windows'
-        run: |
-          # 测试 DNS 解析
-          nslookup raw.githubusercontent.com
+      # - name: Test Network
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     # 测试 DNS 解析
+      #     nslookup raw.githubusercontent.com
           
-          # 测试网络连接
-          ping raw.githubusercontent.com
+      #     # 测试网络连接
+      #     ping raw.githubusercontent.com
           
-          # 测试 HTTPS 连接（使用 PowerShell 命令替代 curl）
-          powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/nodejs/Release/main/schedule.json' -UseBasicParsing"
+      #     # 测试 HTTPS 连接（使用 PowerShell 命令替代 curl）
+      #     powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/nodejs/Release/main/schedule.json' -UseBasicParsing"
           
-          # 显示网络路由
-          tracert raw.githubusercontent.com
+      #     # 显示网络路由
+      #     tracert raw.githubusercontent.com
 
       # - name: Checkout code
       #   uses: actions/checkout@v3
