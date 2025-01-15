@@ -4,7 +4,7 @@ use std::time::Duration;
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use reqwest::Client;
+// use reqwest::Client;
 use snm_utils::snm_error::SnmError;
 use tokio::io::AsyncWriteExt;
 use tokio::time::sleep;
@@ -113,6 +113,7 @@ impl DownloadBuilder {
       #[cfg(not(target_os = "windows"))]
       let client = reqwest::Client::builder()
         // 其他平台使用默认的 rustls
+        // .use_native_tls() // Windows 下使用系统 TLS
         .timeout(Duration::from_secs(30))
         .build()?;
 
