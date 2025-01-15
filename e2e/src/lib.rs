@@ -221,8 +221,6 @@ macro_rules! test1 {
             $builder.exec("snm setup")?;
 
 
-            mock_server.
-
             // let $snapshot = e2e::SnapshotBuilder::new();
 
             $body
