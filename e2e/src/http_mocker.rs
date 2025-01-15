@@ -100,6 +100,20 @@ impl HttpMocker {
         .join(format!("v{}", v))
         .join("SHASUMS256.txt");
 
+      let shasums_url = format!("/v{version}/SHASUMS256.txt", version = v);
+
+      println!(
+        r#"
+      URI   : {}{}
+      PATH  : {:?}
+      EXISTS: {:?}
+  "#,
+        mock_server.uri(),
+        shasums_url,
+        shasums_path,
+        shasums_path.exists()
+      );
+
       wiremock::Mock::given(wiremock::matchers::method("GET"))
         .and(wiremock::matchers::path(format!(
           "/v{version}/SHASUMS256.txt",
