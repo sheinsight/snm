@@ -17,7 +17,7 @@ pub enum WriteStrategy {
 }
 
 #[cfg(target_os = "windows")]
-fn init_windows_network() -> Result<(), Box<dyn std::error::Error>> {
+fn init_windows_network() -> anyhow::Result<()> {
   use std::sync::Once;
   static INIT: Once = Once::new();
 
