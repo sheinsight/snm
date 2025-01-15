@@ -25,9 +25,14 @@ impl HttpMocker {
 
     let request_url = format!("index.json");
 
-    println!("request_url: {:?}", request_url);
     println!(
-      "file_path_bug: {:?} , exists: {:?}",
+      r#"
+    URI   : {}{}
+    PATH  : {:?}
+    EXISTS: {:?}
+"#,
+      mock_server.uri(),
+      request_url,
       file_path_bug,
       file_path_bug.exists()
     );
@@ -69,9 +74,14 @@ impl HttpMocker {
         ext = self.ext
       );
 
-      println!("request_url: {:?}", request_url);
       println!(
-        "node_tgz_path_buf: {:?} , exists: {:?}",
+        r#"
+      URI   : {}{}
+      PATH  : {:?}
+      EXISTS: {:?}
+  "#,
+        mock_server.uri(),
+        request_url,
         node_tgz_path_buf,
         node_tgz_path_buf.exists()
       );
@@ -134,9 +144,14 @@ impl HttpMocker {
       let json = std::fs::read_to_string(&json_path_bug)
         .with_context(|| format!("Can not found {:?}", &json_path_bug))?;
 
-      println!("json_request_url: {:?}", json_request_url);
       println!(
-        "json_path_bug: {:?} , exists: {:?}",
+        r#"
+        URI   : {}{}
+        PATH  : {:?}
+        EXISTS: {:?}
+    "#,
+        mock_server.uri(),
+        json_request_url,
         json_path_bug,
         json_path_bug.exists()
       );
@@ -162,9 +177,14 @@ impl HttpMocker {
         version = v
       );
 
-      println!("request_url: {:?}", request_url);
       println!(
-        "tgz_path_buf: {:?} , exists: {:?}",
+        r#"
+        URI   : {}{}
+        PATH  : {:?}
+        EXISTS: {:?}
+    "#,
+        mock_server.uri(),
+        request_url,
         tgz_path_buf,
         tgz_path_buf.exists()
       );
