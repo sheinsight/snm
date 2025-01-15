@@ -67,7 +67,7 @@ impl DownloadBuilder {
               "Download failed, attempting retry {} . The URL is {} . Error: {:?}",
               attempts.to_string().bright_yellow().bold(),
               download_url.bright_red(),
-              err
+              err.source()
             );
           }
           sleep(Duration::from_millis((self.retries + 10).into())).await;
