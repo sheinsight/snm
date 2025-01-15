@@ -123,7 +123,11 @@ impl DownloadBuilder {
         .await?;
 
       if !response.status().is_success() {
-        return Err(SnmError::HttpStatusCodeUnOk);
+        anyhow::bail!(
+          "Http status code not ok {} : {:?}",
+          response.status(),
+          response
+        );
       }
 
       let total_size = response.content_length();
