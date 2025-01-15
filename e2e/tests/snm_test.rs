@@ -228,8 +228,8 @@ e2e::test1! {
 
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
-  let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
-  if cfg!(target_os = "windows") {
+  //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+  let resp = if cfg!(target_os = "windows") {
     cmd!(
         "powershell",
         "-Command",
@@ -237,7 +237,7 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
       )
       .stdout_capture()
       .stderr_capture()
-      .run()?;
+      .read()?
   } else {
     cmd!(
       "curl",
@@ -246,8 +246,11 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
     )
     .stdout_capture()
     .stderr_capture()
-    .run()?;
-  }
+    .read()?
+  };
+
+  println!("resp---->: {:?}", resp);
+
   //   let response = reqwest::get(url).await?;
   //   println!("response---->: {:?}", response);
   //   assert!(response.status().is_success());
