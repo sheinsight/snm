@@ -133,19 +133,6 @@ impl<'a> NodeDownloader<'a> {
     let download_url = self.get_download_url(version);
     let downloaded_file_path_buf = self.get_downloaded_path_buf(version);
 
-    let response = reqwest::Client::builder()
-      .build()?
-      .head(&download_url)
-      .send()
-      .await?;
-
-    if response.status() == StatusCode::NOT_FOUND {
-      bail!(
-        "Node {version} version not found",
-        version = version.bright_red()
-      );
-    }
-
     DownloadBuilder::new()
       .retries(3)
       .timeout(self.config.download_timeout_secs)

@@ -104,7 +104,19 @@ impl DownloadBuilder {
         std::fs::create_dir_all(parent)?;
       }
 
-      let response = Client::new()
+      #[cfg(target_os = "windows")]
+      let client = reqwest::Client::builder()
+        .use_native_tls() // Windows 下使用系统 TLS
+        .timeout(Duration::from_secs(30))
+        .build()?;
+
+      #[cfg(not(target_os = "windows"))]
+      let client = reqwest::Client::builder()
+        // 其他平台使用默认的 rustls
+        .timeout(Duration::from_secs(30))
+        .build()?;
+
+      let response = client
         .get(download_url)
         .timeout(Duration::from_secs(60))
         .send()
