@@ -231,9 +231,9 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
   let resp = if cfg!(target_os = "windows") {
     cmd!(
-        "powershell",
-        "-Command",
-        "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/nodejs/Release/main/schedule.json' -UseBasicParsing"
+        "cmd",
+        "/C",
+        "certutil -urlcache -split -f https://raw.githubusercontent.com/nodejs/Release/main/schedule.json temp.json & type temp.json & del temp.json"
       )
       .stdout_capture()
       .stderr_capture()
