@@ -3,10 +3,6 @@ use std::{env::current_dir, path::PathBuf, time::Duration};
 use anyhow::Context;
 
 pub struct HttpMocker {
-  node_versions: Vec<String>,
-  npm_versions: Vec<String>,
-  pnpm_versions: Vec<String>,
-  yarn_versions: Vec<String>,
   os: &'static str,
   arch: &'static str,
   ext: &'static str,
@@ -17,10 +13,6 @@ impl HttpMocker {
   pub fn builder() -> anyhow::Result<Self> {
     let fixtures = current_dir()?.join("src").join("fixtures");
     Ok(Self {
-      node_versions: Default::default(),
-      npm_versions: Default::default(),
-      pnpm_versions: Default::default(),
-      yarn_versions: Default::default(),
       os: snm_utils::consts::os(),
       arch: snm_utils::consts::arch(),
       ext: snm_utils::consts::ext(),
@@ -28,34 +20,23 @@ impl HttpMocker {
     })
   }
 
-  pub fn with_node(mut self, versions: Vec<&str>) -> Self {
-    self.node_versions = versions.into_iter().map(String::from).collect();
-    self
-  }
-
-  pub fn with_npm(mut self, versions: Vec<&str>) -> Self {
-    self.npm_versions = versions.into_iter().map(String::from).collect();
-    self
-  }
-
-  pub fn with_pnpm(mut self, versions: Vec<&str>) -> Self {
-    self.pnpm_versions = versions.into_iter().map(String::from).collect();
-    self
-  }
-
-  pub fn with_yarn(mut self, versions: Vec<&str>) -> Self {
-    self.yarn_versions = versions.into_iter().map(String::from).collect();
-    self
-  }
-
   async fn setup_node_index(&self, mock_server: &wiremock::MockServer) -> anyhow::Result<()> {
-    let file_path = self.fixtures.join("node").join("index.json");
+    let file_path_bug = self.fixtures.join("node").join("index.json");
 
-    let index_body =
-      std::fs::read(&file_path).with_context(|| format!("Can not found {:?}", &file_path))?;
+    let request_url = format!("index.json");
+
+    println!("request_url: {:?}", request_url);
+    println!(
+      "file_path_bug: {:?} , exists: {:?}",
+      file_path_bug,
+      file_path_bug.exists()
+    );
+
+    let index_body = std::fs::read(&file_path_bug)
+      .with_context(|| format!("Can not found {:?}", &file_path_bug))?;
 
     wiremock::Mock::given(wiremock::matchers::any())
-      .and(wiremock::matchers::path("index.json"))
+      .and(wiremock::matchers::path(&request_url))
       .respond_with(
         wiremock::ResponseTemplate::new(200).set_body_raw(index_body, "application/json"),
       )
@@ -68,7 +49,7 @@ impl HttpMocker {
     let node_versions = vec!["20.0.0".to_string()];
 
     for v in &node_versions {
-      let fixture_path = self
+      let node_tgz_path_buf = self
         .fixtures
         .join("node")
         .join(format!("v{}", v))
@@ -77,22 +58,28 @@ impl HttpMocker {
           v, self.os, self.arch, self.ext
         ));
 
-      println!(" node fixture_path: {:?}", fixture_path);
+      let node_tgz = std::fs::read(&node_tgz_path_buf)
+        .with_context(|| format!("Can not found {:?}", &node_tgz_path_buf))?;
+
+      let request_url = format!(
+        "/v{version}/node-v{version}-{os}-{arch}.{ext}",
+        version = v,
+        os = self.os,
+        arch = self.arch,
+        ext = self.ext
+      );
+
+      println!("request_url: {:?}", request_url);
+      println!(
+        "node_tgz_path_buf: {:?} , exists: {:?}",
+        node_tgz_path_buf,
+        node_tgz_path_buf.exists()
+      );
 
       wiremock::Mock::given(wiremock::matchers::any())
-        .and(wiremock::matchers::path(format!(
-          "/v{version}/node-v{version}-{os}-{arch}.{ext}",
-          version = v,
-          os = snm_utils::consts::os(),
-          arch = snm_utils::consts::arch(),
-          ext = snm_utils::consts::ext()
-        )))
+        .and(wiremock::matchers::path(&request_url))
         .respond_with(
-          wiremock::ResponseTemplate::new(200).set_body_raw(
-            std::fs::read(&fixture_path)
-              .with_context(|| format!("Can not found {:?}", &fixture_path))?,
-            "application/octet-stream",
-          ),
+          wiremock::ResponseTemplate::new(200).set_body_raw(node_tgz, "application/octet-stream"),
         )
         .mount(&mock_server)
         .await;
@@ -140,34 +127,50 @@ impl HttpMocker {
         pm_name
       };
 
-      let p = self.fixtures.join(pm_name).join(format!("{}.json", v));
+      let json_path_bug = self.fixtures.join(pm_name).join(format!("{}.json", v));
 
-      let json = std::fs::read_to_string(&p).with_context(|| format!("Can not found {:?}", &p))?;
+      let json_request_url = format!("/{name}/{version}", name = name, version = v);
+
+      let json = std::fs::read_to_string(&json_path_bug)
+        .with_context(|| format!("Can not found {:?}", &json_path_bug))?;
+
+      println!("json_request_url: {:?}", json_request_url);
+      println!(
+        "json_path_bug: {:?} , exists: {:?}",
+        json_path_bug,
+        json_path_bug.exists()
+      );
 
       wiremock::Mock::given(wiremock::matchers::any())
-        .and(wiremock::matchers::path(format!(
-          "/{name}/{version}",
-          name = name,
-          version = v
-        )))
+        .and(wiremock::matchers::path(&json_request_url))
         .respond_with(wiremock::ResponseTemplate::new(200).set_body_raw(json, "application/json"))
         .mount(&mock_server)
         .await;
 
-      let tgz_p = self
+      let tgz_path_buf = self
         .fixtures
         .join(pm_name)
         .join(format!("{}-{}.tgz", pm_name, v));
 
-      let tgz = std::fs::read(&tgz_p).with_context(|| format!("Can not found {:?}", &tgz_p))?;
+      let tgz = std::fs::read(&tgz_path_buf)
+        .with_context(|| format!("Can not found {:?}", &tgz_path_buf))?;
+
+      let request_url = format!(
+        "/{name}/-/{name2}-{version}.tgz",
+        name = name,
+        name2 = name.split("/").last().unwrap(),
+        version = v
+      );
+
+      println!("request_url: {:?}", request_url);
+      println!(
+        "tgz_path_buf: {:?} , exists: {:?}",
+        tgz_path_buf,
+        tgz_path_buf.exists()
+      );
 
       wiremock::Mock::given(wiremock::matchers::any())
-        .and(wiremock::matchers::path(format!(
-          "/{name}/-/{name2}-{version}.tgz",
-          name = name,
-          name2 = name.split("/").last().unwrap(),
-          version = v
-        )))
+        .and(wiremock::matchers::path(&request_url))
         .respond_with(
           wiremock::ResponseTemplate::new(200).set_body_raw(tgz, "application/octet-stream"),
         )
