@@ -139,7 +139,7 @@ impl DownloadBuilder {
         .build()?;
 
       let response = client
-        .get(download_url)
+        .post(download_url)
         .timeout(Duration::from_secs(60))
         .send()
         .await?;

@@ -114,7 +114,7 @@ impl HttpMocker {
         shasums_path.exists()
       );
 
-      wiremock::Mock::given(wiremock::matchers::method("GET"))
+      wiremock::Mock::given(wiremock::matchers::any())
         .and(wiremock::matchers::path(format!(
           "/v{version}/SHASUMS256.txt",
           version = v
