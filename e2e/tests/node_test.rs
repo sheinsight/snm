@@ -42,7 +42,7 @@ use e2e::SnmEnv;
 // }
 
 e2e::test1! {
-  #[tokio::test]
+  #[tokio::test(flavor = "current_thread")]
   test_with_strict_mode_and_has_default_node,
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
   envs: [SnmEnv::Strict("true".to_string())],
@@ -57,3 +57,9 @@ e2e::test1! {
     })?;
   }
 }
+
+// #[test]
+// fn hello() {
+//   let mock_server = e2e::get_global_mock_server().await;
+//   println!("mock_server---->: {:?}", mock_server);
+// }
