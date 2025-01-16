@@ -1,6 +1,5 @@
 // pub mod exec_builder;
 pub mod http_mocker;
-pub mod mock_server_manager;
 use std::path::PathBuf;
 
 use duct::cmd;
@@ -171,6 +170,25 @@ is: {}
   }
 }
 
+static GLOBAL_MOCK_SERVER: tokio::sync::OnceCell<std::sync::Arc<wiremock::MockServer>> =
+  tokio::sync::OnceCell::const_new();
+
+pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
+  GLOBAL_MOCK_SERVER
+    .get_or_init(|| async {
+      println!("\nInitializing global mock server...");
+      let mock_server = http_mocker::HttpMocker::builder()
+        .unwrap()
+        .build()
+        .await
+        .unwrap();
+
+      std::sync::Arc::new(mock_server)
+    })
+    .await
+    .clone()
+}
+
 #[macro_export]
 macro_rules! test1 {
     (
@@ -186,7 +204,7 @@ macro_rules! test1 {
             //     .build()
             //     .await?;
 
-            let mock_server = e2e::mock_server_manager::get_global_mock_server().await;
+            let mock_server = e2e::get_global_mock_server().await;
 
             let uri = mock_server.uri();
 
