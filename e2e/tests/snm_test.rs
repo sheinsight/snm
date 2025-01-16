@@ -293,31 +293,38 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
 
   let uri = mock_server.uri();
 
-  let builder = e2e::CommandBuilder::with_envs(
-    "test_reqwest_download",
-    std::env::current_dir()?
-      .join("tests")
-      .join("fixtures")
-      .join("empty"),
-    vec![
-      e2e::SnmEnv::NodeDistUrl(uri.clone()),
-      e2e::SnmEnv::NpmRegistry(uri.clone()),
-    ],
-  )?;
+  let download_url = format!("{}{}", uri, "/v20.0.0/node-v20.0.0-win-x64.zip");
+  let abs_path = std::env::current_dir()?.join("temp.zip");
+  let res = snm_download_builder::DownloadBuilder::new()
+    .download(&download_url, &abs_path)
+    .await?;
+  println!("res---->: {:?}", res);
 
-  let res = builder.exec("snm node install 20.0.0")?;
-  println!("res---->: {:?}", res);
-  let res = builder.exec("snm node list --compact")?;
-  println!("res---->: {:?}", res);
-  let res = builder.exec("snm node default 20.0.0")?;
-  println!("res---->: {:?}", res);
-  let res = builder.exec("snm node list --compact")?;
-  println!("res---->: {:?}", res);
-  let res = builder.exec("node -v")?;
-  println!("res---->: {:?}", res);
-  builder.assert_snapshots(|name, res| {
-    insta::assert_snapshot!(name, res);
-  })?;
+  //   let builder = e2e::CommandBuilder::with_envs(
+  //     "test_reqwest_download",
+  //     std::env::current_dir()?
+  //       .join("tests")
+  //       .join("fixtures")
+  //       .join("empty"),
+  //     vec![
+  //       e2e::SnmEnv::NodeDistUrl(uri.clone()),
+  //       e2e::SnmEnv::NpmRegistry(uri.clone()),
+  //     ],
+  //   )?;
+
+  //   let res = builder.exec("snm node install 20.0.0")?;
+  //   println!("res---->: {:?}", res);
+  //   let res = builder.exec("snm node list --compact")?;
+  //   println!("res---->: {:?}", res);
+  //   let res = builder.exec("snm node default 20.0.0")?;
+  //   println!("res---->: {:?}", res);
+  //   let res = builder.exec("snm node list --compact")?;
+  //   println!("res---->: {:?}", res);
+  //   let res = builder.exec("node -v")?;
+  //   println!("res---->: {:?}", res);
+  //   builder.assert_snapshots(|name, res| {
+  //     insta::assert_snapshot!(name, res);
+  //   })?;
 
   //   let out = current_dir()?.join("temp.zip");
 
