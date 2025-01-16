@@ -170,7 +170,7 @@ is: {}
   }
 }
 
-static GLOBAL_MOCK_SERVER: tokio::sync::OnceCell<std::sync::Arc<wiremock::MockServer>> =
+pub static GLOBAL_MOCK_SERVER: tokio::sync::OnceCell<std::sync::Arc<wiremock::MockServer>> =
   tokio::sync::OnceCell::const_new();
 
 pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
