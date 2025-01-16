@@ -287,7 +287,7 @@
 // //   root_dir.join("target").join("debug")
 // // }
 
-use std::path::PathBuf;
+// use std::path::PathBuf;
 
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
@@ -299,21 +299,20 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   //   let abs_path = std::env::current_dir()?.join("temp.zip");
   //   let res = snm_download_builder::DownloadBuilder::new()
 
+  let cur = std::env::current_dir()?;
+
   let config = snm_config::SnmConfig {
-    node_bin_dir: PathBuf::from("demo"),
-    download_dir: PathBuf::from("download"),
-    cache_dir: PathBuf::from("cache"),
-    node_modules_dir: PathBuf::from("node_modules"),
+    node_bin_dir: cur.join(".snm").join("node_bin_demo"),
+    download_dir: cur.join(".snm").join("downloads_demo"),
+    cache_dir: cur.join(".snm").join("cache_demo"),
+    node_modules_dir: cur.join(".snm").join("node_modules_demo"),
     node_dist_url: uri,
     node_github_resource_host: "https://raw.githubusercontent.com".to_string(),
     node_install_strategy: snm_config::InstallStrategy::Auto,
     node_white_list: "".to_string(),
     download_timeout_secs: 30,
     npm_registry: "https://registry.npmmirror.com".to_string(),
-    workspace: std::env::current_dir()?
-      .join("tests")
-      .join("fixtures")
-      .join("empty"),
+    workspace: cur.join("tests").join("fixtures").join("empty"),
     lang: "en".to_string(),
     restricted_list: vec![],
     strict: false,
