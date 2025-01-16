@@ -226,52 +226,112 @@ e2e::test1! {
     }
 }
 
+// #[tokio::test]
+// async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
+//   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
+
+//   let node_url = format!(
+//     "{}{}",
+//     mock_server.uri(),
+//     "/v20.0.0/node-v20.0.0-win-x64.zip"
+//   );
+
+//   let out = current_dir()?.join("temp.zip");
+
+//   let res = snm_download_builder::DownloadBuilder::new()
+//     .retries(3)
+//     .timeout(30)
+//     .download(&node_url, &out)
+//     .await?;
+
+//   println!("test_reqwest_download ---->: {:?} {:?}", res, out.exists());
+
+//   //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+//   //   let resp = if cfg!(target_os = "windows") {
+//   //     cmd!(
+//   //         "cmd",
+//   //         "/C",
+//   //         "certutil -urlcache -split -f https://raw.githubusercontent.com/nodejs/Release/main/schedule.json temp.json & type temp.json & del temp.json"
+//   //       )
+//   //       .stdout_capture()
+//   //       .stderr_capture()
+//   //       .read()?
+//   //   } else {
+//   //     cmd!(
+//   //       "curl",
+//   //       "-s",
+//   //       "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
+//   //     )
+//   //     .stdout_capture()
+//   //     .stderr_capture()
+//   //     .read()?
+//   //   };
+
+//   //   let response = reqwest::get(url).await?;
+//   //   println!("response---->: {:?}", response);
+//   //   assert!(response.status().is_success());
+//   //   let content = response.text().await?;
+//   //   assert!(content.contains("v0.8")); // 验证内容
+//   //   println!("content---->: {:?}", content);
+//   Ok(())
+// }
+
+fn get_debug_dir() -> std::path::PathBuf {
+  // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
+  let e2e_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+  // 向上一级找到项目根目录
+  let root_dir = e2e_dir.parent().expect("Failed to get root dir");
+
+  // 进入 target/debug 目录
+  root_dir.join("target").join("debug")
+}
+
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
-
-  let node_url = format!(
-    "{}{}",
-    mock_server.uri(),
-    "/v20.0.0/node-v20.0.0-win-x64.zip"
-  );
-
   let out = current_dir()?.join("temp.zip");
 
-  let res = snm_download_builder::DownloadBuilder::new()
-    .retries(3)
-    .timeout(30)
-    .download(&node_url, &out)
-    .await?;
+  // 获取 download_test 可执行文件路径
+  let test_exe = get_debug_dir().join("download_test");
 
-  println!("test_reqwest_download ---->: {:?} {:?}", res, out.exists());
+  let output = if cfg!(target_os = "windows") {
+    duct::cmd!(
+      "cmd",
+      "/C",
+      format!(
+        "{} {} {}",
+        test_exe.display(),
+        mock_server.uri(),
+        out.display()
+      )
+    )
+  } else {
+    duct::cmd!(
+      "sh",
+      "-c",
+      format!(
+        "{} {} {}",
+        test_exe.display(),
+        mock_server.uri(),
+        out.display()
+      )
+    )
+  }
+  .stdout_capture()
+  .stderr_capture()
+  .run()?;
 
-  //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
-  //   let resp = if cfg!(target_os = "windows") {
-  //     cmd!(
-  //         "cmd",
-  //         "/C",
-  //         "certutil -urlcache -split -f https://raw.githubusercontent.com/nodejs/Release/main/schedule.json temp.json & type temp.json & del temp.json"
-  //       )
-  //       .stdout_capture()
-  //       .stderr_capture()
-  //       .read()?
-  //   } else {
-  //     cmd!(
-  //       "curl",
-  //       "-s",
-  //       "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
-  //     )
-  //     .stdout_capture()
-  //     .stderr_capture()
-  //     .read()?
-  //   };
+  println!(
+    "Child process output: {}",
+    String::from_utf8_lossy(&output.stdout)
+  );
+  println!(
+    "Child process error: {}",
+    String::from_utf8_lossy(&output.stderr)
+  );
 
-  //   let response = reqwest::get(url).await?;
-  //   println!("response---->: {:?}", response);
-  //   assert!(response.status().is_success());
-  //   let content = response.text().await?;
-  //   assert!(content.contains("v0.8")); // 验证内容
-  //   println!("content---->: {:?}", content);
+  assert!(out.exists(), "Downloaded file should exist");
+
   Ok(())
 }
