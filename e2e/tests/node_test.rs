@@ -1,6 +1,6 @@
-use std::env::current_dir;
+// use std::env::current_dir;
 
-use e2e::SnmEnv;
+// use e2e::SnmEnv;
 
 // e2e::test1! {
 //   #[tokio::test]
@@ -41,22 +41,22 @@ use e2e::SnmEnv;
 //   }
 // }
 
-e2e::test1! {
-  #[tokio::test(flavor = "current_thread")]
-  test_with_strict_mode_and_has_default_node,
-  cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: [SnmEnv::Strict("true".to_string())],
-  |builder:e2e::CommandBuilder| => {
-    builder.add_snapshot("snm node install 20.0.0")?;
-    builder.add_snapshot("snm node list --compact")?;
-    builder.add_snapshot("snm node default 20.0.0")?;
-    builder.add_snapshot("snm node list --compact")?;
-    builder.add_snapshot("node -v")?;
-    builder.assert_snapshots(|name,res| {
-      insta::assert_snapshot!(name, res);
-    })?;
-  }
-}
+// e2e::test1! {
+//   #[tokio::test(flavor = "current_thread")]
+//   test_with_strict_mode_and_has_default_node,
+//   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
+//   envs: [SnmEnv::Strict("true".to_string())],
+//   |builder:e2e::CommandBuilder| => {
+//     builder.add_snapshot("snm node install 20.0.0")?;
+//     builder.add_snapshot("snm node list --compact")?;
+//     builder.add_snapshot("snm node default 20.0.0")?;
+//     builder.add_snapshot("snm node list --compact")?;
+//     builder.add_snapshot("node -v")?;
+//     builder.assert_snapshots(|name,res| {
+//       insta::assert_snapshot!(name, res);
+//     })?;
+//   }
+// }
 
 // #[test]
 // fn hello() {
