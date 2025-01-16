@@ -20,7 +20,7 @@ pub async fn get_global_mock_server() -> Arc<MockServer> {
 
 // 可选：添加清理函数
 pub async fn cleanup() {
-  if let Some(server) = GLOBAL_MOCK_SERVER.get() {
+  if let Some(_server) = GLOBAL_MOCK_SERVER.get() {
     println!("\nCleaning up global mock server...");
     // 如果需要清理逻辑
   }
