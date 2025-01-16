@@ -50,11 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let res = node_downloader.download("20.0.0").await?;
 
   #[cfg(windows)]
-  let node_bin_dir = config
-    .node_bin_dir
-    .join("20.0.0")
-    .join("bin")
-    .join("node.exe");
+  let node_bin_dir = config.node_bin_dir.join("20.0.0").join("node.exe");
   #[cfg(not(windows))]
   let node_bin_dir = config.node_bin_dir.join("20.0.0").join("bin").join("node");
 
