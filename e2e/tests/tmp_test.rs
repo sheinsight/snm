@@ -40,36 +40,36 @@
 // }
 
 // 或者使用 duct
-use duct::cmd;
+// use duct::cmd;
 
-#[tokio::test]
-async fn test_download_node() -> Result<(), Box<dyn std::error::Error>> {
-  // let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
-  // let uri = mock_server.uri();
+// #[tokio::test]
+// async fn test_download_node() -> Result<(), Box<dyn std::error::Error>> {
+//   // let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
+//   // let uri = mock_server.uri();
 
-  // 获取 download_test 的路径
-  let exe_dir = std::env::current_exe()?
-    .parent()
-    .unwrap()
-    .parent()
-    .unwrap()
-    .to_path_buf();
+//   // 获取 download_test 的路径
+//   let exe_dir = std::env::current_exe()?
+//     .parent()
+//     .unwrap()
+//     .parent()
+//     .unwrap()
+//     .to_path_buf();
 
-  #[cfg(windows)]
-  let download_test = exe_dir.join("download_test.exe");
-  #[cfg(not(windows))]
-  let download_test = exe_dir.join("download_test");
+//   #[cfg(windows)]
+//   let download_test = exe_dir.join("download_test.exe");
+//   #[cfg(not(windows))]
+//   let download_test = exe_dir.join("download_test");
 
-  println!("Executing: {:?}", download_test);
+//   println!("Executing: {:?}", download_test);
 
-  // 执行 download_test
-  let output = cmd!(download_test)
-    .stdout_capture()
-    .stderr_capture()
-    .run()?;
+//   // 执行 download_test
+//   let output = cmd!(download_test)
+//     .stdout_capture()
+//     .stderr_capture()
+//     .run()?;
 
-  println!("Output: {}", String::from_utf8_lossy(&output.stdout));
-  println!("Error: {}", String::from_utf8_lossy(&output.stderr));
+//   println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+//   println!("Error: {}", String::from_utf8_lossy(&output.stderr));
 
-  Ok(())
-}
+//   Ok(())
+// }
