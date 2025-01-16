@@ -54,8 +54,11 @@ jobs:
           New-NetFirewallRule -DisplayName "Allow Mock Server" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 0-65535
 
 
-          netsh winsock reset
-          
+          netsh int ip reset
+          netsh interface ipv4 reset
+          netsh interface ipv6 reset
+          ipconfig /flushdns
+
           node -v
           cargo install just
           just setup
