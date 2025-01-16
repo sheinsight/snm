@@ -12,6 +12,7 @@ clap                 = { version = "4.5.7", features = ["derive", "cargo"] }
 colored              = "2.1.0"
 dialoguer            = { workspace = true }
 flate2               = "1.0.28"
+fs_extra             = { workspace = true }
 itertools            = "0.13.0"
 reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
 semver               = { workspace = true }
