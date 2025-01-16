@@ -302,10 +302,10 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   let cur = std::env::current_dir()?;
 
   let config = snm_config::SnmConfig {
-    node_bin_dir: cur.join(".snm").join("node_bin_demo"),
-    download_dir: cur.join(".snm").join("downloads_demo"),
-    cache_dir: cur.join(".snm").join("cache_demo"),
-    node_modules_dir: cur.join(".snm").join("node_modules_demo"),
+    node_bin_dir: cur.join(".snm").join("node_bin"),
+    download_dir: cur.join(".snm").join("downloads"),
+    cache_dir: cur.join(".snm").join("cache"),
+    node_modules_dir: cur.join(".snm").join("node_modules"),
     node_dist_url: uri,
     node_github_resource_host: "https://raw.githubusercontent.com".to_string(),
     node_install_strategy: snm_config::InstallStrategy::Auto,
