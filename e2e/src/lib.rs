@@ -191,8 +191,8 @@ macro_rules! test1 {
                 stringify!($test_name),
                 $cwd,
                 vec![
-                    e2e::SnmEnv::NodeDistUrl(mock_server.address()),
-                    e2e::SnmEnv::NpmRegistry(mock_server.address()),
+                    e2e::SnmEnv::NodeDistUrl(mock_server.uri()),
+                    e2e::SnmEnv::NpmRegistry(mock_server.uri()),
                     $($env,)*
                 ]
             )?;
