@@ -138,9 +138,11 @@ async fn test_install_node() -> anyhow::Result<()> {
 
   let output = cmd
     .envs([
-      ("NODE_DIST_URL", uri.to_string()),
-      ("NPM_REGISTRY", uri.to_string()),
+      ("SNM_NODE_DIST_URL", uri.to_string()),
+      ("SNM_NPM_REGISTRY", uri.to_string()),
+      ("SNM_HOME_DIR", debug_dir),
       ("PATH", new_path),
+      ("SNM_NODE_INSTALL_STRATEGY", "auto".to_string()),
     ])
     .current_dir(
       std::env::current_dir()?
