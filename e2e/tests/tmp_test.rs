@@ -44,8 +44,8 @@ use duct::cmd;
 
 #[tokio::test]
 async fn test_download_node() -> Result<(), Box<dyn std::error::Error>> {
-  let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
-  let uri = mock_server.uri();
+  // let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
+  // let uri = mock_server.uri();
 
   // 获取 download_test 的路径
   let exe_dir = std::env::current_exe()?.parent().unwrap().to_path_buf();
