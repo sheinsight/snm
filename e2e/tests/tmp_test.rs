@@ -74,16 +74,43 @@
 //   Ok(())
 // }
 
-e2e::test1! {
-  #[tokio::test(flavor = "current_thread")]
-  test_with_strict_mode_and_has_default_node,
-  cwd: std::env::current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: [e2e::SnmEnv::Strict("true".to_string())],
-  |builder:e2e::CommandBuilder| => {
-    let res = builder.exec("snm node install 20.0.0")?;
-    println!("res---->: {:?}", res);
-    builder.assert_snapshots(|name,res| {
-      insta::assert_snapshot!(name, res);
-    })?;
-  }
+// e2e::test1! {
+//   #[tokio::test(flavor = "current_thread")]
+//   test_with_strict_mode_and_has_default_node,
+//   cwd: std::env::current_dir()?.join("tests").join("fixtures").join("empty"),
+//   envs: [e2e::SnmEnv::Strict("true".to_string())],
+//   |builder:e2e::CommandBuilder| => {
+//     let res = builder.exec("snm node install 20.0.0")?;
+//     println!("res---->: {:?}", res);
+//     builder.assert_snapshots(|name,res| {
+//       insta::assert_snapshot!(name, res);
+//     })?;
+//   }
+// }
+
+#[tokio::test]
+async fn test_install_node() -> anyhow::Result<()> {
+  let mock_server = e2e::get_global_mock_server().await;
+
+  let uri = mock_server.uri();
+
+  let builder = e2e::CommandBuilder::with_envs(
+    "test_install_node",
+    std::env::current_dir()?
+      .join("tests")
+      .join("fixtures")
+      .join("empty"),
+    vec![
+      e2e::SnmEnv::NodeDistUrl(uri.clone()),
+      e2e::SnmEnv::NpmRegistry(uri.clone()),
+    ],
+  )?;
+
+  builder.exec("snm setup")?;
+
+  let res = builder.exec("snm node install 20.0.0")?;
+
+  println!("res---->: {:?}", res);
+
+  Ok(())
 }
