@@ -170,29 +170,33 @@ is: {}
   }
 }
 
-pub static GLOBAL_MOCK_SERVER: tokio::sync::OnceCell<std::sync::Arc<wiremock::MockServer>> =
-  tokio::sync::OnceCell::const_new();
+pub static GLOBAL_MOCK_SERVER: once_cell::sync::Lazy<
+  parking_lot::Mutex<Option<std::sync::Arc<wiremock::MockServer>>>,
+> = once_cell::sync::Lazy::new(|| parking_lot::Mutex::new(None));
 
 pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
-  GLOBAL_MOCK_SERVER
-    .get_or_init(|| async {
-      println!("\nInitializing global mock server...");
-      let mock_server = http_mocker::HttpMocker::builder()
-        .unwrap()
-        .build()
-        .await
-        .unwrap();
+  let mut guard = GLOBAL_MOCK_SERVER.lock();
 
-      println!(
-        "{} Called from: {}",
-        mock_server.uri(),
-        std::backtrace::Backtrace::capture()
-      );
+  if let Some(server) = guard.as_ref() {
+    return server.clone();
+  }
 
-      std::sync::Arc::new(mock_server)
-    })
+  println!("\nInitializing global mock server...");
+  let mock_server = http_mocker::HttpMocker::builder()
+    .unwrap()
+    .build()
     .await
-    .clone()
+    .unwrap();
+
+  println!(
+    "{} Called from: {}",
+    mock_server.uri(),
+    std::backtrace::Backtrace::capture()
+  );
+
+  let server = std::sync::Arc::new(mock_server);
+  *guard = Some(server.clone());
+  server
 }
 
 #[macro_export]
