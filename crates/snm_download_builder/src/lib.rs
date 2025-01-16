@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::path::Path;
 use std::time::Duration;
 
@@ -179,7 +180,11 @@ impl DownloadBuilder {
         .timeout(Duration::from_secs(30))
         .no_proxy()
         // .tcp_nodelay(true)
-        .build()?;
+        .build()
+        .map_err(|e| {
+          println!("Error building client: {:?} {:?}", e, e.source());
+          e
+        })?;
 
       let response = client
         .head(download_url)
