@@ -22,5 +22,8 @@ async fn run() -> anyhow::Result<()> {
 
   let cli = SnmCli::parse();
 
-  execute_cli(cli, snm_config).await
+  // execute_cli(cli, snm_config).await
+
+  let nm = snm_node::factory::NodeFactory::new(&snm_config);
+  nm.install(args).await?;
 }
