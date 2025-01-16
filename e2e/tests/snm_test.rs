@@ -293,7 +293,7 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
 
   let uri = mock_server.uri();
 
-  let mut builder = e2e::CommandBuilder::with_envs(
+  let builder = e2e::CommandBuilder::with_envs(
     "test_reqwest_download",
     std::env::current_dir()?
       .join("tests")
