@@ -7,7 +7,6 @@ use std::{
 use anyhow::{bail, Context};
 // use colored::Colorize;
 use flate2::read::GzDecoder;
-use fs_extra::dir::remove;
 // use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
 use snm_config::SnmConfig;
@@ -82,7 +81,7 @@ impl<'a> NodeDownloader<'a> {
 
     // 清理临时目录
     // std::fs::remove_dir_all(&temp_dir)?;
-    remove(&temp_dir)?;
+    remove_dir_all::remove_dir_all(&temp_dir)?;
 
     Ok(())
   }
