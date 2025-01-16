@@ -175,6 +175,8 @@ impl DownloadBuilder {
         // 其他平台使用默认的 rustls
         // .use_native_tls() // Windows 下使用系统 TLS
         .timeout(Duration::from_secs(30))
+        .no_proxy()
+        // .tcp_nodelay(true)
         .build()?;
 
       let response = client
