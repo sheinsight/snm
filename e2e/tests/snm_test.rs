@@ -230,15 +230,21 @@ e2e::test1! {
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
 
-  let node_url = format!("{}{}", mock_server.uri(), "/v20.0.0/SHASUMS256.txt");
+  let node_url = format!(
+    "{}{}",
+    mock_server.uri(),
+    "/v20.0.0/node-v20.0.0-win-x64.zip"
+  );
+
+  let out = current_dir()?.join("temp.zip");
 
   let res = snm_download_builder::DownloadBuilder::new()
     .retries(3)
     .timeout(30)
-    .download(&node_url, "temp.json")
+    .download(&node_url, &out)
     .await?;
 
-  println!("test_reqwest_download ---->: {:?}", res);
+  println!("test_reqwest_download ---->: {:?} {:?}", res, out.exists());
 
   //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
   //   let resp = if cfg!(target_os = "windows") {
