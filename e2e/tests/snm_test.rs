@@ -262,8 +262,6 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   //     .read()?
   //   };
 
-  println!("resp---->: {:?}", resp);
-
   //   let response = reqwest::get(url).await?;
   //   println!("response---->: {:?}", response);
   //   assert!(response.status().is_success());
