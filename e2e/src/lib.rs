@@ -1,8 +1,11 @@
 // pub mod exec_builder;
 pub mod http_mocker;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use duct::cmd;
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use tempfile::tempdir;
 use textwrap::dedent;
 
@@ -170,18 +173,24 @@ is: {}
   }
 }
 
-pub static GLOBAL_MOCK_SERVER: once_cell::sync::Lazy<
-  parking_lot::Mutex<Option<std::sync::Arc<wiremock::MockServer>>>,
-> = once_cell::sync::Lazy::new(|| parking_lot::Mutex::new(None));
+pub static GLOBAL_MOCK_SERVER: Lazy<Mutex<Option<Arc<wiremock::MockServer>>>> =
+  Lazy::new(|| Mutex::new(None));
 
-pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
+pub async fn get_global_mock_server() -> Arc<wiremock::MockServer> {
   let mut guard = GLOBAL_MOCK_SERVER.lock();
 
   if let Some(server) = guard.as_ref() {
+    println!(
+      "Reusing existing mock server from thread: {:?}",
+      std::thread::current().id()
+    );
     return server.clone();
   }
 
-  println!("\nInitializing global mock server...");
+  println!(
+    "\nInitializing global mock server from thread: {:?}",
+    std::thread::current().id()
+  );
   let mock_server = http_mocker::HttpMocker::builder()
     .unwrap()
     .build()
@@ -189,12 +198,12 @@ pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
     .unwrap();
 
   println!(
-    "{} Called from: {}",
+    "Mock server started at {} on thread {:?}",
     mock_server.uri(),
-    std::backtrace::Backtrace::capture()
+    std::thread::current().id()
   );
 
-  let server = std::sync::Arc::new(mock_server);
+  let server = Arc::new(mock_server);
   *guard = Some(server.clone());
   server
 }
