@@ -125,6 +125,12 @@ async fn test_install_node() -> anyhow::Result<()> {
     .unchecked()
     .run()?;
 
+  let res = if !output.status.success() {
+    String::from_utf8(output.stderr.clone())?.trim().to_string()
+  } else {
+    String::from_utf8(output.stdout.clone())?.trim().to_string()
+  };
+
   // let builder = e2e::CommandBuilder::with_envs(
   //   "test_install_node",
   //   std::env::current_dir()?
