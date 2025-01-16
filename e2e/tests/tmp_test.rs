@@ -73,3 +73,17 @@
 
 //   Ok(())
 // }
+
+e2e::test1! {
+  #[tokio::test(flavor = "current_thread")]
+  test_with_strict_mode_and_has_default_node,
+  cwd: std::env::current_dir()?.join("tests").join("fixtures").join("empty"),
+  envs: [e2e::SnmEnv::Strict("true".to_string())],
+  |builder:e2e::CommandBuilder| => {
+    let res = builder.exec("snm node install 20.0.0")?;
+    println!("res---->: {:?}", res);
+    builder.assert_snapshots(|name,res| {
+      insta::assert_snapshot!(name, res);
+    })?;
+  }
+}
