@@ -228,26 +228,39 @@ e2e::test1! {
 
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
-  //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
-  let resp = if cfg!(target_os = "windows") {
-    cmd!(
-        "cmd",
-        "/C",
-        "certutil -urlcache -split -f https://raw.githubusercontent.com/nodejs/Release/main/schedule.json temp.json & type temp.json & del temp.json"
-      )
-      .stdout_capture()
-      .stderr_capture()
-      .read()?
-  } else {
-    cmd!(
-      "curl",
-      "-s",
-      "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
+  let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
+
+  let res = snm_download_builder::DownloadBuilder::new()
+    .retries(3)
+    .timeout(30)
+    .download(
+      "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json",
+      "temp.json",
     )
-    .stdout_capture()
-    .stderr_capture()
-    .read()?
-  };
+    .await?;
+
+  println!("test_reqwest_download ---->: {:?}", res);
+
+  //   let _url = "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+  //   let resp = if cfg!(target_os = "windows") {
+  //     cmd!(
+  //         "cmd",
+  //         "/C",
+  //         "certutil -urlcache -split -f https://raw.githubusercontent.com/nodejs/Release/main/schedule.json temp.json & type temp.json & del temp.json"
+  //       )
+  //       .stdout_capture()
+  //       .stderr_capture()
+  //       .read()?
+  //   } else {
+  //     cmd!(
+  //       "curl",
+  //       "-s",
+  //       "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json"
+  //     )
+  //     .stdout_capture()
+  //     .stderr_capture()
+  //     .read()?
+  //   };
 
   println!("resp---->: {:?}", resp);
 
