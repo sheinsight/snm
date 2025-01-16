@@ -232,7 +232,7 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
 
   let node_url = format!(
     "{}{}",
-    mock_server.address(),
+    mock_server.uri(),
     "/v20.0.0/node-v20.0.0-win-x64.zip"
   );
 

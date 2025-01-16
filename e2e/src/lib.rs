@@ -185,14 +185,16 @@ macro_rules! test1 {
                 .build()
                 .await?;
 
+            let uri = mock_server.uri();
+
             println!("cwd------>>:{:?}",$cwd);
 
             let mut $builder = e2e::CommandBuilder::with_envs(
                 stringify!($test_name),
                 $cwd,
                 vec![
-                    e2e::SnmEnv::NodeDistUrl(mock_server.uri()),
-                    e2e::SnmEnv::NpmRegistry(mock_server.uri()),
+                    e2e::SnmEnv::NodeDistUrl(uri.clone()),
+                    e2e::SnmEnv::NpmRegistry(uri.clone()),
                     $($env,)*
                 ]
             )?;
