@@ -87,11 +87,17 @@ impl<'a> NodeDownloader<'a> {
       println!("target---->: {:?}", target);
       std::fs::rename(entry.path(), &target).map_err(|e| {
         println!(
-          "rename error---->: {:?} {:?} {:?}",
+          "rename error---->: {:?} {:?} {} {:?}",
           entry.path(),
           target,
+          target.exists(),
           &e
         );
+        if target.exists() {
+          std::fs::read_dir(&target).unwrap().for_each(|e| {
+            println!("e---->: {:?}", e);
+          });
+        }
         e
       })?;
     }
