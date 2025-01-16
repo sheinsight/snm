@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, ops::Not, process::exit, time::Duration};
+use std::{collections::HashMap, fs, ops::Not, time::Duration};
 
 use colored::*;
 use dialoguer::Confirm;
