@@ -27,5 +27,9 @@ fn test() {
   assert_eq!(registry, "https://project.com".to_string());
 
   let cache = npmrc.read("cache");
+  #[cfg(target_os = "windows")]
+  assert_eq!(cache, None);
+
+  #[cfg(not(target_os = "windows"))]
   assert_eq!(cache, Some("~/.hello".to_string()));
 }
