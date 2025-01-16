@@ -88,6 +88,17 @@
 //   }
 // }
 
+fn get_debug_dir() -> std::path::PathBuf {
+  // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
+  let e2e_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+  // 向上一级找到项目根目录
+  let root_dir = e2e_dir.parent().expect("Failed to get root dir");
+
+  // 进入 target/debug 目录
+  root_dir.join("target").join("debug")
+}
+
 #[tokio::test]
 async fn test_install_node() -> anyhow::Result<()> {
   let mock_server = e2e::get_global_mock_server().await;
@@ -108,10 +119,25 @@ async fn test_install_node() -> anyhow::Result<()> {
     duct::cmd!("sh", "-c", command)
   };
 
+  let env_path = env!("PATH");
+
+  let debug_dir = dunce::canonicalize(get_debug_dir())?
+    .to_str()
+    .unwrap()
+    .to_string();
+
+  let path_separator = if cfg!(target_os = "windows") {
+    ";"
+  } else {
+    ":"
+  };
+  let new_path = format!("{}{}{}", debug_dir, path_separator, env_path);
+
   let output = expr
     .full_env(vec![
       ("NODE_DIST_URL", uri.to_string()),
       ("NPM_REGISTRY", uri.to_string()),
+      ("PATH", new_path),
     ])
     // .env(envs) // 设置环境变量
     .dir(
