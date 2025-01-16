@@ -19,6 +19,8 @@ serde_json = { workspace = true }
 semver = "1.0.23"
 snm_utils = { path = "../crates/snm_utils" }
 snm_download_builder = { path = "../crates/snm_download_builder" }
+snm_node = { path = "../crates/snm_node" }
+snm_config = { path = "../crates/snm_config" }
 dunce = { workspace = true }
 reqwest = { workspace = true }
 parking_lot = "0.12.3"

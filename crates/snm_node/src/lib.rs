@@ -11,7 +11,7 @@ use snm_utils::snm_error::SnmError;
 mod archive_extension;
 pub mod factory;
 pub use factory::*;
-mod downloader;
+pub mod downloader;
 
 const FILE_NAME: &str = ".node-version";
 

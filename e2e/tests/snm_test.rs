@@ -287,18 +287,50 @@
 // //   root_dir.join("target").join("debug")
 // // }
 
+use std::path::PathBuf;
+
 #[tokio::test]
 async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
 
   let uri = mock_server.uri();
 
-  let download_url = format!("{}{}", uri, "/v20.0.0/node-v20.0.0-win-x64.zip");
-  let abs_path = std::env::current_dir()?.join("temp.zip");
-  let res = snm_download_builder::DownloadBuilder::new()
-    .download(&download_url, &abs_path)
-    .await?;
+  //   let download_url = format!("{}{}", uri, "/v20.0.0/node-v20.0.0-win-x64.zip");
+  //   let abs_path = std::env::current_dir()?.join("temp.zip");
+  //   let res = snm_download_builder::DownloadBuilder::new()
+
+  let config = snm_config::SnmConfig {
+    node_bin_dir: PathBuf::from("demo"),
+    download_dir: PathBuf::from("download"),
+    cache_dir: PathBuf::from("cache"),
+    node_modules_dir: PathBuf::from("node_modules"),
+    node_dist_url: uri,
+    node_github_resource_host: "https://raw.githubusercontent.com".to_string(),
+    node_install_strategy: snm_config::InstallStrategy::Auto,
+    node_white_list: "".to_string(),
+    download_timeout_secs: 30,
+    npm_registry: "https://registry.npmmirror.com".to_string(),
+    workspace: std::env::current_dir()?
+      .join("tests")
+      .join("fixtures")
+      .join("empty"),
+    lang: "en".to_string(),
+    restricted_list: vec![],
+    strict: false,
+  };
+
+  let node_downloader = snm_node::downloader::NodeDownloader::new(&config);
+
+  let res = node_downloader.download("20.0.0").await?;
+
+  let node_bin_dir = config.node_bin_dir.join("20.0.0").join("bin").join("node");
+
   println!("res---->: {:?}", res);
+  println!(
+    "node_bin_dir---->: {:?} {}",
+    node_bin_dir,
+    node_bin_dir.exists()
+  );
 
   //   let builder = e2e::CommandBuilder::with_envs(
   //     "test_reqwest_download",
