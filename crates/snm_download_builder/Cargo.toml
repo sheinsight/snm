@@ -9,7 +9,7 @@ version = "0.0.1-119"
 colored      = "2.1.0"
 futures-util = "0.3.30"
 indicatif    = "0.17.8"
-reqwest      = { workspace = true, features = ["full"] }
+reqwest      = { workspace = true, features = ["stream", "native-tls-vendored","native-tls"] }
 snm_utils    = { path = "../snm_utils" }
 tokio        = { version = "1.36.0", features = ["full"] }
 anyhow       = { workspace = true }
