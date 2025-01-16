@@ -89,24 +89,25 @@ impl<'a> NodeFactory<'a> {
   }
 
   pub async fn install(&self, args: InstallArgs) -> anyhow::Result<()> {
-    let node_dir = self.config.node_bin_dir.join(&args.version);
+    // TODO 临时 debug
+    // let node_dir = self.config.node_bin_dir.join(&args.version);
 
-    let node_bin_file = node_dir.join("bin").join("node");
+    // let node_bin_file = node_dir.join("bin").join("node");
 
-    if node_bin_file.try_exists()? {
-      let confirm = Confirm::new()
-        .with_prompt(format!(
-          "🤔 v{} is already installed, do you want to reinstall it ?",
-          &args.version
-        ))
-        .interact()?;
+    // if node_bin_file.try_exists()? {
+    //   let confirm = Confirm::new()
+    //     .with_prompt(format!(
+    //       "🤔 v{} is already installed, do you want to reinstall it ?",
+    //       &args.version
+    //     ))
+    //     .interact()?;
 
-      if confirm {
-        fs::remove_dir_all(&node_dir)?;
-      } else {
-        exit(0);
-      }
-    }
+    //   if confirm {
+    //     fs::remove_dir_all(&node_dir)?;
+    //   } else {
+    //     exit(0);
+    //   }
+    // }
 
     NodeDownloader::new(self.config)
       .download(&args.version)
