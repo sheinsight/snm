@@ -107,18 +107,6 @@ async fn test_install_node() -> anyhow::Result<()> {
 
   let command = "snm node install 20.0.0";
 
-  let expr = if cfg!(target_os = "windows") {
-    // Windows 下需要添加 .exe 后缀
-    let command = if command.starts_with("snm") {
-      command.replace("snm", "snm.exe")
-    } else {
-      command.to_string()
-    };
-    duct::cmd!("cmd", "/C", command)
-  } else {
-    duct::cmd!("sh", "-c", command)
-  };
-
   let env_path = env!("PATH");
 
   let debug_dir = dunce::canonicalize(get_debug_dir())?
@@ -133,28 +121,39 @@ async fn test_install_node() -> anyhow::Result<()> {
   };
   let new_path = format!("{}{}{}", debug_dir, path_separator, env_path);
 
-  let output = expr
-    .full_env(vec![
+  let mut cmd = if cfg!(target_os = "windows") {
+    let command = if command.starts_with("snm") {
+      command.replace("snm", "snm.exe")
+    } else {
+      command.to_string()
+    };
+    let mut cmd = std::process::Command::new("cmd");
+    cmd.args(["/C", &command]);
+    cmd
+  } else {
+    let mut cmd = std::process::Command::new("sh");
+    cmd.args(["-c", &command]);
+    cmd
+  };
+
+  let output = cmd
+    .envs([
       ("NODE_DIST_URL", uri.to_string()),
       ("NPM_REGISTRY", uri.to_string()),
       ("PATH", new_path),
     ])
-    // .env(envs) // 设置环境变量
-    .dir(
+    .current_dir(
       std::env::current_dir()?
         .join("tests")
         .join("fixtures")
         .join("empty"),
-    ) // 设置工作目录
-    .stdout_capture()
-    .stderr_capture() // 同时捕获输出
-    .unchecked()
-    .run()?;
+    )
+    .output()?;
 
   let res = if !output.status.success() {
-    String::from_utf8(output.stderr.clone())?.trim().to_string()
+    String::from_utf8(output.stderr)?.trim().to_string()
   } else {
-    String::from_utf8(output.stdout.clone())?.trim().to_string()
+    String::from_utf8(output.stdout)?.trim().to_string()
   };
 
   // let builder = e2e::CommandBuilder::with_envs(
