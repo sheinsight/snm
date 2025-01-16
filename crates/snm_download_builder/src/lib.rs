@@ -182,7 +182,7 @@ impl DownloadBuilder {
         // .tcp_nodelay(true)
         .build()
         .map_err(|e| {
-          println!("Error building client: {:?} {:?}", e, e.source());
+          println!("Error building client: {:?}", e);
           e
         })?;
 
