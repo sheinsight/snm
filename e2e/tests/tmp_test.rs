@@ -94,21 +94,52 @@ async fn test_install_node() -> anyhow::Result<()> {
 
   let uri = mock_server.uri();
 
-  let builder = e2e::CommandBuilder::with_envs(
-    "test_install_node",
-    std::env::current_dir()?
-      .join("tests")
-      .join("fixtures")
-      .join("empty"),
-    vec![
-      e2e::SnmEnv::NodeDistUrl(uri.clone()),
-      e2e::SnmEnv::NpmRegistry(uri.clone()),
-    ],
-  )?;
+  let command = "snm node install 20.0.0";
 
-  builder.exec("snm setup")?;
+  let expr = if cfg!(target_os = "windows") {
+    // Windows 下需要添加 .exe 后缀
+    let command = if command.starts_with("snm") {
+      command.replace("snm", "snm.exe")
+    } else {
+      command.to_string()
+    };
+    duct::cmd!("cmd", "/C", command)
+  } else {
+    duct::cmd!("sh", "-c", command)
+  };
 
-  let res = builder.exec("snm node install 20.0.0")?;
+  let output = expr
+    .full_env(vec![
+      ("NODE_DIST_URL", uri.to_string()),
+      ("NPM_REGISTRY", uri.to_string()),
+    ])
+    // .env(envs) // 设置环境变量
+    .dir(
+      std::env::current_dir()?
+        .join("tests")
+        .join("fixtures")
+        .join("empty"),
+    ) // 设置工作目录
+    .stdout_capture()
+    .stderr_capture() // 同时捕获输出
+    .unchecked()
+    .run()?;
+
+  // let builder = e2e::CommandBuilder::with_envs(
+  //   "test_install_node",
+  //   std::env::current_dir()?
+  //     .join("tests")
+  //     .join("fixtures")
+  //     .join("empty"),
+  //   vec![
+  //     e2e::SnmEnv::NodeDistUrl(uri.clone()),
+  //     e2e::SnmEnv::NpmRegistry(uri.clone()),
+  //   ],
+  // )?;
+
+  // builder.exec("snm setup")?;
+
+  // let res = builder.exec("snm node install 20.0.0")?;
 
   println!("res---->: {:?}", res);
 
