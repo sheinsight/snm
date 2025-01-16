@@ -287,51 +287,75 @@
 // //   root_dir.join("target").join("debug")
 // // }
 
-// // #[tokio::test]
-// // async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
-// //   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
-// //   let out = current_dir()?.join("temp.zip");
+#[tokio::test]
+async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
+  let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;
 
-// //   // 获取 download_test 可执行文件路径
-// //   let test_exe = get_debug_dir().join("download_test");
+  let uri = mock_server.uri();
 
-// //   let output = if cfg!(target_os = "windows") {
-// //     duct::cmd!(
-// //       "cmd",
-// //       "/C",
-// //       format!(
-// //         "{} {} {}",
-// //         test_exe.display(),
-// //         mock_server.uri(),
-// //         out.display()
-// //       )
-// //     )
-// //   } else {
-// //     duct::cmd!(
-// //       "sh",
-// //       "-c",
-// //       format!(
-// //         "{} {} {}",
-// //         test_exe.display(),
-// //         mock_server.uri(),
-// //         out.display()
-// //       )
-// //     )
-// //   }
-// //   .stdout_capture()
-// //   .stderr_capture()
-// //   .run()?;
+  let mut builder = e2e::CommandBuilder::with_envs(
+    "test_reqwest_download",
+    std::env::current_dir()?
+      .join("tests")
+      .join("fixtures")
+      .join("empty"),
+    vec![
+      e2e::SnmEnv::NodeDistUrl(uri.clone()),
+      e2e::SnmEnv::NpmRegistry(uri.clone()),
+    ],
+  )?;
 
-// //   println!(
-// //     "Child process output: {}",
-// //     String::from_utf8_lossy(&output.stdout)
-// //   );
-// //   println!(
-// //     "Child process error: {}",
-// //     String::from_utf8_lossy(&output.stderr)
-// //   );
+  builder.add_snapshot("snm node install 20.0.0")?;
+  builder.add_snapshot("snm node list --compact")?;
+  builder.add_snapshot("snm node default 20.0.0")?;
+  builder.add_snapshot("snm node list --compact")?;
+  builder.add_snapshot("node -v")?;
+  builder.assert_snapshots(|name, res| {
+    insta::assert_snapshot!(name, res);
+  })?;
 
-// //   assert!(out.exists(), "Downloaded file should exist");
+  //   let out = current_dir()?.join("temp.zip");
 
-// //   Ok(())
-// // }
+  //   // 获取 download_test 可执行文件路径
+  //   let test_exe = get_debug_dir().join("download_test");
+
+  //   let output = if cfg!(target_os = "windows") {
+  //     duct::cmd!(
+  //       "cmd",
+  //       "/C",
+  //       format!(
+  //         "{} {} {}",
+  //         test_exe.display(),
+  //         mock_server.uri(),
+  //         out.display()
+  //       )
+  //     )
+  //   } else {
+  //     duct::cmd!(
+  //       "sh",
+  //       "-c",
+  //       format!(
+  //         "{} {} {}",
+  //         test_exe.display(),
+  //         mock_server.uri(),
+  //         out.display()
+  //       )
+  //     )
+  //   }
+  //   .stdout_capture()
+  //   .stderr_capture()
+  //   .run()?;
+
+  //   println!(
+  //     "Child process output: {}",
+  //     String::from_utf8_lossy(&output.stdout)
+  //   );
+  //   println!(
+  //     "Child process error: {}",
+  //     String::from_utf8_lossy(&output.stderr)
+  //   );
+
+  //   assert!(out.exists(), "Downloaded file should exist");
+
+  Ok(())
+}
