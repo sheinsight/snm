@@ -183,6 +183,12 @@ pub async fn get_global_mock_server() -> std::sync::Arc<wiremock::MockServer> {
         .await
         .unwrap();
 
+      println!(
+        "{} Called from: {}",
+        mock_server.uri(),
+        std::backtrace::Backtrace::capture()
+      );
+
       std::sync::Arc::new(mock_server)
     })
     .await
