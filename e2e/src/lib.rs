@@ -1,5 +1,6 @@
 // pub mod exec_builder;
 pub mod http_mocker;
+pub mod mock_server_manager;
 use std::path::PathBuf;
 
 use duct::cmd;
@@ -181,9 +182,11 @@ macro_rules! test1 {
     ) => {
         $(#[$attr])*
         async fn $test_name() -> anyhow::Result<()> {
-            let mock_server = e2e::http_mocker::HttpMocker::builder()?
-                .build()
-                .await?;
+            // let mock_server = e2e::http_mocker::HttpMocker::builder()?
+            //     .build()
+            //     .await?;
+
+            let mock_server = e2e::mock_server_manager::get_global_mock_server().await;
 
             let uri = mock_server.uri();
 
