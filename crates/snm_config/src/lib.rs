@@ -215,16 +215,23 @@ mod tests {
           return;
         }
       };
-      assert_eq!(snm_config.node_bin_dir.to_str(), Some(".snm/node_bin_demo"));
+
       assert_eq!(
-        snm_config.download_dir.to_str(),
-        Some(".snm/downloads_demo")
+        snm_config.node_bin_dir,
+        PathBuf::from(".snm").join("node_bin_demo")
+      );
+      assert_eq!(
+        snm_config.download_dir,
+        PathBuf::from(".snm").join("downloads_demo")
       );
       assert_eq!(snm_config.lang, "en");
-      assert_eq!(snm_config.cache_dir.to_str(), Some(".snm/cache_demo"));
       assert_eq!(
-        snm_config.node_modules_dir.to_str(),
-        Some(".snm/node_modules_demo")
+        snm_config.cache_dir,
+        PathBuf::from(".snm").join("cache_demo")
+      );
+      assert_eq!(
+        snm_config.node_modules_dir,
+        PathBuf::from(".snm").join("node_modules_demo")
       );
       assert_eq!(
         snm_config.node_dist_url,
