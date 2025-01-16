@@ -1,7 +1,7 @@
 use std::{env::current_dir, process::ExitCode};
 
-use clap::Parser;
-use snm::{execute_cli::execute_cli, SnmCli};
+// use clap::Parser;
+// use snm::{execute_cli::execute_cli, SnmCli};
 use snm_config::SnmConfig;
 
 #[tokio::main]
@@ -20,10 +20,13 @@ async fn run() -> anyhow::Result<()> {
 
   let snm_config = SnmConfig::from(dir)?;
 
-  let cli = SnmCli::parse();
+  // let cli = SnmCli::parse();
 
   // execute_cli(cli, snm_config).await
 
   let nm = snm_node::factory::NodeFactory::new(&snm_config);
-  nm.install(args).await?;
+  nm.install(snm_node::factory::InstallArgs {
+    version: "20.0.0".to_string(),
+  })
+  .await
 }
