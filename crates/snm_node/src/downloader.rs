@@ -85,7 +85,15 @@ impl<'a> NodeDownloader<'a> {
       let entry = entry?;
       let target = output_dir.as_ref().join(entry.file_name());
       println!("target---->: {:?}", target);
-      std::fs::rename(entry.path(), target)?;
+      std::fs::rename(entry.path(), &target).map_err(|e| {
+        println!(
+          "rename error---->: {:?} {:?} {:?}",
+          entry.path(),
+          target,
+          &e
+        );
+        e
+      })?;
     }
 
     // 清理临时目录
