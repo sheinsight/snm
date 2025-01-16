@@ -42,7 +42,7 @@ use e2e::SnmEnv;
 // }
 
 e2e::test1! {
-  #[tokio::test]
+  #[test]
   test_with_strict_mode_and_has_default_node,
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
   envs: [SnmEnv::Strict("true".to_string())],
