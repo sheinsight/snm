@@ -305,11 +305,11 @@ async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
     ],
   )?;
 
-  builder.add_snapshot("snm node install 20.0.0")?;
-  builder.add_snapshot("snm node list --compact")?;
-  builder.add_snapshot("snm node default 20.0.0")?;
-  builder.add_snapshot("snm node list --compact")?;
-  builder.add_snapshot("node -v")?;
+  builder.exec("snm node install 20.0.0")?;
+  builder.exec("snm node list --compact")?;
+  builder.exec("snm node default 20.0.0")?;
+  builder.exec("snm node list --compact")?;
+  builder.exec("node -v")?;
   builder.assert_snapshots(|name, res| {
     insta::assert_snapshot!(name, res);
   })?;
