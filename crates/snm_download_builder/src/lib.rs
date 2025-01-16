@@ -168,15 +168,19 @@ impl DownloadBuilder {
       #[cfg(target_os = "windows")]
       let client = reqwest::Client::builder()
         .use_native_tls() // Windows 下使用系统 TLS
+        .danger_accept_invalid_certs(true)
+        .danger_accept_invalid_hostnames(true)
         .timeout(Duration::from_secs(30))
-        .build()?;
+        .build()
+        .map_err(|e| {
+          println!("Error building client: {:?}", e);
+          e
+        })?;
 
       #[cfg(not(target_os = "windows"))]
       let client = reqwest::Client::builder()
         // 其他平台使用默认的 rustls
         // .use_native_tls() // Windows 下使用系统 TLS
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
         .timeout(Duration::from_secs(30))
         .no_proxy()
         // .tcp_nodelay(true)
