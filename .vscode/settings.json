@@ -19,6 +19,7 @@
         "fmtln",
         "hasher",
         "indicatif",
+        "insta",
         "Itertools",
         "outpath",
         "pnpx",

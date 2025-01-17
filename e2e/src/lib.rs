@@ -153,8 +153,8 @@ impl CommandBuilder {
     let output = cmd
       .envs(self.envs.clone())
       .current_dir(self.cwd.clone())
-      .stdout(std::process::Stdio::piped())
-      .stderr(std::process::Stdio::piped())
+      // .stdout(std::process::Stdio::piped())
+      // .stderr(std::process::Stdio::piped())
       .output()?;
 
     if !output.status.success() {
