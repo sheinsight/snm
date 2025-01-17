@@ -41,24 +41,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          # 检查网络状态
-          Write-Host "Testing local network connectivity..."
-          Test-NetConnection -ComputerName localhost
-          
-          # 确保 HTTP.sys 服务运行
-          Write-Host "Ensuring HTTP service is running..."
-          Start-Service -Name http
-          
-          # 添加防火墙规则
-          Write-Host "Adding firewall rules..."
-          New-NetFirewallRule -DisplayName "Allow Mock Server" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 0-65535
-
-
-          netsh int ip reset
-          netsh interface ipv4 reset
-          netsh interface ipv6 reset
-          ipconfig /flushdns
-
           node -v
           cargo install just
           just setup
