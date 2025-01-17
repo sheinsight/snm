@@ -76,11 +76,17 @@ impl CommandBuilder {
   pub fn with_envs(name: &str, cwd: PathBuf, custom_envs: Vec<SnmEnv>) -> anyhow::Result<Self> {
     let tmp_dir = tempdir()?.into_path();
     let env_path = env!("PATH");
+    println!(
+      "original PATH: {:?}",
+      std::env::var("PATH").unwrap_or_default()
+    );
     // let debug_dir = Self::get_debug_dir().to_str().unwrap().to_string();
     let debug_dir = dunce::canonicalize(Self::get_debug_dir())?
       .to_str()
       .unwrap()
       .to_string();
+
+    println!("debug_dir: {:?}", debug_dir);
 
     let path_separator = if cfg!(target_os = "windows") {
       ";"
