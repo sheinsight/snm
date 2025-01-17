@@ -152,12 +152,6 @@ impl CommandBuilder {
 
     let output = cmd
       .envs(self.envs.clone())
-      .current_dir(
-        std::env::current_dir()?
-          .join("tests")
-          .join("fixtures")
-          .join("empty"),
-      )
       .current_dir(self.cwd.clone())
       .stdout(std::process::Stdio::piped())
       .stderr(std::process::Stdio::piped())
