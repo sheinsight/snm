@@ -17,59 +17,6 @@ pub enum WriteStrategy {
   Nothing,
 }
 
-#[cfg(target_os = "windows")]
-fn init_windows_network() -> anyhow::Result<()> {
-  use std::sync::Once;
-  static INIT: Once = Once::new();
-
-  INIT.call_once(|| {
-    // 确保 WinSock 初始化
-    unsafe {
-      let mut wsa_data = std::mem::zeroed();
-      let result = winapi::um::winsock2::WSAStartup(0x202, &mut wsa_data);
-      if result != 0 {
-        let error = winapi::um::winsock2::WSAGetLastError();
-        panic!("Failed to initialize WinSock: error code {}", error);
-      }
-      println!("WinSock initialized successfully");
-      println!(
-        "WinSock version: {}.{}",
-        wsa_data.wVersion & 0xFF,
-        wsa_data.wVersion >> 8
-      );
-    }
-  });
-
-  Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn check_network_status() {
-  use std::process::Command;
-
-  println!("\nChecking network status before download:");
-
-  // 检查 TCP 连接
-  let output = Command::new("netstat")
-    .args(["-n", "-p", "TCP"])
-    .output()
-    .expect("Failed to execute netstat");
-  println!(
-    "Active TCP connections:\n{}",
-    String::from_utf8_lossy(&output.stdout)
-  );
-
-  // 检查本地端口
-  let output = Command::new("netstat")
-    .args(["-an", "|", "findstr", "LISTENING"])
-    .output()
-    .expect("Failed to execute netstat");
-  println!(
-    "Listening ports:\n{}",
-    String::from_utf8_lossy(&output.stdout)
-  );
-}
-
 pub struct DownloadBuilder {
   retries: u8,
   timeout: u64,
@@ -157,27 +104,19 @@ impl DownloadBuilder {
         std::fs::create_dir_all(parent)?;
       }
 
-      // 在发送请求前调用
-      #[cfg(target_os = "windows")]
-      check_network_status();
+      // #[cfg(target_os = "windows")]
+      // let client = reqwest::Client::builder()
+      //   .use_native_tls() // Windows 下使用系统 TLS
+      //   .danger_accept_invalid_certs(true)
+      //   .danger_accept_invalid_hostnames(true)
+      //   .timeout(Duration::from_secs(30))
+      //   .build()
+      //   .map_err(|e| {
+      //     println!("Error building client: {:?}", e);
+      //     e
+      //   })?;
 
-      // 在创建 reqwest client 之前调用
-      #[cfg(target_os = "windows")]
-      init_windows_network()?;
-
-      #[cfg(target_os = "windows")]
-      let client = reqwest::Client::builder()
-        .use_native_tls() // Windows 下使用系统 TLS
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
-        .timeout(Duration::from_secs(30))
-        .build()
-        .map_err(|e| {
-          println!("Error building client: {:?}", e);
-          e
-        })?;
-
-      #[cfg(not(target_os = "windows"))]
+      // #[cfg(not(target_os = "windows"))]
       let client = reqwest::Client::builder()
         // 其他平台使用默认的 rustls
         // .use_native_tls() // Windows 下使用系统 TLS
