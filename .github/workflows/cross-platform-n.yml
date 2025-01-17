@@ -75,8 +75,8 @@ jobs:
           just setup
           just ready
           just ci-e2e
-        env:
-          RUST_BACKTRACE: full
+        # env:
+        #   RUST_BACKTRACE: full
       
 
   # build-release:
