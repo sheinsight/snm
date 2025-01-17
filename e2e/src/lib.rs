@@ -3,7 +3,7 @@ pub mod http_mocker;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use duct::cmd;
+// use duct::cmd;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use tempfile::tempdir;
