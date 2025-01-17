@@ -147,20 +147,7 @@ impl DownloadBuilder {
         .get(download_url)
         .timeout(Duration::from_secs(60))
         .send()
-        .await
-        .map_err(|e| {
-          println!("\nRequest failed:");
-          println!("URL: {}", download_url);
-          println!("Error: {:?}", e);
-
-          println!("Caused by: {:?}", e);
-
-          #[cfg(target_os = "windows")]
-          unsafe {
-            println!("WSA Error: {}", winapi::um::winsock2::WSAGetLastError());
-          }
-          e
-        })?;
+        .await?;
 
       if !response.status().is_success() {
         anyhow::bail!(

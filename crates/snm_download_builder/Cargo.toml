@@ -13,4 +13,4 @@ indicatif    = "0.17.8"
 reqwest      = { workspace = true, features = ["stream", "native-tls-vendored", "native-tls"] }
 snm_utils    = { path = "../snm_utils" }
 tokio        = { version = "1.36.0", features = ["full"] }
-winapi       = { version = "0.3", features = ["winsock2"] }
+
