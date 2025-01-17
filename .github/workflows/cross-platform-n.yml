@@ -38,7 +38,6 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Run tests
-        if: runner.os != 'Windows'
         run: | 
           node -v
           cargo install just
