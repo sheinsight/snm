@@ -38,17 +38,41 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
     }
 
     let pm_bin_file = node_bin_dir.join(actual_bin_name);
+
+    let real_pm_path = get_real_path(pm_bin_file)?;
+
     exec_cli(
       dir,
       vec![
         "node".to_string(),
-        pm_bin_file.to_string_lossy().to_string(),
+        real_pm_path.to_string_lossy().to_string(),
         args.iter().skip(1).map(|s| s.to_string()).collect(),
       ],
     )?;
   }
 
   Ok(())
+}
+
+fn get_real_path(link_path: PathBuf) -> anyhow::Result<PathBuf> {
+  if link_path.is_symlink() {
+    // 读取符号链接的目标
+    let target = std::fs::read_link(&link_path)?;
+
+    // 如果目标路径是相对路径，需要基于链接所在目录解析
+    if target.is_relative() {
+      let parent = link_path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Link has no parent directory"))?;
+      Ok(parent.join(target).canonicalize()?)
+    } else {
+      // 如果是绝对路径，直接规范化
+      Ok(target.canonicalize()?)
+    }
+  } else {
+    // 如果不是符号链接，返回规范化的原始路径
+    Ok(link_path.canonicalize()?)
+  }
 }
 
 fn build_bin_path<T: AsRef<Path>>(pm_bin_file: &Option<T>, node_bin_dir: &T) -> Vec<String> {
