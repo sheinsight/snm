@@ -113,26 +113,53 @@ impl CommandBuilder {
   }
 
   pub fn exec(&self, command: &str) -> anyhow::Result<String> {
-    let expr = if cfg!(target_os = "windows") {
-      // Windows 下需要添加 .exe 后缀
+    // let expr = if cfg!(target_os = "windows") {
+    //   // Windows 下需要添加 .exe 后缀
+    //   let command = if command.starts_with("snm") {
+    //     command.replace("snm", "snm.exe")
+    //   } else {
+    //     command.to_string()
+    //   };
+    //   cmd!("cmd", "/C", command)
+    // } else {
+    //   cmd!("sh", "-c", command)
+    // };
+
+    let mut cmd = if cfg!(target_os = "windows") {
       let command = if command.starts_with("snm") {
         command.replace("snm", "snm.exe")
       } else {
         command.to_string()
       };
-      cmd!("cmd", "/C", command)
+      let mut cmd = std::process::Command::new("cmd");
+      cmd.args(["/C", &command]);
+      cmd
     } else {
-      cmd!("sh", "-c", command)
+      let mut cmd = std::process::Command::new("sh");
+      cmd.args(["-c", &command]);
+      cmd
     };
 
-    let output = expr
-      .full_env(self.envs.clone())
-      // .env(envs) // 设置环境变量
-      .dir(self.cwd.clone()) // 设置工作目录
-      .stdout_capture()
-      .stderr_capture() // 同时捕获输出
-      .unchecked()
-      .run()?;
+    // let output = expr
+    //   .full_env(self.envs.clone())
+    //   // .env(envs) // 设置环境变量
+    //   .dir(self.cwd.clone()) // 设置工作目录
+    //   .stdout_capture()
+    //   .stderr_capture() // 同时捕获输出
+    //   .unchecked()
+    //   .run()?;
+
+    let output = cmd
+      .envs(self.envs.clone())
+      .current_dir(
+        std::env::current_dir()?
+          .join("tests")
+          .join("fixtures")
+          .join("empty"),
+      )
+      .stdout(std::process::Stdio::piped())
+      .stderr(std::process::Stdio::piped())
+      .output()?;
 
     if !output.status.success() {
       return Ok(String::from_utf8(output.stderr.clone())?.trim().to_string());

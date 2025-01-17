@@ -88,93 +88,93 @@
 //   }
 // }
 
-fn get_debug_dir() -> std::path::PathBuf {
-  // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
-  let e2e_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+// fn get_debug_dir() -> std::path::PathBuf {
+//   // 获取 e2e 目录 (CARGO_MANIFEST_DIR 指向 e2e/Cargo.toml 所在目录)
+//   let e2e_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
-  // 向上一级找到项目根目录
-  let root_dir = e2e_dir.parent().expect("Failed to get root dir");
+//   // 向上一级找到项目根目录
+//   let root_dir = e2e_dir.parent().expect("Failed to get root dir");
 
-  // 进入 target/debug 目录
-  root_dir.join("target").join("debug")
-}
+//   // 进入 target/debug 目录
+//   root_dir.join("target").join("debug")
+// }
 
-#[tokio::test]
-async fn test_install_node() -> anyhow::Result<()> {
-  let mock_server = e2e::get_global_mock_server().await;
+// #[tokio::test]
+// async fn test_install_node() -> anyhow::Result<()> {
+//   let mock_server = e2e::get_global_mock_server().await;
 
-  let uri = mock_server.uri();
+//   let uri = mock_server.uri();
 
-  let command = "snm node install 20.0.0";
+//   let command = "snm node install 20.0.0";
 
-  let env_path = env!("PATH");
+//   let env_path = env!("PATH");
 
-  let debug_dir = dunce::canonicalize(get_debug_dir())?
-    .to_str()
-    .unwrap()
-    .to_string();
+//   let debug_dir = dunce::canonicalize(get_debug_dir())?
+//     .to_str()
+//     .unwrap()
+//     .to_string();
 
-  let path_separator = if cfg!(target_os = "windows") {
-    ";"
-  } else {
-    ":"
-  };
-  let new_path = format!("{}{}{}", debug_dir, path_separator, env_path);
+//   let path_separator = if cfg!(target_os = "windows") {
+//     ";"
+//   } else {
+//     ":"
+//   };
+//   let new_path = format!("{}{}{}", debug_dir, path_separator, env_path);
 
-  let mut cmd = if cfg!(target_os = "windows") {
-    let command = if command.starts_with("snm") {
-      command.replace("snm", "snm.exe")
-    } else {
-      command.to_string()
-    };
-    let mut cmd = std::process::Command::new("cmd");
-    cmd.args(["/C", &command]);
-    cmd
-  } else {
-    let mut cmd = std::process::Command::new("sh");
-    cmd.args(["-c", &command]);
-    cmd
-  };
+//   let mut cmd = if cfg!(target_os = "windows") {
+//     let command = if command.starts_with("snm") {
+//       command.replace("snm", "snm.exe")
+//     } else {
+//       command.to_string()
+//     };
+//     let mut cmd = std::process::Command::new("cmd");
+//     cmd.args(["/C", &command]);
+//     cmd
+//   } else {
+//     let mut cmd = std::process::Command::new("sh");
+//     cmd.args(["-c", &command]);
+//     cmd
+//   };
 
-  let output = cmd
-    .envs([
-      ("SNM_NODE_DIST_URL", uri.to_string()),
-      ("SNM_NPM_REGISTRY", uri.to_string()),
-      ("SNM_HOME_DIR", debug_dir),
-      ("PATH", new_path),
-      ("SNM_NODE_INSTALL_STRATEGY", "auto".to_string()),
-    ])
-    .current_dir(
-      std::env::current_dir()?
-        .join("tests")
-        .join("fixtures")
-        .join("empty"),
-    )
-    .output()?;
+//   let output = cmd
+//     .envs([
+//       ("SNM_NODE_DIST_URL", uri.to_string()),
+//       ("SNM_NPM_REGISTRY", uri.to_string()),
+//       ("SNM_HOME_DIR", debug_dir),
+//       ("PATH", new_path),
+//       ("SNM_NODE_INSTALL_STRATEGY", "auto".to_string()),
+//     ])
+//     .current_dir(
+//       std::env::current_dir()?
+//         .join("tests")
+//         .join("fixtures")
+//         .join("empty"),
+//     )
+//     .output()?;
 
-  let res = if !output.status.success() {
-    String::from_utf8(output.stderr)?.trim().to_string()
-  } else {
-    String::from_utf8(output.stdout)?.trim().to_string()
-  };
+//   let res = if !output.status.success() {
+//     String::from_utf8(output.stderr)?.trim().to_string()
+//   } else {
+//     String::from_utf8(output.stdout)?.trim().to_string()
+//   };
 
-  // let builder = e2e::CommandBuilder::with_envs(
-  //   "test_install_node",
-  //   std::env::current_dir()?
-  //     .join("tests")
-  //     .join("fixtures")
-  //     .join("empty"),
-  //   vec![
-  //     e2e::SnmEnv::NodeDistUrl(uri.clone()),
-  //     e2e::SnmEnv::NpmRegistry(uri.clone()),
-  //   ],
-  // )?;
+//   // let builder = e2e::CommandBuilder::with_envs(
+//   //   "test_install_node",
+//   //   std::env::current_dir()?
+//   //     .join("tests")
+//   //     .join("fixtures")
+//   //     .join("empty"),
+//   //   vec![
+//   //     e2e::SnmEnv::NodeDistUrl(uri.clone()),
+//   //     e2e::SnmEnv::NpmRegistry(uri.clone()),
+//   //   ],
+//   // )?;
 
-  // builder.exec("snm setup")?;
+//   // builder.exec("snm setup")?;
 
-  // let res = builder.exec("snm node install 20.0.0")?;
+//   // let res = builder.exec("snm node install 20.0.0")?;
 
-  println!("res---->: {:?}", res);
+//   println!("res---->: {:?}", res);
 
-  Ok(())
-}
+//   Ok(())
+// }
