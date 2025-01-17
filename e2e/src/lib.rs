@@ -139,13 +139,16 @@ impl CommandBuilder {
       // .stderr(std::process::Stdio::piped())
       .output()?;
 
-    println!("command: {} output---->: {:?}", command, output);
+    let res = format!(
+      r#"
+stdout:{}
+stderr:{}
+    "#,
+      String::from_utf8(output.stdout.clone())?.trim().to_string(),
+      String::from_utf8(output.stderr.clone())?.trim().to_string()
+    );
 
-    if !output.status.success() {
-      return Ok(String::from_utf8(output.stderr.clone())?.trim().to_string());
-    }
-
-    Ok(String::from_utf8(output.stdout.clone())?.trim().to_string())
+    Ok(res)
   }
 
   pub fn add_snapshot(&mut self, command: &str) -> anyhow::Result<&mut Self> {

@@ -7,4 +7,6 @@ name: "test_show_npm_version_when_missing_default_node_and_npm"
 id: 1
 is: npm -v
 
-Error: No default Node.js version found
+
+stdout:
+stderr:Error: No default Node.js version found

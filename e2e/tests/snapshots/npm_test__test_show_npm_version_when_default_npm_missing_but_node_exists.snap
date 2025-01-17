@@ -7,14 +7,22 @@ name: "test_show_npm_version_when_default_npm_missing_but_node_exists"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node default 20.0.0
 
-🎉 Node v20.0.0 is now default
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
 
 id: 3
 is: npm -v
 
-9.6.4
+
+stdout:9.6.4
+stderr:

@@ -7,29 +7,46 @@ name: "test_snm_install_set_default_pnpm"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node default 20.0.0
 
-🎉 Node v20.0.0 is now default
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
 
 id: 3
 is: pnpm -v
 
-Error: Can't find command pnpm
+
+stdout:
+stderr:Error: Can't find command pnpm
+
 
 id: 4
 is: snm pnpm install 9.0.0
 
-🎉 pnpm v9.0.0 is installed
+
+stdout:🎉 pnpm v9.0.0 is installed
+stderr:
+
 
 id: 5
 is: snm pnpm default 9.0.0
 
-🎉 pnpm v9.0.0 is now default
+
+stdout:🎉 pnpm v9.0.0 is now default
+stderr:
+
 
 id: 6
 is: pnpm -v
 
-9.0.0
+
+stdout:9.0.0
+stderr:

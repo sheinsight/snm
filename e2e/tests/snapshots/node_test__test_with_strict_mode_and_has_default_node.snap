@@ -7,24 +7,38 @@ name: "test_with_strict_mode_and_has_default_node"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node list --compact
 
-20.0.0
+
+stdout:20.0.0
+stderr:
+
 
 id: 3
 is: snm node default 20.0.0
 
-🎉 Node v20.0.0 is now default
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
 
 id: 4
 is: snm node list --compact
 
--> 20.0.0
+
+stdout:-> 20.0.0
+stderr:
+
 
 id: 5
 is: node -v
 
-Error: In strict mode, a .node-version file must be configured in the current directory.
+
+stdout:
+stderr:Error: In strict mode, a .node-version file must be configured in the current directory.

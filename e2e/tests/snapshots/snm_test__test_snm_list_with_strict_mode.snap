@@ -7,32 +7,48 @@ name: "test_snm_list_with_strict_mode"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node list
 
-20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
+
+stdout:20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
+stderr:
+
 
 id: 3
 is: snm node default 20.0.0
 
-🎉 Node v20.0.0 is now default
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
 
 id: 4
 is: snm node list
 
--> 20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
+
+stdout:-> 20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
+stderr:
+
 
 id: 5
 is: snm node list --compact
 
--> 20.0.0
+
+stdout:-> 20.0.0
+stderr:
+
 
 id: 6
 is: snm node list --remote
 
-4.0.0        npm 2.14.2           openssl 1.0.2d       died on 2018-04-30     Argon     
+
+stdout:4.0.0        npm 2.14.2           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.0        npm 2.14.3           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.1        npm 2.14.4           openssl 1.0.2d       died on 2018-04-30     Argon     
    4.1.2        npm 2.14.4           openssl 1.0.2d       died on 2018-04-30     Argon     
@@ -563,3 +579,4 @@ is: snm node list --remote
    23.4.0       npm 10.9.2           openssl 3.0.15+quic  died on 2025-06-01               
    23.5.0       npm 10.9.2           openssl 3.0.15+quic  died on 2025-06-01               
    23.6.0       npm 10.9.2           openssl 3.0.15+quic  died on 2025-06-01
+stderr:

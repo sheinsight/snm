@@ -7,29 +7,46 @@ name: "test_snm_install_set_default_yarn4"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node default 20.0.0
 
-🎉 Node v20.0.0 is now default
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
 
 id: 3
 is: yarn -v
 
-Error: Can't find command yarn
+
+stdout:
+stderr:Error: Can't find command yarn
+
 
 id: 4
 is: snm yarn install 4.0.0
 
-🎉 yarn v4.0.0 is installed
+
+stdout:🎉 yarn v4.0.0 is installed
+stderr:
+
 
 id: 5
 is: snm yarn default 4.0.0
 
-🎉 yarn v4.0.0 is now default
+
+stdout:🎉 yarn v4.0.0 is now default
+stderr:
+
 
 id: 6
 is: yarn -v
 
-4.0.0
+
+stdout:4.0.0
+stderr:

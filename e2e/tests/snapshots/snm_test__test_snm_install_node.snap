@@ -7,9 +7,14 @@ name: "test_snm_install_node"
 id: 1
 is: snm node install 20.0.0
 
-🎉 Node v20.0.0 is installed
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
 
 id: 2
 is: snm node list --compact
 
-20.0.0
+
+stdout:20.0.0
+stderr:

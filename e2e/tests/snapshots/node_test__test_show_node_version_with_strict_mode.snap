@@ -7,4 +7,6 @@ name: "test_show_node_version_with_strict_mode"
 id: 1
 is: node -v
 
-Error: In strict mode, a .node-version file must be configured in the current directory.
+
+stdout:
+stderr:Error: In strict mode, a .node-version file must be configured in the current directory.
