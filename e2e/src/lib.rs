@@ -157,6 +157,7 @@ impl CommandBuilder {
           .join("fixtures")
           .join("empty"),
       )
+      .current_dir(self.cwd.clone())
       .stdout(std::process::Stdio::piped())
       .stderr(std::process::Stdio::piped())
       .output()?;
