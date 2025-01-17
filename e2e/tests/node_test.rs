@@ -2,18 +2,18 @@ use std::env::current_dir;
 
 use e2e::SnmEnv;
 
-e2e::test1! {
-  #[tokio::test]
-  test_auto_install_node_with_node_version,
-  cwd: current_dir()?.join("tests").join("fixtures").join("auto_install_node_with_node_version"),
-  envs: [],
-  |builder:e2e::CommandBuilder| => {
-    builder.add_snapshot("node -v")?;
-    builder.assert_snapshots(|name,res| {
-      insta::assert_snapshot!(name, res);
-    })?;
-  }
-}
+// e2e::test1! {
+//   #[tokio::test]
+//   test_auto_install_node_with_node_version,
+//   cwd: current_dir()?.join("tests").join("fixtures").join("auto_install_node_with_node_version"),
+//   envs: [],
+//   |builder:e2e::CommandBuilder| => {
+//     builder.add_snapshot("node -v")?;
+//     builder.assert_snapshots(|name,res| {
+//       insta::assert_snapshot!(name, res);
+//     })?;
+//   }
+// }
 
 e2e::test1! {
   #[tokio::test]

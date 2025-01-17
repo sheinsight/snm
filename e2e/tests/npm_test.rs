@@ -23,8 +23,6 @@ e2e::test1! {
     builder.add_snapshot("snm node default 20.0.0")?;
     builder.add_snapshot("npm -v")?;
     builder.assert_snapshots(|name,res| {
-      println!("name---->: {:?}", name);
-      println!("res---->: {:?}", res);
       insta::assert_snapshot!(name, res);
     })?;
   }
