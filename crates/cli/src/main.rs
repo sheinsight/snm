@@ -1,12 +1,18 @@
-use std::env::current_dir;
+use std::{env::current_dir, process::ExitCode};
 
 use clap::Parser;
 use snm::{execute_cli::execute_cli, SnmCli};
 use snm_config::SnmConfig;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
-  run().await
+async fn main() -> ExitCode {
+  match run().await {
+    Ok(_) => ExitCode::SUCCESS,
+    Err(e) => {
+      eprintln!("Error: {}", e);
+      ExitCode::FAILURE
+    }
+  }
 }
 
 async fn run() -> anyhow::Result<()> {
