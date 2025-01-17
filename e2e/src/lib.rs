@@ -101,7 +101,7 @@ impl CommandBuilder {
       envs: envs.into_iter().map(|e| e.as_tuple()).collect::<Vec<_>>(),
       cwd: cwd,
       counter: 0,
-      snapshots: vec![],
+      snapshots: vec![format!("name: {:?}", name)],
     })
   }
 
@@ -117,18 +117,6 @@ impl CommandBuilder {
   }
 
   pub fn exec(&self, command: &str) -> anyhow::Result<String> {
-    // let expr = if cfg!(target_os = "windows") {
-    //   // Windows 下需要添加 .exe 后缀
-    //   let command = if command.starts_with("snm") {
-    //     command.replace("snm", "snm.exe")
-    //   } else {
-    //     command.to_string()
-    //   };
-    //   cmd!("cmd", "/C", command)
-    // } else {
-    //   cmd!("sh", "-c", command)
-    // };
-
     let mut cmd = if cfg!(target_os = "windows") {
       let command = if command.starts_with("snm") {
         command.replace("snm", "snm.exe")
@@ -143,15 +131,6 @@ impl CommandBuilder {
       cmd.args(["-c", &command]);
       cmd
     };
-
-    // let output = expr
-    //   .full_env(self.envs.clone())
-    //   // .env(envs) // 设置环境变量
-    //   .dir(self.cwd.clone()) // 设置工作目录
-    //   .stdout_capture()
-    //   .stderr_capture() // 同时捕获输出
-    //   .unchecked()
-    //   .run()?;
 
     let output = cmd
       .envs(self.envs.clone())

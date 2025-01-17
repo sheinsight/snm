@@ -1,8 +1,9 @@
 ---
 source: e2e/tests/node_test.rs
 expression: res
-snapshot_kind: text
 ---
+name: "test_with_strict_mode_and_has_default_node"
+
 id: 1
 is: snm node install 20.0.0
 

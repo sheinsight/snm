@@ -1,8 +1,9 @@
 ---
 source: e2e/tests/node_test.rs
 expression: res
-snapshot_kind: text
 ---
+name: "test_no_strict_and_no_default_node"
+
 id: 1
 is: node -v
 
