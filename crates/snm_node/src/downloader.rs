@@ -78,31 +78,46 @@ impl<'a> NodeDownloader<'a> {
       let entry = entry?;
       let target = output_dir.as_ref().join(entry.file_name());
 
-      if entry.file_type()?.is_dir() {
-        let options = fs_extra::dir::CopyOptions {
-          overwrite: true,
-          skip_exist: false,
-          content_only: true,
-          ..Default::default()
-        };
-        fs_extra::dir::copy(entry.path(), &target, &options)?;
-      } else {
-        std::fs::rename(entry.path(), &target).map_err(|e| {
-          println!(
-            "rename error---->: {:?} {:?} {} {:?}",
-            entry.path(),
-            target,
-            target.exists(),
-            &e
-          );
-          if target.exists() {
-            std::fs::read_dir(&target).unwrap().for_each(|e| {
-              println!("e---->: {:?}", e);
-            });
-          }
-          e
-        })?;
-      }
+      // if entry.file_type()?.is_dir() {
+      //   let options = fs_extra::dir::CopyOptions {
+      //     overwrite: true,
+      //     skip_exist: false,
+      //     content_only: true,
+      //     ..Default::default()
+      //   };
+      //   fs_extra::dir::copy(entry.path(), &target, &options)?;
+      // } else {
+      //   std::fs::rename(entry.path(), &target).map_err(|e| {
+      //     println!(
+      //       "rename error---->: {:?} {:?} {} {:?}",
+      //       entry.path(),
+      //       target,
+      //       target.exists(),
+      //       &e
+      //     );
+      //     if target.exists() {
+      //       std::fs::read_dir(&target).unwrap().for_each(|e| {
+      //         println!("e---->: {:?}", e);
+      //       });
+      //     }
+      //     e
+      //   })?;
+      // }
+      std::fs::rename(entry.path(), &target).map_err(|e| {
+        println!(
+          "rename error---->: {:?} {:?} {} {:?}",
+          entry.path(),
+          target,
+          target.exists(),
+          &e
+        );
+        if target.exists() {
+          std::fs::read_dir(&target).unwrap().for_each(|e| {
+            println!("e---->: {:?}", e);
+          });
+        }
+        e
+      })?;
     }
 
     // 清理临时目录
