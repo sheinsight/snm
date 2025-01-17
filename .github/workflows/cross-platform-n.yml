@@ -37,18 +37,6 @@ jobs:
           override: true
           target: ${{ matrix.target }}
 
-      - name: Setup Windows Network
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          node -v
-          cargo install just
-          just setup
-          just ready
-          just ci-e2e
-        # env:
-        #   RUST_BACKTRACE: full
-
       - name: Run tests
         if: runner.os != 'Windows'
         run: | 
@@ -57,8 +45,8 @@ jobs:
           just setup
           just ready
           just ci-e2e
-        # env:
-        #   RUST_BACKTRACE: full
+        env:
+          RUST_BACKTRACE: full
       
 
   # build-release:
