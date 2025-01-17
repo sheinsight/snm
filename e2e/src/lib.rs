@@ -90,6 +90,7 @@ impl CommandBuilder {
     let mut envs: Vec<SnmEnv> = vec![
       SnmEnv::Path(new_path),
       SnmEnv::HomeDir(tmp_dir.display().to_string()),
+      SnmEnv::NodeInstallStrategy("auto".to_string()),
     ];
     envs.extend(custom_envs);
     Ok(Self {

@@ -43,17 +43,10 @@ impl<'a> NodeDownloader<'a> {
     downloaded_file_path_buf: T,
     output_dir: U,
   ) -> anyhow::Result<()> {
-    println!(
-      "downloaded_file_path_buf---->: {:?}",
-      downloaded_file_path_buf.as_ref()
-    );
-
     let format = ArchiveExtension::from_path(&downloaded_file_path_buf)?;
     let file = File::open(&downloaded_file_path_buf)?;
 
     let temp_dir = output_dir.as_ref().join("temp");
-
-    println!("temp_dir---->: {:?}", temp_dir);
 
     std::fs::create_dir_all(&temp_dir)?;
     match format {
@@ -84,7 +77,6 @@ impl<'a> NodeDownloader<'a> {
     for entry in std::fs::read_dir(entry.path())? {
       let entry = entry?;
       let target = output_dir.as_ref().join(entry.file_name());
-      println!("target---->: {:?}", target);
 
       if entry.file_type()?.is_dir() {
         let options = fs_extra::dir::CopyOptions {
