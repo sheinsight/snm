@@ -52,7 +52,11 @@ impl<'a> NodeFactory<'a> {
 
   pub async fn set_default(&self, args: DefaultArgs) -> anyhow::Result<()> {
     let node_dir = self.config.node_bin_dir.join(&args.version);
+    #[cfg(target_os = "windows")]
+    let node_bin_file = node_dir.join("bin").join("node.exe");
+    #[cfg(not(target_os = "windows"))]
     let node_bin_file = node_dir.join("bin").join("node");
+
     let default_dir = self.config.node_bin_dir.join("default");
     if node_bin_file.try_exists()?.not() {
       let confirmed = Confirm::new()
