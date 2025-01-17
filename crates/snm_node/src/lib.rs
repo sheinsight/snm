@@ -102,13 +102,24 @@ impl<'a> SNode<'a> {
 
     let node_dir = self.config.node_bin_dir.join(&version);
 
-    let node_bin_dir = node_dir.join("bin");
+    #[cfg(target_os = "windows")]
+    let node_bin_dir = {
+      let node_bin_file = node_dir.join("node.exe");
+      if node_bin_file.try_exists()? {
+        return Ok(node_dir);
+      }
+      node_dir
+    };
 
-    let node_bin_file = node_bin_dir.join("node");
-
-    if node_bin_file.try_exists()? {
-      return Ok(node_bin_dir);
-    }
+    #[cfg(not(target_os = "windows"))]
+    let node_bin_dir = {
+      let node_bin_dir = node_dir.join("bin");
+      let node_bin_file = node_bin_dir.join("node");
+      if node_bin_file.try_exists()? {
+        return Ok(node_bin_dir);
+      }
+      node_bin_dir
+    };
 
     NodeDownloader::new(self.config).download(version).await?;
 
