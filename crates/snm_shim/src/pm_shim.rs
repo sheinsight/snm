@@ -37,22 +37,36 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
       anyhow::bail!("Can't find command {}", actual_bin_name);
     }
 
-    let pm_bin_file = node_bin_dir.join(actual_bin_name);
+    #[cfg(target_os = "windows")]
+    {
+      let pm_bin_file = node_bin_dir.join(format!("{}.cmd", actual_bin_name));
+      exec_cli(
+        dir,
+        vec![
+          pm_bin_file.to_string_lossy().to_string(),
+          args.iter().skip(1).map(|s| s.to_string()).collect(),
+        ],
+      )?;
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+      let pm_bin_file = node_bin_dir.join(actual_bin_name);
+      exec_cli(
+        dir,
+        vec![
+          "node".to_string(),
+          pm_bin_file.to_string_lossy().to_string(),
+          args.iter().skip(1).map(|s| s.to_string()).collect(),
+        ],
+      )?;
+    }
 
     // println!("pm_bin_file---->: {:?}", &pm_bin_file);
 
     // let real_pm_path = get_real_path(pm_bin_file.clone())?;
 
     // println!("real_pm_path---->: {:?}", &real_pm_path);
-
-    exec_cli(
-      dir,
-      vec![
-        "node".to_string(),
-        pm_bin_file.to_string_lossy().to_string(),
-        args.iter().skip(1).map(|s| s.to_string()).collect(),
-      ],
-    )?;
   }
 
   Ok(())
