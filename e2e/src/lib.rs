@@ -135,9 +135,11 @@ impl CommandBuilder {
     let output = cmd
       .envs(self.envs.clone())
       .current_dir(self.cwd.clone())
-      .stdout(std::process::Stdio::piped())
-      .stderr(std::process::Stdio::piped())
+      // .stdout(std::process::Stdio::piped())
+      // .stderr(std::process::Stdio::piped())
       .output()?;
+
+    println!("command: {} output---->: {:?}", command, output);
 
     if !output.status.success() {
       return Ok(String::from_utf8(output.stderr.clone())?.trim().to_string());
