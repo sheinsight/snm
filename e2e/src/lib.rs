@@ -132,6 +132,8 @@ impl CommandBuilder {
       cmd
     };
 
+    println!("self.envs.clone()---->: {:?}", self.envs.clone());
+
     let output = cmd
       .envs(self.envs.clone())
       .current_dir(self.cwd.clone())
