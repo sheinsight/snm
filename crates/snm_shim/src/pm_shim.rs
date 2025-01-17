@@ -11,19 +11,34 @@ use snm_utils::exec::exec_cli;
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
 pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
+  println!("actual_bin_name---->: {:?}", actual_bin_name);
+
   let args: Vec<String> = env::args().collect();
+
+  println!("args---->: {:?}", args);
 
   let cwd = current_dir()?;
 
+  println!("cwd---->: {:?}", cwd);
+
   let snm_config = SnmConfig::from(&cwd)?;
+
+  println!("snm_config---->: {:?}", snm_config);
 
   let pm_bin_file = get_package_manager_bin(&snm_config, actual_bin_name).await?;
 
+  println!("pm_bin_file---->: {:?}", pm_bin_file);
+
   let node_bin_dir = SNode::try_from(&snm_config)?.get_bin().await?;
+
+  println!("node_bin_dir---->: {:?}", node_bin_dir);
 
   let dir = build_bin_path(&pm_bin_file, &node_bin_dir);
 
+  println!("dir---->: {:?}", dir);
+
   if let Some(pm_bin_file) = pm_bin_file {
+    println!("pm_bin_file---->: {:?}", pm_bin_file);
     exec_cli(
       dir,
       vec![
@@ -33,6 +48,7 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
       ],
     )?;
   } else {
+    println!("is_npm_command---->: {:?}", is_npm_command(actual_bin_name));
     if !is_npm_command(actual_bin_name) {
       anyhow::bail!("Can't find command {}", actual_bin_name);
     }
