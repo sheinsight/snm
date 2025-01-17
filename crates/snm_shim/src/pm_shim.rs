@@ -41,7 +41,7 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
 
     // println!("pm_bin_file---->: {:?}", &pm_bin_file);
 
-    let real_pm_path = get_real_path(pm_bin_file.clone())?;
+    // let real_pm_path = get_real_path(pm_bin_file.clone())?;
 
     // println!("real_pm_path---->: {:?}", &real_pm_path);
 
@@ -58,26 +58,26 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
   Ok(())
 }
 
-fn get_real_path(link_path: PathBuf) -> anyhow::Result<PathBuf> {
-  if link_path.is_symlink() {
-    // 读取符号链接的目标
-    let target = std::fs::read_link(&link_path)?;
+// fn get_real_path(link_path: PathBuf) -> anyhow::Result<PathBuf> {
+//   if link_path.is_symlink() {
+//     // 读取符号链接的目标
+//     let target = std::fs::read_link(&link_path)?;
 
-    // 如果目标路径是相对路径，需要基于链接所在目录解析
-    if target.is_relative() {
-      let parent = link_path
-        .parent()
-        .ok_or_else(|| anyhow::anyhow!("Link has no parent directory"))?;
-      Ok(parent.join(target).canonicalize()?)
-    } else {
-      // 如果是绝对路径，直接规范化
-      Ok(target.canonicalize()?)
-    }
-  } else {
-    // 如果不是符号链接，返回规范化的原始路径
-    Ok(link_path.canonicalize()?)
-  }
-}
+//     // 如果目标路径是相对路径，需要基于链接所在目录解析
+//     if target.is_relative() {
+//       let parent = link_path
+//         .parent()
+//         .ok_or_else(|| anyhow::anyhow!("Link has no parent directory"))?;
+//       Ok(parent.join(target).canonicalize()?)
+//     } else {
+//       // 如果是绝对路径，直接规范化
+//       Ok(target.canonicalize()?)
+//     }
+//   } else {
+//     // 如果不是符号链接，返回规范化的原始路径
+//     Ok(link_path.canonicalize()?)
+//   }
+// }
 
 fn build_bin_path<T: AsRef<Path>>(pm_bin_file: &Option<T>, node_bin_dir: &T) -> Vec<String> {
   if let Some(pm_bin_file) = pm_bin_file {
