@@ -76,17 +76,11 @@ impl CommandBuilder {
   pub fn with_envs(name: &str, cwd: PathBuf, custom_envs: Vec<SnmEnv>) -> anyhow::Result<Self> {
     let tmp_dir = tempdir()?.into_path();
     let env_path = env!("PATH");
-    println!(
-      "original PATH: {:?}",
-      std::env::var("PATH").unwrap_or_default()
-    );
-    // let debug_dir = Self::get_debug_dir().to_str().unwrap().to_string();
+
     let debug_dir = dunce::canonicalize(Self::get_debug_dir())?
       .to_str()
       .unwrap()
       .to_string();
-
-    println!("debug_dir: {:?}", debug_dir);
 
     let path_separator = if cfg!(target_os = "windows") {
       ";"
@@ -137,8 +131,6 @@ impl CommandBuilder {
       cmd.args(["-c", &command]);
       cmd
     };
-
-    println!("self.envs.clone()---->: {:?}", self.envs.clone());
 
     let output = cmd
       .envs(self.envs.clone())
@@ -205,21 +197,11 @@ pub async fn get_global_mock_server() -> Arc<wiremock::MockServer> {
     return server.clone();
   }
 
-  println!(
-    "\nInitializing global mock server from thread: {:?}",
-    std::thread::current().id()
-  );
   let mock_server = http_mocker::HttpMocker::builder()
     .unwrap()
     .build()
     .await
     .unwrap();
-
-  println!(
-    "Mock server started at {} on thread {:?}",
-    mock_server.uri(),
-    std::thread::current().id()
-  );
 
   let server = Arc::new(mock_server);
   *guard = Some(server.clone());
@@ -245,7 +227,7 @@ macro_rules! test1 {
 
             let uri = mock_server.uri();
 
-            println!("cwd------>>:{:?}",$cwd);
+
 
             let mut $builder = e2e::CommandBuilder::with_envs(
                 stringify!($test_name),
