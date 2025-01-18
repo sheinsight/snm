@@ -11,5 +11,6 @@ anyhow    = { workspace = true }
 config    = "0.14.0"
 dirs      = { workspace = true }
 serde     = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 snm_npmrc = { path = "../snm_npmrc" }
 snm_utils = { path = "../snm_utils" }

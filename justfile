@@ -49,6 +49,9 @@ e2e:
     echo "Running end-to-end tests..."
     cargo insta test -p e2e --review -- --nocapture
 
+e2e-watch:
+    echo "Watching end-to-end tests..."
+    cargo watch -q -c -w crates -w e2e -x "insta test -p e2e --review -- --nocapture"
 
 ci-e2e:
     echo "Running end-to-end tests..."

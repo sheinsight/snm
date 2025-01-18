@@ -1,15 +1,16 @@
 use std::{
   env::{self},
+  fmt::Display,
   fs,
   path::{Path, PathBuf},
 };
 
 use config::{Config, Environment};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use snm_npmrc::NpmrcReader;
 use snm_utils::snm_error::SnmError;
 
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone, Serialize)]
 pub enum InstallStrategy {
   Ask,
   Auto,
@@ -41,7 +42,7 @@ impl InstallStrategy {
 const SNM_HOME_DIR_KEY: &str = "SNM_HOME_DIR";
 // const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone, Serialize)]
 pub struct SnmConfig {
   pub node_bin_dir: PathBuf,
   pub download_dir: PathBuf,
@@ -57,6 +58,15 @@ pub struct SnmConfig {
   pub lang: String,
   pub restricted_list: Vec<String>,
   pub strict: bool,
+}
+
+impl Display for SnmConfig {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if let Ok(json) = serde_json::to_string_pretty(self) {
+      return write!(f, "{}", json);
+    }
+    write!(f, "{:?}", self)
+  }
 }
 
 impl SnmConfig {
