@@ -8,11 +8,12 @@ use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;
 use snm_pm::pm_metadata::PackageManagerMetadata;
 use snm_utils::exec::exec_cli;
+use tracing::trace;
 
+use crate::cli::SnmCli;
 use crate::fig::fig_spec_impl;
 use crate::manage_command::NodeManageCommands;
 use crate::snm_command::SnmCommands;
-use crate::SnmCli;
 
 async fn handle_package_manager(
   pm_name: &str,
@@ -36,6 +37,12 @@ async fn handle_package_manager(
 }
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
+  trace!(
+    r#"Start execute cli 
+{}"#,
+    cli
+  );
+
   match cli.command {
     // manage start
     SnmCommands::Node { command } => {

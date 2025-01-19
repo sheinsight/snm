@@ -1,6 +1,6 @@
 use clap::Parser;
-
-#[derive(Parser, Debug, Clone)]
+use serde::Serialize;
+#[derive(Parser, Debug, Clone, Serialize)]
 pub struct InstallArgs {
   #[arg(
     long,
@@ -9,7 +9,7 @@ pub struct InstallArgs {
   pub frozen_lockfile: bool,
 }
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone, Serialize)]
 pub struct AddArgs {
   #[arg(help = "The package spec to install.")]
   pub package_spec: Vec<String>,
@@ -25,7 +25,7 @@ pub struct AddArgs {
   pub save_exact: bool,
 }
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone, Serialize)]
 pub struct RemoveArgs {
   #[arg(help = "The package spec to remove.")]
   pub package_spec: Vec<String>,

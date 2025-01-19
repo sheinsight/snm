@@ -1,15 +1,18 @@
 use std::env::current_dir;
 
 use clap::Parser;
+use cli::SnmCli;
 // use snm::SnmCli;
-use snm::{execute_cli, SnmCli};
+// use snm::{execute_cli, SnmCli};
 use snm_config::SnmConfig;
 use tracing::trace;
 
 // pub mod execute_cli;
-pub mod fig;
-pub mod manage_command;
-pub mod snm_command;
+mod cli;
+mod execute_cli;
+mod fig;
+mod manage_command;
+mod snm_command;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,8 +37,6 @@ async fn main() -> anyhow::Result<()> {
   trace!("Start parse cli");
 
   let cli = SnmCli::parse();
-
-  trace!("Start execute cli");
 
   execute_cli::execute_cli(cli, snm_config).await
 }

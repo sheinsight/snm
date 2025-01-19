@@ -3,16 +3,17 @@ use std::{fs, ops::Not, process::exit};
 use clap::Subcommand;
 use colored::Colorize;
 use dialoguer::Confirm;
+use serde::Serialize;
 
 use crate::{downloader::PackageManagerDownloader, pm_metadata::PackageManagerMetadata};
 
-#[derive(Debug, clap::Args)]
+#[derive(Debug, clap::Args, Serialize)]
 pub struct FactoryCommandArgs {
   #[arg(help = "Package manager version")]
   pub version: String,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Serialize)]
 pub enum PackageManagerFactoryCommands {
   Install(FactoryCommandArgs),
   Default(FactoryCommandArgs),

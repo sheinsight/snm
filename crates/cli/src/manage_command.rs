@@ -1,6 +1,6 @@
 use clap::Subcommand;
-
-#[derive(Subcommand, Debug)]
+use serde::Serialize;
+#[derive(Subcommand, Debug, Serialize)]
 pub enum NodeManageCommands {
   /// Set default npm version
   Default(snm_node::factory::DefaultArgs),

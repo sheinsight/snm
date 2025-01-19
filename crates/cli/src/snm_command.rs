@@ -1,4 +1,5 @@
 use clap::Subcommand;
+use serde::Serialize;
 use snm_pm::{
   factory::PackageManagerFactoryCommands,
   ops::ops::{AddArgs, InstallArgs, RemoveArgs},
@@ -6,7 +7,7 @@ use snm_pm::{
 
 use super::manage_command::NodeManageCommands;
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Serialize)]
 pub enum SnmCommands {
   #[command(about = "Used to install all dependencies for a project.")]
   I(InstallArgs),

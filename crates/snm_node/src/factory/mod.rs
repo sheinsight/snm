@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, ops::Not, time::Duration};
+use std::{collections::HashMap, fmt::Display, fs, ops::Not, path::PathBuf, time::Duration};
 
 use colored::*;
 use dialoguer::Confirm;
@@ -6,7 +6,9 @@ use itertools::Itertools;
 use metadata::NodeMetadata;
 use schedule::Schedule;
 use semver::Version;
+use serde::Serialize;
 use snm_config::SnmConfig;
+use tracing::trace;
 
 use crate::downloader::NodeDownloader;
 
@@ -14,13 +16,22 @@ pub mod lts;
 pub mod metadata;
 pub mod schedule;
 
-#[derive(Debug, clap::Args)]
+#[derive(Debug, clap::Args, Serialize)]
 pub struct DefaultArgs {
   #[arg(help = "Node version")]
   pub version: String,
 }
 
-#[derive(Debug, clap::Args)]
+impl Display for DefaultArgs {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if let Ok(json) = serde_json::to_string_pretty(self) {
+      return write!(f, "{}", json);
+    }
+    write!(f, "{}", self.version)
+  }
+}
+
+#[derive(Debug, clap::Args, Serialize)]
 pub struct ListArgs {
   #[arg(long, help = "List remote node", default_value = "false")]
   pub remote: bool,
@@ -29,13 +40,22 @@ pub struct ListArgs {
   pub compact: bool,
 }
 
-#[derive(Debug, clap::Args)]
+impl Display for ListArgs {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if let Ok(json) = serde_json::to_string_pretty(self) {
+      return write!(f, "{}", json);
+    }
+    write!(f, "{}", self)
+  }
+}
+
+#[derive(Debug, clap::Args, Serialize)]
 pub struct UninstallArgs {
   #[arg(help = "Node version")]
   pub version: String,
 }
 
-#[derive(Debug, clap::Args)]
+#[derive(Debug, clap::Args, Serialize)]
 pub struct InstallArgs {
   #[arg(help = "Node version")]
   pub version: String,
@@ -43,22 +63,77 @@ pub struct InstallArgs {
 
 pub struct NodeFactory<'a> {
   config: &'a SnmConfig,
+  default_dir: PathBuf,
 }
 
 impl<'a> NodeFactory<'a> {
   pub fn new(config: &'a SnmConfig) -> Self {
-    Self { config }
+    Self {
+      config,
+      default_dir: config.node_bin_dir.join("default"),
+    }
+  }
+
+  fn get_node_binary(&self, node_dir: &PathBuf) -> anyhow::Result<(PathBuf, bool)> {
+    #[cfg(target_os = "windows")]
+    let binary = node_dir.join("node.exe");
+    #[cfg(not(target_os = "windows"))]
+    let binary = node_dir.join("bin").join("node");
+
+    let binary_exists = binary.try_exists()?;
+
+    trace!("Binary: {:?} ( exists: {} )", binary, binary_exists);
+
+    Ok((binary, binary_exists))
+  }
+
+  fn symlink_default(&self, source_dir: &PathBuf, target_dir: &PathBuf) -> anyhow::Result<()> {
+    let default_dir_exists = self.has_default()?;
+
+    if default_dir_exists {
+      fs::remove_dir_all(&self.default_dir)?;
+    }
+
+    trace!(
+      r#"Creating symlink: 
+{:?} -> {:?}"#,
+      &source_dir,
+      &target_dir
+    );
+
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&source_dir, &target_dir)?;
+
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_dir(&source_dir, &target_dir)?;
+
+    Ok(())
+  }
+
+  fn get_node_dir(&self, version: &str) -> PathBuf {
+    self.config.node_bin_dir.join(version)
+  }
+
+  fn has_default(&self) -> anyhow::Result<bool> {
+    let (_, binary_exists) = self.get_node_binary(&self.default_dir)?;
+
+    Ok(binary_exists)
   }
 
   pub async fn set_default(&self, args: DefaultArgs) -> anyhow::Result<()> {
-    let node_dir = self.config.node_bin_dir.join(&args.version);
-    #[cfg(target_os = "windows")]
-    let node_bin_file = node_dir.join("node.exe");
-    #[cfg(not(target_os = "windows"))]
-    let node_bin_file = node_dir.join("bin").join("node");
+    trace!(
+      r#"Start set default node , args: 
+{}"#,
+      args
+    );
 
-    let default_dir = self.config.node_bin_dir.join("default");
-    if node_bin_file.try_exists()?.not() {
+    let node_dir = self.get_node_dir(&args.version);
+
+    trace!("Directory for Node {}: {:?}", args.version, &node_dir);
+
+    let (_, binary_exists) = self.get_node_binary(&node_dir)?;
+
+    if !binary_exists {
       let confirmed = Confirm::new()
         .with_prompt(format!(
           "🤔 v{} is not installed, do you want to install it ?",
@@ -74,18 +149,7 @@ impl<'a> NodeFactory<'a> {
       }
     }
 
-    if default_dir.try_exists()? {
-      fs::remove_dir_all(&default_dir)?;
-    }
-
-    #[cfg(unix)]
-    {
-      std::os::unix::fs::symlink(&node_dir, &default_dir)?;
-    }
-    #[cfg(windows)]
-    {
-      std::os::windows::fs::symlink_dir(&node_dir, &default_dir)?;
-    }
+    self.symlink_default(&node_dir, &self.default_dir)?;
 
     println!("🎉 Node v{} is now default", &args.version.bright_green());
 
@@ -93,11 +157,11 @@ impl<'a> NodeFactory<'a> {
   }
 
   pub async fn install(&self, args: InstallArgs) -> anyhow::Result<()> {
-    let node_dir = self.config.node_bin_dir.join(&args.version);
+    let node_dir = self.get_node_dir(&args.version);
 
-    let node_bin_file = node_dir.join("bin").join("node");
+    let (_, binary_exists) = self.get_node_binary(&node_dir)?;
 
-    if node_bin_file.try_exists()? {
+    if binary_exists {
       let confirm = Confirm::new()
         .with_prompt(format!(
           "🤔 v{} is already installed, do you want to reinstall it ?",
@@ -108,7 +172,7 @@ impl<'a> NodeFactory<'a> {
       if confirm {
         fs::remove_dir_all(&node_dir)?;
       } else {
-        std::process::exit(0);
+        return Ok(());
       }
     }
 
@@ -122,33 +186,52 @@ impl<'a> NodeFactory<'a> {
   }
 
   pub async fn uninstall(&self, args: UninstallArgs) -> anyhow::Result<()> {
-    let default_dir = self.config.node_bin_dir.join("default");
+    let node_dir = self.get_node_dir(&args.version);
 
-    let node_dir = self.config.node_bin_dir.join(&args.version);
+    let (_, binary_exists) = self.get_node_binary(&node_dir)?;
 
-    if !node_dir.try_exists()? {
+    if !binary_exists {
       println!("🤔 v{} is not installed", &args.version.bright_green());
       return Ok(());
     }
 
-    if default_dir.try_exists()? {
-      if default_dir.read_link()?.eq(&node_dir) {
-        fs::remove_dir_all(&default_dir)?;
+    let default_dir_exists = self.has_default()?;
+
+    if default_dir_exists {
+      let link = self.default_dir.read_link()?;
+
+      let eq = link.eq(&node_dir);
+
+      trace!(
+        r#"Symlink Relation: 
+{:?} -> {:?}"#,
+        &self.default_dir,
+        &link
+      );
+
+      if eq {
+        fs::remove_dir_all(&node_dir)?;
+        fs::remove_dir_all(&self.default_dir)?;
         println!(
           "🎉 Node v{} is uninstalled , Now there is no default node .",
           &args.version.bright_green()
         );
       }
+    } else {
+      fs::remove_dir_all(&node_dir)?;
+      println!("🎉 Node v{} is uninstalled", &args.version.bright_green());
     }
-
-    fs::remove_dir_all(&node_dir)?;
-
-    println!("🎉 Node v{} is uninstalled", &args.version.bright_green());
 
     Ok(())
   }
 
   pub async fn list(&self, args: ListArgs) -> anyhow::Result<()> {
+    trace!(
+      r#"Start show node list , args: 
+{}"#,
+      args
+    );
+
     if args.remote {
       let remote_node_list = self.get_remote_node().await?;
       remote_node_list.into_iter().for_each(|node| {

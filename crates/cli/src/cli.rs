@@ -1,13 +1,11 @@
+use std::fmt::Display;
+
 use clap::{command, crate_authors, crate_name, crate_version, Parser};
-use snm_command::SnmCommands;
+use serde::Serialize;
 
-pub mod fig;
-pub mod manage_command;
-pub mod snm_command;
+use crate::snm_command::SnmCommands;
 
-pub mod execute_cli;
-
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Serialize)]
 #[
     command(
         name = crate_name!(),
@@ -27,4 +25,13 @@ pub struct SnmCli {
         action = clap::ArgAction::Version
     )]
   version: Option<bool>,
+}
+
+impl Display for SnmCli {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if let Ok(json) = serde_json::to_string_pretty(self) {
+      return write!(f, "{}", json);
+    }
+    write!(f, "{:?}", self)
+  }
 }
