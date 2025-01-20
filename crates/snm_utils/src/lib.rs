@@ -4,3 +4,4 @@ pub mod fmtln;
 pub mod snm_error;
 // pub mod to_ok;
 pub mod consts;
+pub mod log;

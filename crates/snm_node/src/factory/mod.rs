@@ -8,6 +8,7 @@ use schedule::Schedule;
 use semver::Version;
 use serde::Serialize;
 use snm_config::SnmConfig;
+use snm_utils::trace_if;
 use tracing::trace;
 
 use crate::downloader::NodeDownloader;
@@ -249,6 +250,8 @@ impl<'a> NodeFactory<'a> {
       .and_then(|p| p.file_name().map(|n| n.to_owned()))
       .map(|name| name.to_string_lossy().into_owned());
 
+    trace!("default_version---->: {:?}", &default_version);
+
     let local_node_list = self
       .config
       .node_bin_dir
@@ -276,6 +279,14 @@ impl<'a> NodeFactory<'a> {
       })
       .unwrap_or_default();
 
+    trace_if!(|| {
+      trace!(
+        r#"Local node list
+{}"#,
+        local_node_list.join(",")
+      );
+    });
+
     if args.compact {
       local_node_list.into_iter().for_each(|v| {
         let is_default = default_version.as_ref().map_or(false, |d_v| v.eq(d_v));
@@ -291,6 +302,16 @@ impl<'a> NodeFactory<'a> {
       .into_iter()
       .map(|node| (node.version[1..].to_string(), node))
       .collect::<HashMap<String, NodeMetadata>>();
+
+    trace_if!(|| {
+      if let Ok(json) = serde_json::to_string_pretty(&remote_node_map) {
+        trace!(
+          r#"Node remote info
+{}"#,
+          json
+        )
+      }
+    });
 
     local_node_list
       .into_iter()
