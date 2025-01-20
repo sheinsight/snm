@@ -1,7 +1,4 @@
-use std::{
-  env::{self, current_dir, current_exe},
-  ffi::OsStr,
-};
+use std::env::{self, current_dir};
 
 use anyhow::Context;
 use node_shim::load_node;
