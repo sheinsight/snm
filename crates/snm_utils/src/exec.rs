@@ -1,9 +1,12 @@
 use std::{
-  env::{self},
+  env::{self, current_exe},
   process::{Command, Stdio},
 };
 
-use anyhow::Context;
+use anyhow::{bail, Context};
+use tracing::trace;
+
+use crate::trace_if;
 
 pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   let bin_name = args.get(0).context("bin name not found")?.to_owned();
@@ -35,6 +38,43 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   let separator = ":";
 
   let new_path: String = format!("{}{}{}", dir.join(separator), separator, original_path);
+
+  let cwd = std::env::current_dir()?;
+
+  let binaries = which::which_in_all(&bin_name, Some(&new_path), cwd)?.collect::<Vec<_>>();
+
+  // if let Some(binary) = binaries.first() {
+  //   if let Some(parent) = binary.parent() {
+  //     let snm = which::which("snm")?;
+  //     if let Some(snm_parent) = snm.parent() {
+  //       if parent.to_string_lossy().to_string() == snm_parent.to_string_lossy().to_string() {
+  //         bail!("{} is not a command", bin_name);
+  //       }
+  //     }
+  //   }
+  // }
+
+  let snm = which::which("snm")
+    .ok()
+    .and_then(|p| p.parent().map(|p| p.to_owned()));
+
+  trace_if!(|| {
+    trace!("Binaries: {:?} ", binaries);
+    trace!("Snm: {:?} ", snm);
+  });
+
+  if binaries
+    .first()
+    .and_then(|b| b.parent())
+    .zip(snm)
+    .map_or(false, |(p1, p2)| p1 == p2)
+  {
+    bail!("{} is not a command", bin_name);
+  }
+
+  // if which::which_in_all(&bin_name, new_path) {
+  //   bail!("{} is not a command", bin_name);
+  // }
 
   // let new_path: String = format!("{}:{}", dir.join(":"), original_path);
 
@@ -72,7 +112,7 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   Command::new(&bin_name)
     .args(args)
     .env("PATH", new_path.clone())
-    .env("Path", new_path.clone())
+    // .env("Path", new_path.clone())
     .stdout(Stdio::inherit())
     .stderr(Stdio::inherit())
     .stdin(Stdio::inherit())
