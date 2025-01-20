@@ -109,6 +109,40 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
 
   let args = args.iter().skip(1).collect::<Vec<_>>();
 
+  trace_if!(|| {
+    trace!("Args: {:?} ", args);
+  });
+
+  trace_if!(|| {
+    if let Some(binary) = binaries.first() {
+      if binary.is_symlink() {
+        trace!("Binary is symlink");
+        if let Ok(target) = std::fs::read_link(binary) {
+          trace!("Symlink target: {:?}", target);
+        }
+      }
+      trace!("Binary path: {:?}", binary);
+    }
+  });
+
+  // #[cfg(not(target_os = "windows"))]
+  // Command::new("sh")
+  //   .args(["-c", args.join(" ").as_str()])
+  //   .env("PATH", new_path.clone())
+  //   .stdout(Stdio::inherit())
+  //   .stderr(Stdio::inherit())
+  //   .stdin(Stdio::inherit())
+  //   .status()?;
+
+  // #[cfg(target_os = "windows")]
+  // Command::new("cmd")
+  //   .args(["/C", args.join(" ").as_str()])
+  //   .env("PATH", new_path.clone())
+  //   .stdout(Stdio::inherit())
+  //   .stderr(Stdio::inherit())
+  //   .stdin(Stdio::inherit())
+  //   .status()?;
+
   Command::new(&bin_name)
     .args(args)
     .env("PATH", new_path.clone())

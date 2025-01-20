@@ -26,6 +26,14 @@ pub async fn load_pm(
 
   let dir = build_bin_path(&pm_bin_file, &node_bin_dir);
 
+  // if let Some(pm_bin_file) = pm_bin_file {
+  //   if let Some(parent) = pm_bin_file.parent() {
+  //     dir.insert(0, parent.to_string_lossy().to_string());
+  //   }
+  // }
+
+  // exec_cli(dir, args)?;
+
   if let Some(pm_bin_file) = pm_bin_file {
     exec_cli(
       dir,
