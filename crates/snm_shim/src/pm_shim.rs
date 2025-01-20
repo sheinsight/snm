@@ -1,23 +1,26 @@
 use std::{
-  env::{self, current_dir},
+  env::{self},
   path::{Path, PathBuf},
 };
 
 use snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_pm::pm::PackageManager;
-use snm_utils::exec::exec_cli;
+use snm_utils::{exec::exec_cli, trace_if};
+use tracing::trace;
 
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
-pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
-  let args: Vec<String> = env::args().collect();
+pub async fn load_pm(
+  snm_config: &SnmConfig,
+  exe_name: &str,
+  args: Vec<String>,
+) -> anyhow::Result<()> {
+  let pm_bin_file = get_package_manager_bin(&snm_config, exe_name).await?;
 
-  let cwd = current_dir()?;
-
-  let snm_config = SnmConfig::from(&cwd)?;
-
-  let pm_bin_file = get_package_manager_bin(&snm_config, actual_bin_name).await?;
+  trace_if!(|| {
+    trace!("{} bin file: {:?}", exe_name, pm_bin_file);
+  });
 
   let node_bin_dir = SNode::try_from(&snm_config)?.get_bin().await?;
 
@@ -33,13 +36,13 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
       ],
     )?;
   } else {
-    if !is_npm_command(actual_bin_name) {
-      anyhow::bail!("Can't find command {}", actual_bin_name);
+    if !is_npm_command(exe_name) {
+      anyhow::bail!("Can't find command {}", exe_name);
     }
 
     #[cfg(target_os = "windows")]
     {
-      let pm_bin_file = node_bin_dir.join(format!("{}.cmd", actual_bin_name));
+      let pm_bin_file = node_bin_dir.join(format!("{}.cmd", exe_name));
       exec_cli(
         dir,
         vec![
@@ -51,7 +54,7 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
 
     #[cfg(not(target_os = "windows"))]
     {
-      let pm_bin_file = node_bin_dir.join(actual_bin_name);
+      let pm_bin_file = node_bin_dir.join(exe_name);
       exec_cli(
         dir,
         vec![
@@ -61,12 +64,6 @@ pub async fn package_manager(actual_bin_name: &str) -> anyhow::Result<()> {
         ],
       )?;
     }
-
-    // println!("pm_bin_file---->: {:?}", &pm_bin_file);
-
-    // let real_pm_path = get_real_path(pm_bin_file.clone())?;
-
-    // println!("real_pm_path---->: {:?}", &real_pm_path);
   }
 
   Ok(())

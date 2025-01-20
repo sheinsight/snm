@@ -27,6 +27,7 @@
         "reqwest",
         "rexpect",
         "rsplit",
+        "serde",
         "SHASUMS",
         "tempdir",
         "tempfile",
