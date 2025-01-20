@@ -3,6 +3,7 @@ use std::{
   ffi::OsStr,
 };
 
+use anyhow::Context;
 use node_shim::load_node;
 use pm_shim::load_pm;
 use snm_config::SnmConfig;
@@ -54,24 +55,30 @@ async fn main() -> anyhow::Result<()> {
     );
   });
 
-  let exe_path = current_exe()?;
+  let actual_bin_name = args.get(0).context("bin name not found")?.clone();
 
   trace_if!(|| {
-    trace!("Exe path: {:?}", exe_path);
+    trace!("Actual bin name: {:?}", actual_bin_name);
   });
 
-  let exe_name = exe_path
-    .file_name()
-    .ok_or(anyhow::anyhow!("file name not found"))?;
+  // let exe_path = current_exe()?;
 
-  trace_if!(|| {
-    trace!("Exe name: {:?}", exe_name);
-  });
+  // trace_if!(|| {
+  //   trace!("Exe path: {:?}", exe_path);
+  // });
 
-  if exe_name == OsStr::new("node") {
+  // let exe_name = exe_path
+  //   .file_name()
+  //   .ok_or(anyhow::anyhow!("file name not found"))?;
+
+  // trace_if!(|| {
+  //   trace!("Exe name: {:?}", exe_name);
+  // });
+
+  if actual_bin_name == "node" {
     load_node(&snm_config, args).await?;
   } else {
-    load_pm(&snm_config, &exe_name.to_string_lossy().to_string(), args).await?;
+    load_pm(&snm_config, &actual_bin_name, args).await?;
   }
 
   Ok(())
