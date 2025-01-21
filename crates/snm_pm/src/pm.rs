@@ -109,7 +109,7 @@ impl<'a> PackageManager<'a> {
     Self::parse(raw, config)
   }
 
-  pub fn from_default(actual_bin_name: &str, config: &'a SnmConfig) -> anyhow::Result<PathBuf> {
+  pub fn get_default_bin(actual_bin_name: &str, config: &'a SnmConfig) -> anyhow::Result<PathBuf> {
     let actual_bin_name = if actual_bin_name == "npx" {
       "npm"
     } else if actual_bin_name == "pnpx" {
