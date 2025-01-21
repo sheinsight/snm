@@ -48,10 +48,9 @@ pub async fn load_pm(
       anyhow::bail!("Can't find command {}", exe_name);
     }
 
-    let pm_bin_file = node_bin_dir.join(exe_name);
-
     #[cfg(target_os = "windows")]
     {
+      let pm_bin_file = node_bin_dir.join(format!("{}.cmd", exe_name));
       exec_cli(
         paths,
         vec![
@@ -63,6 +62,7 @@ pub async fn load_pm(
 
     #[cfg(not(target_os = "windows"))]
     {
+      let pm_bin_file = node_bin_dir.join(exe_name);
       exec_cli(
         paths,
         vec![
