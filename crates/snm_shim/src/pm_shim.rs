@@ -119,7 +119,7 @@ async fn get_package_manager_bin(
 ) -> anyhow::Result<Option<PathBuf>> {
   match PackageManager::try_from_env(config) {
     Ok(pm) => Ok(Some(pm.get_bin(&env::args().collect()).await?)),
-    Err(_) => match PackageManager::from_default(bin_name, config) {
+    Err(_) => match PackageManager::get_default_bin(bin_name, config) {
       Ok(file) => Ok(Some(file)),
       Err(_) => Ok(None),
     },
