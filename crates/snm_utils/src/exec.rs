@@ -1,5 +1,5 @@
 use std::{
-  env::{self, current_exe},
+  env::{self},
   process::{Command, Stdio},
 };
 
