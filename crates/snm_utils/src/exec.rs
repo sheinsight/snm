@@ -28,7 +28,7 @@ pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   // #[cfg(not(target_os = "windows"))]
   // let original_path = env::var("PATH")?;
 
-  let original_path = env!("PATH");
+  let original_path = std::env::var("PATH").unwrap_or_default();
 
   #[cfg(target_os = "windows")]
   let separator = ";";
