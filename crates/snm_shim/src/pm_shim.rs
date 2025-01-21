@@ -38,7 +38,7 @@ pub async fn load_pm(
     exec_cli(
       paths,
       vec![
-        // "node".to_string(),
+        "node".to_string(),
         pm_bin_file.to_string_lossy().to_string(),
         args.iter().skip(1).map(|s| s.to_string()).collect(),
       ],
