@@ -5,7 +5,7 @@ use tracing::trace;
 
 use crate::trace_if;
 
-pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
+pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   let bin_name = args.get(0).context("bin name not found")?.to_owned();
 
   // let exe = current_exe()?;
@@ -36,7 +36,7 @@ pub fn exec_cli(dir: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   #[cfg(not(target_os = "windows"))]
   let separator = ":";
 
-  let new_path: String = format!("{}{}{}", dir.join(separator), separator, original_path);
+  let new_path: String = format!("{}{}{}", paths.join(separator), separator, original_path);
 
   let cwd = std::env::current_dir()?;
 

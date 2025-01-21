@@ -24,7 +24,7 @@ pub async fn load_pm(
 
   let node_bin_dir = SNode::try_from(&snm_config)?.get_bin().await?;
 
-  let dir = build_bin_path(&pm_bin_file, &node_bin_dir);
+  let paths = build_bin_path(&pm_bin_file, &node_bin_dir);
 
   // if let Some(pm_bin_file) = pm_bin_file {
   //   if let Some(parent) = pm_bin_file.parent() {
@@ -36,9 +36,9 @@ pub async fn load_pm(
 
   if let Some(pm_bin_file) = pm_bin_file {
     exec_cli(
-      dir,
+      paths,
       vec![
-        "node".to_string(),
+        // "node".to_string(),
         pm_bin_file.to_string_lossy().to_string(),
         args.iter().skip(1).map(|s| s.to_string()).collect(),
       ],
@@ -48,11 +48,12 @@ pub async fn load_pm(
       anyhow::bail!("Can't find command {}", exe_name);
     }
 
+    let pm_bin_file = node_bin_dir.join(exe_name);
+
     #[cfg(target_os = "windows")]
     {
-      let pm_bin_file = node_bin_dir.join(format!("{}.cmd", exe_name));
       exec_cli(
-        dir,
+        paths,
         vec![
           pm_bin_file.to_string_lossy().to_string(),
           args.iter().skip(1).map(|s| s.to_string()).collect(),
@@ -62,9 +63,8 @@ pub async fn load_pm(
 
     #[cfg(not(target_os = "windows"))]
     {
-      let pm_bin_file = node_bin_dir.join(exe_name);
       exec_cli(
-        dir,
+        paths,
         vec![
           // "node".to_string(),
           pm_bin_file.to_string_lossy().to_string(),
@@ -101,7 +101,7 @@ pub async fn load_pm(
 fn build_bin_path<T: AsRef<Path>>(pm_bin_file: &Option<T>, node_bin_dir: &T) -> Vec<String> {
   if let Some(pm_bin_file) = pm_bin_file {
     vec![
-      pm_bin_file.as_ref().to_string_lossy().to_string(),
+      // pm_bin_file.as_ref().to_string_lossy().to_string(),
       node_bin_dir.as_ref().to_string_lossy().to_string(),
     ]
   } else {
