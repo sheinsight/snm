@@ -99,7 +99,7 @@ pub async fn load_pm(
 // }
 
 fn build_bin_path<T: AsRef<Path>>(pm_bin_file: &Option<T>, node_bin_dir: &T) -> Vec<String> {
-  if let Some(pm_bin_file) = pm_bin_file {
+  if let Some(_pm_bin_file) = pm_bin_file {
     vec![
       // pm_bin_file.as_ref().to_string_lossy().to_string(),
       node_bin_dir.as_ref().to_string_lossy().to_string(),
