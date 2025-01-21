@@ -2,11 +2,9 @@ use std::env::current_exe;
 
 use anyhow::bail;
 use snm_config::SnmConfig;
-use snm_pm::factory::{PackageManagerFactory, PackageManagerFactoryCommands};
 use snm_pm::ops::ops::InstallArgs;
 use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;
-use snm_pm::pm_metadata::PackageManagerMetadata;
 use snm_utils::exec::exec_cli;
 use tracing::trace;
 
@@ -14,27 +12,6 @@ use crate::cli::SnmCli;
 use crate::fig::fig_spec_impl;
 use crate::manage_command::NodeManageCommands;
 use crate::snm_command::SnmCommands;
-
-async fn handle_package_manager(
-  pm_name: &str,
-  command: &PackageManagerFactoryCommands,
-  config: &SnmConfig,
-) -> anyhow::Result<()> {
-  let version = match command {
-    PackageManagerFactoryCommands::Install(args) => &args.version,
-    PackageManagerFactoryCommands::Default(args) => &args.version,
-    PackageManagerFactoryCommands::Uninstall(args) => &args.version,
-  };
-
-  let metadata = PackageManagerMetadata::from_str(&format!("{}@{}", pm_name, version), config)?;
-  let pm = PackageManagerFactory::new(&metadata);
-
-  match command {
-    PackageManagerFactoryCommands::Install(_) => pm.install().await,
-    PackageManagerFactoryCommands::Default(_) => pm.set_default().await,
-    PackageManagerFactoryCommands::Uninstall(_) => pm.uninstall().await,
-  }
-}
 
 pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<()> {
   trace!(
@@ -63,9 +40,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         }
       }
     }
-    SnmCommands::Pnpm { command } => handle_package_manager("pnpm", &command, &snm_config).await?,
-    SnmCommands::Yarn { command } => handle_package_manager("yarn", &command, &snm_config).await?,
-    SnmCommands::Npm { command } => handle_package_manager("npm", &command, &snm_config).await?,
     // manage end
     SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) | SnmCommands::D(_) => {
       if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {

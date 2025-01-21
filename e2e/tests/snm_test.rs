@@ -90,82 +90,6 @@ e2e::test1! {
 
 e2e::test1! {
     #[tokio::test]
-    test_snm_install_set_default_pnpm,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("pnpm -v")?;
-        builder.add_snapshot("snm pnpm install 9.0.0")?;
-        builder.add_snapshot("snm pnpm default 9.0.0")?;
-        builder.add_snapshot("pnpm -v")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
-}
-
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_set_default_npm_with_node_20,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("npm -v")?;
-        builder.add_snapshot("snm npm install 9.0.0")?;
-        builder.add_snapshot("snm npm default 9.0.0")?;
-        builder.add_snapshot("npm -v")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
-}
-
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_set_default_yarn,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("yarn -v")?;
-        builder.add_snapshot("snm yarn install 1.22.22")?;
-        builder.add_snapshot("snm yarn default 1.22.22")?;
-        builder.add_snapshot("yarn -v")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
-}
-
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_set_default_yarn4,
-    cwd:current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("yarn -v")?;
-        builder.add_snapshot("snm yarn install 4.0.0")?;
-        builder.add_snapshot("snm yarn default 4.0.0")?;
-        builder.add_snapshot("yarn -v")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
-}
-
-e2e::test1! {
-    #[tokio::test]
     test_snm_install_with_node_20_npm,
     cwd: current_dir()?.join("tests").join("fixtures").join("snm_i_with_node_npm"),
 
@@ -173,30 +97,6 @@ e2e::test1! {
     |builder:e2e::CommandBuilder| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("npm -v")?;
-        builder.exec("npm install")?;
-        builder.add_snapshot("node index.cjs")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
-}
-
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_with_outside_npm,
-    cwd:current_dir()?
-    .join("tests")
-    .join("fixtures")
-    .join("test_snm_install_with_outside_pnpm"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("npm -v")?;
-        builder.add_snapshot("snm npm install 9.0.0")?;
-        builder.add_snapshot("snm npm default 9.0.0")?;
         builder.add_snapshot("npm -v")?;
         builder.exec("npm install")?;
         builder.add_snapshot("node index.cjs")?;

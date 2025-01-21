@@ -1,9 +1,6 @@
 use clap::Subcommand;
 use serde::Serialize;
-use snm_pm::{
-  factory::PackageManagerFactoryCommands,
-  ops::ops::{AddArgs, InstallArgs, RemoveArgs},
-};
+use snm_pm::ops::ops::{AddArgs, InstallArgs, RemoveArgs};
 
 use super::manage_command::NodeManageCommands;
 
@@ -33,29 +30,6 @@ pub enum SnmCommands {
   Node {
     #[command(subcommand)]
     command: NodeManageCommands,
-  },
-
-  #[command(about = "Manage package manager.")]
-  Pnpm {
-    #[command(subcommand)]
-    command: PackageManagerFactoryCommands,
-  },
-
-  #[command(about = "Manage yarn.")]
-  Yarn {
-    #[command(subcommand)]
-    command: PackageManagerFactoryCommands,
-  },
-
-  // #[command(about = "Manage yarn berry.")]
-  // YarnBerry {
-  //     #[command(subcommand)]
-  //     command: PackageManagerFactoryCommands,
-  // },
-  #[command(about = "Manage npm.")]
-  Npm {
-    #[command(subcommand)]
-    command: PackageManagerFactoryCommands,
   },
 
   #[command(about = "write fig spec to autocomplete build directory.")]
