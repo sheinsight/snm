@@ -1,7 +1,4 @@
-use std::{
-  env::{self},
-  process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 use anyhow::{bail, Context};
 use tracing::trace;
