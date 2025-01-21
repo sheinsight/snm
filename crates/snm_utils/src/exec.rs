@@ -124,32 +124,38 @@ pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
     }
   });
 
-  #[cfg(not(target_os = "windows"))]
-  Command::new("sh")
-    .args(["-c", args.join(" ").as_str()])
-    .env("PATH", new_path.clone())
-    .stdout(Stdio::inherit())
-    .stderr(Stdio::inherit())
-    .stdin(Stdio::inherit())
-    .status()?;
-
-  #[cfg(target_os = "windows")]
-  Command::new("cmd")
-    .args(["/C", args.join(" ").as_str()])
-    .env("PATH", new_path.clone())
-    .stdout(Stdio::inherit())
-    .stderr(Stdio::inherit())
-    .stdin(Stdio::inherit())
-    .status()?;
-
-  // Command::new(&bin_name)
-  //   .args(args)
+  // #[cfg(not(target_os = "windows"))]
+  // Command::new("sh")
+  //   .args(["-c", args.join(" ").as_str()])
   //   .env("PATH", new_path.clone())
-  //   // .env("Path", new_path.clone())
   //   .stdout(Stdio::inherit())
   //   .stderr(Stdio::inherit())
   //   .stdin(Stdio::inherit())
   //   .status()?;
+
+  // #[cfg(target_os = "windows")]
+  // Command::new("cmd")
+  //   .args(["/C", args.join(" ").as_str()])
+  //   .env("PATH", new_path.clone())
+  //   .stdout(Stdio::inherit())
+  //   .stderr(Stdio::inherit())
+  //   .stdin(Stdio::inherit())
+  //   .status()?;
+
+  Command::new(&bin_name)
+    .args(
+      args
+        .iter()
+        .skip(1)
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    )
+    .env("PATH", new_path.clone())
+    // .env("Path", new_path.clone())
+    .stdout(Stdio::inherit())
+    .stderr(Stdio::inherit())
+    .stdin(Stdio::inherit())
+    .status()?;
 
   Ok(())
 }
