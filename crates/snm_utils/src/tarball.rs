@@ -68,7 +68,7 @@ impl ArchiveExtension {
           if let Some(first) = path.components().next() {
             let target = path.strip_prefix(first)?;
             let target = target_dir.join(target);
-            self.ensure_dir_exists(&target)?;
+            // self.ensure_dir_exists(&target)?;
             entry.unpack(&target)?;
           }
         }
@@ -83,7 +83,7 @@ impl ArchiveExtension {
           if let Some(first) = path.components().next() {
             let target = path.strip_prefix(first)?;
             let target = target_dir.join(target);
-            self.ensure_dir_exists(&target)?;
+            // self.ensure_dir_exists(&target)?;
             entry.unpack(&target)?;
           }
         }
@@ -100,7 +100,7 @@ impl ArchiveExtension {
             trace_if!(|| {
               trace!("Decompress file: {}", target.to_string_lossy());
             });
-            self.ensure_dir_exists(&target)?;
+            // self.ensure_dir_exists(&target)?;
             let mut outfile = std::fs::File::create(&target)?;
             std::io::copy(&mut file, &mut outfile)?;
           }
