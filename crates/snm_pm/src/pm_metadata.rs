@@ -3,9 +3,11 @@ use std::env;
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use semver::{Version, VersionReq};
 use snm_config::SnmConfig;
-use snm_utils::consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME};
+use snm_utils::{
+  consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME},
+  ver::ver_gt_1,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata<'a> {
@@ -62,10 +64,7 @@ impl<'a> PackageManagerMetadata<'a> {
     let library_name = if name != YARN_PACKAGE_NAME {
       &name
     } else {
-      let version =
-        Version::parse(&version).with_context(|| format!("Invalid version: {}", version))?;
-      let req: VersionReq = VersionReq::parse(">1")?;
-      if req.matches(&version) {
+      if ver_gt_1(&version)? {
         YARNPKG_PACKAGE_NAME
       } else {
         YARN_PACKAGE_NAME

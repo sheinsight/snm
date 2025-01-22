@@ -1,7 +1,6 @@
-pub mod constant;
+pub mod consts;
 pub mod exec;
 pub mod fmtln;
-pub mod snm_error;
-// pub mod to_ok;
-pub mod consts;
 pub mod log;
+pub mod snm_error;
+pub mod ver;
