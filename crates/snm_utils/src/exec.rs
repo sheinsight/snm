@@ -73,31 +73,32 @@ OLD: {}"#,
     }
   });
 
-  #[cfg(not(target_os = "windows"))]
-  Command::new("sh")
-    .args(["-c", args.join(" ").as_str()])
-    .env("PATH", new_path.clone())
-    .stdout(Stdio::inherit())
-    .stderr(Stdio::inherit())
-    .stdin(Stdio::inherit())
-    .status()?;
-
-  #[cfg(target_os = "windows")]
-  Command::new("cmd")
-    .args(["/C", args.join(" ").as_str()])
-    .env("PATH", new_path.clone())
-    .stdout(Stdio::inherit())
-    .stderr(Stdio::inherit())
-    .stdin(Stdio::inherit())
-    .status()?;
-
-  // Command::new(&bin_name)
-  //   .args(args)
+  // #[cfg(not(target_os = "windows"))]
+  // Command::new("sh")
+  //   .args(["-c", args.join(" ").as_str()])
   //   .env("PATH", new_path.clone())
   //   .stdout(Stdio::inherit())
   //   .stderr(Stdio::inherit())
   //   .stdin(Stdio::inherit())
   //   .status()?;
+
+  // #[cfg(target_os = "windows")]
+  // Command::new("cmd")
+  //   .args(["/C", args.join(" ").as_str()])
+  //   .env("PATH", new_path.clone())
+  //   .stdout(Stdio::inherit())
+  //   .stderr(Stdio::inherit())
+  //   .stdin(Stdio::inherit())
+  //   .status()?;
+
+  Command::new(&bin_name)
+    .args(args)
+    .env("PATH", new_path.clone())
+    // .env("Path", new_path.clone())
+    .stdout(Stdio::inherit())
+    .stderr(Stdio::inherit())
+    .stdin(Stdio::inherit())
+    .status()?;
 
   Ok(())
 }
