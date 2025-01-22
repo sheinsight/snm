@@ -101,27 +101,26 @@ impl ArchiveExtension {
             continue;
           }
 
-          trace_if!(|| {
-            trace!("Decompress file: {:?}", &path);
-          });
+          // 去除第一个组件（根目录名）
+          let target = path.components().skip(1).collect::<PathBuf>();
+          let target = target_dir.join(target);
 
-          if let Some(first) = path.components().next() {
-            trace_if!(|| {
-              trace!("first: {:?}", &first);
-            });
-
-            let target = path.strip_prefix(first)?;
-            let target = target_dir.join(target);
-            // let target = dunce::canonicalize(target)?;
-            trace_if!(|| {
-              trace!("Decompress file: {}", target.to_string_lossy());
-            });
-            // self.ensure_dir_exists(&target)?;
-            let mut outfile = std::fs::File::create(&target)
-              .with_context(|| format!("Failed to create file: {}", target.to_string_lossy()))?;
-            std::io::copy(&mut file, &mut outfile)
-              .with_context(|| format!("Failed to copy file: {}", target.to_string_lossy()))?;
+          if file.is_dir() {
+            trace!(target: "snm", "Creating directory: {}", target.display());
+            std::fs::create_dir_all(&target)?;
+            continue;
           }
+
+          trace!(target: "snm", "Extracting file: {}", target.display());
+
+          // 确保父目录存在
+          if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent)?;
+          }
+
+          // 只复制文件
+          let mut outfile = std::fs::File::create(&target)?;
+          std::io::copy(&mut file, &mut outfile)?;
         }
       }
     }
