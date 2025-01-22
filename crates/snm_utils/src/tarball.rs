@@ -92,8 +92,18 @@ impl ArchiveExtension {
         let mut archive = ZipArchive::new(File::open(source_file)?)?;
         for i in 0..archive.len() {
           let mut file = archive.by_index(i)?;
+
           let path = file.mangled_name();
+
+          trace_if!(|| {
+            trace!("Decompress file: {:?}", &path);
+          });
+
           if let Some(first) = path.components().next() {
+            trace_if!(|| {
+              trace!("first: {:?}", &first);
+            });
+
             let target = path.strip_prefix(first)?;
             let target = target_dir.join(target);
             // let target = dunce::canonicalize(target)?;
