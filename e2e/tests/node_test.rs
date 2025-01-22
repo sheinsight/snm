@@ -47,7 +47,7 @@ e2e::test1! {
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
   envs: [
     SnmEnv::Strict("true".to_string()),
-    SnmEnv::Log("snm=trace".to_string()),
+    // SnmEnv::Log("snm=trace".to_string()),
   ],
   |builder:e2e::CommandBuilder| => {
     builder.add_snapshot("snm node install 20.0.0")?;
