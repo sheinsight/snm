@@ -33,7 +33,7 @@ impl ArchiveExtension {
 
   fn ensure_dir_exists(&self, path: &PathBuf) -> anyhow::Result<()> {
     trace_if!(|| {
-      trace!("Ensure dir exists: {}", path.to_string_lossy());
+      trace!("Ensure dir exists: {:?}", path);
     });
 
     if path.is_file() {
