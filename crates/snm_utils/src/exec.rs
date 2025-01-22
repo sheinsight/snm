@@ -10,7 +10,7 @@ use wait_timeout::ChildExt;
 
 use crate::trace_if;
 
-pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
+pub fn exec_cli(args: Vec<String>, paths: Vec<String>, check_snm: bool) -> anyhow::Result<()> {
   let [bin_name, args @ ..] = args.as_slice() else {
     bail!("No binary name provided in arguments");
   };
@@ -32,7 +32,9 @@ paths:   {:?}"#,
 
   let binaries = which::which_in_all(&bin_name, Some(&new_path), cwd)?.collect::<Vec<_>>();
 
-  check_snm_binary(bin_name, &binaries)?;
+  if check_snm {
+    check_snm_binary(bin_name, &binaries)?;
+  }
 
   trace_if!(|| {
     if let Some(binary) = binaries.first() {

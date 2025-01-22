@@ -58,7 +58,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             _ => unreachable!("unreachable"),
           }?;
 
-          exec_cli(vec![], args)?;
+          exec_cli(args, vec![], false)?;
         } else {
           bail!("No package manager found");
         }

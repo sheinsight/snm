@@ -45,10 +45,10 @@ pub async fn load_pm(
       command_args.as_slice(),
     ]
     .concat();
-    exec_cli(paths, args)?;
+    exec_cli(args, paths, true)?;
   } else {
     if !is_npm_command(exe_name) {
-      exec_cli(paths.clone(), args)?;
+      exec_cli(args, paths, true)?;
     } else {
       #[cfg(target_os = "windows")]
       let bin_name = format!("{}.cmd", exe_name);
@@ -65,7 +65,7 @@ pub async fn load_pm(
       let mut exec_args = vec![pm_bin_file.to_string_lossy().to_string()];
       exec_args.extend(command_args);
 
-      exec_cli(paths, exec_args)?;
+      exec_cli(exec_args, paths, true)?;
     }
   }
 

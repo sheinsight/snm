@@ -7,7 +7,7 @@ pub async fn load_node(config: &SnmConfig, args: Vec<String>) -> anyhow::Result<
 
   let node_bin_dir = node_version_reader.get_bin().await?;
 
-  exec_cli(vec![node_bin_dir.to_string_lossy().to_string()], args)?;
+  exec_cli(args, vec![node_bin_dir.to_string_lossy().to_string()], true)?;
 
   Ok(())
 }
