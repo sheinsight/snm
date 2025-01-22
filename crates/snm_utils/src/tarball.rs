@@ -65,12 +65,24 @@ impl ArchiveExtension {
         for entry in archive.entries()? {
           let mut entry = entry?;
           let path = entry.path()?;
-          if let Some(first) = path.components().next() {
-            let target = path.strip_prefix(first)?;
-            let target = target_dir.join(target);
-            // self.ensure_dir_exists(&target)?;
-            entry.unpack(&target)?;
+
+          if path.components().count() <= 1 {
+            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            continue;
           }
+
+          // 去除第一个组件（根目录名）
+          let target = path.components().skip(1).collect::<PathBuf>();
+          let target = target_dir.join(target);
+
+          entry.unpack(&target)?;
+
+          // if let Some(first) = path.components().next() {
+          //   let target = path.strip_prefix(first)?;
+          //   let target = target_dir.join(target);
+          //   // self.ensure_dir_exists(&target)?;
+          //   entry.unpack(&target)?;
+          // }
         }
       }
 
@@ -80,12 +92,24 @@ impl ArchiveExtension {
         for entry in archive.entries()? {
           let mut entry = entry?;
           let path = entry.path()?;
-          if let Some(first) = path.components().next() {
-            let target = path.strip_prefix(first)?;
-            let target = target_dir.join(target);
-            // self.ensure_dir_exists(&target)?;
-            entry.unpack(&target)?;
+
+          if path.components().count() <= 1 {
+            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            continue;
           }
+
+          // 去除第一个组件（根目录名）
+          let target = path.components().skip(1).collect::<PathBuf>();
+          let target = target_dir.join(target);
+
+          entry.unpack(&target)?;
+
+          // if let Some(first) = path.components().next() {
+          //   let target = path.strip_prefix(first)?;
+          //   let target = target_dir.join(target);
+          //   // self.ensure_dir_exists(&target)?;
+          //   entry.unpack(&target)?;
+          // }
         }
       }
       ArchiveExtension::Zip(source_file) => {
