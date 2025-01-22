@@ -96,6 +96,7 @@ impl ArchiveExtension {
           if let Some(first) = path.components().next() {
             let target = path.strip_prefix(first)?;
             let target = target_dir.join(target);
+            let target = dunce::canonicalize(target)?;
             trace_if!(|| {
               trace!("Decompress file: {}", target.to_string_lossy());
             });
