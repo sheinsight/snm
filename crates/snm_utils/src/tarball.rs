@@ -7,7 +7,7 @@ use tracing::trace;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
 
-use crate::trace_if;
+// use crate::trace_if;
 
 #[derive(Debug)]
 pub enum ArchiveExtension {
