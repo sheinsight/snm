@@ -95,6 +95,12 @@ impl ArchiveExtension {
 
           let path = file.mangled_name();
 
+          // 跳过根目录
+          if path.components().count() <= 1 {
+            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            continue;
+          }
+
           trace_if!(|| {
             trace!("Decompress file: {:?}", &path);
           });
