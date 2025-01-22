@@ -37,11 +37,7 @@ impl<'a> NodeDownloader<'a> {
     let expected = self.get_expect_shasum(version).await?;
 
     trace_if!(|| {
-      trace!(
-        "Verify shasum: expect: {}, actual: {}",
-        expect_shasum,
-        actual_shasum
-      );
+      trace!("Verify shasum: expect: {}, actual: {}", expected, actual);
     });
 
     if actual != expected {
