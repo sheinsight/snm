@@ -96,13 +96,15 @@ impl ArchiveExtension {
           if let Some(first) = path.components().next() {
             let target = path.strip_prefix(first)?;
             let target = target_dir.join(target);
-            let target = dunce::canonicalize(target)?;
+            // let target = dunce::canonicalize(target)?;
             trace_if!(|| {
               trace!("Decompress file: {}", target.to_string_lossy());
             });
             // self.ensure_dir_exists(&target)?;
-            let mut outfile = std::fs::File::create(&target)?;
-            std::io::copy(&mut file, &mut outfile)?;
+            let mut outfile = std::fs::File::create(&target)
+              .with_context(|| format!("Failed to create file: {}", target.to_string_lossy()))?;
+            std::io::copy(&mut file, &mut outfile)
+              .with_context(|| format!("Failed to copy file: {}", target.to_string_lossy()))?;
           }
         }
       }
