@@ -6,7 +6,7 @@ use std::sync::Arc;
 // use duct::cmd;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use tempfile::tempdir;
+use tempfile::{tempdir, Builder};
 use textwrap::dedent;
 
 #[derive(Debug, Clone)]
@@ -76,7 +76,10 @@ pub struct CommandBuilder {
 
 impl CommandBuilder {
   pub fn with_envs(name: &str, cwd: PathBuf, custom_envs: Vec<SnmEnv>) -> anyhow::Result<Self> {
-    let tmp_dir = tempdir()?.into_path();
+    let temp_dir = Builder::new()
+      .prefix(".snm")
+      .tempdir_in(dirs::home_dir()?)?
+      .into_path();
     let env_path = env!("PATH");
 
     let debug_dir = dunce::canonicalize(Self::get_debug_dir())?
