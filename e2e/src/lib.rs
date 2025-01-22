@@ -7,7 +7,7 @@ use anyhow::Context;
 // use duct::cmd;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use tempfile::{tempdir, Builder};
+use tempfile::Builder;
 use textwrap::dedent;
 
 #[derive(Debug, Clone)]
