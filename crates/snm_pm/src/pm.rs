@@ -109,33 +109,6 @@ impl<'a> PackageManager<'a> {
     Self::parse(raw, config)
   }
 
-  pub fn get_default_bin(actual_bin_name: &str, config: &'a SnmConfig) -> anyhow::Result<PathBuf> {
-    let actual_bin_name = if actual_bin_name == "npx" {
-      "npm"
-    } else if actual_bin_name == "pnpx" {
-      "pnpm"
-    } else {
-      actual_bin_name
-    };
-
-    if config.strict {
-      bail!("The strict mode is not supported for default package manager");
-    }
-
-    let wk = config
-      .node_modules_dir
-      .join(actual_bin_name)
-      .join("default");
-
-    let json = PackageJson::from(wk)?;
-
-    return json.get_bin_with_name(actual_bin_name);
-
-    // let metadata = PackageManagerMetadata::from_str(&json.package_manager.unwrap(), config)?;
-
-    // Ok(Self::from(metadata))
-  }
-
   pub fn parse(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
     let metadata = PackageManagerMetadata::from_str(&raw, config)?;
 

@@ -1,22 +1,39 @@
-use std::process::{Command, Stdio};
+use std::{
+  env::{join_paths, split_paths},
+  process::{Command, Stdio},
+};
 
-use anyhow::{bail, Context};
+use anyhow::bail;
 use tracing::trace;
 
 use crate::trace_if;
 
 pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
-  let bin_name = args.get(0).context("bin name not found")?.to_owned();
+  trace_if!(|| {
+    trace!("Exec cli, paths: {:?}, args: {:?}", paths, args);
+  });
+
+  let [bin_name, args @ ..] = args.as_slice() else {
+    bail!("bin name not found");
+  };
 
   let original_path = std::env::var("PATH").unwrap_or_default();
 
-  #[cfg(target_os = "windows")]
-  let separator = ";";
+  let path_chunks = paths
+    .into_iter()
+    .chain(split_paths(&original_path).map(|p| p.to_string_lossy().into_owned()));
 
-  #[cfg(not(target_os = "windows"))]
-  let separator = ":";
+  let new_path = join_paths(path_chunks)?.to_string_lossy().into_owned();
 
-  let new_path: String = format!("{}{}{}", paths.join(separator), separator, original_path);
+  trace_if!(|| {
+    trace!(
+      r#"Diff PATH ENV
+NEW: {}
+OLD: {}"#,
+      new_path,
+      original_path
+    );
+  });
 
   let cwd = std::env::current_dir()?;
 
@@ -75,13 +92,7 @@ pub fn exec_cli(paths: Vec<String>, args: Vec<String>) -> anyhow::Result<()> {
   //   .status()?;
 
   Command::new(&bin_name)
-    .args(
-      args
-        .iter()
-        .skip(1)
-        .map(|s| s.to_string())
-        .collect::<Vec<_>>(),
-    )
+    .args(args)
     .env("PATH", new_path.clone())
     // .env("Path", new_path.clone())
     .stdout(Stdio::inherit())
