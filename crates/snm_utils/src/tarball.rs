@@ -88,10 +88,9 @@ impl ArchiveExtension {
         for i in 0..archive.len() {
           let mut file = archive.by_index(i)?;
           let path = file.mangled_name();
-
-          // 跳过第一层目录
-          if let Ok(stripped_path) = path.strip_prefix(path.components().next().unwrap()) {
-            let target = target_dir.join(stripped_path);
+          if let Some(first) = path.components().next() {
+            let target = path.strip_prefix(first)?;
+            let target = target_dir.join(target);
             trace_if!(|| {
               trace!("Decompress file: {}", target.to_string_lossy());
             });
