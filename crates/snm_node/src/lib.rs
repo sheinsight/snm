@@ -11,7 +11,6 @@ use snm_utils::{
   consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
   snm_error::SnmError,
 };
-mod archive_extension;
 pub mod factory;
 pub use factory::*;
 pub mod downloader;

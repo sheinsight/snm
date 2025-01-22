@@ -11,7 +11,7 @@ use snm_utils::{
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata<'a> {
-  pub library_name: String,
+  pub full_name: String,
   pub version: String,
   // pub hash_name: Option<String>,
   // pub hash_value: Option<String>,
@@ -74,7 +74,7 @@ impl<'a> PackageManagerMetadata<'a> {
     env::set_var(ENV_KEY_FOR_SNM_PM, raw);
 
     Ok(Self {
-      library_name: library_name.to_owned(),
+      full_name: library_name.to_owned(),
       version,
       hash,
       config,

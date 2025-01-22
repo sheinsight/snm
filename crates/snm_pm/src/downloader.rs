@@ -5,12 +5,12 @@ use std::{
 };
 
 use anyhow::bail;
-use flate2::read::GzDecoder;
 use sha1::{Digest, Sha1};
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use tar::Archive;
+use snm_utils::{tarball::ArchiveExtension, trace_if};
+use tracing::trace;
 
-use crate::{package_json::PackageJson, pm_metadata::PackageManagerMetadata};
+use crate::pm_metadata::PackageManagerMetadata;
 
 #[derive(serde::Deserialize)]
 struct NpmResponse {
@@ -42,10 +42,11 @@ impl<'a> PackageManagerDownloader<'a> {
 
     let decompressed_dir_path_buf = config
       .node_modules_dir
-      .join(&self.metadata.name)
+      .join(&self.metadata.full_name)
       .join(version);
 
-    self.decompress_download_file(&downloaded_file_path_buf, &decompressed_dir_path_buf)?;
+    ArchiveExtension::from_path(downloaded_file_path_buf)?
+      .decompress(&decompressed_dir_path_buf)?;
 
     Ok(decompressed_dir_path_buf)
   }
@@ -55,12 +56,16 @@ impl<'a> PackageManagerDownloader<'a> {
 
     let download_url = self.get_download_url(version);
 
+    trace_if!(|| {
+      trace!("Start download from: {}", download_url);
+    });
+
     let downloaded_file_path_buf = metadata
       .config
       .download_dir
-      .join(&metadata.library_name)
+      .join(&metadata.full_name)
       .join(version)
-      .join(format!("{}-{}.tgz", &metadata.library_name, version));
+      .join(format!("{}-{}.tgz", &metadata.full_name, version));
 
     DownloadBuilder::new()
       .retries(3)
@@ -68,6 +73,16 @@ impl<'a> PackageManagerDownloader<'a> {
       .write_strategy(WriteStrategy::WriteAfterDelete)
       .download(&download_url, &downloaded_file_path_buf)
       .await?;
+
+    trace_if!(|| {
+      trace!(
+        r#"Download success: 
+from: {}
+to: {}"#,
+        download_url,
+        downloaded_file_path_buf.to_string_lossy(),
+      );
+    });
 
     Ok(downloaded_file_path_buf)
   }
@@ -81,6 +96,14 @@ impl<'a> PackageManagerDownloader<'a> {
       bail!("SHASUM mismatch");
     }
 
+    trace_if!(|| {
+      trace!(
+        "Verify shasum: expect: {}, actual: {}",
+        expect_shasum,
+        actual_shasum
+      );
+    });
+
     Ok(())
   }
 
@@ -88,6 +111,10 @@ impl<'a> PackageManagerDownloader<'a> {
     let url = self.get_expect_shasum_url(version);
 
     let resp = reqwest::get(&url).await?.json::<NpmResponse>().await?;
+
+    trace_if!(|| {
+      trace!("Get expect shasum from: {} is {}", url, resp.dist.shasum);
+    });
 
     Ok(resp.dist.shasum)
   }
@@ -99,7 +126,7 @@ impl<'a> PackageManagerDownloader<'a> {
     format!(
       "{host}/{library_name}/{version}",
       host = &metadata.config.npm_registry,
-      library_name = &metadata.library_name,
+      library_name = &metadata.full_name,
       version = version
     )
   }
@@ -115,66 +142,20 @@ impl<'a> PackageManagerDownloader<'a> {
     Ok(format!("{:x}", hasher.finalize()))
   }
 
-  fn decompress_download_file<P: AsRef<Path>>(
-    &self,
-    input_file_path_buf: P,
-    output_dir_path_buf: P,
-  ) -> anyhow::Result<()> {
-    let temp_dir = output_dir_path_buf.as_ref().join("temp");
-    std::fs::create_dir_all(&temp_dir)?;
-
-    let tar_gz = File::open(input_file_path_buf)?;
-    let tar = GzDecoder::new(tar_gz);
-    let mut archive = Archive::new(tar);
-    archive.unpack(&temp_dir)?;
-
-    // 获取解压后的第一个目录
-    let entry = std::fs::read_dir(&temp_dir)?
-      .next()
-      .ok_or_else(|| anyhow::anyhow!("No files found"))??;
-
-    // 移动文件
-    for entry in std::fs::read_dir(entry.path())? {
-      let entry = entry?;
-      let target = output_dir_path_buf.as_ref().join(entry.file_name());
-      std::fs::rename(entry.path(), target)?;
-    }
-
-    // 清理临时目录
-    std::fs::remove_dir_all(&temp_dir)?;
-
-    let json = PackageJson::from(&output_dir_path_buf)?;
-
-    json.enumerate_bin(|k, v| {
-      let dir = v.parent().unwrap();
-      let link_file = dir.join(k);
-      if !link_file.exists() {
-        #[cfg(unix)]
-        {
-          std::os::unix::fs::symlink(v, link_file).unwrap();
-        }
-        #[cfg(windows)]
-        std::os::windows::fs::symlink_file(v, link_file).unwrap();
-      }
-    });
-
-    Ok(())
-  }
-
   fn get_download_url(&self, version: &str) -> String {
     let metadata = &self.metadata;
     let npm_registry = &metadata.config.npm_registry;
 
     // 使用 rsplit_once 直接获取最后一个部分，避免创建 Vec
     let file_name = metadata
-      .library_name
+      .full_name
       .rsplit_once('/')
-      .map_or(metadata.library_name.clone(), |(_, name)| name.to_owned());
+      .map_or(metadata.full_name.clone(), |(_, name)| name.to_owned());
 
     format!(
       "{host}/{name}/-/{file}-{version}.tgz",
       host = npm_registry,
-      name = metadata.library_name,
+      name = metadata.full_name,
       file = file_name
     )
   }

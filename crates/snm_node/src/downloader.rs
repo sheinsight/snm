@@ -5,17 +5,10 @@ use std::{
 };
 
 use anyhow::{bail, Context};
-// use colored::Colorize;
-use flate2::read::GzDecoder;
-// use reqwest::StatusCode;
 use sha2::{Digest, Sha256};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use tar::Archive;
-use xz2::read::XzDecoder;
-use zip::ZipArchive;
-
-use crate::archive_extension::ArchiveExtension;
+use snm_utils::tarball::ArchiveExtension;
 
 pub struct NodeDownloader<'a> {
   config: &'a SnmConfig,
@@ -33,135 +26,9 @@ impl<'a> NodeDownloader<'a> {
 
     let node_dir = self.config.node_bin_dir.join(&version);
 
-    self.decompress(&downloaded_file, &node_dir)?;
+    ArchiveExtension::from_path(downloaded_file)?.decompress(&node_dir)?;
 
     Ok(node_dir)
-  }
-
-  fn decompress<T: AsRef<Path>, U: AsRef<Path>>(
-    &self,
-    downloaded_file_path_buf: T,
-    output_dir: U,
-  ) -> anyhow::Result<()> {
-    let format = ArchiveExtension::from_path(&downloaded_file_path_buf)?;
-    let file = File::open(&downloaded_file_path_buf)?;
-
-    let temp_dir = output_dir.as_ref().join("temp");
-
-    std::fs::create_dir_all(&temp_dir)?;
-    match format {
-      ArchiveExtension::Tgz => {
-        let decoder = GzDecoder::new(file);
-        let mut archive = Archive::new(decoder);
-        // archive.unpack(&temp_dir)?;
-        for entry in archive.entries()? {
-          let mut entry = entry?;
-          let path = entry.path()?;
-          if let Ok(stripped_path) = path.strip_prefix(path.components().next().unwrap()) {
-            let target = output_dir.as_ref().join(stripped_path);
-            entry.unpack(&target)?; // 使用 unpack 保持目录结构
-          }
-        }
-      }
-      ArchiveExtension::Xz => {
-        // 处理 xz
-        let xz = XzDecoder::new(file);
-        let mut archive = Archive::new(xz);
-        for entry in archive.entries()? {
-          let mut entry = entry?;
-          let path = entry.path()?;
-          if let Ok(stripped_path) = path.strip_prefix(path.components().next().unwrap()) {
-            let target = output_dir.as_ref().join(stripped_path);
-            entry.unpack(&target)?; // 使用 unpack 保持目录结构
-          }
-        }
-        // archive.unpack(&temp_dir)?;
-      }
-      ArchiveExtension::Zip => {
-        // 处理 zip
-        let mut archive = ZipArchive::new(file)?;
-
-        for i in 0..archive.len() {
-          let mut file = archive.by_index(i)?;
-          let path = file.mangled_name();
-
-          // 跳过第一层目录
-          if let Ok(stripped_path) = path.strip_prefix(path.components().next().unwrap()) {
-            let target = output_dir.as_ref().join(stripped_path);
-
-            if file.is_dir() {
-              std::fs::create_dir_all(&target)?;
-            } else {
-              if let Some(parent) = target.parent() {
-                std::fs::create_dir_all(parent)?;
-              }
-              let mut outfile = std::fs::File::create(&target)?;
-              std::io::copy(&mut file, &mut outfile)?;
-            }
-          }
-        }
-
-        // archive.extract(&temp_dir)?;
-      }
-    }
-
-    // 获取解压后的第一个目录
-    // let entry = std::fs::read_dir(&temp_dir)?
-    //   .next()
-    //   .ok_or_else(|| anyhow::anyhow!("No files found"))??;
-
-    // 移动文件
-    // for entry in std::fs::read_dir(entry.path())? {
-    //   let entry = entry?;
-    //   let target = output_dir.as_ref().join(entry.file_name());
-
-    // if entry.file_type()?.is_dir() {
-    //   let options = fs_extra::dir::CopyOptions {
-    //     overwrite: true,
-    //     skip_exist: false,
-    //     content_only: true,
-    //     ..Default::default()
-    //   };
-    //   fs_extra::dir::copy(entry.path(), &target, &options)?;
-    // } else {
-    //   std::fs::rename(entry.path(), &target).map_err(|e| {
-    //     println!(
-    //       "rename error---->: {:?} {:?} {} {:?}",
-    //       entry.path(),
-    //       target,
-    //       target.exists(),
-    //       &e
-    //     );
-    //     if target.exists() {
-    //       std::fs::read_dir(&target).unwrap().for_each(|e| {
-    //         println!("e---->: {:?}", e);
-    //       });
-    //     }
-    //     e
-    //   })?;
-    // }
-    // std::fs::rename(entry.path(), &target).map_err(|e| {
-    //   println!(
-    //     "rename error---->: {:?} {:?} {} {:?}",
-    //     entry.path(),
-    //     target,
-    //     target.exists(),
-    //     &e
-    //   );
-    //   if target.exists() {
-    //     std::fs::read_dir(&target).unwrap().for_each(|e| {
-    //       println!("e---->: {:?}", e);
-    //     });
-    //   }
-    //   e
-    // })?;
-    // }
-
-    // 清理临时目录
-    // std::fs::remove_dir_all(&temp_dir)?;
-    remove_dir_all::remove_dir_all(&temp_dir)?;
-
-    Ok(())
   }
 
   async fn verify_shasum(&self, file_path: &PathBuf, version: &str) -> anyhow::Result<()> {

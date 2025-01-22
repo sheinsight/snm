@@ -11,10 +11,9 @@ chrono               = { workspace = true }
 clap                 = { version = "4.5.7", features = ["derive", "cargo"] }
 colored              = "2.1.0"
 dialoguer            = { workspace = true }
-flate2               = "1.0.28"
 fs_extra             = { workspace = true }
-remove_dir_all       = { workspace = true }
 itertools            = "0.13.0"
+remove_dir_all       = { workspace = true }
 reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
 semver               = { workspace = true }
 serde                = { workspace = true, features = ["derive"] }
@@ -23,7 +22,4 @@ sha2                 = "0.10.2"
 snm_config           = { path = "../snm_config" }
 snm_download_builder = { path = "../snm_download_builder" }
 snm_utils            = { path = "../snm_utils" }
-tar                  = "0.4.40"
-xz2                  = { version = "0.1.7", features = ["static"] }
-zip                  = "2.1.3"
-tracing               = { workspace = true }
+tracing              = { workspace = true }

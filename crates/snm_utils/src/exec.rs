@@ -66,7 +66,7 @@ first binary: {}"#,
     .stdin(Stdio::inherit())
     .spawn()?;
 
-  if c.wait_timeout(Duration::from_secs(5))?.is_none() {
+  if c.wait_timeout(Duration::from_secs(60))?.is_none() {
     bail!("command {} timeout", bin_name);
   }
 

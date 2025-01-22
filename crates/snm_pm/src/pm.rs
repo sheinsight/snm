@@ -28,7 +28,7 @@ pub enum PackageManager<'a> {
 
 impl<'a> From<PackageManagerMetadata<'a>> for PackageManager<'a> {
   fn from(metadata: PackageManagerMetadata<'a>) -> Self {
-    match metadata.library_name.as_str() {
+    match metadata.full_name.as_str() {
       "npm" => Self::Npm(metadata),
       "yarn" => Self::Yarn(metadata),
       "@yarnpkg/cli-dist" => Self::YarnBerry(metadata),
@@ -72,7 +72,7 @@ impl<'a> PackageManager<'a> {
   }
 
   pub fn library_name(&self) -> &str {
-    self.metadata().library_name.as_str()
+    self.metadata().full_name.as_str()
   }
 
   pub fn name(&self) -> &str {
@@ -137,27 +137,27 @@ impl<'a> PackageManager<'a> {
 
     let version = self.version();
 
-    if metadata.config.restricted_list.contains(command) {
+    // if self.name() != actual_bin_name {
+    //   bail!(
+    //     "Package manager mismatch, expect: {}, actual: {}",
+    //     self.name().green(),
+    //     actual_bin_name.red()
+    //   );
+    // }
+
+    if self.name() != actual_bin_name && metadata.config.restricted_list.contains(command) {
       bail!(
         "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
-        self.library_name().green(),
+        self.name().green(),
         actual_bin_name.red(),
         self.metadata().config.restricted_list.join(", ").black()
-      );
-    }
-
-    if self.name() != actual_bin_name {
-      bail!(
-        "Package manager mismatch, expect: {}, actual: {}",
-        self.library_name().green(),
-        actual_bin_name.red()
       );
     }
 
     let pkg_dir = metadata
       .config
       .node_modules_dir
-      .join(metadata.library_name.clone())
+      .join(metadata.full_name.clone())
       .join(version);
 
     let pkg = pkg_dir.join("package.json");
@@ -201,7 +201,7 @@ mod tests {
       _ => panic!("Expected Pnpm variant"),
     };
 
-    assert_eq!(info.library_name, "pnpm");
+    assert_eq!(info.full_name, "pnpm");
     assert_eq!(info.version, "9.0.0");
   }
 
