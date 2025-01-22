@@ -1,3 +1,11 @@
+pub const YARN_PACKAGE_NAME: &str = "yarn";
+pub const YARNPKG_PACKAGE_NAME: &str = "@yarnpkg/cli-dist";
+
+pub const ENV_KEY_FOR_SNM_PM: &str = "SNM_PM";
+pub const ENV_KEY_FOR_SNM_NODE: &str = "SNM_NODE";
+
+pub const NODE_VERSION_FILE_NAME: &str = ".node-version";
+
 pub const fn os() -> &'static str {
   #[cfg(target_os = "macos")]
   {

@@ -5,6 +5,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use semver::{Version, VersionReq};
 use snm_config::SnmConfig;
+use snm_utils::consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata<'a> {
@@ -28,10 +29,6 @@ impl PackageManagerHash {
     Self { method, value }
   }
 }
-
-pub const SNM_PACKAGE_MANAGER_ENV_KEY: &str = "SNM_PACKAGE_MANAGER";
-const YARN_PACKAGE: &str = "yarn";
-const YARNPKG_PACKAGE: &str = "@yarnpkg/cli-dist";
 
 impl<'a> PackageManagerMetadata<'a> {
   pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -62,20 +59,20 @@ impl<'a> PackageManagerMetadata<'a> {
       })
       .map(|(method, value)| PackageManagerHash::new(method, value));
 
-    let library_name = if name != YARN_PACKAGE {
+    let library_name = if name != YARN_PACKAGE_NAME {
       &name
     } else {
       let version =
         Version::parse(&version).with_context(|| format!("Invalid version: {}", version))?;
-      let req = VersionReq::parse(">1")?;
+      let req: VersionReq = VersionReq::parse(">1")?;
       if req.matches(&version) {
-        YARNPKG_PACKAGE
+        YARNPKG_PACKAGE_NAME
       } else {
-        YARN_PACKAGE
+        YARN_PACKAGE_NAME
       }
     };
 
-    env::set_var(SNM_PACKAGE_MANAGER_ENV_KEY, raw);
+    env::set_var(ENV_KEY_FOR_SNM_PM, raw);
 
     Ok(Self {
       library_name: library_name.to_owned(),

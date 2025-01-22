@@ -3,6 +3,7 @@ use std::{env, path::PathBuf};
 use anyhow::{bail, Context};
 use colored::Colorize;
 use snm_config::SnmConfig;
+use snm_utils::consts::ENV_KEY_FOR_SNM_PM;
 
 use crate::{
   downloader::PackageManagerDownloader,
@@ -14,7 +15,7 @@ use crate::{
     yarn_berry::YarnBerryCommandLine,
   },
   package_json::PackageJson,
-  pm_metadata::{PackageManagerHash, PackageManagerMetadata, SNM_PACKAGE_MANAGER_ENV_KEY},
+  pm_metadata::{PackageManagerHash, PackageManagerMetadata},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -101,7 +102,7 @@ impl<'a> PackageManager<'a> {
   }
 
   pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let raw = env::var(SNM_PACKAGE_MANAGER_ENV_KEY)?;
+    let raw = env::var(ENV_KEY_FOR_SNM_PM)?;
     Self::parse(&raw, config)
   }
 

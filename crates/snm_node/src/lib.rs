@@ -7,15 +7,14 @@ use std::{
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
 use snm_config::SnmConfig;
-use snm_utils::snm_error::SnmError;
+use snm_utils::{
+  consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
+  snm_error::SnmError,
+};
 mod archive_extension;
 pub mod factory;
 pub use factory::*;
 pub mod downloader;
-
-const FILE_NAME: &str = ".node-version";
-
-const SNM_NODE_VERSION_ENV_KEY: &str = "SNM_NODE_VERSION";
 
 #[derive(Debug)]
 pub struct SNode<'a> {
@@ -38,7 +37,7 @@ impl<'a> SNode<'a> {
   }
 
   fn from_config_file(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let file_path = config.workspace.join(FILE_NAME);
+    let file_path = config.workspace.join(NODE_VERSION_FILE_NAME);
     let version =
       Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
 
@@ -49,7 +48,7 @@ impl<'a> SNode<'a> {
   }
 
   fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let version = env::var(SNM_NODE_VERSION_ENV_KEY)?;
+    let version = env::var(ENV_KEY_FOR_SNM_NODE)?;
     Ok(Self {
       version: Some(version),
       config,
@@ -86,7 +85,7 @@ impl<'a> SNode<'a> {
     if version_parts.len() != 3 || version_parts.iter().any(|s| s.parse::<u32>().is_err()) {
       return None;
     }
-    env::set_var(SNM_NODE_VERSION_ENV_KEY, &version);
+    env::set_var(ENV_KEY_FOR_SNM_NODE, &version);
     Some(version)
   }
 }
