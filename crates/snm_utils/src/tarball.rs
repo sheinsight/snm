@@ -31,25 +31,25 @@ impl ArchiveExtension {
     }
   }
 
-  fn ensure_dir_exists(&self, path: &PathBuf) -> anyhow::Result<()> {
-    trace_if!(|| {
-      trace!("Ensure dir exists: {:?}", path);
-    });
+  // fn ensure_dir_exists(&self, path: &PathBuf) -> anyhow::Result<()> {
+  //   trace_if!(|| {
+  //     trace!("Ensure dir exists: {:?}", path);
+  //   });
 
-    if path.is_file() {
-      if let Some(parent) = path.parent() {
-        if !parent.try_exists()? {
-          std::fs::create_dir_all(parent)?;
-        }
-      }
-    } else {
-      if !path.try_exists()? {
-        std::fs::create_dir_all(path)?;
-      }
-    }
+  //   if path.is_file() {
+  //     if let Some(parent) = path.parent() {
+  //       if !parent.try_exists()? {
+  //         std::fs::create_dir_all(parent)?;
+  //       }
+  //     }
+  //   } else {
+  //     if !path.try_exists()? {
+  //       std::fs::create_dir_all(path)?;
+  //     }
+  //   }
 
-    Ok(())
-  }
+  //   Ok(())
+  // }
 
   pub fn decompress(&self, target_dir: &PathBuf) -> anyhow::Result<()> {
     if target_dir.try_exists()? {
