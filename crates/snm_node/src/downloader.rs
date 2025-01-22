@@ -8,7 +8,8 @@ use anyhow::{bail, Context};
 use sha2::{Digest, Sha256};
 use snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_utils::tarball::ArchiveExtension;
+use snm_utils::{tarball::ArchiveExtension, trace_if};
+use tracing::trace;
 
 pub struct NodeDownloader<'a> {
   config: &'a SnmConfig,
@@ -35,9 +36,18 @@ impl<'a> NodeDownloader<'a> {
     let actual = self.get_actual_shasum(file_path).await?;
     let expected = self.get_expect_shasum(version).await?;
 
+    trace_if!(|| {
+      trace!(
+        "Verify shasum: expect: {}, actual: {}",
+        expect_shasum,
+        actual_shasum
+      );
+    });
+
     if actual != expected {
       bail!("Node binary shasum mismatch");
     }
+
     Ok(())
   }
 

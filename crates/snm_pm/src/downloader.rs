@@ -92,10 +92,6 @@ to: {}"#,
 
     let actual_shasum = self.get_actual_shasum(file_path)?;
 
-    if expect_shasum != actual_shasum {
-      bail!("SHASUM mismatch");
-    }
-
     trace_if!(|| {
       trace!(
         "Verify shasum: expect: {}, actual: {}",
@@ -103,6 +99,10 @@ to: {}"#,
         actual_shasum
       );
     });
+
+    if expect_shasum != actual_shasum {
+      bail!("SHASUM mismatch");
+    }
 
     Ok(())
   }

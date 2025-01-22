@@ -3,8 +3,11 @@ use std::{fs::File, path::PathBuf};
 use anyhow::{bail, Context};
 use flate2::read::GzDecoder;
 use tar::Archive;
+use tracing::trace;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
+
+use crate::trace_if;
 
 #[derive(Debug)]
 pub enum ArchiveExtension {
@@ -29,6 +32,10 @@ impl ArchiveExtension {
   }
 
   fn ensure_dir_exists(&self, path: &PathBuf) -> anyhow::Result<()> {
+    trace_if!(|| {
+      trace!("Ensure dir exists: {}", path.to_string_lossy());
+    });
+
     if path.is_dir() {
       std::fs::create_dir_all(path)?;
     } else {
@@ -85,6 +92,9 @@ impl ArchiveExtension {
           // 跳过第一层目录
           if let Ok(stripped_path) = path.strip_prefix(path.components().next().unwrap()) {
             let target = target_dir.join(stripped_path);
+            trace_if!(|| {
+              trace!("Decompress file: {}", target.to_string_lossy());
+            });
             self.ensure_dir_exists(&target)?;
             let mut outfile = std::fs::File::create(&target)?;
             std::io::copy(&mut file, &mut outfile)?;
