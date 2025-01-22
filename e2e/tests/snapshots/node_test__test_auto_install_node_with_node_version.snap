@@ -7,4 +7,6 @@ name: "test_auto_install_node_with_node_version"
 id: 1
 is: node -v
 
-v20.0.0
+
+stdout:v20.0.0
+stderr:
