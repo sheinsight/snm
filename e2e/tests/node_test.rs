@@ -45,7 +45,10 @@ e2e::test1! {
   #[tokio::test(flavor = "current_thread")]
   test_with_strict_mode_and_has_default_node,
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-  envs: [SnmEnv::Strict("true".to_string())],
+  envs: [
+    SnmEnv::Strict("true".to_string()),
+    SnmEnv::Log("snm=trace".to_string()),
+  ],
   |builder:e2e::CommandBuilder| => {
     builder.add_snapshot("snm node install 20.0.0")?;
     builder.add_snapshot("snm node list --compact")?;

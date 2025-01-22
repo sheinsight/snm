@@ -26,6 +26,7 @@ pub enum SnmEnv<T: AsRef<str> = String> {
   NodeWhiteList(T),
   Path(T),
   RustBacktrace(T), // 新增
+  Log(T),
 }
 
 impl<T: AsRef<str>> SnmEnv<T> {
@@ -55,6 +56,7 @@ impl<T: AsRef<str>> SnmEnv<T> {
       Self::NodeWhiteList(v) => ("SNM_NODE_WHITE_LIST".to_string(), v.as_ref().to_string()),
       Self::Path(v) => ("PATH".to_string(), v.as_ref().to_string()),
       Self::RustBacktrace(v) => ("RUST_BACKTRACE".to_string(), v.as_ref().to_string()),
+      Self::Log(v) => ("SNM_LOG".to_string(), v.as_ref().to_string()),
     }
   }
 }
