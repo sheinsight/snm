@@ -36,13 +36,18 @@ impl ArchiveExtension {
       trace!("Ensure dir exists: {}", path.to_string_lossy());
     });
 
-    if path.is_dir() {
-      std::fs::create_dir_all(path)?;
-    } else {
+    if path.is_file() {
       if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+        if !parent.try_exists()? {
+          std::fs::create_dir_all(parent)?;
+        }
+      }
+    } else {
+      if !path.try_exists()? {
+        std::fs::create_dir_all(path)?;
       }
     }
+
     Ok(())
   }
 
