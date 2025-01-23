@@ -8,7 +8,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
 
     envs:[],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node list --compact")?;
         builder.assert_snapshots(|name,res| {
@@ -23,7 +23,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
 
     envs:[],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node list --compact")?;
         builder.add_snapshot("snm node uninstall 20.0.0")?;
@@ -40,7 +40,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
 
     envs:[],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node default 20.0.0")?;
         builder.add_snapshot("node -v")?;
@@ -56,7 +56,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
 
     envs:[],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node list")?;
         builder.add_snapshot("snm node default 20.0.0")?;
@@ -75,7 +75,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
 
     envs:[SnmEnv::Strict("true".to_string())],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node list")?;
         builder.add_snapshot("snm node default 20.0.0")?;
@@ -94,7 +94,7 @@ e2e::test1! {
     cwd: current_dir()?.join("tests").join("fixtures").join("snm_i_with_node_npm"),
 
     envs:[],
-    |builder:e2e::CommandBuilder| => {
+    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
         builder.add_snapshot("snm node install 20.0.0")?;
         builder.add_snapshot("snm node default 20.0.0")?;
         builder.add_snapshot("npm -v")?;

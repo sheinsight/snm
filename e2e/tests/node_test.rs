@@ -7,7 +7,7 @@ e2e::test1! {
   test_auto_install_node_with_node_version,
   cwd: current_dir()?.join("tests").join("fixtures").join("auto_install_node_with_node_version"),
   envs: [],
-  |builder:e2e::CommandBuilder| => {
+  |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
     builder.add_snapshot("node -v")?;
     builder.assert_snapshots(|name,res| {
       insta::assert_snapshot!(name, res);
@@ -20,7 +20,7 @@ e2e::test1! {
   test_show_node_version_with_strict_mode,
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
   envs: [SnmEnv::Strict("true".to_string())],
-  |builder:e2e::CommandBuilder| => {
+  |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
     builder.add_snapshot("node -v")?;
     builder.assert_snapshots(|name,res| {
       insta::assert_snapshot!(name, res);
@@ -33,7 +33,7 @@ e2e::test1! {
   test_no_strict_and_no_default_node,
   cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
   envs: [SnmEnv::Strict("false".to_string())],
-  |builder:e2e::CommandBuilder| => {
+  |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
     builder.add_snapshot("node -v")?;
     builder.assert_snapshots(|name,res| {
       insta::assert_snapshot!(name, res);
@@ -50,7 +50,7 @@ e2e::test1! {
     // #[cfg(target_os = "windows")]
     // SnmEnv::Log("snm=trace".to_string()),
   ],
-  |builder:e2e::CommandBuilder| => {
+  |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
     builder.add_snapshot("snm node install 20.0.0")?;
     builder.add_snapshot("snm node list --compact")?;
     builder.add_snapshot("snm node default 20.0.0")?;

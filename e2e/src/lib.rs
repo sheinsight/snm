@@ -221,19 +221,17 @@ macro_rules! test1 {
         $test_name:ident,
         cwd: $cwd:expr,
         envs:[$($env:expr),* $(,)?],
-        |$builder:ident:$handler_type:ty| => $body:block
+        |$builder:ident:e2e::CommandBuilder,$cwd_ident:ident:std::path::PathBuf| => $body:block
     ) => {
         $(#[$attr])*
         async fn $test_name() -> anyhow::Result<()> {
-            // let mock_server = e2e::http_mocker::HttpMocker::builder()?
-            //     .build()
-            //     .await?;
+
 
             let mock_server = e2e::get_global_mock_server().await;
 
             let uri = mock_server.uri();
 
-
+            let $cwd_ident = $cwd;
 
             let mut $builder = e2e::CommandBuilder::with_envs(
                 stringify!($test_name),
@@ -246,9 +244,6 @@ macro_rules! test1 {
             )?;
 
             $builder.exec("snm setup")?;
-
-
-            // let $snapshot = e2e::SnapshotBuilder::new();
 
             $body
 
