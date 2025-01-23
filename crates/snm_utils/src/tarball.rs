@@ -7,7 +7,7 @@ use tracing::trace;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
 
-// use crate::trace_if;
+use crate::trace_if;
 
 #[derive(Debug)]
 pub enum ArchiveExtension {
@@ -20,38 +20,38 @@ impl ArchiveExtension {
   pub fn from_path(path: PathBuf) -> anyhow::Result<Self> {
     let ext = path
       .extension()
-      .and_then(|s| s.to_str())
-      .context("Invalid file extension")?;
+      .context(format!("File has no extension: {:?}", &path))?;
 
-    match ext {
-      "tgz" | "gz" => Ok(Self::Tgz(path)),
-      "xz" => Ok(Self::Xz(path)),
-      "zip" => Ok(Self::Zip(path)),
-      _ => bail!("Unsupported archive format: {}", ext),
+    match ext.to_str() {
+      Some("tgz") | Some("gz") => Ok(Self::Tgz(path)),
+      Some("xz") => Ok(Self::Xz(path)),
+      Some("zip") => Ok(Self::Zip(path)),
+      Some(ext) => bail!("Unsupported archive format '{}' for file: {:?}", ext, &path),
+      None => bail!("Invalid non-UTF8 file extension for file: {:?}", &path),
     }
   }
 
-  // fn ensure_dir_exists(&self, path: &PathBuf) -> anyhow::Result<()> {
-  //   trace_if!(|| {
-  //     trace!("Ensure dir exists: {:?}", path);
-  //   });
-
-  //   if path.is_file() {
-  //     if let Some(parent) = path.parent() {
-  //       if !parent.try_exists()? {
-  //         std::fs::create_dir_all(parent)?;
-  //       }
-  //     }
-  //   } else {
-  //     if !path.try_exists()? {
-  //       std::fs::create_dir_all(path)?;
-  //     }
-  //   }
-
-  //   Ok(())
-  // }
+  fn ensure_parent_dir(&self, path: &PathBuf) -> anyhow::Result<()> {
+    // 确保父目录存在
+    if let Some(parent) = path.parent() {
+      if !parent.try_exists()? {
+        std::fs::create_dir_all(parent)?;
+      }
+    }
+    Ok(())
+  }
 
   pub fn decompress(&self, target_dir: &PathBuf) -> anyhow::Result<()> {
+    trace_if!(|| {
+      trace!(
+        r#"Decompressing archive
+source: {:?}
+target: {:?}"#,
+        self,
+        target_dir
+      );
+    });
+
     if target_dir.try_exists()? {
       std::fs::remove_dir_all(target_dir)?;
     } else {
@@ -62,12 +62,13 @@ impl ArchiveExtension {
       ArchiveExtension::Tgz(source_file) => {
         let decoder = GzDecoder::new(File::open(source_file)?);
         let mut archive = Archive::new(decoder);
+
         for entry in archive.entries()? {
           let mut entry = entry?;
           let path = entry.path()?;
 
           if path.components().count() <= 1 {
-            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            trace!("Skipping root entry: {:?}", path);
             continue;
           }
 
@@ -75,14 +76,23 @@ impl ArchiveExtension {
           let target = path.components().skip(1).collect::<PathBuf>();
           let target = target_dir.join(target);
 
-          entry.unpack(&target)?;
+          if path.is_dir() {
+            std::fs::create_dir_all(&target)?;
+            continue;
+          } else {
+            self.ensure_parent_dir(&target)?;
+          }
 
-          // if let Some(first) = path.components().next() {
-          //   let target = path.strip_prefix(first)?;
-          //   let target = target_dir.join(target);
-          //   // self.ensure_dir_exists(&target)?;
-          //   entry.unpack(&target)?;
-          // }
+          trace_if!(|| {
+            trace!(
+              r#"Unpacking file: 
+{:?} -> {:?}"#,
+              path,
+              target
+            );
+          });
+
+          entry.unpack(&target)?;
         }
       }
 
@@ -94,7 +104,7 @@ impl ArchiveExtension {
           let path = entry.path()?;
 
           if path.components().count() <= 1 {
-            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            trace!("Skipping root entry: {:?}", path);
             continue;
           }
 
@@ -102,14 +112,23 @@ impl ArchiveExtension {
           let target = path.components().skip(1).collect::<PathBuf>();
           let target = target_dir.join(target);
 
-          entry.unpack(&target)?;
+          if path.is_dir() {
+            std::fs::create_dir_all(&target)?;
+            continue;
+          } else {
+            self.ensure_parent_dir(&target)?;
+          }
 
-          // if let Some(first) = path.components().next() {
-          //   let target = path.strip_prefix(first)?;
-          //   let target = target_dir.join(target);
-          //   // self.ensure_dir_exists(&target)?;
-          //   entry.unpack(&target)?;
-          // }
+          trace_if!(|| {
+            trace!(
+              r#"Unpacking file: 
+{:?} -> {:?}"#,
+              path,
+              target
+            );
+          });
+
+          entry.unpack(&target)?;
         }
       }
       ArchiveExtension::Zip(source_file) => {
@@ -121,7 +140,7 @@ impl ArchiveExtension {
 
           // 跳过根目录
           if path.components().count() <= 1 {
-            trace!(target: "snm", "Skipping root entry: {}", path.display());
+            trace!("Skipping root entry: {:?}", path);
             continue;
           }
 
@@ -130,17 +149,20 @@ impl ArchiveExtension {
           let target = target_dir.join(target);
 
           if file.is_dir() {
-            trace!(target: "snm", "Creating directory: {}", target.display());
             std::fs::create_dir_all(&target)?;
             continue;
           }
 
-          trace!(target: "snm", "Extracting file: {}", target.display());
+          self.ensure_parent_dir(&target)?;
 
-          // 确保父目录存在
-          if let Some(parent) = target.parent() {
-            std::fs::create_dir_all(parent)?;
-          }
+          trace_if!(|| {
+            trace!(
+              r#"Copying file: 
+{:?} -> {:?}"#,
+              path,
+              target
+            );
+          });
 
           // 只复制文件
           let mut outfile = std::fs::File::create(&target)?;
