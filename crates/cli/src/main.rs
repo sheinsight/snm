@@ -2,13 +2,10 @@ use std::env::current_dir;
 
 use clap::Parser;
 use cli::SnmCli;
-// use snm::SnmCli;
-// use snm::{execute_cli, SnmCli};
 use snm_config::SnmConfig;
 use tracing::trace;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
-// pub mod execute_cli;
 mod cli;
 mod execute_cli;
 mod fig;

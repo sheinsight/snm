@@ -9,7 +9,7 @@ use crate::{
   downloader::PackageManagerDownloader,
   ops::{
     npm::NpmCommandLine,
-    ops::{AddArgs, InstallArgs, PackageManagerOps, RemoveArgs},
+    ops::{InstallArgs, PackageManagerOps, RemoveArgs},
     pnpm::PnpmCommandLine,
     yarn::YarnCommandLine,
     yarn_berry::YarnBerryCommandLine,
@@ -55,9 +55,9 @@ impl<'a> PackageManager<'a> {
     self.execute(|pm| pm.install(args.clone()))
   }
 
-  pub fn add(&self, args: AddArgs) -> anyhow::Result<Vec<String>> {
-    self.execute(|pm| pm.add(args.clone()))
-  }
+  // pub fn add(&self, args: AddArgs) -> anyhow::Result<Vec<String>> {
+  //   self.execute(|pm| pm.add(args.clone()))
+  // }
 
   pub fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
     self.execute(|pm| pm.remove(args.clone()))
@@ -136,14 +136,6 @@ impl<'a> PackageManager<'a> {
     let metadata = self.metadata();
 
     let version = self.version();
-
-    // if self.name() != actual_bin_name {
-    //   bail!(
-    //     "Package manager mismatch, expect: {}, actual: {}",
-    //     self.name().green(),
-    //     actual_bin_name.red()
-    //   );
-    // }
 
     if self.name() != actual_bin_name && metadata.config.restricted_list.contains(command) {
       bail!(

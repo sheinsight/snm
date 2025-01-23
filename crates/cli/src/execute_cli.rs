@@ -2,7 +2,7 @@ use std::env::current_exe;
 
 use anyhow::bail;
 use snm_config::SnmConfig;
-use snm_pm::ops::ops::InstallArgs;
+// use snm_pm::ops::ops::InstallArgs;
 use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;
 use snm_utils::exec::exec_cli;
@@ -41,19 +41,19 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
       }
     }
     // manage end
-    SnmCommands::I(_) | SnmCommands::C(_) | SnmCommands::A(_) | SnmCommands::D(_) => {
+    SnmCommands::Install(_) | SnmCommands::Uninstall(_) => {
       if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {
         if let Some(pm) = package_json.package_manager {
           let pm = PackageManager::from_str(&pm, &snm_config)?;
           let args = match cli.command {
             // SnmCommands::Node { command } => todo!(),
-            SnmCommands::I(args) => pm.install(args),
-            SnmCommands::C(args) => pm.install(InstallArgs {
-              frozen_lockfile: true,
-              ..args
-            }),
-            SnmCommands::A(args) => pm.add(args),
-            SnmCommands::D(args) => pm.remove(args),
+            SnmCommands::Install(args) => pm.install(args),
+            // SnmCommands::C(args) => pm.install(InstallArgs {
+            //   frozen_lockfile: true,
+            //   ..args
+            // }),
+            // SnmCommands::Add(args) => pm.add(args),
+            SnmCommands::Uninstall(args) => pm.remove(args),
             // SnmCommands::FigSpec => todo!(),
             _ => unreachable!("unreachable"),
           }?;
