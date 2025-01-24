@@ -87,8 +87,30 @@ pub struct RemoveArgs {
   pub package_spec: Vec<String>,
 }
 
+#[derive(Parser, Debug, Clone, Serialize)]
+#[command(
+  // trailing_var_arg = true,
+  after_help = r#"EXAMPLES:
+    snm run dev -- --port=3000    # Run dev script with port 3000
+    snm run test -- --watch     # Run test with watch mode"#
+)]
+pub struct RunArgs {
+  #[arg(help = "The command to run.", required = false, default_value = "")]
+  pub command: String,
+
+  #[arg(
+    help = "Arguments after -- will be passed directly to the command",
+    last = true,
+    raw = true,
+    // allow_hyphen_values = true
+  )]
+  pub passthrough_args: Vec<String>,
+}
+
 pub trait PackageManagerOps {
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>>;
 
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>>;
+
+  fn run(&self, args: RunArgs) -> anyhow::Result<Vec<String>>;
 }

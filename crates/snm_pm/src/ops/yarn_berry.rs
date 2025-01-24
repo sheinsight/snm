@@ -1,3 +1,6 @@
+use snm_utils::trace_if;
+use tracing::trace;
+
 use super::{
   command_builder::CommandBuilder,
   flag::Flag,
@@ -42,5 +45,21 @@ impl<'a> PackageManagerOps for YarnBerryCommandLine<'a> {
     CommandBuilder::new(self.metadata.name.clone(), "remove")
       .with_args(args.package_spec)
       .build()
+  }
+
+  fn run(&self, args: super::ops::RunArgs) -> anyhow::Result<Vec<String>> {
+    trace_if!(|| trace!(r#"Ops run args:{:?}"#, &args));
+
+    let command = vec![
+      self.metadata.name.clone(),
+      String::from("run"),
+      args.command,
+    ]
+    .into_iter()
+    .chain(args.passthrough_args.clone())
+    .collect();
+
+    trace_if!(|| trace!(r#"Ops run cmd:{:?}"#, command));
+    Ok(command)
   }
 }

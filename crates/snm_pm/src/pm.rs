@@ -9,7 +9,7 @@ use crate::{
   downloader::PackageManagerDownloader,
   ops::{
     npm::NpmCommandLine,
-    ops::{InstallArgs, PackageManagerOps, RemoveArgs},
+    ops::{InstallArgs, PackageManagerOps, RemoveArgs, RunArgs},
     pnpm::PnpmCommandLine,
     yarn::YarnCommandLine,
     yarn_berry::YarnBerryCommandLine,
@@ -55,12 +55,12 @@ impl<'a> PackageManager<'a> {
     self.execute(|pm| pm.install(args.clone()))
   }
 
-  // pub fn add(&self, args: AddArgs) -> anyhow::Result<Vec<String>> {
-  //   self.execute(|pm| pm.add(args.clone()))
-  // }
-
   pub fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
     self.execute(|pm| pm.remove(args.clone()))
+  }
+
+  pub fn run(&self, args: RunArgs) -> anyhow::Result<Vec<String>> {
+    self.execute(|pm| pm.run(args.clone()))
   }
 }
 

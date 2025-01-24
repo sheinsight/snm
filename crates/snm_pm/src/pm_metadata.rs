@@ -13,8 +13,6 @@ use snm_utils::{
 pub struct PackageManagerMetadata<'a> {
   pub full_name: String,
   pub version: String,
-  // pub hash_name: Option<String>,
-  // pub hash_value: Option<String>,
   pub hash: Option<PackageManagerHash>,
   pub config: &'a SnmConfig,
   pub name: String,

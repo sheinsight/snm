@@ -1,6 +1,6 @@
 use clap::Subcommand;
 use serde::Serialize;
-use snm_pm::ops::ops::{InstallArgs, RemoveArgs};
+use snm_pm::ops::ops::{InstallArgs, RemoveArgs, RunArgs};
 
 use super::manage_command::NodeManageCommands;
 
@@ -22,6 +22,9 @@ pub enum SnmCommands {
     about = "Remove a package.",
   )]
   Uninstall(RemoveArgs),
+
+  #[command(about = "Run a command.")]
+  Run(RunArgs),
 
   // #[command(about = "Hot load a package, and runs whatever default command binary it exposes..")]
   // X(XArgs),
