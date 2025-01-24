@@ -1,11 +1,7 @@
 use snm_utils::trace_if;
 use tracing::trace;
 
-use super::{
-  command_builder::CommandBuilder,
-  flag::Flag,
-  ops::{InstallArgs, PackageManagerOps, RemoveArgs},
-};
+use super::ops::{InstallArgs, PackageManagerOps, RemoveArgs};
 use crate::pm_metadata::PackageManagerMetadata;
 
 pub struct NpmCommandLine<'a> {
@@ -20,29 +16,52 @@ impl<'a> NpmCommandLine<'a> {
 
 impl<'a> PackageManagerOps for NpmCommandLine<'a> {
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
-    match (args.package_spec.is_empty(), args.frozen) {
-      // CI
-      (true, true) => CommandBuilder::new(self.metadata.name.clone(), "ci").build(),
-      // init install
-      (true, false) => CommandBuilder::new(self.metadata.name.clone(), "install").build(),
-      // add library
-      (false, _) => CommandBuilder::new(self.metadata.name.clone(), "install")
-        .with_args(args.package_spec)
-        .with_exclu_opts(vec![
-          Flag::new(args.save_prod, "--save-prod"),
-          Flag::new(args.save_peer, "--save-peer"),
-          Flag::new(args.save_dev, "--save-dev"),
-          Flag::new(args.save_optional, "--save-optional"),
-        ])
-        .with_addon_opts(vec![Flag::new(args.save_exact, "--save-exact")])
-        .build(),
+    let mut command = vec![self.metadata.name.clone()];
+
+    if args.frozen {
+      command.push(String::from("ci"));
+      return Ok(command);
     }
+
+    command.push(String::from("install"));
+
+    if args.package_spec.is_empty() {
+      return Ok(command);
+    }
+
+    command.push(args.package_spec.join(" "));
+
+    {
+      if args.save_prod {
+        command.push(String::from("--save-prod"));
+      }
+
+      if args.save_peer {
+        command.push(String::from("--save-peer"));
+      }
+
+      if args.save_dev {
+        command.push(String::from("--save-dev"));
+      }
+
+      if args.save_optional {
+        command.push(String::from("--save-optional"));
+      }
+    }
+
+    if args.save_exact {
+      command.push(String::from("--save-exact"));
+    }
+
+    return Ok(command);
   }
 
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
-    CommandBuilder::new(self.metadata.name.clone(), "uninstall")
-      .with_args(args.package_spec)
-      .build()
+    let command = vec![self.metadata.name.clone(), String::from("uninstall")]
+      .into_iter()
+      .chain(args.package_spec)
+      .collect();
+    Ok(command)
   }
 
   fn run(&self, args: super::ops::RunArgs) -> anyhow::Result<Vec<String>> {
