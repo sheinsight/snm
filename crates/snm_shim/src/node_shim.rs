@@ -1,4 +1,4 @@
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_utils::exec::exec_cli;
 

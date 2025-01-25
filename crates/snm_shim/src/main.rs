@@ -3,7 +3,7 @@ use std::env::{self, current_dir};
 use anyhow::Context;
 use node_shim::load_node;
 use pm_shim::load_pm;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_utils::trace_if;
 use tracing::trace;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};

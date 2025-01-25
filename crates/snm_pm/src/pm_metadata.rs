@@ -3,7 +3,7 @@ use std::env;
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_utils::{
   consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME},
   ver::ver_gt_1,

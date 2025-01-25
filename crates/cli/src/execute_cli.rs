@@ -1,7 +1,7 @@
 use std::env::current_exe;
 
 use anyhow::bail;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 // use snm_pm::ops::ops::InstallArgs;
 use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 
 use super::metadata::ScheduleMetadata;
 

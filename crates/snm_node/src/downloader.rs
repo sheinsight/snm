@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{bail, Context};
 use sha2::{Digest, Sha256};
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::{tarball::ArchiveExtension, trace_if};
 use tracing::trace;

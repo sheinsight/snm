@@ -3,7 +3,7 @@ use std::{
   path::PathBuf,
 };
 
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_pm::pm::PackageManager;
 use snm_utils::{exec::exec_cli, trace_if};

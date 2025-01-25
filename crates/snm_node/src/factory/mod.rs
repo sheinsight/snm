@@ -7,7 +7,7 @@ use metadata::NodeMetadata;
 use schedule::Schedule;
 use semver::Version;
 use serde::Serialize;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_utils::trace_if;
 use tracing::trace;
 

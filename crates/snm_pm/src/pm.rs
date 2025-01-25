@@ -2,7 +2,7 @@ use std::{env, path::PathBuf};
 
 use anyhow::{bail, Context};
 use colored::Colorize;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::ENV_KEY_FOR_SNM_PM;
 
 use crate::{

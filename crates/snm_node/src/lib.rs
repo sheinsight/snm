@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use snm_utils::{
   consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
   snm_error::SnmError,

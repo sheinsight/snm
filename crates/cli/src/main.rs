@@ -2,7 +2,7 @@ use std::env::current_dir;
 
 use clap::Parser;
 use cli::SnmCli;
-use snm_config::SnmConfig;
+use snm_config::snm_config::SnmConfig;
 use tracing::trace;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 

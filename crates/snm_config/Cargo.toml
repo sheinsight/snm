@@ -14,3 +14,4 @@ serde      = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 snm_npmrc  = { path = "../snm_npmrc" }
 snm_utils  = { path = "../snm_utils" }
+tokio      = { workspace = true , features = ["macros"]}
