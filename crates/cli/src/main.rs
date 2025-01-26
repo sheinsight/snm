@@ -3,6 +3,7 @@ use std::env::current_dir;
 use clap::Parser;
 use cli::SnmCli;
 use snm_config::snm_config::SnmConfig;
+use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
@@ -36,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
 
   trace!("Get current dir: {:?}", dir);
 
-  let snm_config = SnmConfig::from(dir)?;
+  let snm_config = SnmConfig::from(SNM_PREFIX, dir)?;
 
   trace!(
     r#"Get snm config:

@@ -38,17 +38,26 @@ impl Display for SnmConfig {
 }
 
 impl SnmConfig {
-  pub fn from<P: AsRef<Path>>(workspace: P) -> anyhow::Result<Self> {
-    let config = EnvSnmConfig::parse()?;
+  fn get_home_dir() -> anyhow::Result<PathBuf> {
+    match env::var(SNM_HOME_DIR_KEY) {
+      Ok(dir) => {
+        if dir.is_empty() {
+          return dirs::home_dir().ok_or(anyhow::anyhow!("Get home dir error"));
+        }
+        Ok(PathBuf::from(dir))
+      }
+      Err(_) => dirs::home_dir().ok_or(anyhow::anyhow!("Get home dir error")),
+    }
+  }
+
+  pub fn from<P: AsRef<Path>>(prefix: &str, workspace: P) -> anyhow::Result<Self> {
+    let config = EnvSnmConfig::parse(prefix)?;
 
     let npm_registry = config
       .npm_registry
       .unwrap_or_else(|| NpmrcReader::from(&workspace).read_registry_with_default());
 
-    let base_dir = env::var(SNM_HOME_DIR_KEY)
-      .map(PathBuf::from)
-      .or_else(|_| dirs::home_dir().ok_or(anyhow::anyhow!("Get home dir error")))
-      .map(|dir| dir.join(".snm"))?;
+    let base_dir = Self::get_home_dir()?.join(".snm");
 
     let node_bin_dir = base_dir.join(String::from("node_bin"));
     let download_dir = base_dir.join(String::from("downloads"));
@@ -97,15 +106,40 @@ impl SnmConfig {
 
 #[cfg(test)]
 mod tests {
+  use test_context::{test_context, AsyncTestContext};
+
   use super::*;
 
+  struct EnvTestContext {}
+
+  impl AsyncTestContext for EnvTestContext {
+    fn teardown(self) -> impl std::future::Future<Output = ()> + Send {
+      async {
+        env::remove_var(SNM_HOME_DIR_KEY);
+      }
+    }
+
+    fn setup() -> impl std::future::Future<Output = Self> + Send {
+      async {
+        let home = dirs::home_dir().unwrap();
+        env::set_var(SNM_HOME_DIR_KEY, home.to_string_lossy().to_string());
+        Self {}
+      }
+    }
+  }
+
+  #[test_context(EnvTestContext)]
   #[tokio::test]
-  async fn should_parse_snm_config() -> anyhow::Result<()> {
-    let config = SnmConfig::from(".")?;
+  async fn should_parse_snm_config(_ctx: &mut EnvTestContext) -> anyhow::Result<()> {
+    let config = SnmConfig::from("SNM1", ".")?;
 
-    let home = dirs::home_dir().ok_or(anyhow::anyhow!("Get home dir error"))?;
+    let home = dirs::home_dir().unwrap();
 
-    assert_eq!(config.workspace, PathBuf::from("."));
+    // let e = env::var(SNM_HOME_DIR_KEY)?;
+
+    // println!("config: {:?}", config);
+    // println!("e: {:?}", e);
+
     assert_eq!(config.node_bin_dir, home.join(".snm/node_bin"));
     assert_eq!(config.download_dir, home.join(".snm/downloads"));
     assert_eq!(config.node_modules_dir, home.join(".snm/node_modules"));

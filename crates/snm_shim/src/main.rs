@@ -4,7 +4,7 @@ use anyhow::Context;
 use node_shim::load_node;
 use pm_shim::load_pm;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::trace_if;
+use snm_utils::{consts::SNM_PREFIX, trace_if};
 use tracing::trace;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 mod node_shim;
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     trace!("Command args: {:?}", &args);
   });
 
-  let snm_config = SnmConfig::from(&cwd)?;
+  let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
   trace_if!(|| {
     trace!(

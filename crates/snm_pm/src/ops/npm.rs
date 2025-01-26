@@ -82,3 +82,37 @@ impl<'a> PackageManagerOps for NpmCommandLine<'a> {
     Ok(command)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use std::path::PathBuf;
+
+  use snm_config::snm_config::SnmConfig;
+  use snm_utils::consts::SNM_PREFIX;
+
+  use super::*;
+  use crate::pm::PackageManager;
+
+  #[tokio::test]
+  async fn should_parse_npm_command() -> anyhow::Result<()> {
+    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
+
+    let pm = PackageManager::from_str("npm@8.0.0", &config)?;
+
+    let cmd = pm.install(InstallArgs {
+      package_spec: vec!["express".to_string()],
+      save_prod: false,
+      save_peer: false,
+      save_dev: false,
+      save_optional: false,
+      save_exact: false,
+      frozen: false,
+    })?;
+
+    println!("{:?}", cmd);
+
+    // let npm = NpmCommandLine::new(&pm);
+
+    Ok(())
+  }
+}

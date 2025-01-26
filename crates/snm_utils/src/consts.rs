@@ -6,6 +6,8 @@ pub const ENV_KEY_FOR_SNM_NODE: &str = "SNM_NODE";
 
 pub const NODE_VERSION_FILE_NAME: &str = ".node-version";
 
+pub const SNM_PREFIX: &str = "SNM";
+
 pub const fn os() -> &'static str {
   #[cfg(target_os = "macos")]
   {

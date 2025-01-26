@@ -177,11 +177,13 @@ impl<'a> PackageManager<'a> {
 mod tests {
   use std::path::PathBuf;
 
+  use snm_utils::consts::SNM_PREFIX;
+
   use super::*;
 
   #[test]
   fn test_parse_package_manager_with_pnpm() {
-    let config = SnmConfig::from(PathBuf::from(".")).unwrap();
+    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
 
     let pm =
       PackageManager::parse("pnpm@9.0.0", &config).expect("Should parse PNPM package manager");
@@ -199,7 +201,7 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_pnpm_and_hash() {
-    let config = SnmConfig::from(PathBuf::from(".")).unwrap();
+    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
 
     let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890", &config)
       .expect("Should parse PNPM package manager");
@@ -212,7 +214,7 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_npm() {
-    let config = SnmConfig::from(PathBuf::from(".")).unwrap();
+    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
 
     let pm =
       PackageManager::parse("npm@10.0.0", &config).expect("Should parse NPM package manager");

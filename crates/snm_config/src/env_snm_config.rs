@@ -23,9 +23,9 @@ pub struct EnvSnmConfig {
 }
 
 impl EnvSnmConfig {
-  pub fn parse() -> anyhow::Result<Self> {
+  pub fn parse(prefix: &str) -> anyhow::Result<Self> {
     let config = Config::builder()
-      .add_source(Environment::with_prefix("SNM"))
+      .add_source(Environment::with_prefix(prefix))
       .build()?;
 
     let config: EnvSnmConfig = config.try_deserialize()?;
@@ -37,27 +37,65 @@ impl EnvSnmConfig {
 mod tests {
   use std::env;
 
+  use test_context::{test_context, AsyncTestContext};
+
   use super::*;
 
+  pub const SNM_PREFIX: &str = "ENV_SNM_CONFIG_SNM";
+
+  struct EnvTestContext {}
+
+  impl AsyncTestContext for EnvTestContext {
+    fn teardown(self) -> impl std::future::Future<Output = ()> + Send {
+      async {
+        env::remove_var(format!("{}_LANG", SNM_PREFIX));
+        env::remove_var(format!("{}_HOME_DIR", SNM_PREFIX));
+        env::remove_var(format!("{}_RESTRICTED_LIST", SNM_PREFIX));
+        env::remove_var(format!("{}_NODE_DIST_URL", SNM_PREFIX));
+        env::remove_var(format!("{}_NODE_GITHUB_RESOURCE_HOST", SNM_PREFIX));
+        env::remove_var(format!("{}_NODE_WHITE_LIST", SNM_PREFIX));
+        env::remove_var(format!("{}_DOWNLOAD_TIMEOUT_SECS", SNM_PREFIX));
+        env::remove_var(format!("{}_NPM_REGISTRY", SNM_PREFIX));
+        env::remove_var(format!("{}_STRICT", SNM_PREFIX));
+      }
+    }
+
+    fn setup() -> impl std::future::Future<Output = Self> + Send {
+      async {
+        let home = dirs::home_dir().unwrap();
+        env::set_var(format!("{}_LANG", SNM_PREFIX), "en");
+        env::set_var(
+          format!("{}_HOME_DIR", SNM_PREFIX),
+          home.to_string_lossy().to_string(),
+        );
+        env::set_var(format!("{}_RESTRICTED_LIST", SNM_PREFIX), "install");
+        env::set_var(
+          format!("{}_NODE_DIST_URL", SNM_PREFIX),
+          "https://nodejs.org/dist",
+        );
+        env::set_var(
+          format!("{}_NODE_GITHUB_RESOURCE_HOST", SNM_PREFIX),
+          "https://raw.githubusercontent.com",
+        );
+        env::set_var(format!("{}_NODE_WHITE_LIST", SNM_PREFIX), "1.1.0,1.2.0");
+        env::set_var(format!("{}_DOWNLOAD_TIMEOUT_SECS", SNM_PREFIX), "60");
+        env::set_var(
+          format!("{}_NPM_REGISTRY", SNM_PREFIX),
+          "https://test.npmjs.org",
+        );
+        env::set_var(format!("{}_STRICT", SNM_PREFIX), "true");
+        Self {}
+      }
+    }
+  }
+
+  #[test_context(EnvTestContext)]
   #[tokio::test]
-  async fn should_parse_env_snm_config() -> anyhow::Result<()> {
-    env::set_var("SNM_LANG", "en");
-    env::set_var("SNM_HOME_DIR", "");
-    env::set_var("SNM_RESTRICTED_LIST", "install");
-    env::set_var("SNM_NODE_DIST_URL", "https://nodejs.org/dist");
-    env::set_var(
-      "SNM_NODE_GITHUB_RESOURCE_HOST",
-      "https://raw.githubusercontent.com",
-    );
-    env::set_var("SNM_NODE_WHITE_LIST", "1.1.0,1.2.0");
-    env::set_var("SNM_DOWNLOAD_TIMEOUT_SECS", "60");
-    env::set_var("SNM_NPM_REGISTRY", "https://test.npmjs.org");
-    env::set_var("SNM_STRICT", "true");
-
-    let config = EnvSnmConfig::parse().unwrap();
-
+  async fn should_parse_env_snm_config(_ctx: &mut EnvTestContext) -> anyhow::Result<()> {
+    let config = EnvSnmConfig::parse(SNM_PREFIX).unwrap();
+    let home = dirs::home_dir().unwrap();
     assert_eq!(config.lang, Some("en".to_string()));
-    assert_eq!(config.home_dir, Some("".to_string()));
+    assert_eq!(config.home_dir, Some(home.to_string_lossy().to_string()));
     assert_eq!(config.restricted_list, Some("install".to_string()));
     assert_eq!(
       config.node_dist_url,
