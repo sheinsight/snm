@@ -20,17 +20,21 @@ fn test_parse_no_node_version_file() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>> {
-  env::set_var("SNM_STRICT", "true");
+  let prefix = "TEST_SNM_NODE_PARSE_NO_CONTENT";
+
+  env::set_var(format!("{}_STRICT", prefix), "true");
   let workspace = current_dir()
     .unwrap()
     .join("tests")
     .join("features")
     .join("no_content");
 
-  let snm_config = SnmConfig::from(SNM_PREFIX, &workspace)?;
+  let snm_config = SnmConfig::from(prefix, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config);
 
   assert!(node_version_reader.is_err());
+
+  env::remove_var(format!("{}_STRICT", prefix));
 
   Ok(())
 }
