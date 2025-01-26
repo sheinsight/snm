@@ -5,22 +5,23 @@ use snm_node::SNode;
 use snm_utils::consts::SNM_PREFIX;
 
 #[test]
-fn test_parse_no_node_version_file() -> Result<(), Box<dyn std::error::Error>> {
-  env::set_var("SNM_NODE_BIN_DIR", "node_bin_demo");
+fn should_fail_when_node_version_file_not_exists() -> Result<(), Box<dyn std::error::Error>> {
+  let prefix = uuid::Uuid::new_v4().to_string();
+  env::set_var(format!("{}_STRICT", prefix), "true");
   let workspace = current_dir()
     .unwrap()
     .join("tests")
     .join("features")
     .join("no_node_version_file");
-  let snm_config = SnmConfig::from(SNM_PREFIX, &workspace)?;
+  let snm_config = SnmConfig::from(&prefix, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config);
   assert!(node_version_reader.is_err());
   Ok(())
 }
 
 #[test]
-fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>> {
-  let prefix = "TEST_SNM_NODE_PARSE_NO_CONTENT";
+fn should_fail_when_node_version_file_is_empty() -> Result<(), Box<dyn std::error::Error>> {
+  let prefix = uuid::Uuid::new_v4().to_string();
 
   env::set_var(format!("{}_STRICT", prefix), "true");
   let workspace = current_dir()
@@ -29,7 +30,7 @@ fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>
     .join("features")
     .join("no_content");
 
-  let snm_config = SnmConfig::from(prefix, &workspace)?;
+  let snm_config = SnmConfig::from(&prefix, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config);
 
   assert!(node_version_reader.is_err());
@@ -40,7 +41,7 @@ fn test_parse_no_node_version_content() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
-fn test_parse_node_version_start_with_v() -> Result<(), Box<dyn std::error::Error>> {
+fn should_parse_version_when_starts_with_v_prefix() -> Result<(), Box<dyn std::error::Error>> {
   let workspace = current_dir()
     .unwrap()
     .join("tests")
