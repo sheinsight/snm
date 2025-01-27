@@ -1,8 +1,6 @@
 use std::env::current_exe;
 
-use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
-use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;
 use snm_utils::exec::exec_cli;
 use tracing::trace;
@@ -41,21 +39,15 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
     }
     // manage end
     SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
-      if let Some(package_json) = PackageJson::from(&snm_config.workspace).ok() {
-        if let Some(pm) = package_json.package_manager {
-          let pm = PackageManager::from_str(&pm, &snm_config)?;
-          let args = match cli.command {
-            SnmCommands::Install(args) => pm.install(args),
-            SnmCommands::Uninstall(args) => pm.remove(args),
-            SnmCommands::Run(args) => pm.run(args),
-            _ => unreachable!("unreachable"),
-          }?;
+      let pm = PackageManager::from(&snm_config.workspace, &snm_config)?;
+      let commands = match cli.command {
+        SnmCommands::Install(install_args) => pm.install(install_args),
+        SnmCommands::Uninstall(remove_args) => pm.remove(remove_args),
+        SnmCommands::Run(run_args) => pm.run(run_args),
+        _ => unreachable!(),
+      }?;
 
-          exec_cli(&args, &vec![], false)?;
-        } else {
-          bail!("No package manager found");
-        }
-      }
+      exec_cli(&commands, &vec![], false)?;
     }
 
     SnmCommands::FigSpec => {

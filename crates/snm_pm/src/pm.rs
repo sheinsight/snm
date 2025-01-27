@@ -1,6 +1,6 @@
-use std::env;
+use std::{env, path::PathBuf};
 
-use anyhow::Context;
+use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::ENV_KEY_FOR_SNM_PM;
 
@@ -22,18 +22,6 @@ pub enum PackageManager<'a> {
   Yarn(PackageManagerMetadata<'a>),
   YarnBerry(PackageManagerMetadata<'a>),
   Pnpm(PackageManagerMetadata<'a>),
-}
-
-impl<'a> From<PackageManagerMetadata<'a>> for PackageManager<'a> {
-  fn from(metadata: PackageManagerMetadata<'a>) -> Self {
-    match metadata.full_name.as_str() {
-      "npm" => Self::Npm(metadata),
-      "yarn" => Self::Yarn(metadata),
-      "@yarnpkg/cli-dist" => Self::YarnBerry(metadata),
-      "pnpm" => Self::Pnpm(metadata),
-      _ => unreachable!(),
-    }
-  }
 }
 
 impl<'a> PackageManager<'a> {
@@ -92,11 +80,15 @@ impl<'a> PackageManager<'a> {
       return pm;
     }
 
-    PackageJson::from(&config.workspace)
-      .ok()
-      .and_then(|json| json.package_manager)
-      .and_then(|raw| Self::parse(&raw, config).ok())
-      .with_context(|| "Failed to determine package manager")
+    let pm = Self::from(&config.workspace, config)?;
+
+    Ok(pm)
+
+    // PackageJson::from(&config.workspace)
+    //   .ok()
+    //   .and_then(|json| json.package_manager)
+    //   .and_then(|raw| Self::parse(&raw, config).ok())
+    //   .with_context(|| "Failed to determine package manager")
   }
 
   pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
@@ -104,16 +96,24 @@ impl<'a> PackageManager<'a> {
     Self::parse(&raw, config)
   }
 
+  pub fn from(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
+    let package_json = PackageJson::from(dir)?;
+
+    if let Some(raw) = package_json.package_manager {
+      return Self::parse(&raw, config);
+    }
+
+    bail!("No package manager found");
+  }
+
   pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
     Self::parse(raw, config)
   }
 
   pub fn parse(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let metadata = PackageManagerMetadata::from_str(&raw, config)?;
+    let pm = PackageManagerMetadata::from_str(&raw, config)?.into();
 
-    let package_manager = Self::from(metadata);
-
-    Ok(package_manager)
+    Ok(pm)
   }
 }
 

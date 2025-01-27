@@ -88,12 +88,12 @@ args: {:?}"#,
 
   let pm = PackageManager::try_from_env(config)?;
 
-  if pm.name() != bin_name && pm.metadata().config.restricted_list.contains(command) {
+  if pm.name() != bin_name && config.restricted_list.contains(command) {
     bail!(
       "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
       pm.name().green(),
       bin_name.red(),
-      pm.metadata().config.restricted_list.join(", ").black()
+      config.restricted_list.join(", ").black()
     );
   }
 

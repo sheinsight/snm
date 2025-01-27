@@ -9,6 +9,8 @@ use snm_utils::{
   ver::ver_gt_1,
 };
 
+use crate::pm::PackageManager;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata<'a> {
   pub full_name: String,
@@ -27,6 +29,18 @@ pub struct PackageManagerHash {
 impl PackageManagerHash {
   pub fn new(method: String, value: String) -> Self {
     Self { method, value }
+  }
+}
+
+impl<'a> Into<PackageManager<'a>> for PackageManagerMetadata<'a> {
+  fn into(self) -> PackageManager<'a> {
+    match self.full_name.as_str() {
+      "npm" => PackageManager::Npm(self),
+      "yarn" => PackageManager::Yarn(self),
+      "@yarnpkg/cli-dist" => PackageManager::YarnBerry(self),
+      "pnpm" => PackageManager::Pnpm(self),
+      _ => unreachable!(),
+    }
   }
 }
 
