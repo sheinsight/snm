@@ -69,7 +69,7 @@ impl<'a> PackageManager<'a> {
     }
   }
 
-  pub fn library_name(&self) -> &str {
+  pub fn full_name(&self) -> &str {
     self.metadata().full_name.as_str()
   }
 
@@ -150,7 +150,7 @@ mod tests {
     let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890", &config)
       .expect("Should parse PNPM package manager");
 
-    assert_eq!(pm.library_name(), "pnpm");
+    assert_eq!(pm.full_name(), "pnpm");
     assert_eq!(pm.version(), "9.0.0");
     assert_eq!(pm.hash().unwrap().method, "sha");
     assert_eq!(pm.hash().unwrap().value, "1234567890");
@@ -163,7 +163,7 @@ mod tests {
     let pm =
       PackageManager::parse("npm@10.0.0", &config).expect("Should parse NPM package manager");
 
-    assert_eq!(pm.library_name(), "npm");
+    assert_eq!(pm.full_name(), "npm");
     assert_eq!(pm.version(), "10.0.0");
   }
 }

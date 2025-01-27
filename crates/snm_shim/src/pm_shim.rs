@@ -99,10 +99,7 @@ args: {:?}"#,
 
   let metadata = pm.metadata();
 
-  let mut dir = config
-    .node_bin_dir
-    .join(pm.library_name())
-    .join(pm.version());
+  let mut dir = config.node_bin_dir.join(pm.full_name()).join(pm.version());
 
   let file = dir.join("package.json");
 
