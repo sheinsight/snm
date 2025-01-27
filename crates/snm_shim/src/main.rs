@@ -1,6 +1,6 @@
 use std::env::{self, current_dir};
 
-use anyhow::Context;
+use anyhow::bail;
 use node_shim::load_node;
 use pm_shim::load_pm;
 use snm_config::snm_config::SnmConfig;
@@ -44,38 +44,22 @@ async fn main() -> anyhow::Result<()> {
 
   let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-  trace_if!(|| {
-    trace!(
-      r#"Snm config: 
-{}"#,
-      snm_config
-    );
-  });
+  if let [actual_bin_name, ..] = args.as_slice() {
+    trace_if!(|| {
+      trace!("Actual bin name: {:?}", actual_bin_name);
+    });
 
-  let actual_bin_name = args.get(0).context("bin name not found")?.clone();
-
-  trace_if!(|| {
-    trace!("Actual bin name: {:?}", actual_bin_name);
-  });
-
-  // let exe_path = current_exe()?;
-
-  // trace_if!(|| {
-  //   trace!("Exe path: {:?}", exe_path);
-  // });
-
-  // let exe_name = exe_path
-  //   .file_name()
-  //   .ok_or(anyhow::anyhow!("file name not found"))?;
-
-  // trace_if!(|| {
-  //   trace!("Exe name: {:?}", exe_name);
-  // });
-
-  if actual_bin_name == "node" {
-    load_node(&snm_config, args).await?;
+    if actual_bin_name == "node" {
+      load_node(&snm_config, &args).await?;
+    } else {
+      load_pm(&snm_config, &args).await?;
+    }
   } else {
-    load_pm(&snm_config, &actual_bin_name, args).await?;
+    bail!(
+      r#"No binary name provided in arguments
+args: {:?}"#,
+      args
+    );
   }
 
   Ok(())

@@ -2,7 +2,6 @@ use std::env::current_exe;
 
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
-// use snm_pm::ops::ops::InstallArgs;
 use snm_pm::package_json::PackageJson;
 use snm_pm::pm::PackageManager;
 use snm_utils::exec::exec_cli;
@@ -52,7 +51,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             _ => unreachable!("unreachable"),
           }?;
 
-          exec_cli(args, vec![], false)?;
+          exec_cli(&args, &vec![], false)?;
         } else {
           bail!("No package manager found");
         }

@@ -1,8 +1,7 @@
-use std::{
-  env::{self},
-  path::PathBuf,
-};
+use std::path::PathBuf;
 
+use anyhow::bail;
+use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_pm::pm::PackageManager;
@@ -11,23 +10,21 @@ use tracing::trace;
 
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
-pub async fn load_pm(
-  snm_config: &SnmConfig,
-  exe_name: &str,
-  args: Vec<String>,
-) -> anyhow::Result<()> {
+pub async fn load_pm(snm_config: &SnmConfig, args: &Vec<String>) -> anyhow::Result<()> {
+  let [exe_name, ..] = args.as_slice() else {
+    bail!(
+      r#"No binary name provided in arguments
+args: {:?}"#,
+      args
+    );
+  };
+
   trace_if!(|| {
     trace!(
       r#"Load pm shim , exe_name: {}, args: {}"#,
       exe_name,
       args.join(" ")
     );
-  });
-
-  let pm_bin_file = get_package_manager_bin(&snm_config).await?;
-
-  trace_if!(|| {
-    trace!("Found pm bin file: {:?}", pm_bin_file);
   });
 
   let node_bin_dir = SNode::try_from(&snm_config)?.get_bin().await?;
@@ -39,16 +36,16 @@ pub async fn load_pm(
 
   let command_args = args[1..].to_vec();
 
-  if let Some(pm_bin_file) = pm_bin_file {
+  if let Ok(pm_bin_file) = get_package_manager_bin(&args, &snm_config).await {
     let args = [
       &[node_str, pm_bin_file.to_string_lossy().into_owned()],
       command_args.as_slice(),
     ]
     .concat();
-    exec_cli(args, paths, true)?;
+    exec_cli(&args, &paths, true)?;
   } else {
     if !is_npm_command(exe_name) {
-      exec_cli(args, paths, true)?;
+      exec_cli(&args, &paths, true)?;
     } else {
       #[cfg(target_os = "windows")]
       let bin_name = format!("{}.cmd", exe_name);
@@ -65,7 +62,7 @@ pub async fn load_pm(
       let mut exec_args = vec![pm_bin_file.to_string_lossy().to_string()];
       exec_args.extend(command_args);
 
-      exec_cli(exec_args, paths, true)?;
+      exec_cli(&exec_args, &paths, true)?;
     }
   }
 
@@ -77,9 +74,47 @@ fn is_npm_command(command: &str) -> bool {
   NPM_COMMANDS.contains(&command)
 }
 
-async fn get_package_manager_bin(config: &SnmConfig) -> anyhow::Result<Option<PathBuf>> {
-  match PackageManager::try_from_env(config) {
-    Ok(pm) => Ok(Some(pm.get_bin(&env::args().collect()).await?)),
-    Err(_) => Ok(None),
+async fn get_package_manager_bin(
+  args: &Vec<String>,
+  config: &SnmConfig,
+) -> anyhow::Result<PathBuf> {
+  let [bin_name, command, _args @ ..] = args.as_slice() else {
+    bail!(
+      r#"No binary name provided in arguments
+args: {:?}"#,
+      args
+    );
+  };
+
+  let pm = PackageManager::try_from_env(config)?;
+
+  if pm.name() != bin_name && pm.metadata().config.restricted_list.contains(command) {
+    bail!(
+      "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
+      pm.name().green(),
+      bin_name.red(),
+      pm.metadata().config.restricted_list.join(", ").black()
+    );
   }
+
+  let metadata = pm.metadata();
+
+  let mut dir = config
+    .node_bin_dir
+    .join(pm.library_name())
+    .join(pm.version());
+
+  let file = dir.join("package.json");
+
+  if !file.try_exists()? {
+    dir = snm_pm::downloader::PackageManagerDownloader::new(metadata)
+      .download_pm(pm.version())
+      .await?;
+  }
+
+  let json = snm_pm::package_json::PackageJson::from(dir)?;
+
+  let file = json.get_bin_with_name(bin_name)?;
+
+  Ok(file)
 }

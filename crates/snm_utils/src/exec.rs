@@ -10,7 +10,7 @@ use wait_timeout::ChildExt;
 
 use crate::trace_if;
 
-pub fn exec_cli(args: Vec<String>, paths: Vec<String>, check_snm: bool) -> anyhow::Result<()> {
+pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> anyhow::Result<()> {
   let [bin_name, args @ ..] = args.as_slice() else {
     bail!("No binary name provided in arguments");
   };
@@ -26,7 +26,7 @@ paths:   {:?}"#,
     );
   });
 
-  let new_path = create_path_with_additional_dirs(paths)?;
+  let new_path = create_path_with_additional_dirs(paths.clone())?;
 
   let cwd = std::env::current_dir()?;
 
@@ -76,9 +76,9 @@ first binary: {}"#,
 fn create_path_with_additional_dirs(additional_paths: Vec<String>) -> anyhow::Result<String> {
   let o = std::env::var("PATH").unwrap_or_default();
 
-  let path_chunks = additional_paths
-    .into_iter()
-    .chain(split_paths(&o).map(|p| p.to_string_lossy().into_owned()));
+  let n = split_paths(&o).map(|p| p.to_string_lossy().into_owned());
+
+  let path_chunks = additional_paths.into_iter().chain(n);
 
   let n = join_paths(path_chunks)?.to_string_lossy().into_owned();
 

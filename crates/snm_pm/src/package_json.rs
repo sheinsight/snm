@@ -31,8 +31,8 @@ pub struct PackageJson {
 }
 
 impl PackageJson {
-  pub fn from<P: AsRef<Path>>(workspace: P) -> anyhow::Result<Self> {
-    let raw_file_path = workspace.as_ref().join("package.json");
+  pub fn from<P: AsRef<Path>>(dir: P) -> anyhow::Result<Self> {
+    let raw_file_path = dir.as_ref().join("package.json");
 
     raw_file_path
       .exists()
@@ -43,7 +43,7 @@ impl PackageJson {
       .map(|mut raw: Self| {
         // 处理 bin
         raw.bin.as_ref().map(|bin| {
-          raw.internal_bin = Some(Self::parse_bin(&workspace, bin));
+          raw.internal_bin = Some(Self::parse_bin(&dir, bin));
         });
 
         // 处理 package_manager

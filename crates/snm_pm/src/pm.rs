@@ -1,12 +1,10 @@
-use std::{env, path::PathBuf};
+use std::env;
 
-use anyhow::{bail, Context};
-use colored::Colorize;
+use anyhow::Context;
 use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::ENV_KEY_FOR_SNM_PM;
 
 use crate::{
-  downloader::PackageManagerDownloader,
   ops::{
     npm::NpmCommandLine,
     ops::{InstallArgs, PackageManagerOps, RemoveArgs, RunArgs},
@@ -65,7 +63,7 @@ impl<'a> PackageManager<'a> {
 }
 
 impl<'a> PackageManager<'a> {
-  fn metadata(&self) -> &PackageManagerMetadata<'a> {
+  pub fn metadata(&self) -> &PackageManagerMetadata<'a> {
     match self {
       Self::Npm(a) | Self::Yarn(a) | Self::YarnBerry(a) | Self::Pnpm(a) => a,
     }
@@ -116,60 +114,6 @@ impl<'a> PackageManager<'a> {
     let package_manager = Self::from(metadata);
 
     Ok(package_manager)
-  }
-}
-
-impl<'a> PackageManager<'a> {
-  pub async fn get_bin(&self, args: &Vec<String>) -> anyhow::Result<PathBuf> {
-    let actual_bin_name = args.get(0).context("bin name not found")?;
-
-    let actual_bin_name = if actual_bin_name == "pnpx" {
-      "pnpm"
-    } else if actual_bin_name == "npx" {
-      "npm"
-    } else {
-      actual_bin_name
-    };
-
-    let command = args.get(1).context("command not found")?;
-
-    let metadata = self.metadata();
-
-    let version = self.version();
-
-    if self.name() != actual_bin_name && metadata.config.restricted_list.contains(command) {
-      bail!(
-        "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
-        self.name().green(),
-        actual_bin_name.red(),
-        self.metadata().config.restricted_list.join(", ").black()
-      );
-    }
-
-    let pkg_dir = metadata
-      .config
-      .node_modules_dir
-      .join(metadata.full_name.clone())
-      .join(version);
-
-    let pkg = pkg_dir.join("package.json");
-
-    if pkg.try_exists()? {
-      let json = PackageJson::from(pkg_dir)?;
-      let bin_path_buf = json.get_bin_with_name(actual_bin_name)?;
-
-      return Ok(bin_path_buf);
-    };
-
-    let decompressed_dir_path_buf = PackageManagerDownloader::new(metadata)
-      .download_pm(version)
-      .await?;
-
-    let json = PackageJson::from(decompressed_dir_path_buf)?;
-
-    let file = json.get_bin_with_name(actual_bin_name)?;
-
-    Ok(file)
   }
 }
 
