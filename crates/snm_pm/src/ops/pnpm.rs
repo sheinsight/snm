@@ -5,7 +5,7 @@ use super::ops::{InstallArgs, PackageManagerOps, RemoveArgs};
 use crate::pm_metadata::PackageManagerMetadata;
 
 pub struct PnpmCommandLine<'a> {
-  pub metadata: &'a PackageManagerMetadata<'a>,
+  pub metadata: &'a PackageManagerMetadata,
 }
 
 impl<'a> PnpmCommandLine<'a> {

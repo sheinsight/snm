@@ -17,14 +17,14 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum PackageManager<'a> {
-  Npm(PackageManagerMetadata<'a>),
-  Yarn(PackageManagerMetadata<'a>),
-  YarnBerry(PackageManagerMetadata<'a>),
-  Pnpm(PackageManagerMetadata<'a>),
+pub enum PackageManager {
+  Npm(PackageManagerMetadata),
+  Yarn(PackageManagerMetadata),
+  YarnBerry(PackageManagerMetadata),
+  Pnpm(PackageManagerMetadata),
 }
 
-impl<'a> PackageManager<'a> {
+impl PackageManager {
   fn execute<F, T>(&self, callback: F) -> T
   where
     F: Fn(&dyn PackageManagerOps) -> T,
@@ -50,8 +50,8 @@ impl<'a> PackageManager<'a> {
   }
 }
 
-impl<'a> PackageManager<'a> {
-  pub fn metadata(&self) -> &PackageManagerMetadata<'a> {
+impl PackageManager {
+  pub fn metadata(&self) -> &PackageManagerMetadata {
     match self {
       Self::Npm(a) | Self::Yarn(a) | Self::YarnBerry(a) | Self::Pnpm(a) => a,
     }
@@ -73,14 +73,14 @@ impl<'a> PackageManager<'a> {
     self.metadata().hash.as_ref()
   }
 
-  pub fn try_from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let pm = Self::from_env(&config);
+  pub fn try_from_env(config: &SnmConfig) -> anyhow::Result<Self> {
+    let pm = Self::from_env();
 
     if pm.is_ok() {
       return pm;
     }
 
-    let pm = Self::from(&config.workspace, config)?;
+    let pm = Self::from(&config.workspace)?;
 
     Ok(pm)
 
@@ -91,27 +91,27 @@ impl<'a> PackageManager<'a> {
     //   .with_context(|| "Failed to determine package manager")
   }
 
-  pub fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+  pub fn from_env() -> anyhow::Result<Self> {
     let raw = env::var(ENV_KEY_FOR_SNM_PM)?;
-    Self::parse(&raw, config)
+    Self::parse(&raw)
   }
 
-  pub fn from(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
+  pub fn from(dir: &PathBuf) -> anyhow::Result<Self> {
     let package_json = PackageJson::from(dir)?;
 
     if let Some(raw) = package_json.package_manager {
-      return Self::parse(&raw, config);
+      return Self::parse(&raw);
     }
 
     bail!("No package manager found");
   }
 
-  pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    Self::parse(raw, config)
+  pub fn from_str(raw: &str) -> anyhow::Result<Self> {
+    Self::parse(raw)
   }
 
-  pub fn parse(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let pm = PackageManagerMetadata::from_str(&raw, config)?.into();
+  pub fn parse(raw: &str) -> anyhow::Result<Self> {
+    let pm = PackageManagerMetadata::from_str(&raw)?.into();
 
     Ok(pm)
   }
@@ -119,18 +119,12 @@ impl<'a> PackageManager<'a> {
 
 #[cfg(test)]
 mod tests {
-  use std::path::PathBuf;
-
-  use snm_utils::consts::SNM_PREFIX;
 
   use super::*;
 
   #[test]
   fn test_parse_package_manager_with_pnpm() {
-    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
-
-    let pm =
-      PackageManager::parse("pnpm@9.0.0", &config).expect("Should parse PNPM package manager");
+    let pm = PackageManager::parse("pnpm@9.0.0").expect("Should parse PNPM package manager");
 
     assert!(matches!(pm, PackageManager::Pnpm(_)));
 
@@ -145,9 +139,7 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_pnpm_and_hash() {
-    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
-
-    let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890", &config)
+    let pm = PackageManager::parse("pnpm@9.0.0+sha.1234567890")
       .expect("Should parse PNPM package manager");
 
     assert_eq!(pm.full_name(), "pnpm");
@@ -158,10 +150,7 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_npm() {
-    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
-
-    let pm =
-      PackageManager::parse("npm@10.0.0", &config).expect("Should parse NPM package manager");
+    let pm = PackageManager::parse("npm@10.0.0").expect("Should parse NPM package manager");
 
     assert_eq!(pm.full_name(), "npm");
     assert_eq!(pm.version(), "10.0.0");

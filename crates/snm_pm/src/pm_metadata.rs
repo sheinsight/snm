@@ -3,7 +3,6 @@ use std::env;
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use snm_config::snm_config::SnmConfig;
 use snm_utils::{
   consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME},
   ver::ver_gt_1,
@@ -12,11 +11,11 @@ use snm_utils::{
 use crate::pm::PackageManager;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct PackageManagerMetadata<'a> {
+pub struct PackageManagerMetadata {
   pub full_name: String,
   pub version: String,
   pub hash: Option<PackageManagerHash>,
-  pub config: &'a SnmConfig,
+  // pub config: &'a SnmConfig,
   pub name: String,
 }
 
@@ -32,8 +31,8 @@ impl PackageManagerHash {
   }
 }
 
-impl<'a> Into<PackageManager<'a>> for PackageManagerMetadata<'a> {
-  fn into(self) -> PackageManager<'a> {
+impl Into<PackageManager> for PackageManagerMetadata {
+  fn into(self) -> PackageManager {
     match self.full_name.as_str() {
       "npm" => PackageManager::Npm(self),
       "yarn" => PackageManager::Yarn(self),
@@ -44,8 +43,8 @@ impl<'a> Into<PackageManager<'a>> for PackageManagerMetadata<'a> {
   }
 }
 
-impl<'a> PackageManagerMetadata<'a> {
-  pub fn from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+impl PackageManagerMetadata {
+  pub fn from_str(raw: &str) -> anyhow::Result<Self> {
     static REGEX: Lazy<Regex> = Lazy::new(|| {
       Regex::new(r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$")
                 .expect("Invalid regex pattern")
@@ -89,7 +88,7 @@ impl<'a> PackageManagerMetadata<'a> {
       full_name: library_name.to_owned(),
       version,
       hash,
-      config,
+      // config,
       name,
     })
   }

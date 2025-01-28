@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::bail;
 use sha1::{Digest, Sha1};
+use snm_config::snm_config::SnmConfig;
 use snm_download_builder::{DownloadBuilder, WriteStrategy};
 use snm_utils::{tarball::ArchiveExtension, trace_if};
 use tracing::trace;
@@ -23,24 +24,27 @@ struct Dist {
 }
 
 pub struct PackageManagerDownloader<'a> {
-  metadata: &'a PackageManagerMetadata<'a>,
+  metadata: &'a PackageManagerMetadata,
+  snm_config: &'a SnmConfig,
 }
 
 impl<'a> PackageManagerDownloader<'a> {
-  pub fn new(metadata: &'a PackageManagerMetadata) -> Self {
-    Self { metadata }
+  pub fn new(metadata: &'a PackageManagerMetadata, snm_config: &'a SnmConfig) -> Self {
+    Self {
+      metadata,
+      snm_config,
+    }
   }
 
   pub async fn download_pm(&self, version: &str) -> anyhow::Result<PathBuf> {
-    let config = &self.metadata.config;
-
     let downloaded_file_path_buf = self.download(version).await?;
 
     self
       .verify_shasum(&downloaded_file_path_buf, version)
       .await?;
 
-    let decompressed_dir_path_buf = config
+    let decompressed_dir_path_buf = self
+      .snm_config
       .node_modules_dir
       .join(&self.metadata.full_name)
       .join(version);
@@ -60,8 +64,8 @@ impl<'a> PackageManagerDownloader<'a> {
       trace!("Start download from: {}", download_url);
     });
 
-    let downloaded_file_path_buf = metadata
-      .config
+    let downloaded_file_path_buf = self
+      .snm_config
       .download_dir
       .join(&metadata.full_name)
       .join(version)
@@ -69,7 +73,7 @@ impl<'a> PackageManagerDownloader<'a> {
 
     DownloadBuilder::new()
       .retries(3)
-      .timeout(metadata.config.download_timeout_secs)
+      .timeout(self.snm_config.download_timeout_secs)
       .write_strategy(WriteStrategy::WriteAfterDelete)
       .download(&download_url, &downloaded_file_path_buf)
       .await?;
@@ -125,7 +129,7 @@ to: {}"#,
     // https://registry.npmjs.org/@yarnpkg/cli-dist/2.4.1
     format!(
       "{host}/{library_name}/{version}",
-      host = &metadata.config.npm_registry,
+      host = &self.snm_config.npm_registry,
       library_name = &metadata.full_name,
       version = version
     )
@@ -144,7 +148,7 @@ to: {}"#,
 
   fn get_download_url(&self, version: &str) -> String {
     let metadata = &self.metadata;
-    let npm_registry = &metadata.config.npm_registry;
+    let npm_registry = &self.snm_config.npm_registry;
 
     // 使用 rsplit_once 直接获取最后一个部分，避免创建 Vec
     let file_name = metadata

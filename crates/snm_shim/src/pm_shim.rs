@@ -104,7 +104,7 @@ args: {:?}"#,
   let file = dir.join("package.json");
 
   if !file.try_exists()? {
-    dir = snm_pm::downloader::PackageManagerDownloader::new(metadata)
+    dir = snm_pm::downloader::PackageManagerDownloader::new(metadata, config)
       .download_pm(pm.version())
       .await?;
   }
