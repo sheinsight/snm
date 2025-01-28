@@ -85,19 +85,17 @@ impl<'a> PackageManagerOps for NpmCommandLine<'a> {
 
 #[cfg(test)]
 mod tests {
-  use std::path::PathBuf;
+  // use std::path::PathBuf;
 
-  use snm_config::snm_config::SnmConfig;
-  use snm_utils::consts::SNM_PREFIX;
+  // use snm_config::snm_config::SnmConfig;
+  // use snm_utils::consts::SNM_PREFIX;
 
   use super::*;
   use crate::pm::PackageManager;
 
   #[tokio::test]
   async fn should_parse_npm_command() -> anyhow::Result<()> {
-    let config = SnmConfig::from(SNM_PREFIX, PathBuf::from(".")).unwrap();
-
-    let pm = PackageManager::from_str("npm@8.0.0", &config)?;
+    let pm = PackageManager::from_str("npm@8.0.0")?;
 
     let cmd = pm.install(InstallArgs {
       package_spec: vec!["express".to_string()],
