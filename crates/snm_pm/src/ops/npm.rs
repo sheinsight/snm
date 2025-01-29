@@ -2,21 +2,22 @@ use snm_utils::trace_if;
 use tracing::trace;
 
 use super::ops::{InstallArgs, PackageManagerOps, RemoveArgs};
-use crate::pm_metadata::PackageManagerMetadata;
 
-pub struct NpmCommandLine<'a> {
-  pub metadata: &'a PackageManagerMetadata,
+pub struct NpmCommandLine {
+  pub name: String,
 }
 
-impl<'a> NpmCommandLine<'a> {
-  pub fn new(pm: &'a PackageManagerMetadata) -> Self {
-    Self { metadata: pm }
+impl NpmCommandLine {
+  pub fn new() -> Self {
+    Self {
+      name: String::from("npm"),
+    }
   }
 }
 
-impl<'a> PackageManagerOps for NpmCommandLine<'a> {
+impl PackageManagerOps for NpmCommandLine {
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
-    let mut command = vec![self.metadata.name.clone()];
+    let mut command = vec![self.name.clone()];
 
     if args.frozen {
       command.push(String::from("ci"));
@@ -57,7 +58,7 @@ impl<'a> PackageManagerOps for NpmCommandLine<'a> {
   }
 
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
-    let command = vec![self.metadata.name.clone(), String::from("uninstall")]
+    let command = vec![self.name.clone(), String::from("uninstall")]
       .into_iter()
       .chain(args.package_spec)
       .collect();
@@ -68,7 +69,7 @@ impl<'a> PackageManagerOps for NpmCommandLine<'a> {
     trace_if!(|| trace!(r#"Ops run args:{:?}"#, &args));
 
     let command = vec![
-      self.metadata.name.clone(),
+      self.name.clone(),
       String::from("run"),
       args.command,
       String::from("--"),

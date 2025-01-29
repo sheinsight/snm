@@ -2,21 +2,22 @@ use snm_utils::trace_if;
 use tracing::trace;
 
 use super::ops::{InstallArgs, PackageManagerOps, RemoveArgs};
-use crate::pm_metadata::PackageManagerMetadata;
 
-pub struct YarnBerryCommandLine<'a> {
-  pub metadata: &'a PackageManagerMetadata,
+pub struct YarnBerryCommandLine {
+  pub name: String,
 }
 
-impl<'a> YarnBerryCommandLine<'a> {
-  pub fn new(pm: &'a PackageManagerMetadata) -> Self {
-    Self { metadata: pm }
+impl YarnBerryCommandLine {
+  pub fn new() -> Self {
+    Self {
+      name: String::from("yarn"),
+    }
   }
 }
 
-impl<'a> PackageManagerOps for YarnBerryCommandLine<'a> {
+impl PackageManagerOps for YarnBerryCommandLine {
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
-    let mut command = vec![self.metadata.name.clone(), String::from("install")];
+    let mut command = vec![self.name.clone(), String::from("install")];
 
     if args.package_spec.is_empty() {
       command.push(String::from("install"));
@@ -53,7 +54,7 @@ impl<'a> PackageManagerOps for YarnBerryCommandLine<'a> {
   }
 
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
-    let command = vec![self.metadata.name.clone(), String::from("remove")]
+    let command = vec![self.name.clone(), String::from("remove")]
       .into_iter()
       .chain(args.package_spec)
       .collect();
@@ -63,14 +64,10 @@ impl<'a> PackageManagerOps for YarnBerryCommandLine<'a> {
   fn run(&self, args: super::ops::RunArgs) -> anyhow::Result<Vec<String>> {
     trace_if!(|| trace!(r#"Ops run args:{:?}"#, &args));
 
-    let command = vec![
-      self.metadata.name.clone(),
-      String::from("run"),
-      args.command,
-    ]
-    .into_iter()
-    .chain(args.passthrough_args.clone())
-    .collect();
+    let command = vec![self.name.clone(), String::from("run"), args.command]
+      .into_iter()
+      .chain(args.passthrough_args.clone())
+      .collect();
 
     trace_if!(|| trace!(r#"Ops run cmd:{:?}"#, command));
     Ok(command)

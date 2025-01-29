@@ -40,10 +40,11 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
     // manage end
     SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
       let pm = PackageManager::from(&snm_config.workspace)?;
+      let handler = pm.get_ops();
       let commands = match cli.command {
-        SnmCommands::Install(install_args) => pm.install(install_args),
-        SnmCommands::Uninstall(remove_args) => pm.remove(remove_args),
-        SnmCommands::Run(run_args) => pm.run(run_args),
+        SnmCommands::Install(install_args) => handler.install(install_args),
+        SnmCommands::Uninstall(remove_args) => handler.remove(remove_args),
+        SnmCommands::Run(run_args) => handler.run(run_args),
         _ => unreachable!(),
       }?;
 

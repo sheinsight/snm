@@ -2,21 +2,22 @@ use snm_utils::trace_if;
 use tracing::trace;
 
 use super::ops::{InstallArgs, PackageManagerOps, RemoveArgs};
-use crate::pm_metadata::PackageManagerMetadata;
 
-pub struct PnpmCommandLine<'a> {
-  pub metadata: &'a PackageManagerMetadata,
+pub struct PnpmCommandLine {
+  pub name: String,
 }
 
-impl<'a> PnpmCommandLine<'a> {
-  pub fn new(pm: &'a PackageManagerMetadata) -> Self {
-    Self { metadata: pm }
+impl PnpmCommandLine {
+  pub fn new() -> Self {
+    Self {
+      name: String::from("pnpm"),
+    }
   }
 }
 
-impl<'a> PackageManagerOps for PnpmCommandLine<'a> {
+impl PackageManagerOps for PnpmCommandLine {
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
-    let mut command = vec![self.metadata.name.clone()];
+    let mut command = vec![self.name.clone()];
 
     if args.package_spec.is_empty() {
       command.push(String::from("install"));
@@ -55,7 +56,7 @@ impl<'a> PackageManagerOps for PnpmCommandLine<'a> {
   }
 
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
-    let command = vec![self.metadata.name.clone(), String::from("remove")]
+    let command = vec![self.name.clone(), String::from("remove")]
       .into_iter()
       .chain(args.package_spec)
       .collect();
@@ -65,14 +66,10 @@ impl<'a> PackageManagerOps for PnpmCommandLine<'a> {
   fn run(&self, args: super::ops::RunArgs) -> anyhow::Result<Vec<String>> {
     trace_if!(|| trace!(r#"Ops run args:{:?}"#, &args));
 
-    let command = vec![
-      self.metadata.name.clone(),
-      String::from("run"),
-      args.command,
-    ]
-    .into_iter()
-    .chain(args.passthrough_args.clone())
-    .collect();
+    let command = vec![self.name.clone(), String::from("run"), args.command]
+      .into_iter()
+      .chain(args.passthrough_args.clone())
+      .collect();
 
     trace_if!(|| trace!(r#"Ops run cmd:{:?}"#, command));
 
