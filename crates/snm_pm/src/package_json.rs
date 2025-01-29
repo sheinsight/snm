@@ -42,6 +42,7 @@ impl PackageJson {
       .and_then(|reader| serde_json::from_reader(reader).ok())
       .map(|mut raw: Self| {
         // 处理 bin
+
         raw.bin.as_ref().map(|bin| {
           raw.internal_bin = Some(Self::parse_bin(&dir, bin));
         });
@@ -57,16 +58,28 @@ impl PackageJson {
   }
 
   fn parse_bin<P: AsRef<Path>>(workspace: P, bin: &Bin) -> HashMap<String, PathBuf> {
+    let path = workspace.as_ref();
     match bin {
-      Bin::Str(_) => HashMap::new(),
+      Bin::Str(_bin_path) => {
+        // // 从 package name 中解析命令名称（处理作用域包）
+        // let command_name = package_name
+        //   .split('/') // 分割作用域和包名
+        //   .last() // 取最后一部分（包名）
+        //   .unwrap_or(package_name)
+        //   .to_string();
+
+        // // 构建完整路径（处理路径分隔符）
+        // let full_path = workspace
+        //   .as_ref()
+        //   .join(bin_path.replace('/', MAIN_SEPARATOR_STR));
+
+        // // 返回单个键值对
+        // HashMap::from_iter([(command_name, full_path)])
+        HashMap::new()
+      }
       Bin::Map(map) => map
         .into_iter()
-        .filter_map(|(k, v)| {
-          Some((
-            k.to_string(),
-            workspace.as_ref().join(v.replace('/', MAIN_SEPARATOR_STR)),
-          ))
-        })
+        .filter_map(|(k, v)| Some((k.to_string(), path.join(v.replace('/', MAIN_SEPARATOR_STR)))))
         .collect(),
     }
   }
