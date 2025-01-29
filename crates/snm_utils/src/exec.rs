@@ -66,6 +66,15 @@ first binary: {}"#,
     .stdin(Stdio::inherit())
     .spawn()?;
 
+  trace_if!(|| {
+    trace!(
+      r#"exec command: 
+    {} {}"#,
+      &bin_name,
+      args.join(" ")
+    );
+  });
+
   if c.wait_timeout(Duration::from_secs(60))?.is_none() {
     bail!("command {} timeout", bin_name);
   }
