@@ -11,7 +11,7 @@ use tracing::trace;
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
 pub async fn load_pm(snm_config: &SnmConfig, args: &Vec<String>) -> anyhow::Result<()> {
-  let [exe_name, ..] = args.as_slice() else {
+  let [bin_name, command_args @ ..] = args.as_slice() else {
     bail!(
       r#"No binary name provided in arguments
 args: {:?}"#,
@@ -22,7 +22,7 @@ args: {:?}"#,
   trace_if!(|| {
     trace!(
       r#"Load pm shim , exe_name: {}, args: {}"#,
-      exe_name,
+      bin_name,
       args.join(" ")
     );
   });
@@ -34,24 +34,24 @@ args: {:?}"#,
 
   let paths = vec![node_bin_dir_str];
 
-  let command_args = args[1..].to_vec();
+  // let command_args = args[1..].to_vec();
 
   if let Ok(pm_bin_file) = get_package_manager_bin(&args, &snm_config).await {
     let args = [
       &[node_str, pm_bin_file.to_string_lossy().into_owned()],
-      command_args.as_slice(),
+      command_args,
     ]
     .concat();
     exec_cli(&args, &paths, true)?;
   } else {
-    if !is_npm_command(exe_name) {
+    if !is_npm_command(bin_name) {
       exec_cli(&args, &paths, true)?;
     } else {
       #[cfg(target_os = "windows")]
-      let bin_name = format!("{}.cmd", exe_name);
+      let bin_name = format!("{}.cmd", bin_name);
 
       #[cfg(not(target_os = "windows"))]
-      let bin_name = exe_name.to_string();
+      let bin_name = bin_name.to_string();
 
       let pm_bin_file = node_bin_dir.join(bin_name);
 
@@ -60,7 +60,7 @@ args: {:?}"#,
       });
 
       let mut exec_args = vec![pm_bin_file.to_string_lossy().to_string()];
-      exec_args.extend(command_args);
+      exec_args.extend(command_args.iter().map(|s| s.to_string()));
 
       exec_cli(&exec_args, &paths, true)?;
     }
@@ -99,9 +99,16 @@ args: {:?}"#,
 
   let metadata = pm.metadata();
 
-  let mut dir = config.node_bin_dir.join(pm.full_name()).join(pm.version());
+  let mut dir = config
+    .node_modules_dir
+    .join(pm.full_name())
+    .join(pm.version());
 
   let file = dir.join("package.json");
+
+  trace_if!(|| {
+    trace!("File: {:?}", file);
+  });
 
   if !file.try_exists()? {
     dir = snm_pm::downloader::PackageManagerDownloader::new(metadata, config)
