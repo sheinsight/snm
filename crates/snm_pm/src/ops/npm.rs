@@ -17,6 +17,26 @@ impl NpmCommandLine {
 }
 
 impl PackageManagerOps for NpmCommandLine {
+  fn get_save_flag(&self, args: &InstallArgs) -> anyhow::Result<Option<String>> {
+    let save_flags = [
+      (args.save_prod, "--save-prod"),
+      (args.save_dev, "--save-dev"),
+      (args.save_peer, "--save-peer"),
+      (args.save_optional, "--save-optional"),
+    ];
+
+    let active_flags: Vec<_> = save_flags
+      .iter()
+      .filter(|(condition, _)| *condition)
+      .collect();
+
+    if active_flags.len() > 1 {
+      bail!("Only one of --save-prod, --save-dev, --save-peer, or --save-optional can be specified at a time");
+    }
+
+    Ok(active_flags.first().map(|(_, flag)| flag.to_string()))
+  }
+
   fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
     let mut command = vec![self.name.clone()];
 
@@ -33,25 +53,8 @@ impl PackageManagerOps for NpmCommandLine {
 
     command.push(args.package_spec.join(" "));
 
-    let save_flags = [
-      (args.save_prod, "--save-prod"),
-      (args.save_dev, "--save-dev"),
-      (args.save_peer, "--save-peer"),
-      (args.save_optional, "--save-optional"),
-    ];
-
-    let active_flags: Vec<&str> = save_flags
-      .iter()
-      .filter(|(condition, _)| *condition)
-      .map(|(_, flag)| *flag)
-      .collect();
-
-    if active_flags.len() > 1 {
-      bail!("Only one of --save-prod, --save-dev, --save-peer, or --save-optional can be specified at a time");
-    }
-
-    if let Some(flag) = active_flags.first() {
-      command.push(flag.to_string());
+    if let Some(flag) = self.get_save_flag(&args)? {
+      command.push(flag);
     }
 
     if args.save_exact {

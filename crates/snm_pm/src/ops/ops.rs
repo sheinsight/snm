@@ -113,4 +113,6 @@ pub trait PackageManagerOps {
   fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>>;
 
   fn run(&self, args: RunArgs) -> anyhow::Result<Vec<String>>;
+
+  fn get_save_flag(&self, args: &InstallArgs) -> anyhow::Result<Option<String>>;
 }
