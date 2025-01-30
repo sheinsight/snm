@@ -2,7 +2,7 @@ use std::env::{self, current_dir};
 
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
-use snm_utils::consts::SNM_PREFIX;
+use snm_utils::consts::{ENV_KEY_FOR_SNM_NODE, SNM_PREFIX};
 
 #[test]
 fn should_fail_when_node_version_file_not_exists() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,6 +15,7 @@ fn should_fail_when_node_version_file_not_exists() -> Result<(), Box<dyn std::er
     .join("no_node_version_file");
   let snm_config = SnmConfig::from(&prefix, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config);
+  env::remove_var(ENV_KEY_FOR_SNM_NODE);
   assert!(node_version_reader.is_err());
   Ok(())
 }
@@ -28,14 +29,19 @@ fn should_fail_when_node_version_file_is_empty() -> Result<(), Box<dyn std::erro
     .unwrap()
     .join("tests")
     .join("features")
-    .join("no_content");
+    .join("no_content")
+    .canonicalize()?;
 
   let snm_config = SnmConfig::from(&prefix, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config);
 
+  println!("node_version_reader: {:?}", node_version_reader);
+  println!("prefix: {:?}", prefix);
+
   assert!(node_version_reader.is_err());
 
   env::remove_var(format!("{}_STRICT", prefix));
+  env::remove_var(ENV_KEY_FOR_SNM_NODE);
 
   Ok(())
 }
@@ -50,7 +56,7 @@ fn should_parse_version_when_starts_with_v_prefix() -> Result<(), Box<dyn std::e
 
   let snm_config = SnmConfig::from(SNM_PREFIX, &workspace)?;
   let node_version_reader = SNode::try_from(&snm_config)?;
-
+  env::remove_var(ENV_KEY_FOR_SNM_NODE);
   assert_eq!(node_version_reader.version, Some("20.0.1".to_string()));
 
   Ok(())
