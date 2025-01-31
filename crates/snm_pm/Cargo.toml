@@ -22,5 +22,5 @@ sha1                 = "0.10"
 snm_config           = { path = "../snm_config" }
 snm_download_builder = { path = "../snm_download_builder" }
 snm_utils            = { path = "../snm_utils" }
-tracing              = { workspace = true }
 tokio                = { workspace = true, features = ["macros"] }
+tracing              = { workspace = true }

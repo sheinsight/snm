@@ -7,12 +7,12 @@ version = "0.0.1-119"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow     = { workspace = true }
-config     = "0.14.0"
-dirs       = { workspace = true }
-serde      = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
-snm_npmrc  = { path = "../snm_npmrc" }
-snm_utils  = { path = "../snm_utils" }
-tokio      = { workspace = true , features = ["macros"]}
+anyhow       = { workspace = true }
+config       = "0.14.0"
+dirs         = { workspace = true }
+serde        = { workspace = true, features = ["derive"] }
+serde_json   = { workspace = true }
+snm_npmrc    = { path = "../snm_npmrc" }
+snm_utils    = { path = "../snm_utils" }
 test-context = { workspace = true }
+tokio        = { workspace = true, features = ["macros"] }
