@@ -8,7 +8,7 @@ version = "0.0.1-119"
 
 [dependencies]
 anyhow       = { workspace = true }
-config       = "0.14.0"
+config       = { workspace = true }
 dirs         = { workspace = true }
 serde        = { workspace = true, features = ["derive"] }
 serde_json   = { workspace = true }

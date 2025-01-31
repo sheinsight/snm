@@ -8,11 +8,11 @@ version = "0.0.1-119"
 [dependencies]
 anyhow               = { workspace = true }
 chrono               = { workspace = true }
-clap                 = { version = "4.5.7", features = ["derive", "cargo"] }
-colored              = "2.1.0"
+clap                 = { workspace = true, features = ["derive", "cargo"] }
+colored              = { workspace = true }
 dialoguer            = { workspace = true }
 fs_extra             = { workspace = true }
-itertools            = "0.13.0"
+itertools            = { workspace = true }
 remove_dir_all       = { workspace = true }
 reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
 semver               = { workspace = true }

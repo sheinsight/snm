@@ -1,12 +1,9 @@
-// use std::error::Error;
 use std::path::Path;
 use std::time::Duration;
 
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
-// use reqwest::Client;
-use snm_utils::snm_error::SnmError;
 use tokio::io::AsyncWriteExt;
 use tokio::time::sleep;
 
@@ -51,7 +48,7 @@ impl DownloadBuilder {
     &mut self,
     download_url: &str,
     abs_path: P,
-  ) -> Result<P, SnmError> {
+  ) -> anyhow::Result<P> {
     let mut attempts = 0;
 
     while attempts < (self.retries + 1) {
@@ -76,7 +73,7 @@ impl DownloadBuilder {
       }
     }
 
-    return Err(SnmError::ExceededMaxRetries(download_url.to_string()));
+    anyhow::bail!("Exceeded max retry attempts: {}", self.retries);
   }
 
   pub async fn original_download<P: AsRef<Path>>(
@@ -111,20 +108,6 @@ impl DownloadBuilder {
           println!("Error building client: {:?}", e);
           e
         })?;
-
-      // let response = client
-      //   .head(download_url)
-      //   .timeout(Duration::from_secs(60))
-      //   .send()
-      //   .await?;
-
-      // if !response.status().is_success() {
-      //   anyhow::bail!(
-      //     "Head request failed, Http status code not ok {} : {:?}",
-      //     response.status(),
-      //     response
-      //   );
-      // }
 
       let response = client
         .get(download_url)

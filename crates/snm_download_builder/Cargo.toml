@@ -7,7 +7,7 @@ version = "0.0.1-119"
 
 [dependencies]
 anyhow       = { workspace = true }
-colored      = "2.1.0"
+colored      = { workspace = true }
 futures-util = "0.3.30"
 indicatif    = "0.17.8"
 reqwest      = { workspace = true, features = ["stream", "native-tls-vendored", "native-tls"] }

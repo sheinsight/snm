@@ -7,10 +7,7 @@ use std::{
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::{
-  consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
-  snm_error::SnmError,
-};
+use snm_utils::consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME};
 pub mod factory;
 pub use factory::*;
 pub mod downloader;
@@ -131,14 +128,10 @@ impl<'a> SNode<'a> {
     if self.config.node_white_list.contains(&version) {
       return Ok(());
     }
-    bail!(SnmError::UnsupportedNodeVersionError {
-      version: version.to_owned(),
-      node_white_list: self
-        .config
-        .node_white_list
-        .split(',')
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>(),
-    })
+
+    bail!(
+      r"Unsupported node version: {version}, supported versions: {}",
+      self.config.node_white_list
+    );
   }
 }
