@@ -15,7 +15,6 @@ pub struct PackageManagerMetadata {
   pub full_name: String,
   pub version: String,
   pub hash: Option<PackageManagerHash>,
-  // pub config: &'a SnmConfig,
   pub name: String,
 }
 
@@ -88,7 +87,6 @@ impl PackageManagerMetadata {
       full_name: library_name.to_owned(),
       version,
       hash,
-      // config,
       name,
     })
   }

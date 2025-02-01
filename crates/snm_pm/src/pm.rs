@@ -22,18 +22,6 @@ pub enum PackageManager {
 }
 
 impl PackageManager {
-  // fn execute<F, T>(&self, callback: F) -> T
-  // where
-  //   F: Fn(&dyn PackageManagerOps) -> T,
-  // {
-  //   match self {
-  //     Self::Npm(metadata) => callback(&NpmCommandLine::new(metadata)),
-  //     Self::Yarn(metadata) => callback(&YarnCommandLine::new(metadata)),
-  //     Self::YarnBerry(metadata) => callback(&YarnBerryCommandLine::new(metadata)),
-  //     Self::Pnpm(metadata) => callback(&PnpmCommandLine::new(metadata)),
-  //   }
-  // }
-
   pub fn get_ops(&self) -> Box<dyn PackageManagerOps> {
     match self {
       Self::Npm(_) => Box::new(NpmCommandLine::new()),
@@ -42,18 +30,6 @@ impl PackageManager {
       Self::Pnpm(_) => Box::new(PnpmCommandLine::new()),
     }
   }
-
-  // pub fn install(&self, args: InstallArgs) -> anyhow::Result<Vec<String>> {
-  //   self.execute(|pm| pm.install(args.clone()))
-  // }
-
-  // pub fn remove(&self, args: RemoveArgs) -> anyhow::Result<Vec<String>> {
-  //   self.execute(|pm| pm.remove(args.clone()))
-  // }
-
-  // pub fn run(&self, args: RunArgs) -> anyhow::Result<Vec<String>> {
-  //   self.execute(|pm| pm.run(args.clone()))
-  // }
 }
 
 impl PackageManager {
