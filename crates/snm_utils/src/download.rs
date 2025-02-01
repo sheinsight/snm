@@ -27,11 +27,11 @@ impl DownloadBuilder {
   pub fn new() -> anyhow::Result<Self> {
     Ok(Self {
       retries: 0,
-      timeout: 30,
+      timeout: 60,
       max_elapsed_time: 60,
       write_strategy: WriteStrategy::WriteAfterDelete,
       client: reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(60))
         .build()?,
     })
   }
@@ -132,7 +132,7 @@ Error: {:?}"#,
       let response = self
         .client
         .get(download_url)
-        .timeout(Duration::from_secs(60))
+        .timeout(Duration::from_secs(self.timeout))
         .send()
         .await?;
 
