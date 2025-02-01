@@ -1,6 +1,7 @@
 use std::{
   collections::HashMap,
   env::{self, current_dir},
+  path::PathBuf,
 };
 
 use snm_npmrc::NpmrcReader;
@@ -37,19 +38,26 @@ impl NpmrcTestContext {
   }
 }
 
+fn build_path(current: &PathBuf, parts: &[&str]) -> String {
+  parts
+    .iter()
+    .fold(current.to_path_buf(), |acc, part| acc.join(part))
+    .to_string_lossy()
+    .to_string()
+}
+
 #[test_context(NpmrcTestContext)]
 #[tokio::test]
 async fn should_read_custom_npm_registry(ctx: &mut NpmrcTestContext) -> anyhow::Result<()> {
   let current = current_dir()?;
 
-  let global_prefix = current
-    .join("tests")
-    .join("fixtures")
-    .join("global")
-    .to_string_lossy()
-    .to_string();
+  let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);
+  let prefix_win = build_path(&current, &["tests", "fixtures", "global", "win"]);
 
-  ctx.vars(&[("PREFIX".to_string(), global_prefix)]);
+  ctx.vars(&[
+    ("PREFIX".to_string(), prefix_unix),
+    ("APPDATA".to_string(), prefix_win),
+  ]);
 
   let workspace = current.join("tests").join("fixtures").join("project");
 
@@ -59,14 +67,6 @@ async fn should_read_custom_npm_registry(ctx: &mut NpmrcTestContext) -> anyhow::
 
   assert_eq!(registry, "https://project.com".to_string());
 
-  // let cache = npmrc.read("cache");
-
-  // #[cfg(target_os = "windows")]
-  // assert_eq!(cache, None);
-
-  // #[cfg(not(target_os = "windows"))]
-  // assert_eq!(cache, Some("~/.hello".to_string()));
-
   Ok(())
 }
 
@@ -75,25 +75,12 @@ async fn should_read_custom_npm_registry(ctx: &mut NpmrcTestContext) -> anyhow::
 async fn should_read_global_npm_cache(ctx: &mut NpmrcTestContext) -> anyhow::Result<()> {
   let current = current_dir()?;
 
-  let prefix_unix = current
-    .join("tests")
-    .join("fixtures")
-    .join("global")
-    .join("unix")
-    .to_string_lossy()
-    .to_string();
-
-  let prefix_win = current
-    .join("tests")
-    .join("fixtures")
-    .join("global")
-    .join("win")
-    .to_string_lossy()
-    .to_string();
+  let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);
+  let prefix_win = build_path(&current, &["tests", "fixtures", "global", "win"]);
 
   ctx.vars(&[
     ("PREFIX".to_string(), prefix_unix),
-    ("APPDATA".to_string(), prefix_win.to_string()),
+    ("APPDATA".to_string(), prefix_win),
   ]);
 
   let workspace = current.join("tests").join("fixtures").join("project");
