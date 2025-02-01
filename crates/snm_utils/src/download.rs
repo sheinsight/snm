@@ -1,32 +1,39 @@
 use std::path::Path;
 use std::time::Duration;
 
+use backoff::ExponentialBackoff;
 use colored::*;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use tokio::io::AsyncWriteExt;
-use tokio::time::sleep;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum WriteStrategy {
   Error,
   WriteAfterDelete,
   Nothing,
 }
 
+#[derive(Clone)]
 pub struct DownloadBuilder {
   retries: u8,
   timeout: u64,
+  max_elapsed_time: u64,
   write_strategy: WriteStrategy,
+  client: reqwest::Client,
 }
 
 impl DownloadBuilder {
-  pub fn new() -> Self {
-    Self {
+  pub fn new() -> anyhow::Result<Self> {
+    Ok(Self {
       retries: 0,
       timeout: 30,
+      max_elapsed_time: 60,
       write_strategy: WriteStrategy::WriteAfterDelete,
-    }
+      client: reqwest::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()?,
+    })
   }
 
   pub fn retries(mut self, retries: u8) -> Self {
@@ -39,44 +46,65 @@ impl DownloadBuilder {
     self
   }
 
+  pub fn max_elapsed_time(mut self, max_elapsed_time: u64) -> Self {
+    self.max_elapsed_time = max_elapsed_time;
+    self
+  }
+
   pub fn timeout(mut self, timeout: u64) -> Self {
     self.timeout = timeout;
     self
   }
 
-  pub async fn download<P: AsRef<Path>>(
+  pub async fn download<P: AsRef<Path> + Clone>(
     &mut self,
     download_url: &str,
     abs_path: P,
   ) -> anyhow::Result<P> {
-    let mut attempts = 0;
+    let backoff = ExponentialBackoff {
+      initial_interval: Duration::from_millis(100),
+      max_interval: Duration::from_secs(10),
+      multiplier: 2.0,
+      max_elapsed_time: Some(Duration::from_secs(self.max_elapsed_time)),
+      ..Default::default()
+    };
 
-    while attempts < (self.retries + 1) {
-      let result = self.original_download(download_url, &abs_path).await;
-      match result {
-        Ok(_) => {
-          return Ok(abs_path);
-        }
-        Err(err) => {
-          attempts += 1;
+    let abs_path_clone = abs_path.clone();
 
-          if attempts <= self.retries {
+    let operation = move || {
+      let owned_path = abs_path.clone();
+      let owned_url = download_url.to_string();
+      let mut this = self.clone();
+      async move {
+        match this.download_with_progress(&owned_url, &owned_path).await {
+          Ok(_) => Ok(owned_path),
+          Err(err) => {
+            // tracing::warn!(
+            //   "Download failed for URL: {}. Error: {:?}",
+            //   owned_url.bright_red(),
+            //   err
+            // );
             eprintln!(
-              "Download failed, attempting retry {} . The URL is {} . Error: {:?}",
-              attempts.to_string().bright_yellow().bold(),
-              download_url.bright_red(),
-              err.source()
+              r#"Download failed for URL: {}. 
+Error: {:?}"#,
+              owned_url.bright_red(),
+              err
             );
+            Err(backoff::Error::transient(err))
           }
-          sleep(Duration::from_millis((self.retries + 10).into())).await;
         }
       }
-    }
+    };
 
-    anyhow::bail!("Exceeded max retry attempts: {}", self.retries);
+    // 使用 backoff 提供的重试机制
+    backoff::future::retry(backoff, operation)
+      .await
+      .map_err(|e| anyhow::anyhow!("Download failed after retries: {}", e))?;
+
+    Ok(abs_path_clone)
   }
 
-  pub async fn original_download<P: AsRef<Path>>(
+  pub async fn download_with_progress<P: AsRef<Path> + Clone>(
     &mut self,
     download_url: &str,
     abs_path: P,
@@ -101,15 +129,8 @@ impl DownloadBuilder {
         std::fs::create_dir_all(parent)?;
       }
 
-      let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
-        .build()
-        .map_err(|e| {
-          println!("Error building client: {:?}", e);
-          e
-        })?;
-
-      let response = client
+      let response = self
+        .client
         .get(download_url)
         .timeout(Duration::from_secs(60))
         .send()

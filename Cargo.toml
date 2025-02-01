@@ -6,7 +6,6 @@ members = [
   "crates/snm_config",
   "crates/snm_utils",
   "crates/snm_node",
-  "crates/snm_download_builder",
   "crates/snm_shim",
   "crates/dev-tools",
   "e2e",
@@ -50,12 +49,23 @@ textwrap       = "0.16.0"
 tokio          = "1.43.0"
 wait-timeout   = "0.2.0"
 wiremock       = "0.6.2"
+futures-util = "0.3.30"
 
 ## 日志
 tracing            = "0.1.41"
 tracing-subscriber = "0.3.19"
 
+## 指数退避策略 (Exponential Backoff):
+backoff-macro = "0.2.0"
+backoff = { version = "0.4"}
+
+
+## 进度条
+indicatif = "0.17.8"
+
+
 which = "7.0.1"
 
 test-context = "0.3.0"
 uuid         = "1.12.1"
+

@@ -7,8 +7,11 @@ use std::{
 use anyhow::bail;
 use sha1::{Digest, Sha1};
 use snm_config::snm_config::SnmConfig;
-use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_utils::{tarball::ArchiveExtension, trace_if};
+use snm_utils::{
+  download::{DownloadBuilder, WriteStrategy},
+  tarball::ArchiveExtension,
+  trace_if,
+};
 use tracing::trace;
 
 use crate::pm_metadata::PackageManagerMetadata;
@@ -71,7 +74,7 @@ impl<'a> PackageManagerDownloader<'a> {
       .join(version)
       .join(format!("{}-{}.tgz", &metadata.full_name, version));
 
-    DownloadBuilder::new()
+    DownloadBuilder::new()?
       .retries(3)
       .timeout(self.snm_config.download_timeout_secs)
       .write_strategy(WriteStrategy::WriteAfterDelete)

@@ -20,7 +20,6 @@ serde                = { workspace = true, features = ["derive"] }
 serde_json           = { workspace = true }
 sha2                 = "0.10.2"
 snm_config           = { path = "../snm_config" }
-snm_download_builder = { path = "../snm_download_builder" }
 snm_utils            = { path = "../snm_utils" }
 tracing              = { workspace = true }
 uuid                 = { workspace = true, features = ["v4"] }

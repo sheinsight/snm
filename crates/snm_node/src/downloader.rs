@@ -7,8 +7,11 @@ use std::{
 use anyhow::{bail, Context};
 use sha2::{Digest, Sha256};
 use snm_config::snm_config::SnmConfig;
-use snm_download_builder::{DownloadBuilder, WriteStrategy};
-use snm_utils::{tarball::ArchiveExtension, trace_if};
+use snm_utils::{
+  download::{DownloadBuilder, WriteStrategy},
+  tarball::ArchiveExtension,
+  trace_if,
+};
 use tracing::trace;
 
 pub struct NodeDownloader<'a> {
@@ -85,7 +88,7 @@ impl<'a> NodeDownloader<'a> {
     let download_url = self.get_download_url(version);
     let downloaded_file_path_buf = self.get_downloaded_path_buf(version);
 
-    DownloadBuilder::new()
+    DownloadBuilder::new()?
       .retries(3)
       .timeout(self.config.download_timeout_secs)
       .write_strategy(WriteStrategy::WriteAfterDelete)

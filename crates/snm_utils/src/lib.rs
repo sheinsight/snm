@@ -1,6 +1,6 @@
 pub mod consts;
+pub mod download;
 pub mod exec;
-pub mod fmtln;
 pub mod log;
 pub mod tarball;
 pub mod ver;

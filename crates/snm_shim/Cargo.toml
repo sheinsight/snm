@@ -15,7 +15,6 @@ anyhow               = { workspace = true }
 colored              = { workspace = true }
 dirs                 = { workspace = true }
 snm_config           = { path = "../snm_config" }
-snm_download_builder = { path = "../snm_download_builder" }
 snm_node             = { path = "../snm_node" }
 snm_pm               = { path = "../snm_pm" }
 snm_utils            = { path = "../snm_utils" }
