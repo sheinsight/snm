@@ -18,7 +18,7 @@ impl Schedule {
     let client = reqwest::Client::new();
     let cache = client
       .get(&node_schedule_url)
-      .timeout(Duration::from_secs(10))
+      .timeout(Duration::from_secs(60))
       .send()
       .await?
       .json::<HashMap<String, ScheduleMetadata>>()
