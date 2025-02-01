@@ -50,16 +50,16 @@ impl NpmrcReader {
   fn get_system_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-      env::var_os("APPDATA").map(|app_data| PathBuf::from(app_data).join(FILE_NAME))
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-      env::var_os("PREFIX").map(|prefix| {
-        PathBuf::from("/")
-          .join(prefix)
+      env::var_os("APPDATA").map(|app_data| {
+        PathBuf::from(app_data)
+          .join("npm")
           .join("etc")
           .join(ETC_FILE_NAME)
       })
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+      env::var_os("PREFIX").map(|prefix| PathBuf::from(prefix).join("etc").join(ETC_FILE_NAME))
     }
   }
 

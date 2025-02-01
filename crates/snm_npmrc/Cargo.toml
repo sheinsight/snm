@@ -8,3 +8,6 @@ version = "0.0.1-119"
 [dependencies]
 config = { workspace = true }
 dirs = { workspace = true }
+test-context = { workspace = true }
+tokio = { workspace = true, features = ["macros","test-util"] }
+anyhow = { workspace = true }
