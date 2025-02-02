@@ -39,7 +39,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     download_timeout_secs: 30,
     npm_registry: "https://registry.npmmirror.com".to_string(),
     workspace: cur.join("tests").join("fixtures").join("empty"),
-    lang: "en".to_string(),
     restricted_list: vec![],
     strict: false,
   };

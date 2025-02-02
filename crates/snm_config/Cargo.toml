@@ -16,3 +16,7 @@ snm_npmrc    = { path = "../snm_npmrc" }
 snm_utils    = { path = "../snm_utils" }
 test-context = { workspace = true }
 tokio        = { workspace = true, features = ["macros"] }
+
+
+[dev-dependencies]
+snm_test_utils = { path = "../snm_test_utils" }

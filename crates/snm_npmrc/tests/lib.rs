@@ -1,42 +1,8 @@
-use std::{
-  collections::HashMap,
-  env::{self, current_dir},
-  path::PathBuf,
-};
+use std::{env::current_dir, path::PathBuf};
 
 use snm_npmrc::NpmrcReader;
-use test_context::{test_context, AsyncTestContext};
-
-struct NpmrcTestContext {
-  // temp_dir: tempfile::TempDir,
-  env_vars: HashMap<String, String>,
-}
-
-impl AsyncTestContext for NpmrcTestContext {
-  async fn setup() -> Self {
-    // let temp_dir = tempfile::tempdir().unwrap();
-    Self {
-      // temp_dir,
-      env_vars: HashMap::new(),
-    }
-  }
-
-  async fn teardown(self) {
-    // 清理所有设置的环境变量
-    for (key, _) in self.env_vars {
-      env::remove_var(key);
-    }
-  }
-}
-
-impl NpmrcTestContext {
-  fn vars(&mut self, envs: &[(String, String)]) {
-    for (key, value) in envs {
-      self.env_vars.insert(key.to_string(), value.to_string());
-      env::set_var(key, value);
-    }
-  }
-}
+use snm_test_utils::SnmTestContext;
+use test_context::test_context;
 
 fn build_path(current: &PathBuf, parts: &[&str]) -> String {
   parts
@@ -46,9 +12,9 @@ fn build_path(current: &PathBuf, parts: &[&str]) -> String {
     .to_string()
 }
 
-#[test_context(NpmrcTestContext)]
+#[test_context(SnmTestContext)]
 #[tokio::test]
-async fn should_read_custom_npm_registry(ctx: &mut NpmrcTestContext) -> anyhow::Result<()> {
+async fn should_read_custom_npm_registry(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   let current = current_dir()?;
 
   let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);
@@ -70,9 +36,9 @@ async fn should_read_custom_npm_registry(ctx: &mut NpmrcTestContext) -> anyhow::
   Ok(())
 }
 
-#[test_context(NpmrcTestContext)]
+#[test_context(SnmTestContext)]
 #[tokio::test]
-async fn should_read_global_npm_cache(ctx: &mut NpmrcTestContext) -> anyhow::Result<()> {
+async fn should_read_global_npm_cache(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   let current = current_dir()?;
 
   let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);

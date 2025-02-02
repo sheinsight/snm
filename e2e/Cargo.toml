@@ -8,7 +8,7 @@ name = "download_test"
 path = "src/main.rs"
 
 [dependencies]
-tempfile = "3.3"
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 anyhow = "1.0.7"
 insta = { workspace = true }
