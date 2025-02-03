@@ -2,7 +2,7 @@ use std::{
   collections::HashMap,
   fs::File,
   io::BufReader,
-  path::{Path, PathBuf, MAIN_SEPARATOR_STR},
+  path::{MAIN_SEPARATOR_STR, Path, PathBuf},
 };
 
 use anyhow::Context;
@@ -16,7 +16,7 @@ pub enum Bin {
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
-pub struct PackageJson {
+pub struct PJson {
   name: Option<String>,
 
   version: Option<String>,
@@ -30,7 +30,7 @@ pub struct PackageJson {
   internal_bin: Option<HashMap<String, PathBuf>>,
 }
 
-impl PackageJson {
+impl PJson {
   pub fn from<P: AsRef<Path>>(dir: P) -> anyhow::Result<Self> {
     let raw_file_path = dir.as_ref().join("package.json");
 
@@ -85,7 +85,11 @@ impl PackageJson {
   }
 }
 
-impl PackageJson {
+impl PJson {
+  pub fn exists(dir: &PathBuf) -> bool {
+    dir.join("package.json").exists()
+  }
+
   pub fn get_bin_with_name(&self, name: &str) -> anyhow::Result<PathBuf> {
     self
       .internal_bin
@@ -110,7 +114,7 @@ mod tests {
 
   #[test]
   fn test_parse_bin() {
-    let bin = PackageJson::parse_bin(".", &Bin::Map(HashMap::new()));
+    let bin = PJson::parse_bin(".", &Bin::Map(HashMap::new()));
     assert_eq!(bin, HashMap::new());
   }
 
@@ -119,7 +123,7 @@ mod tests {
     let mut bin = HashMap::new();
     bin.insert("pnpm".to_string(), "pnpm".to_string());
     bin.insert("pnpx".to_string(), "pnpx".to_string());
-    let internal_bin = PackageJson::parse_bin("/usr/local/bin", &Bin::Map(bin));
+    let internal_bin = PJson::parse_bin("/usr/local/bin", &Bin::Map(bin));
     assert_eq!(
       *internal_bin.get("pnpm").unwrap(),
       PathBuf::from("/usr/local/bin/pnpm")

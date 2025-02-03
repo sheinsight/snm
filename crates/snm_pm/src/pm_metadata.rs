@@ -4,11 +4,11 @@ use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use snm_utils::{
-  consts::{ENV_KEY_FOR_SNM_PM, YARNPKG_PACKAGE_NAME, YARN_PACKAGE_NAME},
+  consts::{ENV_KEY_FOR_SNM_PM, YARN_PACKAGE_NAME, YARNPKG_PACKAGE_NAME},
   ver::ver_gt_1,
 };
 
-use crate::pm::PackageManager;
+use crate::pm::PM;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata {
@@ -30,13 +30,13 @@ impl PackageManagerHash {
   }
 }
 
-impl Into<PackageManager> for PackageManagerMetadata {
-  fn into(self) -> PackageManager {
+impl Into<PM> for PackageManagerMetadata {
+  fn into(self) -> PM {
     match self.full_name.as_str() {
-      "npm" => PackageManager::Npm(self),
-      "yarn" => PackageManager::Yarn(self),
-      "@yarnpkg/cli-dist" => PackageManager::YarnBerry(self),
-      "pnpm" => PackageManager::Pnpm(self),
+      "npm" => PM::Npm(self),
+      "yarn" => PM::Yarn(self),
+      "@yarnpkg/cli-dist" => PM::YarnBerry(self),
+      "pnpm" => PM::Pnpm(self),
       _ => unreachable!(),
     }
   }
@@ -81,7 +81,9 @@ impl PackageManagerMetadata {
       }
     };
 
-    env::set_var(ENV_KEY_FOR_SNM_PM, raw);
+    unsafe {
+      env::set_var(ENV_KEY_FOR_SNM_PM, raw);
+    }
 
     Ok(Self {
       full_name: library_name.to_owned(),

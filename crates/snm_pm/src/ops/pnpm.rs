@@ -84,7 +84,9 @@ impl PackageManagerOps for PnpmCommandLine {
       .collect();
 
     if active_flags.len() > 1 {
-      bail!("Only one of --save-prod, --save-dev, --save-peer, or --save-optional can be specified at a time");
+      bail!(
+        "Only one of --save-prod, --save-dev, --save-peer, or --save-optional can be specified at a time"
+      );
     }
 
     Ok(active_flags.first().map(|(_, flag)| flag.to_string()))
@@ -94,11 +96,11 @@ impl PackageManagerOps for PnpmCommandLine {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::{ops::ops::RunArgs, pm::PackageManager};
+  use crate::{ops::ops::RunArgs, pm::PM};
 
   #[tokio::test]
   async fn should_parse_pnpm_command() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -117,7 +119,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_frozen() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -136,7 +138,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_save_prod() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -155,7 +157,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_save_peer() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -174,7 +176,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_save_dev() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -193,7 +195,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_save_optional() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -212,7 +214,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_save_exact() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -231,7 +233,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_run() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.run(RunArgs {
@@ -245,7 +247,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_run_with_passthrough_args() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.run(RunArgs {
@@ -259,7 +261,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_fail_when_save_peer_and_optional_are_set() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let result = ops.install(InstallArgs {
@@ -278,7 +280,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_empty_command() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let result = ops.run(RunArgs {
@@ -292,7 +294,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_remove_multiple_packages() -> anyhow::Result<()> {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.remove(RemoveArgs {
@@ -306,7 +308,7 @@ mod tests {
   #[tokio::test]
   async fn should_parse_pnpm_command_with_special_characters_in_package_spec() -> anyhow::Result<()>
   {
-    let pm = PackageManager::from_str("pnpm@8.0.0")?;
+    let pm = PM::parse("pnpm@8.0.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -322,10 +324,11 @@ mod tests {
       frozen: false,
     })?;
 
-    assert_eq!(
-      cmd,
-      vec!["pnpm", "add", "@scope/package package-with-space"]
-    );
+    assert_eq!(cmd, vec![
+      "pnpm",
+      "add",
+      "@scope/package package-with-space"
+    ]);
     Ok(())
   }
 }

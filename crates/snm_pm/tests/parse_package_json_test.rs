@@ -1,6 +1,6 @@
 use std::env::current_dir;
 
-use snm_pm::package_json::PackageJson;
+use snm_pm::package_json::PJson;
 
 #[test]
 fn test_parse_for_bin() {
@@ -10,7 +10,7 @@ fn test_parse_for_bin() {
     .join("features")
     .join("has_bin");
 
-  let package_json = match PackageJson::from(&workspace_path_buf) {
+  let package_json = match PJson::from(&workspace_path_buf) {
     Ok(package_json) => package_json,
     Err(e) => unreachable!("Failed to parse package.json: {}", e),
   };
@@ -34,7 +34,7 @@ fn test_parse_for_bin() {
 fn test_parse_package_manager() {
   let workspace_path_buf = current_dir().unwrap();
 
-  let package_json = match PackageJson::from(
+  let package_json = match PJson::from(
     &workspace_path_buf
       .join("tests")
       .join("features")
