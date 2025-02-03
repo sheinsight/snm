@@ -4,7 +4,7 @@ use std::{fs, ops::Not};
 use clap::CommandFactory;
 use colored::*;
 use snm_config::snm_config::SnmConfig;
-use snm_pm::pm::PackageManager;
+use snm_pm::pm::SPM;
 use snm_utils::exec::exec_cli;
 use tracing::trace;
 
@@ -41,7 +41,10 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
     }
     // manage end
     SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
-      let pm = PackageManager::from(&snm_config.workspace)?;
+      let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
+
+      let pm = spm.pm;
+
       let handler = pm.get_ops();
       let commands = match cli.command {
         SnmCommands::Install(install_args) => handler.install(install_args),
