@@ -72,7 +72,10 @@ impl SnmConfig {
     let restricted_list = {
       let map =
         |v: String| -> Vec<String> { v.split(',').map(|s| s.to_string()).collect::<Vec<String>>() };
-      config.restricted_list.map(map).unwrap_or(Vec::new())
+      config
+        .restricted_list
+        .map(map)
+        .unwrap_or(vec!["install".to_string(), "add".to_string()])
     };
 
     let strict = config.strict.unwrap_or(false);
