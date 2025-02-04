@@ -87,53 +87,80 @@ impl<'a> SNode<'a> {
 }
 
 impl<'a> SNode<'a> {
-  pub async fn ensure_node_and_return_dir(&self) -> anyhow::Result<PathBuf> {
-    let version = self
+  fn get_version(&self) -> anyhow::Result<String> {
+    let v = self
       .version
       .as_deref()
       .context("No valid node version found")?;
+    self.check_v(&v)?;
+    Ok(v.to_string())
+  }
 
-    self.check_v(&version)?;
+  pub async fn get_bin_dir(&self) -> anyhow::Result<PathBuf> {
+    let node_home_dir = self.ensure_node().await?;
 
-    let node_dir = self.config.node_bin_dir.join(&version);
+    #[cfg(windows)]
+    let bin_dir = node_home_dir;
 
-    let (node_bin_dir, exe_name) = if cfg!(windows) {
-      (node_dir.clone(), "node.exe")
+    #[cfg(not(windows))]
+    let bin_dir = node_home_dir.join("bin");
+
+    Ok(bin_dir)
+  }
+
+  pub async fn get_home_dir(&self) -> anyhow::Result<PathBuf> {
+    self.ensure_node().await
+  }
+
+  async fn ensure_node(&self) -> anyhow::Result<PathBuf> {
+    let version = self.get_version()?;
+    let node_home_dir = self.config.node_bin_dir.join(&version);
+
+    // let (node_bin_dir, exe_name) = if cfg!(windows) {
+    //   (node_dir.clone(), "node.exe")
+    // } else {
+    //   (node_dir.join("bin"), "node")
+    // };
+
+    let node_exe = if cfg!(windows) {
+      node_home_dir.join("node.exe")
     } else {
-      (node_dir.join("bin"), "node")
+      node_home_dir.join("lib").join("node")
     };
 
     // 优化: 提前计算最终返回值
-    let node_exe = node_bin_dir.join(exe_name);
-
-    // #[cfg(target_os = "windows")]
-    // let node_bin_dir = {
-    //   let node_bin_file = node_dir.join("node.exe");
-    //   if node_bin_file.try_exists()? {
-    //     return Ok(node_dir);
-    //   }
-    //   node_dir
-    // };
-
-    // #[cfg(not(target_os = "windows"))]
-    // let node_bin_dir = {
-    //   let node_bin_dir = node_dir.join("bin");
-    //   let node_bin_file = node_bin_dir.join("node");
-    //   if node_bin_file.try_exists()? {
-    //     return Ok(node_bin_dir);
-    //   }
-    //   node_bin_dir
-    // };
-
+    // let node_exe = node_bin_dir.join(exe_name);
     // 优化: 只在文件不存在时下载
     if !node_exe.try_exists()? {
-      NodeDownloader::new(self.config).download(version).await?;
+      NodeDownloader::new(self.config).download(&version).await?;
     }
 
-    // NodeDownloader::new(self.config).download(version).await?;
-
-    Ok(node_bin_dir)
+    Ok(node_home_dir)
   }
+
+  // pub async fn ensure_node_and_return_dir(&self) -> anyhow::Result<PathBuf> {
+  //   let version = self.get_version()?;
+
+  //   self.check_v(&version)?;
+
+  //   let node_dir = self.config.node_bin_dir.join(&version);
+
+  //   let (node_bin_dir, exe_name) = if cfg!(windows) {
+  //     (node_dir.clone(), "node.exe")
+  //   } else {
+  //     (node_dir.join("bin"), "node")
+  //   };
+
+  //   // 优化: 提前计算最终返回值
+  //   let node_exe = node_bin_dir.join(exe_name);
+
+  //   // 优化: 只在文件不存在时下载
+  //   if !node_exe.try_exists()? {
+  //     NodeDownloader::new(self.config).download(&version).await?;
+  //   }
+
+  //   Ok(node_dir)
+  // }
 
   fn check_v(&self, version: &str) -> anyhow::Result<()> {
     if self.config.node_white_list.is_empty() {
