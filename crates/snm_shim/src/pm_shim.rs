@@ -7,7 +7,7 @@ use snm_node::SNode;
 use snm_pm::{package_json::PJson, pm::SPM};
 use snm_utils::{exec::exec_cli, trace_if};
 use tracing::trace;
-
+const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 pub async fn load_pm(snm_config: &SnmConfig, args: &Vec<String>) -> anyhow::Result<()> {
   let [bin_name, command_args @ ..] = args.as_slice() else {
     bail!(
@@ -43,16 +43,58 @@ args: {:?}"#,
       if snm_config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       } else {
-        exec_cli(&args, &paths, true)?;
+        // exec_cli(&args, &paths, true)?;
+        if !is_npm_command(bin_name) {
+          exec_cli(&args, &paths, true)?;
+        } else {
+          #[cfg(target_os = "windows")]
+          let bin_name = format!("{}.cmd", bin_name);
+
+          #[cfg(not(target_os = "windows"))]
+          let bin_name = bin_name.to_string();
+
+          let pm_bin_file = node_bin_dir.join(bin_name);
+
+          trace_if!(|| {
+            trace!("Default bin file: {:?}", pm_bin_file);
+          });
+
+          let mut exec_args = vec![pm_bin_file.to_string_lossy().to_string()];
+          exec_args.extend(command_args.iter().map(|s| s.to_string()));
+
+          exec_cli(&exec_args, &paths, true)?;
+        }
       }
     }
   } else {
-    exec_cli(&args, &paths, true)?;
+    // exec_cli(&args, &paths, true)?;
+    if !is_npm_command(bin_name) {
+      exec_cli(&args, &paths, true)?;
+    } else {
+      #[cfg(target_os = "windows")]
+      let bin_name = format!("{}.cmd", bin_name);
+
+      #[cfg(not(target_os = "windows"))]
+      let bin_name = bin_name.to_string();
+
+      let pm_bin_file = node_bin_dir.join(bin_name);
+
+      trace_if!(|| {
+        trace!("Default bin file: {:?}", pm_bin_file);
+      });
+
+      let mut exec_args = vec![pm_bin_file.to_string_lossy().to_string()];
+      exec_args.extend(command_args.iter().map(|s| s.to_string()));
+
+      exec_cli(&exec_args, &paths, true)?;
+    }
   }
 
   Ok(())
 }
-
+fn is_npm_command(command: &str) -> bool {
+  NPM_COMMANDS.contains(&command)
+}
 async fn get_package_manager_bin(
   args: &Vec<String>,
   config: &SnmConfig,
