@@ -12,25 +12,30 @@ jobs:
     strategy:
       matrix:
         include:
-            # Linux targets
+            # Linux targets (GNU)
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+            target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
           - os: ubuntu-latest
-            target: i686-unknown-linux-gnu
+            target: i686-unknown-linux-gnu      # 32位 Linux (GNU)
+            # Linux targets (MUSL)
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
+            target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
           - os: ubuntu-latest
-            target: i686-unknown-linux-musl
-          # Windows targets
+            target: i686-unknown-linux-musl     # 32位 Linux (MUSL)
+            # Windows targets
           - os: windows-latest
-            target: x86_64-pc-windows-msvc
+            target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
           - os: windows-latest
-            target: i686-pc-windows-msvc
-          # macOS targets
+            target: i686-pc-windows-msvc        # 32位 Windows (MSVC)
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
+          - os: windows-latest
+            target: i686-pc-windows-gnu         # 32位 Windows (MinGW)
+            # macOS targets
           - os: macos-14
-            target: aarch64-apple-darwin
+            target: aarch64-apple-darwin        # Apple Silicon Mac
           - os: macos-13
-            target: x86_64-apple-darwin
+            target: x86_64-apple-darwin         # Intel Mac
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
