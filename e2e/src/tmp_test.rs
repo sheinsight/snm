@@ -1,8 +1,9 @@
 use std::env::current_dir;
 
 use snm_test_utils::{ResponseSource, SnmMockServerArg, SnmTestContext};
+use wiremock::MockServer;
 
-pub async fn setup_http_server(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+pub async fn setup_http_server(ctx: &mut SnmTestContext) -> anyhow::Result<MockServer> {
   let current = current_dir()?;
 
   let server = ctx
@@ -67,7 +68,5 @@ pub async fn setup_http_server(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
     ])
     .await?;
 
-  println!("server--->{:?}", server.uri());
-
-  Ok(())
+  Ok(server)
 }

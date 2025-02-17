@@ -9,7 +9,13 @@ use test_context::test_context;
 async fn h(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   let cwd = current_dir()?.join("tests/fixtures/empty");
   tmp_test::setup_http_server(ctx).await?;
-  ctx.vars(&[("SNM_STRICT".to_string(), "true".to_string())]);
+  ctx.vars(&[
+    ("SNM_STRICT".to_string(), "true".to_string()),
+    (
+      "SNM_HOME_DIR".to_string(),
+      ctx.temp_dir().to_string_lossy().to_string(),
+    ),
+  ]);
   ctx.cwd(&cwd);
   ctx.add_snapshot("snm node install 20.0.0")?;
   ctx.add_snapshot("snm node list --compact")?;
