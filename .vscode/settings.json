@@ -32,6 +32,7 @@
         "tempdir",
         "tempfile",
         "termimad",
+        "textwrap",
         "thiserror",
         "Unalias",
         "wiremock",

@@ -1,3 +1,28 @@
+use std::env::current_dir;
+
+use e2e::tmp_test;
+use snm_test_utils::SnmTestContext;
+use test_context::test_context;
+
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn h(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  tmp_test::setup_http_server(ctx).await?;
+  ctx.vars(&[("SNM_STRICT".to_string(), "true".to_string())]);
+  ctx.cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("snm node default 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("node -v")?;
+  ctx.name("hhh");
+  ctx.assert_snapshots(|name, res| {
+    insta::assert_snapshot!(name, res);
+  })?;
+  Ok(())
+}
+
 // #[tokio::test]
 // async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {
 //   let mock_server = e2e::http_mocker::HttpMocker::builder()?.build().await?;

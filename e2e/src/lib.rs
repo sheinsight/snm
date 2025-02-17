@@ -1,5 +1,6 @@
 // pub mod exec_builder;
 pub mod http_mocker;
+pub mod tmp_test;
 use std::path::PathBuf;
 use std::sync::Arc;
 

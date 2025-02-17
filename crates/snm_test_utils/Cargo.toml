@@ -7,3 +7,7 @@ edition = "2024"
 tempfile = { workspace = true }
 test-context = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
+anyhow = {workspace = true}
+textwrap = {workspace = true}
+wiremock = { workspace = true }
+
