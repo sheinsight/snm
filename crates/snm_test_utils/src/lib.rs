@@ -1,6 +1,6 @@
 use std::{
   collections::HashMap,
-  env::{self, current_dir},
+  env::{self},
   fs,
   path::PathBuf,
 };
@@ -71,6 +71,8 @@ impl SnmTestContext {
 
   fn get_debug_dir() -> PathBuf {
     let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    println!("e2e_dir: {:?}", e2e_dir);
 
     let root_dir = e2e_dir
       .parent()
