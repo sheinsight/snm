@@ -54,12 +54,13 @@ impl SnmTestContext {
   fn setup_env_vars() -> HashMap<String, String> {
     let env_path = env!("PATH");
     let path_sep = if cfg!(windows) { ";" } else { ":" };
-    let debug_dir = dunce::canonicalize(Self::get_debug_dir())?
+    let debug_dir = dunce::canonicalize(Self::get_debug_dir())
+      .unwrap()
       .to_str()
       .unwrap()
       .to_string();
 
-    let new_path = format!("{}{}{}", debug_dir.to_str().unwrap(), path_sep, env_path);
+    let new_path = format!("{}{}{}", debug_dir, path_sep, env_path);
     HashMap::from([("PATH".to_string(), new_path)])
   }
 
