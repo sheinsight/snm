@@ -70,13 +70,14 @@ impl SnmTestContext {
       .to_string();
 
     let new_path = format!("{}{}{}", debug_dir, path_sep, env_path);
-    HashMap::from([("PATH".to_string(), new_path)])
+    HashMap::from([
+      ("PATH".to_string(), new_path),
+      ("RUST_BACKTRACE".to_string(), "0".to_string()),
+    ])
   }
 
   fn get_debug_dir() -> PathBuf {
     let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-    println!("e2e_dir: {:?}", e2e_dir);
 
     let root_dir = e2e_dir
       .parent()

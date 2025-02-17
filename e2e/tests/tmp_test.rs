@@ -11,7 +11,6 @@ async fn h(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   tmp_test::setup_http_server(ctx).await?;
   ctx.cwd(&cwd);
   ctx.vars(&[
-    ("RUST_BACKTRACE".to_string(), "0".to_string()),
     ("SNM_STRICT".to_string(), "true".to_string()),
     (
       "SNM_HOME_DIR".to_string(),
