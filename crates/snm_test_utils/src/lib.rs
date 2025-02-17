@@ -1,4 +1,9 @@
-use std::{collections::HashMap, env, fs, path::PathBuf};
+use std::{
+  collections::HashMap,
+  env::{self, current_dir},
+  fs,
+  path::PathBuf,
+};
 
 use anyhow::Context;
 use test_context::AsyncTestContext;
@@ -65,11 +70,11 @@ impl SnmTestContext {
   }
 
   fn get_debug_dir() -> PathBuf {
-    let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let e2e_dir = current_dir().unwrap();
 
     let root_dir = e2e_dir.parent().expect("Failed to get root dir");
 
-    root_dir.join("target").join("debug")
+    root_dir.join("target/debug")
   }
 }
 
