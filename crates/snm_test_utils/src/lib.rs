@@ -70,9 +70,13 @@ impl SnmTestContext {
   }
 
   fn get_debug_dir() -> PathBuf {
-    let e2e_dir = current_dir().unwrap();
+    let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
-    let root_dir = e2e_dir.parent().expect("Failed to get root dir");
+    let root_dir = e2e_dir
+      .parent()
+      .expect("Failed to get root dir")
+      .parent()
+      .expect("Failed to get root dir");
 
     root_dir.join("target/debug")
   }
