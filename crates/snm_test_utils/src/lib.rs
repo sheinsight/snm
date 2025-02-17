@@ -1,6 +1,6 @@
 use std::{
   collections::HashMap,
-  env::{self},
+  env::{self, current_dir},
   fs,
   path::PathBuf,
 };
@@ -25,6 +25,7 @@ pub struct SnmTestContext {
   id: String,
   name: String,
   counter: usize,
+  cwd: String,
   temp_dir: PathBuf,
   env_vars: HashMap<String, String>,
   snapshots: Vec<String>,
@@ -36,10 +37,13 @@ impl AsyncTestContext for SnmTestContext {
 
     let env_vars = Self::setup_env_vars();
 
+    let cwd = current_dir().unwrap();
+
     Self {
       id: uuid::Uuid::new_v4().to_string(),
       name: "".to_string(),
       counter: 0,
+      cwd: cwd.to_string_lossy().to_string(),
       temp_dir: temp_dir.into_path(),
       env_vars,
       snapshots: vec![],
@@ -90,7 +94,7 @@ impl SnmTestContext {
   }
 
   pub fn cwd(&mut self, path: &PathBuf) {
-    self.temp_dir = path.to_owned();
+    self.cwd = path.to_string_lossy().to_string();
   }
 
   pub fn vars(&mut self, envs: &[(String, String)]) {
