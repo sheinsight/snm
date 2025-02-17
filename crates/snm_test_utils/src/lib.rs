@@ -28,12 +28,15 @@ pub struct SnmTestContext {
 impl AsyncTestContext for SnmTestContext {
   async fn setup() -> Self {
     let temp_dir = tempfile::tempdir().unwrap();
+
+    let env_vars = Self::setup_env_vars();
+
     Self {
       id: uuid::Uuid::new_v4().to_string(),
       name: "".to_string(),
       counter: 0,
       temp_dir: temp_dir.into_path(),
-      env_vars: HashMap::new(),
+      env_vars,
       snapshots: vec![],
     }
   }
@@ -44,6 +47,24 @@ impl AsyncTestContext for SnmTestContext {
         env::remove_var(key);
       }
     }
+  }
+}
+
+impl SnmTestContext {
+  fn setup_env_vars() -> HashMap<String, String> {
+    let env_path = env!("PATH");
+    let path_sep = if cfg!(windows) { ";" } else { ":" };
+    let debug_dir = Self::get_debug_dir();
+    let new_path = format!("{}{}{}", debug_dir.to_str().unwrap(), path_sep, env_path);
+    HashMap::from([("PATH".to_string(), new_path)])
+  }
+
+  fn get_debug_dir() -> PathBuf {
+    let e2e_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    let root_dir = e2e_dir.parent().expect("Failed to get root dir");
+
+    root_dir.join("target").join("debug")
   }
 }
 
