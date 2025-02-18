@@ -2,8 +2,6 @@
 source: e2e/tests/node_test.rs
 expression: res
 ---
-name: "test_show_node_version_with_strict_mode"
-
 id: 1
 is: node -v
 

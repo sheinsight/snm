@@ -2,8 +2,6 @@
 source: e2e/tests/npm_test.rs
 expression: res
 ---
-name: "test_show_npm_version_when_default_npm_missing_but_node_exists"
-
 id: 1
 is: snm node install 20.0.0
 

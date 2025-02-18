@@ -2,8 +2,6 @@
 source: e2e/tests/snm_test.rs
 expression: res
 ---
-name: "test_snm_uninstall_node"
-
 id: 1
 is: snm node install 20.0.0
 
@@ -17,20 +15,4 @@ is: snm node list --compact
 
 
 stdout:20.0.0
-stderr:
-
-
-id: 3
-is: snm node uninstall 20.0.0
-
-
-stdout:🎉 Node v20.0.0 is uninstalled
-stderr:
-
-
-id: 4
-is: snm node list --compact
-
-
-stdout:
 stderr:

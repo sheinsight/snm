@@ -2,8 +2,6 @@
 source: e2e/tests/snm_test.rs
 expression: res
 ---
-name: "test_snm_set_default_node"
-
 id: 1
 is: snm node install 20.0.0
 
@@ -13,16 +11,24 @@ stderr:
 
 
 id: 2
-is: snm node default 20.0.0
+is: snm node list --compact
 
 
-stdout:🎉 Node v20.0.0 is now default
+stdout:20.0.0
 stderr:
 
 
 id: 3
-is: node -v
+is: snm node uninstall 20.0.0
 
 
-stdout:v20.0.0
+stdout:🎉 Node v20.0.0 is uninstalled
+stderr:
+
+
+id: 4
+is: snm node list --compact
+
+
+stdout:
 stderr:

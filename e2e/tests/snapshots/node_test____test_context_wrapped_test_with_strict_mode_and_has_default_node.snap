@@ -1,5 +1,5 @@
 ---
-source: e2e/tests/tmp_test.rs
+source: e2e/tests/node_test.rs
 expression: res
 ---
 id: 1

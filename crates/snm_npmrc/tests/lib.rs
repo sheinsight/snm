@@ -20,7 +20,7 @@ async fn should_read_custom_npm_registry(ctx: &mut SnmTestContext) -> anyhow::Re
   let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);
   let prefix_win = build_path(&current, &["tests", "fixtures", "global", "win"]);
 
-  ctx.vars(&[
+  ctx.set_envs(&[
     ("PREFIX".to_string(), prefix_unix),
     ("APPDATA".to_string(), prefix_win),
   ]);
@@ -44,7 +44,7 @@ async fn should_read_global_npm_cache(ctx: &mut SnmTestContext) -> anyhow::Resul
   let prefix_unix = build_path(&current, &["tests", "fixtures", "global", "unix"]);
   let prefix_win = build_path(&current, &["tests", "fixtures", "global", "win"]);
 
-  ctx.vars(&[
+  ctx.set_envs(&[
     ("PREFIX".to_string(), prefix_unix),
     ("APPDATA".to_string(), prefix_win),
   ]);

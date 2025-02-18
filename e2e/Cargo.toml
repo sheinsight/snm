@@ -3,9 +3,7 @@ name = "e2e"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "download_test"
-path = "src/main.rs"
+
 
 [dependencies]
 tempfile = { workspace = true }

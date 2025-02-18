@@ -2,8 +2,6 @@
 source: e2e/tests/node_test.rs
 expression: res
 ---
-name: "test_auto_install_node_with_node_version"
-
 id: 1
 is: node -v
 

@@ -47,7 +47,7 @@ test:
 
 e2e:
     echo "Running end-to-end tests..."
-    cargo insta test -p e2e --review -- --nocapture
+    cargo insta test -p e2e --review -- --nocapture 
 
 e2e-watch:
     echo "Watching end-to-end tests..."

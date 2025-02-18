@@ -1,107 +1,104 @@
 use std::env::current_dir;
 
-use e2e::SnmEnv;
+use snm_test_utils::SnmTestContext;
+use test_context::test_context;
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_node,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node list --compact")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_install_node(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_uninstall_node,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node list --compact")?;
-        builder.add_snapshot("snm node uninstall 20.0.0")?;
-        builder.add_snapshot("snm node list --compact")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_uninstall_node(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("snm node uninstall 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_set_default_node,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("node -v")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_set_default_node(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("snm node default 20.0.0")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_list,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node list")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("snm node list")?;
-        builder.add_snapshot("snm node list --compact")?;
-        builder.add_snapshot("snm node list --remote")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_list(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list")?;
+  ctx.add_snapshot("snm node default 20.0.0")?;
+  ctx.add_snapshot("snm node list")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("snm node list --remote")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_list_with_strict_mode,
-    cwd: current_dir()?.join("tests").join("fixtures").join("empty"),
-
-    envs:[SnmEnv::Strict("true".to_string())],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node list")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("snm node list")?;
-        builder.add_snapshot("snm node list --compact")?;
-        builder.add_snapshot("snm node list --remote")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_list_with_strict_mode(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.set_envs(&[("SNM_STRICT".to_string(), "true".to_string())]);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node list")?;
+  ctx.add_snapshot("snm node default 20.0.0")?;
+  ctx.add_snapshot("snm node list")?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.add_snapshot("snm node list --remote")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }
 
-e2e::test1! {
-    #[tokio::test]
-    test_snm_install_with_node_20_npm,
-    cwd: current_dir()?.join("tests").join("fixtures").join("snm_i_with_node_npm"),
-
-    envs:[],
-    |builder:e2e::CommandBuilder,_cwd:std::path::PathBuf| => {
-        builder.add_snapshot("snm node install 20.0.0")?;
-        builder.add_snapshot("snm node default 20.0.0")?;
-        builder.add_snapshot("npm -v")?;
-        builder.exec("npm install")?;
-        builder.add_snapshot("node index.cjs")?;
-        builder.assert_snapshots(|name,res| {
-            insta::assert_snapshot!(name, res);
-        })?;
-    }
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_install_with_node_20_npm(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/snm_i_with_node_npm");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.add_snapshot("snm node install 20.0.0")?;
+  ctx.add_snapshot("snm node default 20.0.0")?;
+  ctx.add_snapshot("npm -v")?;
+  ctx.exec("npm install")?;
+  ctx.add_snapshot("node index.cjs")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
 }

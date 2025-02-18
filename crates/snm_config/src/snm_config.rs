@@ -106,18 +106,24 @@ mod tests {
   #[test_context(SnmTestContext)]
   #[tokio::test]
   async fn should_parse_snm_config(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
-    ctx.vars(&[(
-      format!("{}_HOME_DIR", ctx.id()),
-      ctx.temp_dir().to_string_lossy().to_string(),
+    ctx.set_envs(&[(
+      format!("{}_HOME_DIR", ctx.get_id()),
+      ctx.get_temp_dir().to_string_lossy().to_string(),
     )]);
 
-    let config = SnmConfig::from(ctx.id(), ctx.temp_dir())?;
+    let config = SnmConfig::from(ctx.get_id(), ctx.get_temp_dir())?;
 
-    assert_eq!(config.node_bin_dir, ctx.temp_dir().join(".snm/node_bin"));
-    assert_eq!(config.download_dir, ctx.temp_dir().join(".snm/downloads"));
+    assert_eq!(
+      config.node_bin_dir,
+      ctx.get_temp_dir().join(".snm/node_bin")
+    );
+    assert_eq!(
+      config.download_dir,
+      ctx.get_temp_dir().join(".snm/downloads")
+    );
     assert_eq!(
       config.node_modules_dir,
-      ctx.temp_dir().join(".snm/node_modules")
+      ctx.get_temp_dir().join(".snm/node_modules")
     );
     assert_eq!(config.node_dist_url, "https://nodejs.org/dist");
     assert_eq!(

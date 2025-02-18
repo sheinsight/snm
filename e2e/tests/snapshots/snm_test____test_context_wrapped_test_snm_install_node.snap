@@ -2,8 +2,6 @@
 source: e2e/tests/snm_test.rs
 expression: res
 ---
-name: "test_snm_install_node"
-
 id: 1
 is: snm node install 20.0.0
 

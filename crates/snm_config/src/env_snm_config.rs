@@ -42,7 +42,7 @@ mod tests {
   #[test_context(SnmTestContext)]
   #[tokio::test]
   async fn should_parse_env_snm_config(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
-    let home_dir = ctx.temp_dir().to_string_lossy().to_string();
+    let home_dir = ctx.get_temp_dir().to_string_lossy().to_string();
     let restricted_list = "install";
     let node_dist_url = "https://nodejs.org/dist";
     let node_github_resource_host = "https://raw.githubusercontent.com";
@@ -52,37 +52,37 @@ mod tests {
     let strict = true;
 
     let envs = [
-      (format!("{}_HOME_DIR", ctx.id()), home_dir.clone()),
+      (format!("{}_HOME_DIR", ctx.get_id()), home_dir.clone()),
       (
-        format!("{}_RESTRICTED_LIST", ctx.id()),
+        format!("{}_RESTRICTED_LIST", ctx.get_id()),
         restricted_list.to_string(),
       ),
       (
-        format!("{}_NODE_DIST_URL", ctx.id()),
+        format!("{}_NODE_DIST_URL", ctx.get_id()),
         node_dist_url.to_string(),
       ),
       (
-        format!("{}_NODE_GITHUB_RESOURCE_HOST", ctx.id()),
+        format!("{}_NODE_GITHUB_RESOURCE_HOST", ctx.get_id()),
         node_github_resource_host.to_string(),
       ),
       (
-        format!("{}_NODE_WHITE_LIST", ctx.id()),
+        format!("{}_NODE_WHITE_LIST", ctx.get_id()),
         node_white_list.to_string(),
       ),
       (
-        format!("{}_DOWNLOAD_TIMEOUT_SECS", ctx.id()),
+        format!("{}_DOWNLOAD_TIMEOUT_SECS", ctx.get_id()),
         download_timeout_secs.to_string(),
       ),
       (
-        format!("{}_NPM_REGISTRY", ctx.id()),
+        format!("{}_NPM_REGISTRY", ctx.get_id()),
         npm_registry.to_string(),
       ),
-      (format!("{}_STRICT", ctx.id()), strict.to_string()),
+      (format!("{}_STRICT", ctx.get_id()), strict.to_string()),
     ];
 
-    ctx.vars(&envs);
+    ctx.set_envs(&envs);
 
-    let config = EnvSnmConfig::parse(ctx.id())?;
+    let config = EnvSnmConfig::parse(ctx.get_id())?;
 
     assert_eq!(config.home_dir, Some(home_dir.clone()));
     assert_eq!(config.restricted_list, Some(restricted_list.to_string()));

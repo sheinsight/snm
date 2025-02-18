@@ -1,33 +1,33 @@
-use std::env::current_dir;
+// use std::env::current_dir;
 
-use e2e::tmp_test;
-use snm_test_utils::SnmTestContext;
-use test_context::test_context;
+// use e2e::tmp_test;
+// use snm_test_utils::SnmTestContext;
+// use test_context::test_context;
 
-#[test_context(SnmTestContext)]
-#[tokio::test]
-async fn h(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
-  let cwd = current_dir()?.join("tests/fixtures/empty");
-  tmp_test::setup_http_server(ctx).await?;
-  ctx.cwd(&cwd);
-  ctx.vars(&[
-    ("SNM_STRICT".to_string(), "true".to_string()),
-    (
-      "SNM_HOME_DIR".to_string(),
-      ctx.temp_dir().to_string_lossy().to_string(),
-    ),
-  ]);
-  ctx.add_snapshot("snm node install 20.0.0")?;
-  ctx.add_snapshot("snm node list --compact")?;
-  ctx.add_snapshot("snm node default 20.0.0")?;
-  ctx.add_snapshot("snm node list --compact")?;
-  ctx.add_snapshot("node -v")?;
-  ctx.name("hhh");
-  ctx.assert_snapshots(|name, res| {
-    insta::assert_snapshot!(name, res);
-  })?;
-  Ok(())
-}
+// #[test_context(SnmTestContext)]
+// #[tokio::test]
+// async fn h(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+//   let cwd = current_dir()?.join("tests/fixtures/empty");
+//   tmp_test::setup_http_server(ctx).await?;
+//   ctx.set_cwd(&cwd);
+//   ctx.set_envs(&[
+//     ("SNM_STRICT".to_string(), "true".to_string()),
+//     (
+//       "SNM_HOME_DIR".to_string(),
+//       ctx.get_temp_dir().to_string_lossy().to_string(),
+//     ),
+//   ]);
+//   ctx.add_snapshot("snm node install 20.0.0")?;
+//   ctx.add_snapshot("snm node list --compact")?;
+//   ctx.add_snapshot("snm node default 20.0.0")?;
+//   ctx.add_snapshot("snm node list --compact")?;
+//   ctx.add_snapshot("node -v")?;
+//   ctx.set_name("hhh");
+//   ctx.assert_snapshots(|name, res| {
+//     insta::assert_snapshot!(name, res);
+//   })?;
+//   Ok(())
+// }
 
 // #[tokio::test]
 // async fn test_reqwest_download() -> Result<(), Box<dyn std::error::Error>> {

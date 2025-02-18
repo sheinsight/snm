@@ -1,9 +1,7 @@
 ---
-source: e2e/tests/node_test.rs
+source: e2e/tests/snm_test.rs
 expression: res
 ---
-name: "test_with_strict_mode_and_has_default_node"
-
 id: 1
 is: snm node install 20.0.0
 
@@ -34,11 +32,3 @@ is: snm node list --compact
 
 stdout:-> 20.0.0
 stderr:
-
-
-id: 5
-is: node -v
-
-
-stdout:
-stderr:Error: In strict mode, a .node-version file must be configured in the current directory.

@@ -1,11 +1,9 @@
 ---
-source: e2e/tests/node_test.rs
+source: e2e/tests/npm_test.rs
 expression: res
 ---
-name: "test_no_strict_and_no_default_node"
-
 id: 1
-is: node -v
+is: npm -v
 
 
 stdout:
