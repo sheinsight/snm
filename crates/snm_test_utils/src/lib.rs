@@ -140,6 +140,34 @@ impl SnmTestContext {
         ),
       },
       SnmMockServerArg {
+        path: "/v20.0.0/node-v20.0.0-linux-x64.tar.xz".to_string(),
+        mime: "application/octet-stream".to_string(),
+        resp: ResponseSource::File(
+          current.join("src/fixtures/node/v20.0.0/node-v20.0.0-linux-x64.tar.xz"),
+        ),
+      },
+      SnmMockServerArg {
+        path: "/v20.0.0/node-v20.0.0-linux-arm64.tar.xz".to_string(),
+        mime: "application/octet-stream".to_string(),
+        resp: ResponseSource::File(
+          current.join("src/fixtures/node/v20.0.0/node-v20.0.0-linux-arm64.tar.xz"),
+        ),
+      },
+      SnmMockServerArg {
+        path: "/v20.0.0/node-v20.0.0-win-x64.zip".to_string(),
+        mime: "application/octet-stream".to_string(),
+        resp: ResponseSource::File(
+          current.join("src/fixtures/node/v20.0.0/node-v20.0.0-win-x64.zip"),
+        ),
+      },
+      SnmMockServerArg {
+        path: "/v20.0.0/node-v20.0.0-win-x86.zip".to_string(),
+        mime: "application/octet-stream".to_string(),
+        resp: ResponseSource::File(
+          current.join("src/fixtures/node/v20.0.0/node-v20.0.0-win-x86.zip"),
+        ),
+      },
+      SnmMockServerArg {
         path: "/v20.0.0/SHASUMS256.txt".to_string(),
         mime: "text/plain".to_string(),
         resp: ResponseSource::File(current.join("src/fixtures/node/v20.0.0/SHASUMS256.txt")),
