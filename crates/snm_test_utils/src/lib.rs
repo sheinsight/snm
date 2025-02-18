@@ -140,6 +140,13 @@ impl SnmTestContext {
         ),
       },
       SnmMockServerArg {
+        path: "/v20.0.0/node-v20.0.0-darwin-x64.tar.xz".to_string(),
+        mime: "application/octet-stream".to_string(),
+        resp: ResponseSource::File(
+          current.join("src/fixtures/node/v20.0.0/node-v20.0.0-darwin-x64.tar.xz"),
+        ),
+      },
+      SnmMockServerArg {
         path: "/v20.0.0/node-v20.0.0-linux-x64.tar.xz".to_string(),
         mime: "application/octet-stream".to_string(),
         resp: ResponseSource::File(
