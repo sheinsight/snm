@@ -52,11 +52,11 @@ jobs:
         run: | 
           cargo install just
           just setup
-          cargo c --verbose
-          cargo b --verbose
-          cargo t
-          cargo insta test -p e2e -- --nocapture
-          # just ready
-          # just ci-e2e
+          # cargo c --verbose
+          # cargo b --verbose
+          # cargo t
+          # cargo insta test -p e2e -- --nocapture
+          just ready
+          just ci-e2e
         env:
           RUST_BACKTRACE: full
