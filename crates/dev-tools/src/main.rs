@@ -39,14 +39,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut major = original.clone();
     major.major = major.major + 1;
+    major.minor = 0;
+    major.patch = 0;
+    major.pre = Prerelease::new("0").unwrap();
 
     let mut minor = original.clone();
     minor.minor = minor.minor + 1;
+    minor.patch = 0;
+    minor.pre = Prerelease::new("0").unwrap();
 
     let mut patch = original.clone();
     patch.patch = patch.patch + 1;
-
-    // let x = patch.pre;
+    patch.pre = Prerelease::new("0").unwrap();
 
     let mut pre_version = original.clone();
 

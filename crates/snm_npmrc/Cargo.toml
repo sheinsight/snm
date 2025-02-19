@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name    = "snm_npmrc"
-version = "0.0.1-119"
+version = "0.1.0-0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
