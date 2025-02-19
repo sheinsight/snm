@@ -30,9 +30,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           override: true
           target: ${{ matrix.target }}
       - name: Run tests
@@ -145,10 +144,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           override: true
           target: ${{ matrix.target }}
 
