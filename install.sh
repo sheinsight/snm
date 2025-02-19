@@ -68,6 +68,9 @@ set_filename() {
 }
 
 download_snm() {
+
+  echo "INSTALL_DIR: $INSTALL_DIR"
+
   if [ "$RELEASE" = "latest" ]; then
     URL="https://github.com/sheinsight/snm/releases/latest/download/$FILENAME"
   else
@@ -84,7 +87,7 @@ download_snm() {
     echo "Please check permissions and try again."
     exit 1
   fi
-  
+
   if ! curl --progress-bar --fail -L "$URL" -o "$DOWNLOAD_DIR/$FILENAME"; then
     echo "Download failed.  Check that the release/filename are correct."
     exit 1
