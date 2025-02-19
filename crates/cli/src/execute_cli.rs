@@ -1,4 +1,5 @@
 use std::env::current_exe;
+use std::process::Command;
 use std::{fs, ops::Not};
 
 use clap::CommandFactory;
@@ -20,7 +21,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
   );
 
   match cli.command {
-    // manage start
     SnmCommands::Node { command } => {
       let nm = snm_node::factory::NodeFactory::new(&snm_config);
 
@@ -39,7 +39,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         }
       }
     }
-    // manage end
     SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
       let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
 
@@ -55,10 +54,80 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
 
       exec_cli(&commands, &vec![], false)?;
     }
-
     SnmCommands::SetUp => {
       setup_fig()?;
       setup_symlink()?;
+    }
+    SnmCommands::AiCommit => {
+      let unified_diff = Command::new("git")
+        .args(["diff", "--staged", "--unified=3"])
+        .output()?;
+
+      let stat_diff = Command::new("git")
+        .args(["diff", "--staged", "--stat"])
+        .output()?;
+
+      let unified_content = String::from_utf8_lossy(&unified_diff.stdout);
+      let stat_content = String::from_utf8_lossy(&stat_diff.stdout);
+
+      // println!("Unified diff:\n{}", unified_content);
+      // println!("Stat diff:\n\n{}", stat_content);
+
+
+      let client = async_openai::Client::new();
+
+      let request = async_openai::types::CreateChatCompletionRequestArgs::default()
+        // .max_tokens(512u32)
+        .model("gpt-4o")
+        .messages([
+          async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+            .content("你是一个资深程序员，擅长各种编程语言，特别是 javascript 、typescript、rust、java，并且你还精通 git 。")
+            .build()?
+            .into(),
+          async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+            .content(format!(r#"
+请针对我的 git diff 内容生成一份标准的 中文 commit msg 信息,满足以下条件
+  - 尽可能的推断出代码改动的意图
+  - 请不要回复多余的信息，直接回复 commit msg 的内容
+  - commit msg 遵循 angular commit message 格式
+"#))
+            .build()?
+            .into(),
+          async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+            .content(format!(r#"你可以从接下来的内容中获取 哪些文件被修改、每个文件增删了多少行"#))
+            .build()?
+            .into(),
+            async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+            .content(stat_content.to_string())
+            .build()?
+            .into(),
+            async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+            .content(format!(r#"你可以从接下来的内容中获取具体每一个文件的修改内容"#))
+            .build()?
+            .into(),
+          async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+            .content(unified_content.to_string())
+            .build()?
+            .into(),
+         
+        ])
+        .build()?;
+
+      // println!("{}", serde_json::to_string(&request).unwrap());
+
+      let response = client.chat().create(request).await?;
+
+      // println!("\nResponse:\n");
+      for choice in response.choices {
+        // println!(
+        //   "{}: Role: {}",
+        //   choice.index, choice.message.role
+        // );
+        println!(
+          "{}",
+          choice.message.content.unwrap()
+        );
+      }
     }
   }
 

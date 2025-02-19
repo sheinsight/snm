@@ -33,5 +33,6 @@ snm_utils          = { path = "../snm_utils" }
 tokio              = { workspace = true, features = ["full"] }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
+async-openai       = { workspace = true }
 
 [dev-dependencies]

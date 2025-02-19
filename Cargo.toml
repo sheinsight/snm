@@ -72,5 +72,7 @@ which = "7.0.1"
 test-context = "0.3.0"
 uuid         = "1.12.1"
 
+
+async-openai = "0.27.2"
 # [profile.test]
 # test-threads = 1
