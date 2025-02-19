@@ -88,6 +88,8 @@ download_snm() {
     exit 1
   fi
 
+  ls -l $INSTALL_DIR
+
   if ! curl --progress-bar --fail -L "$URL" -o "$DOWNLOAD_DIR/$FILENAME"; then
     echo "Download failed.  Check that the release/filename are correct."
     exit 1
