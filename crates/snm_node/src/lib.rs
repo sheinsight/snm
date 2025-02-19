@@ -125,7 +125,7 @@ impl<'a> SNode<'a> {
     let node_exe = if cfg!(windows) {
       node_home_dir.join("node.exe")
     } else {
-      node_home_dir.join("lib").join("node")
+      node_home_dir.join("bin").join("node")
     };
 
     // 优化: 提前计算最终返回值
