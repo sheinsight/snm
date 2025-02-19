@@ -92,15 +92,15 @@ jobs:
       - name: Strip Binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
-          for file in snm node npm npx pnpm pnpx yarn; do
+          for file in snm snm-shim; do
             strip "target/${{ matrix.target }}/release/$file"
           done
       - name: Create Archive
         shell: bash
         run: |
           mkdir archive
-          cp LICENSE README.md target/${{ matrix.target }}/release/{node,npm,npx,pnpm,pnpx,snm,yarn} archive/
-          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md node npm npx pnpm pnpx snm yarn
+          cp LICENSE README.md target/${{ matrix.target }}/release/{snm,snm-shim} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
           ls -l
       - name: Calculate SHA256 Checksum
         run: |
