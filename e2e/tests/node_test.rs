@@ -13,6 +13,7 @@ async fn test_auto_install_node_with_node_version(ctx: &mut SnmTestContext) -> a
   let cwd = current_dir()?.join("tests/fixtures/auto_install_node_with_node_version");
   ctx.start_server().await?;
   ctx.set_cwd(&cwd);
+  ctx.exec("snm setup")?;
   ctx.add_snapshot("node -v")?;
   ctx.assert_snapshots(|res| {
     insta::assert_snapshot!(res);
@@ -26,6 +27,7 @@ async fn test_show_node_version_with_strict_mode(ctx: &mut SnmTestContext) -> an
   let cwd = current_dir()?.join("tests/fixtures/empty");
   ctx.start_server().await?;
   ctx.set_cwd(&cwd);
+  ctx.exec("snm setup")?;
   ctx.set_envs(&[("SNM_STRICT".to_string(), "true".to_string())]);
   ctx.add_snapshot("node -v")?;
   ctx.assert_snapshots(|res| {
@@ -40,6 +42,7 @@ async fn test_no_strict_and_no_default_node(ctx: &mut SnmTestContext) -> anyhow:
   let cwd = current_dir()?.join("tests/fixtures/empty");
   ctx.start_server().await?;
   ctx.set_cwd(&cwd);
+  ctx.exec("snm setup")?;
   ctx.set_envs(&[("SNM_STRICT".to_string(), "false".to_string())]);
   ctx.add_snapshot("node -v")?;
   ctx.assert_snapshots(|res| {
@@ -56,6 +59,7 @@ async fn test_with_strict_mode_and_has_default_node(
   let cwd = current_dir()?.join("tests/fixtures/empty");
   ctx.start_server().await?;
   ctx.set_cwd(&cwd);
+  ctx.exec("snm setup")?;
   ctx.set_envs(&[("SNM_STRICT".to_string(), "true".to_string())]);
   ctx.add_snapshot("snm node install 20.0.0")?;
   ctx.add_snapshot("snm node list --compact")?;
