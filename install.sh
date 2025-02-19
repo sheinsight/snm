@@ -78,7 +78,13 @@ download_snm() {
   fi
   DOWNLOAD_DIR=$(mktemp -d)
   echo "Downloading $URL..."
-  mkdir -p "$INSTALL_DIR" &>/dev/null
+   # 创建安装目录
+  if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
+    echo "Failed to create directory: $INSTALL_DIR"
+    echo "Please check permissions and try again."
+    exit 1
+  fi
+  
   if ! curl --progress-bar --fail -L "$URL" -o "$DOWNLOAD_DIR/$FILENAME"; then
     echo "Download failed.  Check that the release/filename are correct."
     exit 1
