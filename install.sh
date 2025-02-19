@@ -100,6 +100,8 @@ download_snm() {
     mv "$file" "$INSTALL_DIR"
   done
 
+  "$INSTALL_DIR/snm" setup
+
   echo "Downloaded to $DOWNLOAD_DIR"
 }
 
