@@ -6,11 +6,11 @@ version = "0.0.1-119"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-config = { workspace = true }
-dirs = { workspace = true }
+anyhow       = { workspace = true }
+config       = { workspace = true }
+dirs         = { workspace = true }
 test-context = { workspace = true }
-tokio = { workspace = true, features = ["macros","test-util"] }
-anyhow = { workspace = true }
+tokio        = { workspace = true, features = ["macros", "test-util"] }
 
 [dev-dependencies]
 snm_test_utils = { path = "../snm_test_utils" }

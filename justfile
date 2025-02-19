@@ -1,6 +1,3 @@
-
-
-
 setup:
   cargo install --locked cargo-binstall
   cargo binstall taplo-cli cargo-release cargo-insta cargo-deny cargo-watch -y --force

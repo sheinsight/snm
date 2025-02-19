@@ -1,13 +1,13 @@
 [package]
-name = "snm_test_utils"
-version = "0.1.0"
 edition = "2024"
+name    = "snm_test_utils"
+version = "0.1.0"
 
 [dependencies]
-tempfile = { workspace = true }
+anyhow       = { workspace = true }
+dunce        = { workspace = true }
+tempfile     = { workspace = true }
 test-context = { workspace = true }
-uuid = { workspace = true, features = ["v4"] }
-anyhow = {workspace = true}
-textwrap = {workspace = true}
-wiremock = { workspace = true }
-dunce = { workspace = true }
+textwrap     = { workspace = true }
+uuid         = { workspace = true, features = ["v4"] }
+wiremock     = { workspace = true }

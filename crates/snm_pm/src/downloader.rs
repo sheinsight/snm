@@ -102,8 +102,7 @@ to: {}"#,
     trace_if!(|| {
       trace!(
         "Verify shasum: expect: {}, actual: {}",
-        expect_shasum,
-        actual_shasum
+        expect_shasum, actual_shasum
       );
     });
 

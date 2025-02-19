@@ -7,23 +7,23 @@ version = "0.0.1-119"
 
 [dependencies]
 anyhow             = { workspace = true }
+backoff            = { workspace = true, features = ["tokio"] }
 colored            = { workspace = true }
 config             = { workspace = true }
 dialoguer          = { workspace = true }
 dirs               = { workspace = true }
 dunce              = { workspace = true }
 flate2             = "1.0.28"
+futures-util       = { workspace = true }
+indicatif          = { workspace = true }
 reqwest            = { workspace = true, features = ["stream", "native-tls-vendored"] }
 semver             = { workspace = true }
 serde_json         = { workspace = true }
 tar                = "0.4.40"
+tokio              = { workspace = true }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 wait-timeout       = { workspace = true }
 which              = { workspace = true }
 xz2                = { version = "0.1.7", features = ["static"] }
 zip                = "2.1.3"
-backoff            = { workspace = true, features = ["tokio"] }
-indicatif          = { workspace = true }
-futures-util       = { workspace = true }
-tokio        = {workspace = true}

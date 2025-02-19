@@ -6,18 +6,18 @@ version = "0.0.1-119"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow               = { workspace = true }
-clap                 = { workspace = true, features = ["derive"] }
-colored              = { workspace = true }
-dialoguer            = { workspace = true }
-once_cell            = "1.20.2"
-regex                = { workspace = true }
-reqwest              = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
-semver               = { workspace = true }
-serde                = { workspace = true, features = ["derive"] }
-serde_json           = { workspace = true }
-sha1                 = "0.10"
-snm_config           = { path = "../snm_config" }
-snm_utils            = { path = "../snm_utils" }
-tokio                = { workspace = true, features = ["macros"] }
-tracing              = { workspace = true }
+anyhow     = { workspace = true }
+clap       = { workspace = true, features = ["derive"] }
+colored    = { workspace = true }
+dialoguer  = { workspace = true }
+once_cell  = "1.20.2"
+regex      = { workspace = true }
+reqwest    = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
+semver     = { workspace = true }
+serde      = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+sha1       = "0.10"
+snm_config = { path = "../snm_config" }
+snm_utils  = { path = "../snm_utils" }
+tokio      = { workspace = true, features = ["macros"] }
+tracing    = { workspace = true }
