@@ -165,6 +165,7 @@ jobs:
           ls -R
       - name: e2e tests
         run: |
+          snm setup
           cargo test --package e2e -- --nocapture
 
 
