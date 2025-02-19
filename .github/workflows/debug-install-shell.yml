@@ -46,9 +46,9 @@ jobs:
       - name: Test install with install-dir
         run: |
           chmod +x install.sh
-          ./install.sh --install-dir "~/.snm-demo"
-          if [ ! -d ~/.snm-demo ]; then
-            echo "Error: ~/.snm-demo directory not found!"
+          ./install.sh --install-dir "/.snm-demo"
+          if [ ! -d /.snm-demo ]; then
+            echo "Error: /.snm-demo directory not found!"
             exit 1
           fi
-          ls -l ~/.snm-demo
+          ls -l /.snm-demo

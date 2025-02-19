@@ -88,8 +88,6 @@ download_snm() {
     exit 1
   fi
 
-  ls -l $INSTALL_DIR
-
   if ! curl --progress-bar --fail -L "$URL" -o "$DOWNLOAD_DIR/$FILENAME"; then
     echo "Download failed.  Check that the release/filename are correct."
     exit 1
@@ -162,16 +160,16 @@ setup_shell() {
   echo "Installing for $SHELL_NAME. Appending the following to $CONF_FILE:"
   echo ""
   echo "  # snm"
-  echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
+  echo "  export PATH=\"$INSTALL_DIR:\$PATH\" "
 
   {
     echo ""
     echo "# snm"
-    echo "export PATH=\"$INSTALL_DIR:\$PATH\""
+    echo "export PATH=\"$INSTALL_DIR:\$PATH\" "
   } >>"$CONF_FILE"
 
   echo -e "\nIn order to apply the changes, open a new terminal or run the following command:\n"
-  echo "  source $CONF_FILE"
+  echo "source $CONF_FILE"
 }
 
 parse_args "$@"
