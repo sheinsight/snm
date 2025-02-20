@@ -29,6 +29,7 @@
         "rsplit",
         "serde",
         "SHASUMS",
+        "snode",
         "tempdir",
         "tempfile",
         "termimad",
