@@ -2,7 +2,7 @@
 authors = ["ityuany"]
 edition = "2021"
 name    = "snm"
-version = "0.1.0-8"
+version = "0.1.0-9"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
