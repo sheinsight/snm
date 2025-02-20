@@ -1,3 +1,5 @@
+use std::env::var;
+
 use anyhow::bail;
 use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
@@ -64,8 +66,13 @@ args: {:?}"#,
 
   let paths = vec![node_bin_dir_str];
 
+  let is_escape = match var("e") {
+    Ok(val) => val == "1",
+    Err(_) => false,
+  };
+
   // 如果没有 package.json,直接执行命令
-  if !PJson::exists(&snm_config.workspace) {
+  if !PJson::exists(&snm_config.workspace) || is_escape {
     return if is_npm_command(bin_name) {
       handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
     } else {

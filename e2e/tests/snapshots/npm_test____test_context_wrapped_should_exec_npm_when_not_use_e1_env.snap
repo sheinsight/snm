@@ -1,0 +1,26 @@
+---
+source: e2e/tests/npm_test.rs
+expression: res
+---
+id: 1
+is: snm node install 20.0.0
+
+
+stdout:🎉 Node v20.0.0 is installed
+stderr:
+
+
+id: 2
+is: snm node default 20.0.0
+
+
+stdout:🎉 Node v20.0.0 is now default
+stderr:
+
+
+id: 3
+is: npm -v
+
+
+stdout:
+stderr:Error: Package manager mismatch, expect: pnpm, actual: npm
