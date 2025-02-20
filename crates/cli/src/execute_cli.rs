@@ -73,7 +73,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
       // println!("Unified diff:\n{}", unified_content);
       // println!("Stat diff:\n\n{}", stat_content);
 
-
       let client = async_openai::Client::new();
 
       let request = async_openai::types::CreateChatCompletionRequestArgs::default()
@@ -109,7 +108,6 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
             .content(unified_content.to_string())
             .build()?
             .into(),
-         
         ])
         .build()?;
 
@@ -123,10 +121,7 @@ pub async fn execute_cli(cli: SnmCli, snm_config: SnmConfig) -> anyhow::Result<(
         //   "{}: Role: {}",
         //   choice.index, choice.message.role
         // );
-        println!(
-          "{}",
-          choice.message.content.unwrap()
-        );
+        println!("{}", choice.message.content.unwrap());
       }
     }
   }
