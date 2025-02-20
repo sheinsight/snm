@@ -20,7 +20,6 @@ pub struct SnmConfig {
   pub download_timeout_secs: u64,
   pub npm_registry: String,
   pub workspace: PathBuf,
-  pub restricted_list: Vec<String>,
   pub strict: bool,
 }
 
@@ -69,19 +68,9 @@ impl SnmConfig {
 
     let node_white_list = config.node_white_list.unwrap_or(String::from(""));
 
-    let restricted_list = {
-      let map =
-        |v: String| -> Vec<String> { v.split(',').map(|s| s.to_string()).collect::<Vec<String>>() };
-      config
-        .restricted_list
-        .map(map)
-        .unwrap_or(vec!["install".to_string(), "add".to_string()])
-    };
-
     let strict = config.strict.unwrap_or(false);
 
     Ok(Self {
-      restricted_list,
       workspace: workspace.as_ref().to_path_buf(),
       node_bin_dir: node_bin_dir,
       download_dir: download_dir,

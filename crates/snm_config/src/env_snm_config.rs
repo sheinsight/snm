@@ -5,8 +5,6 @@ use serde::Deserialize;
 pub struct EnvSnmConfig {
   pub home_dir: Option<String>,
 
-  pub restricted_list: Option<String>,
-
   pub node_dist_url: Option<String>,
 
   pub node_github_resource_host: Option<String>,
@@ -43,7 +41,6 @@ mod tests {
   #[tokio::test]
   async fn should_parse_env_snm_config(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
     let home_dir = ctx.get_temp_dir().to_string_lossy().to_string();
-    let restricted_list = "install";
     let node_dist_url = "https://nodejs.org/dist";
     let node_github_resource_host = "https://raw.githubusercontent.com";
     let node_white_list = "1.1.0,1.2.0";
@@ -53,10 +50,6 @@ mod tests {
 
     let envs = [
       (format!("{}_HOME_DIR", ctx.get_id()), home_dir.clone()),
-      (
-        format!("{}_RESTRICTED_LIST", ctx.get_id()),
-        restricted_list.to_string(),
-      ),
       (
         format!("{}_NODE_DIST_URL", ctx.get_id()),
         node_dist_url.to_string(),
@@ -85,7 +78,6 @@ mod tests {
     let config = EnvSnmConfig::parse(ctx.get_id())?;
 
     assert_eq!(config.home_dir, Some(home_dir.clone()));
-    assert_eq!(config.restricted_list, Some(restricted_list.to_string()));
     assert_eq!(config.node_dist_url, Some(node_dist_url.to_string()));
     assert_eq!(
       config.node_github_resource_host,

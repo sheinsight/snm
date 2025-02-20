@@ -98,12 +98,11 @@ args: {:?}"#,
   let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
   let pm = &spm.pm;
 
-  if pm.name() != bin_name && snm_config.restricted_list.contains(command) {
+  if pm.name() != bin_name {
     bail!(
-      "Package manager mismatch, expect: {}, actual: {} . Restricted list: {}",
+      "Package manager mismatch, expect: {}, actual: {}",
       pm.name().green(),
-      bin_name.red(),
-      snm_config.restricted_list.join(", ").black()
+      bin_name.red()
     );
   }
 
