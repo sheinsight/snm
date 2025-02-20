@@ -9,6 +9,7 @@
     "cSpell.words": [
         "aarch",
         "armv",
+        "binstall",
         "canonicalize",
         "chrono",
         "consts",
@@ -21,6 +22,7 @@
         "indicatif",
         "insta",
         "Itertools",
+        "nocapture",
         "outpath",
         "pnpx",
         "premajor",
@@ -30,6 +32,7 @@
         "serde",
         "SHASUMS",
         "snode",
+        "taplo",
         "tempdir",
         "tempfile",
         "termimad",
