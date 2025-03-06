@@ -25,7 +25,12 @@ pub fn init_snm_log() -> anyhow::Result<()> {
       .with_filter(EnvFilter::from_env("SNM_LOG"));
 
     // 创建控制台写入器
-    let stdout_layer = fmt::layer().with_filter(EnvFilter::from_env("SNM_LOG"));
+    let stdout_layer = fmt::layer()
+      .with_file(true)
+      .with_line_number(true)
+      .with_span_events(fmt::format::FmtSpan::FULL)
+      .with_target(true)
+      .with_filter(EnvFilter::from_env("SNM_LOG"));
 
     tracing_subscriber::registry()
       .with(file_layer)
