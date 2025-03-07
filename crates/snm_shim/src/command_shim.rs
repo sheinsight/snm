@@ -5,10 +5,7 @@ use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
 
-use crate::{
-  node_shim::load_node,
-  pm_shim::{load_pm, PmShim},
-};
+use crate::{node_shim::load_node, pm_shim::PmShim};
 
 pub enum CommandShim {
   Node(NodeShim),
