@@ -96,6 +96,18 @@ impl<'a> SNode<'a> {
     Ok(v.to_string())
   }
 
+  pub async fn get_node_modules_dir(&self) -> anyhow::Result<PathBuf> {
+    let node_home_dir = self.ensure_node().await?;
+
+    #[cfg(windows)]
+    let node_modules_dir = node_home_dir.join("node_modules");
+
+    #[cfg(not(windows))]
+    let node_modules_dir = node_home_dir.join("lib").join("node_modules");
+
+    Ok(node_modules_dir)
+  }
+
   pub async fn get_bin_dir(&self) -> anyhow::Result<PathBuf> {
     let node_home_dir = self.ensure_node().await?;
 
