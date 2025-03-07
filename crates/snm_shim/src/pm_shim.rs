@@ -1,11 +1,11 @@
-use std::env::var;
+use std::{env::var, fmt::Result, path::Path};
 
 use anyhow::bail;
 use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_pm::{package_json::PJson, pm::SPM};
-use snm_utils::{exec::exec_cli, trace_if};
+use snm_utils::{consts::SNM_PREFIX, exec::exec_cli, trace_if};
 use tracing::trace;
 const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
@@ -73,15 +73,21 @@ args: {:?}"#,
 
   // 如果没有 package.json,直接执行命令
   if !PJson::exists(&snm_config.workspace) || is_escape {
-    return if is_npm_command(bin_name) {
-      handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
-    } else {
-      exec_cli(
-        &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &paths,
-        true,
-      )
-    };
+    // TODO 不记得当时为什么要做这个判断，感觉直接透传命令就行了。因为本来就会加载 node 的 bin 目录。
+    // return if is_npm_command(bin_name) {
+    //   handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
+    // } else {
+    //   exec_cli(
+    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+    //     &paths,
+    //     true,
+    //   )
+    // };
+    return exec_cli(
+      &[&[bin_name.clone(), command.to_owned()], args].concat(),
+      &paths,
+      true,
+    );
   }
 
   // 检查是否配置了包管理器
@@ -89,16 +95,21 @@ args: {:?}"#,
     if snm_config.strict {
       bail!("You have not correctly configured packageManager in package.json");
     }
-
-    return if is_npm_command(bin_name) {
-      handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
-    } else {
-      exec_cli(
-        &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &paths,
-        true,
-      )
-    };
+    // TODO 不记得当时为什么要做这个判断，感觉直接透传命令就行了。因为本来就会加载 node 的 bin 目录。
+    // return if is_npm_command(bin_name) {
+    //   handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
+    // } else {
+    //   exec_cli(
+    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+    //     &paths,
+    //     true,
+    //   )
+    // };
+    return exec_cli(
+      &[&[bin_name.clone(), command.to_owned()], args].concat(),
+      &paths,
+      true,
+    );
   }
 
   // 处理配置了包管理器的情况
@@ -132,4 +143,89 @@ args: {:?}"#,
   )?;
 
   Ok(())
+}
+
+pub struct PmShim {
+  pub args: Vec<String>,
+}
+
+impl PmShim {
+  pub async fn proxy<T: AsRef<Path>>(&self, cwd: &T) -> anyhow::Result<()> {
+    let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
+    let [bin_name, command, args @ ..] = self.args.as_slice() else {
+      bail!(r#"deconstruct args failed, args: {:?}"#, self.args);
+    };
+
+    let s_node = SNode::try_from(&snm_config)?;
+
+    let node_bin_dir = s_node.get_bin_dir().await?;
+
+    let node_bin_dir_str = node_bin_dir.to_string_lossy().into_owned();
+
+    let paths = vec![node_bin_dir_str];
+
+    let is_escape = match var("e") {
+      Ok(val) => val == "1",
+      Err(_) => false,
+    };
+
+    if !PJson::exists(&snm_config.workspace) || is_escape {
+      return exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &paths,
+        true,
+      );
+    }
+
+    if !SPM::exists(&snm_config.workspace)? {
+      if snm_config.strict {
+        bail!("You have not correctly configured packageManager in package.json");
+      }
+      return exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &paths,
+        true,
+      );
+    }
+
+    // 处理配置了包管理器的情况
+    let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
+    let pm = &spm.pm;
+
+    if pm.name() != bin_name && bin_name != "npx" {
+      bail!(
+        "Package manager mismatch, expect: {}, actual: {}",
+        pm.name().green(),
+        bin_name.red()
+      );
+    }
+
+    let dir = spm.ensure_bin_dir().await?;
+    let json = PJson::from(dir)?;
+    // let file = json.get_bin_with_name(bin_name);
+
+    if let Ok(file) = json.get_bin_with_name(bin_name) {
+      exec_cli(
+        &[
+          &[
+            String::from("node"),
+            file.to_string_lossy().into_owned(),
+            command.to_owned(),
+          ],
+          args,
+        ]
+        .concat(),
+        &paths,
+        true,
+      )?;
+    } else {
+      exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &paths,
+        true,
+      )?;
+    }
+
+    Ok(())
+  }
 }

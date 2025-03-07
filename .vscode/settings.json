@@ -1,4 +1,16 @@
 {
+
+    "[rust]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "[toml]": {
+          "editor.formatOnSave": true,
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    // "dependi.decoration.compatible.template":"🟢",
+    // "dependi.decoration.incompatible.template":"🔴",
+    // "dependi.decoration.position":"before",
     "rust-analyzer.linkedProjects": [
         "./crates/cli/Cargo.toml",
         "./crates/snm_npmrc/Cargo.toml",

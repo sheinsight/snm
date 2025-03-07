@@ -29,6 +29,7 @@ ignore-filename-regex = [".*\\.cargo/registry/src/.*", ".*target/.*", ".*ordered
 
 [workspace.dependencies]
 anyhow         = "1.0.91"
+async-trait    = "0.1.87"
 chrono         = "0.4.39"
 clap           = "4.5.26"
 colored        = "2.1.0"
@@ -51,7 +52,6 @@ textwrap       = "0.16.0"
 tokio          = "1.43.0"
 wait-timeout   = "0.2.0"
 wiremock       = "0.6.2"
-async-trait = "0.1.87"
 
 ## 日志
 tracing            = "0.1.41"

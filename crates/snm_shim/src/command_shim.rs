@@ -5,7 +5,10 @@ use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
 
-use crate::{node_shim::load_node, pm_shim::load_pm};
+use crate::{
+  node_shim::load_node,
+  pm_shim::{load_pm, PmShim},
+};
 
 pub enum CommandShim {
   Node(NodeShim),
@@ -17,6 +20,9 @@ impl TryFrom<Args> for CommandShim {
 
   fn try_from(args: Args) -> Result<Self, Self::Error> {
     let args = args.collect::<Vec<String>>();
+
+    trace!(r#"try_from args: {:#?}"#, args);
+
     if let Some(actual_bin_name) = args.first() {
       if actual_bin_name == "node" {
         Ok(CommandShim::Node(NodeShim { args }))
@@ -35,7 +41,10 @@ impl CommandShim {
     trace!(r#"{:#?}"#, snm_config);
     match self {
       CommandShim::Node(node_shim) => load_node(&snm_config, &node_shim.args).await?,
-      CommandShim::Pm(pm_shim) => load_pm(&snm_config, &pm_shim.args).await?,
+      CommandShim::Pm(pm_shim) => {
+        pm_shim.proxy(cwd).await?
+        // load_pm(&snm_config, &pm_shim.args).await?
+      }
     }
     Ok(())
   }
@@ -45,6 +54,6 @@ pub struct NodeShim {
   args: Vec<String>,
 }
 
-pub struct PmShim {
-  args: Vec<String>,
-}
+// pub struct PmShim {
+//   args: Vec<String>,
+// }

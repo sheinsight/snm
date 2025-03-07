@@ -34,6 +34,7 @@ prerelease:
     echo "Building the project for release..."
     ./target/debug/tools
 
+
 watch:
     echo "Running the project..."
     cargo watch -x build
