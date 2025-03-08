@@ -27,6 +27,16 @@ stderr:
 
 
 id: 4
+is: ls node_modules
+
+
+stdout:js-tokens
+loose-envify
+react
+stderr:
+
+
+id: 5
 is: node index.cjs
 
 
