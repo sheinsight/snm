@@ -5,42 +5,42 @@ use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
 use snm_pm::{package_json::PJson, pm::SPM};
-use snm_utils::{consts::SNM_PREFIX, exec::exec_cli, trace_if};
-use tracing::trace;
+use snm_utils::{consts::SNM_PREFIX, exec::exec_cli};
 // use tracing::trace;
-const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
+// use tracing::trace;
+// const NPM_COMMANDS: [&str; 2] = ["npm", "npx"];
 
-fn is_npm_command(command: &str) -> bool {
-  NPM_COMMANDS.contains(&command)
-}
+// fn is_npm_command(command: &str) -> bool {
+//   NPM_COMMANDS.contains(&command)
+// }
 
-fn handle_npm_command(
-  bin_name: &str,
-  command: &str,
-  args: &[String],
-  node_bin_dir: &std::path::Path,
-  paths: &Vec<String>,
-) -> anyhow::Result<()> {
-  let bin_name = if cfg!(windows) {
-    format!("{}.cmd", bin_name)
-  } else {
-    bin_name.to_string()
-  };
+// fn handle_npm_command(
+//   bin_name: &str,
+//   command: &str,
+//   args: &[String],
+//   node_bin_dir: &std::path::Path,
+//   paths: &Vec<String>,
+// ) -> anyhow::Result<()> {
+//   let bin_name = if cfg!(windows) {
+//     format!("{}.cmd", bin_name)
+//   } else {
+//     bin_name.to_string()
+//   };
 
-  let pm_bin_file = node_bin_dir.join(bin_name);
+//   let pm_bin_file = node_bin_dir.join(bin_name);
 
-  trace_if!(|| {
-    trace!("Default bin file: {:?}", pm_bin_file);
-  });
+//   trace_if!(|| {
+//     trace!("Default bin file: {:?}", pm_bin_file);
+//   });
 
-  let mut exec_args = vec![
-    pm_bin_file.to_string_lossy().to_string(),
-    command.to_owned(),
-  ];
-  exec_args.extend(args.iter().cloned());
+//   let mut exec_args = vec![
+//     pm_bin_file.to_string_lossy().to_string(),
+//     command.to_owned(),
+//   ];
+//   exec_args.extend(args.iter().cloned());
 
-  exec_cli(&exec_args, paths, true)
-}
+//   exec_cli(&exec_args, paths, true)
+// }
 
 // pub async fn load_pm(snm_config: &SnmConfig, args: &Vec<String>) -> anyhow::Result<()> {
 //   let [bin_name, command, args @ ..] = args.as_slice() else {
@@ -171,30 +171,40 @@ impl PmShim {
     };
 
     if !PJson::exists(&snm_config.workspace) || is_escape {
-      return if is_npm_command(bin_name) {
-        handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
-      } else {
-        exec_cli(
-          &[&[bin_name.clone(), command.to_owned()], args].concat(),
-          &paths,
-          true,
-        )
-      };
+      // return if is_npm_command(bin_name) {
+      //   handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
+      // } else {
+      //   exec_cli(
+      //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+      //     &paths,
+      //     true,
+      //   )
+      // };
+      return exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &paths,
+        true,
+      );
     }
 
     if !SPM::exists(&snm_config.workspace)? {
       if snm_config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       }
-      return if is_npm_command(bin_name) {
-        handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
-      } else {
-        exec_cli(
-          &[&[bin_name.clone(), command.to_owned()], args].concat(),
-          &paths,
-          true,
-        )
-      };
+      // return if is_npm_command(bin_name) {
+      //   handle_npm_command(bin_name, command, args, &node_bin_dir, &paths)
+      // } else {
+      //   exec_cli(
+      //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+      //     &paths,
+      //     true,
+      //   )
+      // };
+      return exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &paths,
+        true,
+      );
     }
 
     // 处理配置了包管理器的情况

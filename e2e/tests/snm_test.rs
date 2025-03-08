@@ -101,6 +101,10 @@ async fn test_snm_install_with_node_20_npm(ctx: &mut SnmTestContext) -> anyhow::
   ctx.add_snapshot("snm node install 20.0.0")?;
   ctx.add_snapshot("snm node default 20.0.0")?;
   ctx.add_snapshot("npm -v")?;
+  #[cfg(target_os = "windows")]
+  ctx.exec("where npm")?;
+  #[cfg(not(target_os = "windows"))]
+  ctx.exec("which npm")?;
   ctx.exec("npm install")?;
   ctx.add_snapshot("node index.cjs")?;
   ctx.assert_snapshots(|res| {

@@ -5,7 +5,7 @@ use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
 
-use crate::{node_shim::load_node, pm_shim::PmShim};
+use crate::{node_shim::NodeShim, pm_shim::PmShim};
 
 pub enum CommandShim {
   Node(NodeShim),
@@ -37,7 +37,10 @@ impl CommandShim {
     let snm_config = SnmConfig::from(SNM_PREFIX, cwd)?;
     trace!(r#"{:#?}"#, snm_config);
     match self {
-      CommandShim::Node(node_shim) => load_node(&snm_config, &node_shim.args).await?,
+      CommandShim::Node(node_shim) => {
+        // load_node(&snm_config, &node_shim.args).await?
+        node_shim.proxy(cwd).await?
+      }
       CommandShim::Pm(pm_shim) => {
         pm_shim.proxy(cwd).await?
         // load_pm(&snm_config, &pm_shim.args).await?
@@ -46,11 +49,3 @@ impl CommandShim {
     Ok(())
   }
 }
-
-pub struct NodeShim {
-  args: Vec<String>,
-}
-
-// pub struct PmShim {
-//   args: Vec<String>,
-// }
