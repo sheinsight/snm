@@ -35,6 +35,16 @@ stderr:
 
 
 id: 5
+is: npm install
+
+
+stdout:up to date, audited 4 packages in 519ms
+
+found 0 vulnerabilities
+stderr:
+
+
+id: 6
 is: node index.cjs
 
 
