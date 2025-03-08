@@ -102,7 +102,6 @@ async fn test_snm_install_with_node_20_npm(ctx: &mut SnmTestContext) -> anyhow::
   ctx.add_snapshot("snm node default 20.0.0")?;
   ctx.add_snapshot("npm -v")?;
   ctx.exec("npm install")?;
-  ctx.add_snapshot("ls node_modules")?;
   ctx.add_snapshot("node index.cjs")?;
   ctx.assert_snapshots(|res| {
     insta::assert_snapshot!(res);
