@@ -27,6 +27,14 @@ stderr:
 
 
 id: 4
+is: which npm
+
+
+stdout:/Users/ityuany/GitRepository/snm/target/debug/npm
+stderr:
+
+
+id: 5
 is: node index.cjs
 
 
