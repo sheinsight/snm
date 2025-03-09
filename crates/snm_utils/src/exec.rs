@@ -49,7 +49,9 @@ first binary: {}"#,
     }
   });
 
-  let mut c = Command::new(&bin_name)
+  let program = binaries.first().unwrap();
+
+  let mut c = Command::new(program)
     .args(args)
     .env("PATH", new_path.clone())
     .stdout(Stdio::inherit())
