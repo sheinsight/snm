@@ -66,7 +66,7 @@ first binary: {}"#,
     );
   });
 
-  if c.wait_timeout(Duration::from_secs(60))?.is_none() {
+  if c.wait_timeout(Duration::from_secs(6000))?.is_none() {
     bail!("command {} timeout", bin_name);
   }
 
