@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [dev]
 
+env:
+  RUST_BACKTRACE: full
+  SNM_LOG: trace
+  CI: true
+
 jobs:
   unit-testing:
     name: Unit testing
@@ -38,6 +43,4 @@ jobs:
           cargo install just
           just setup 
           cargo b --verbose
-          just ci-e2e
-        env:
-          RUST_BACKTRACE: full
+          just ci-e2e 
