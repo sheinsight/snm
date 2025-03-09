@@ -1,4 +1,7 @@
-use std::{env::Args, path::Path};
+use std::{
+  env::{current_dir, Args},
+  path::Path,
+};
 
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
@@ -20,11 +23,15 @@ impl TryFrom<Args> for CommandShim {
 
     trace!(r#"try_from args: {:#?}"#, args);
 
+    let cwd = current_dir()?;
+
+    let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
+
     if let Some(actual_bin_name) = args.first() {
       if actual_bin_name == "node" {
-        Ok(CommandShim::Node(NodeShim { args }))
+        Ok(CommandShim::Node(NodeShim { args, snm_config }))
       } else {
-        Ok(CommandShim::Pm(PmShim { args }))
+        Ok(CommandShim::Pm(PmShim { args, snm_config }))
       }
     } else {
       bail!("No binary name provided in arguments {:#?}", args);
@@ -37,14 +44,8 @@ impl CommandShim {
     let snm_config = SnmConfig::from(SNM_PREFIX, cwd)?;
     trace!(r#"{:#?}"#, snm_config);
     match self {
-      CommandShim::Node(node_shim) => {
-        // load_node(&snm_config, &node_shim.args).await?
-        node_shim.proxy(cwd).await?
-      }
-      CommandShim::Pm(pm_shim) => {
-        pm_shim.proxy(cwd).await?
-        // load_pm(&snm_config, &pm_shim.args).await?
-      }
+      CommandShim::Node(node_shim) => node_shim.proxy().await?,
+      CommandShim::Pm(pm_shim) => pm_shim.proxy().await?,
     }
     Ok(())
   }
