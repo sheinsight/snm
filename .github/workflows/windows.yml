@@ -8,7 +8,7 @@ on:
 
 env:
   RUST_BACKTRACE: full
-  SNM_LOG: trace
+  # SNM_LOG: trace
   CI: true
 
 jobs:
