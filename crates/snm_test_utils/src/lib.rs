@@ -262,7 +262,7 @@ impl SnmTestContext {
 }
 
 impl SnmTestContext {
-  pub fn exec(&self, command: &str) -> anyhow::Result<String> {
+  pub fn exec(&self, command: &str, with_log: bool) -> anyhow::Result<String> {
     let mut cmd = if cfg!(windows) {
       let command = if command.starts_with("snm") {
         command.replace("snm", "snm.exe")
@@ -284,6 +284,11 @@ impl SnmTestContext {
 
     cmd.current_dir(self.cwd.clone());
 
+    if with_log {
+      cmd.stdout(std::process::Stdio::inherit());
+      cmd.stderr(std::process::Stdio::inherit());
+    }
+
     let output = cmd.output()?;
 
     let res = format!(
@@ -300,7 +305,7 @@ stderr:{}
 
   pub fn add_snapshot(&mut self, command: &str) -> anyhow::Result<&mut Self> {
     self.counter += 1;
-    let res = self.exec(command)?;
+    let res = self.exec(command, false)?;
     let res = dedent(&format!(
       r#"
 id: {}
