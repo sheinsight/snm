@@ -11,20 +11,11 @@ use wait_timeout::ChildExt;
 use crate::trace_if;
 
 pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> anyhow::Result<()> {
+  trace!("exec_cli args: {:#?}", args);
+
   let [bin_name, args @ ..] = args.as_slice() else {
     bail!("No binary name provided in arguments");
   };
-
-  trace_if!(|| {
-    trace!(
-      r#"Exec cli 
-command: {} {}
-paths:   {:?}"#,
-      bin_name,
-      args.join(" "),
-      paths
-    );
-  });
 
   let new_path = create_path_with_additional_dirs(paths.clone())?;
 
