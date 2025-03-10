@@ -69,8 +69,7 @@ impl PmShim {
       exec_cli(
         &[
           &[
-            // TODO 临时去除看看有没有副作用
-            // String::from("node"),
+            "node".to_string(),
             file.to_string_lossy().into_owned(),
             command.to_owned(),
           ],
