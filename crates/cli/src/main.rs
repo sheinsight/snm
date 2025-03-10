@@ -35,27 +35,33 @@ async fn main() -> anyhow::Result<()> {
   let cli = SnmCli::parse();
 
   cli.exec(snm_config).await
-
-  // execute_cli::execute_cli(cli, snm_config).await
 }
 
-// async fn xx() -> anyhow::Result<()> {
-//   let snm_config = SnmConfig::from(SNM_PREFIX, current_dir()?).unwrap();
+async fn xx() -> anyhow::Result<()> {
+  let snm_config = SnmConfig::from(SNM_PREFIX, current_dir()?).unwrap();
 
-//   let cli = SnmCli {
-//     command: snm_command::SnmCommands::Install(snm_pm::ops::ops::InstallArgs {
-//       package_spec: vec![],
-//       frozen: true,
-//       save_prod: false,
-//       save_peer: false,
-//       save_dev: false,
-//       save_optional: false,
-//       save_exact: false,
-//     }),
-//     version: Some(false),
-//   };
+  let args = snm_pm::ops::ops::InstallArgs {
+    package_spec: vec![],
+    frozen: true,
+    save_prod: false,
+    save_peer: false,
+    save_dev: false,
+    save_optional: false,
+    save_exact: false,
+  };
 
-//   let x = execute_cli::execute_cli(cli, snm_config).await?;
+  SnmCli::from(snm_command::SnmCommands::Install(args))
+    .exec(snm_config.clone())
+    .await?;
 
-//   Ok(())
-// }
+  let args = snm_pm::ops::ops::RunArgs {
+    command: "build".to_string(),
+    passthrough_args: vec![],
+  };
+
+  SnmCli::from(snm_command::SnmCommands::Run(args))
+    .exec(snm_config.clone())
+    .await?;
+
+  Ok(())
+}

@@ -9,6 +9,32 @@ use snm_utils::exec::exec_cli;
 
 use crate::{manage_command::NodeManageCommands, snm_command::SnmCommands};
 
+/// SnmCli 是 snm 的命令行工具
+/// Example:
+/// ```rust
+/// use snm::cli::SnmCli;
+/// use snm::snm_command;
+/// use snm_config::snm_config::SnmConfig;
+///
+/// #[tokio::test]
+/// async fn test_snm_cli() -> anyhow::Result<()> {
+///   let snm_config = SnmConfig::from(SNM_PREFIX, current_dir()?).unwrap();
+///
+///   SnmCli::from(snm_command::SnmCommands::Install(
+///     snm_pm::ops::ops::InstallArgs {
+///       package_spec: vec![],
+///       frozen: true,
+///       save_prod: false,
+///       save_peer: false,
+///       save_dev: false,
+///       save_optional: false,
+///       save_exact: false,
+///     },
+///   ))
+///   .exec(snm_config.clone())
+///   .await?;
+/// }
+/// ```
 #[derive(Parser, Debug, Serialize)]
 #[
     command(
@@ -37,6 +63,15 @@ impl Display for SnmCli {
       return write!(f, "{}", json);
     }
     write!(f, "{:?}", self)
+  }
+}
+
+impl From<SnmCommands> for SnmCli {
+  fn from(command: SnmCommands) -> Self {
+    Self {
+      command,
+      version: Some(false),
+    }
   }
 }
 
