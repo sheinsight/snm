@@ -1,4 +1,4 @@
-use std::env::var;
+use std::{env::var, path::Path};
 
 use anyhow::bail;
 use colored::Colorize;
@@ -54,7 +54,20 @@ impl PmShim {
     let spm = SPM::try_from(&self.snm_config.workspace, &self.snm_config)?;
     let pm = &spm.pm;
 
-    if pm.name() != bin_name && bin_name != "npx" {
+    // 传进来的有可能是绝对路径, 如果是绝对路径的的话，取 file_name 判断一下。
+    // 同时需要保证直取命令的名称，方便 后续的 json.get_bin_with_name(bin_name) 获取到对应 js 的真实路径
+    let bin_name = Path::new(bin_name)
+      .file_name()
+      .and_then(|f| f.to_str())
+      .map(|name| {
+        name
+          .strip_suffix(".cmd")
+          .or_else(|| name.strip_suffix(".exe"))
+          .unwrap_or(name)
+      })
+      .unwrap_or(bin_name);
+
+    if bin_name != pm.name() && bin_name != "npx" {
       bail!(
         "Package manager mismatch, expect: {}, actual: {}",
         pm.name().green(),
@@ -81,7 +94,7 @@ impl PmShim {
       )?;
     } else {
       exec_cli(
-        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &[&[bin_name.to_string(), command.to_owned()], args].concat(),
         &self.paths,
         true,
       )?;
