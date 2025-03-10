@@ -1,4 +1,5 @@
 use std::{
+  env::current_dir,
   fmt::Display,
   fs,
   path::{Path, PathBuf},
@@ -6,6 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use snm_npmrc::NpmrcReader;
+use snm_utils::consts::SNM_PREFIX;
 
 use crate::env_snm_config::EnvSnmConfig;
 
@@ -33,6 +35,10 @@ impl Display for SnmConfig {
 }
 
 impl SnmConfig {
+  pub fn try_default() -> anyhow::Result<Self> {
+    Self::from(SNM_PREFIX, current_dir()?)
+  }
+
   pub fn from<P: AsRef<Path>>(prefix: &str, workspace: P) -> anyhow::Result<Self> {
     let config = EnvSnmConfig::parse(prefix)?;
 
