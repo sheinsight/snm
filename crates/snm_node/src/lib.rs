@@ -12,16 +12,16 @@ pub mod factory;
 pub use factory::*;
 pub mod downloader;
 
-#[derive(Debug)]
-pub struct SNode<'a> {
+#[derive(Debug, Clone)]
+pub struct SNode {
   pub version: Option<String>,
-  pub config: &'a SnmConfig,
+  pub config: SnmConfig,
 }
 
-impl<'a> SNode<'a> {
-  pub fn try_from(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    Self::from_env(config)
-      .or_else(|_| Self::from_config_file(config))
+impl SNode {
+  pub fn try_from(config: SnmConfig) -> anyhow::Result<Self> {
+    Self::from_env(config.clone())
+      .or_else(|_| Self::from_config_file(config.clone()))
       .or_else(|_| {
         if config.strict {
           bail!(
@@ -32,7 +32,7 @@ impl<'a> SNode<'a> {
       })
   }
 
-  fn from_config_file(config: &'a SnmConfig) -> anyhow::Result<Self> {
+  fn from_config_file(config: SnmConfig) -> anyhow::Result<Self> {
     let file_path = config.workspace.join(NODE_VERSION_FILE_NAME);
     let version =
       Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
@@ -43,7 +43,7 @@ impl<'a> SNode<'a> {
     })
   }
 
-  fn from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+  fn from_env(config: SnmConfig) -> anyhow::Result<Self> {
     let version = env::var(ENV_KEY_FOR_SNM_NODE)?;
     Ok(Self {
       version: Some(version),
@@ -51,7 +51,7 @@ impl<'a> SNode<'a> {
     })
   }
 
-  fn from_default(config: &'a SnmConfig) -> anyhow::Result<Self> {
+  fn from_default(config: SnmConfig) -> anyhow::Result<Self> {
     let default_dir = config.node_bin_dir.join("default");
 
     if !default_dir.try_exists()? {
@@ -86,7 +86,7 @@ impl<'a> SNode<'a> {
   }
 }
 
-impl<'a> SNode<'a> {
+impl SNode {
   fn get_version(&self) -> anyhow::Result<String> {
     let v = self
       .version
@@ -144,7 +144,7 @@ impl<'a> SNode<'a> {
     // let node_exe = node_bin_dir.join(exe_name);
     // 优化: 只在文件不存在时下载
     if !node_exe.try_exists()? {
-      NodeDownloader::new(self.config).download(&version).await?;
+      NodeDownloader::new(&self.config).download(&version).await?;
     }
 
     Ok(node_home_dir)

@@ -3,38 +3,37 @@ use std::env::var;
 use anyhow::bail;
 use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
-use snm_node::SNode;
 use snm_pm::{package_json::PJson, pm::SPM};
 use snm_utils::exec::exec_cli;
 
 pub struct PmShim {
   pub args: Vec<String>,
+  pub paths: Vec<String>,
   pub snm_config: SnmConfig,
 }
 
 impl PmShim {
+  pub fn new(args: Vec<String>, paths: Vec<String>, snm_config: SnmConfig) -> Self {
+    Self {
+      args,
+      paths,
+      snm_config,
+    }
+  }
+
   pub async fn proxy(&self) -> anyhow::Result<()> {
     let [bin_name, command, args @ ..] = self.args.as_slice() else {
       bail!(r#"deconstruct args failed, args: {:?}"#, self.args);
     };
 
-    let s_node = SNode::try_from(&self.snm_config)?;
-
-    let node_bin_dir = s_node.get_bin_dir().await?;
-
-    let node_bin_dir_str = node_bin_dir.to_string_lossy().into_owned();
-
-    let paths = vec![node_bin_dir_str];
-
-    let is_escape = match var("e") {
-      Ok(val) => val == "1",
-      Err(_) => false,
-    };
+    let is_escape = var("e")
+      .map(|item| item == "1".to_string())
+      .unwrap_or(false);
 
     if !PJson::exists(&self.snm_config.workspace) || is_escape {
       return exec_cli(
         &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &paths,
+        &self.paths,
         true,
       );
     }
@@ -46,7 +45,7 @@ impl PmShim {
 
       return exec_cli(
         &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &paths,
+        &self.paths,
         true,
       );
     }
@@ -70,20 +69,21 @@ impl PmShim {
       exec_cli(
         &[
           &[
-            String::from("node"),
+            // TODO 临时去除看看有没有副作用
+            // String::from("node"),
             file.to_string_lossy().into_owned(),
             command.to_owned(),
           ],
           args,
         ]
         .concat(),
-        &paths,
+        &self.paths,
         true,
       )?;
     } else {
       exec_cli(
         &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &paths,
+        &self.paths,
         true,
       )?;
     }

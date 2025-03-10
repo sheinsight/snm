@@ -16,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
 
   trace!(cwd = ?cwd, "Current working directory");
 
-  let command = CommandShim::try_from(env::args())?;
+  let command = CommandShim::from_args(env::args()).await?;
 
   command.proxy(&cwd).await?;
 
