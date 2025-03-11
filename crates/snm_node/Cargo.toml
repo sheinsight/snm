@@ -14,7 +14,7 @@ dialoguer      = { workspace = true }
 fs_extra       = { workspace = true }
 itertools      = { workspace = true }
 remove_dir_all = { workspace = true }
-reqwest        = { workspace = true, features = ["json", "blocking", "stream", "native-tls-vendored"] }
+reqwest        = { workspace = true, features = ["json", "blocking", "stream", "rustls-tls"] }
 semver         = { workspace = true }
 serde          = { workspace = true, features = ["derive"] }
 serde_json     = { workspace = true }
