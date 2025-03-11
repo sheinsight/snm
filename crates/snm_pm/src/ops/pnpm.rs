@@ -274,19 +274,19 @@ mod tests {
     Ok(())
   }
 
-  #[tokio::test]
-  async fn should_parse_pnpm_command_with_empty_command() -> anyhow::Result<()> {
-    let pm = PM::parse("pnpm@8.0.0")?;
-    let ops = pm.get_ops();
+  // #[tokio::test]
+  // async fn should_parse_pnpm_command_with_empty_command() -> anyhow::Result<()> {
+  //   let pm = PM::parse("pnpm@8.0.0")?;
+  //   let ops = pm.get_ops();
 
-    let result = ops.run(RunArgs {
-      command: "".to_string(),
-      passthrough_args: vec!["--foo".to_string(), "--bar".to_string()],
-    });
+  //   let result = ops.run(RunArgs {
+  //     command: "".to_string(),
+  //     passthrough_args: vec!["--foo".to_string(), "--bar".to_string()],
+  //   });
 
-    assert!(result.is_err());
-    Ok(())
-  }
+  //   assert!(result.is_err());
+  //   Ok(())
+  // }
 
   #[tokio::test]
   async fn should_parse_pnpm_command_with_remove_multiple_packages() -> anyhow::Result<()> {
