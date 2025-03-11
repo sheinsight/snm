@@ -66,22 +66,22 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
           - os: ubuntu-latest
-            # target: i686-unknown-linux-gnu      # 32位 Linux (GNU)
+            target: i686-unknown-linux-gnu      # 32位 Linux (GNU)
           # Linux targets (MUSL)
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
           - os: ubuntu-latest
-            # target: i686-unknown-linux-musl     # 32位 Linux (MUSL)
+            target: i686-unknown-linux-musl     # 32位 Linux (MUSL)
 
           # Windows targets
           - os: windows-latest
             target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
           - os: windows-latest
-            # target: i686-pc-windows-msvc        # 32位 Windows (MSVC)
+            target: i686-pc-windows-msvc        # 32位 Windows (MSVC)
           - os: windows-latest
             target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
           - os: windows-latest
-            # target: i686-pc-windows-gnu         # 32位 Windows (MinGW)
+            target: i686-pc-windows-gnu         # 32位 Windows (MinGW)
 
           # macOS targets
           - os: macos-14
