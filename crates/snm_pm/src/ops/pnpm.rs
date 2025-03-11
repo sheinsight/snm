@@ -56,10 +56,6 @@ impl PackageManagerOps for PnpmCommandLine {
   fn run(&self, args: super::ops::RunArgs) -> anyhow::Result<Vec<String>> {
     trace_if!(|| trace!(r#"Ops run args:{:?}"#, &args));
 
-    if args.command.is_empty() {
-      bail!("Command cannot be empty");
-    }
-
     let command = vec![self.name.clone(), String::from("run"), args.command]
       .into_iter()
       .chain(args.passthrough_args.clone())
