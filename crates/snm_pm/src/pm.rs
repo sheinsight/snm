@@ -62,6 +62,7 @@ impl PM {
   }
 }
 
+#[derive(Debug)]
 pub struct SPM<'a> {
   pub config: &'a SnmConfig,
   pub pm: PM,

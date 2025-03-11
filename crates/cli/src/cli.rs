@@ -97,27 +97,41 @@ impl SnmCli {
         let nm = snm_node::factory::NodeFactory::new(&snm_config);
         match command {
           NodeManageCommands::Default(args) => {
+            trace!("Set default node: {:#?}", args);
             nm.set_default(args).await?;
           }
           NodeManageCommands::Install(args) => {
+            trace!("Install node: {:#?}", args);
             nm.install(args).await?;
           }
           NodeManageCommands::Uninstall(args) => {
+            trace!("Uninstall node: {:#?}", args);
             nm.uninstall(args).await?;
           }
           NodeManageCommands::List(args) => {
+            trace!("List node: {:#?}", args);
             nm.list(args).await?;
           }
         }
       }
       SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
         let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
+        trace!("Get spm: {:#?}", &spm);
         let pm = spm.pm;
         let handler = pm.get_ops();
         let commands = match self.command {
-          SnmCommands::Install(install_args) => handler.install(install_args),
-          SnmCommands::Uninstall(remove_args) => handler.remove(remove_args),
-          SnmCommands::Run(run_args) => handler.run(run_args),
+          SnmCommands::Install(install_args) => {
+            trace!("Install command: {:#?}", install_args);
+            handler.install(install_args)
+          }
+          SnmCommands::Uninstall(remove_args) => {
+            trace!("Uninstall command: {:#?}", remove_args);
+            handler.remove(remove_args)
+          }
+          SnmCommands::Run(run_args) => {
+            trace!("Run command: {:#?}", run_args);
+            handler.run(run_args)
+          }
           _ => unreachable!(),
         }?;
 
