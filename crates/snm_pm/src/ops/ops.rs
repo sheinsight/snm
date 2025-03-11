@@ -81,6 +81,20 @@ pub struct InstallArgs {
   pub save_exact: bool,
 }
 
+impl Default for InstallArgs {
+  fn default() -> Self {
+    Self {
+      package_spec: vec![],
+      frozen: false,
+      save_prod: false,
+      save_peer: false,
+      save_dev: false,
+      save_optional: false,
+      save_exact: false,
+    }
+  }
+}
+
 #[derive(Parser, Debug, Clone, Serialize)]
 pub struct RemoveArgs {
   #[arg(help = "The package spec to remove.")]
@@ -95,7 +109,7 @@ pub struct RemoveArgs {
     snm run test -- --watch     # Run test with watch mode"#
 )]
 pub struct RunArgs {
-  #[arg(help = "The command to run.", required = false, default_value = "")]
+  #[arg(help = "The command to run.", required = true)]
   pub command: String,
 
   #[arg(

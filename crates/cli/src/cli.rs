@@ -1,11 +1,18 @@
-use std::{env::current_exe, fmt::Display, fs, ops::Not, process::Command};
+use std::{
+  env::{current_dir, current_exe},
+  fmt::Display,
+  fs,
+  ops::Not,
+  process::Command,
+};
 
 use clap::{command, crate_authors, crate_name, crate_version, CommandFactory, Parser};
 use colored::Colorize;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
 use snm_pm::pm::SPM;
-use snm_utils::exec::exec_cli;
+use snm_utils::{consts::SNM_PREFIX, exec::exec_cli};
+use tracing::trace;
 
 use crate::{manage_command::NodeManageCommands, snm_command::SnmCommands};
 
@@ -76,7 +83,15 @@ impl From<SnmCommands> for SnmCli {
 }
 
 impl SnmCli {
-  pub async fn exec(self, snm_config: SnmConfig) -> anyhow::Result<()> {
+  pub async fn exec(self) -> anyhow::Result<()> {
+    let dir = current_dir()?;
+
+    trace!("Get current dir: {:#?}", dir);
+
+    let snm_config = SnmConfig::from(SNM_PREFIX, dir)?;
+
+    trace!("Get snm config: {:#?}", snm_config);
+
     match self.command {
       SnmCommands::Node { command } => {
         let nm = snm_node::factory::NodeFactory::new(&snm_config);

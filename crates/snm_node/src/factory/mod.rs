@@ -41,6 +41,15 @@ pub struct ListArgs {
   pub compact: bool,
 }
 
+impl Default for ListArgs {
+  fn default() -> Self {
+    Self {
+      remote: false,
+      compact: true,
+    }
+  }
+}
+
 impl Display for ListArgs {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     if let Ok(json) = serde_json::to_string_pretty(self) {
