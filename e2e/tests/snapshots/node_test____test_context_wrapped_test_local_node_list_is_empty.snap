@@ -1,0 +1,10 @@
+---
+source: e2e/tests/node_test.rs
+expression: res
+---
+id: 1
+is: snm node list --compact
+
+
+stdout:😿 Local node list is empty
+stderr:

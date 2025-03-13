@@ -67,3 +67,17 @@ async fn test_with_strict_mode_and_has_default_node(
   })?;
   Ok(())
 }
+
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_local_node_list_is_empty(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/empty");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.exec("snm setup", false)?;
+  ctx.add_snapshot("snm node list --compact")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
+}
