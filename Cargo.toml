@@ -28,10 +28,10 @@ strip         = "none"
 ignore-filename-regex = [".*\\.cargo/registry/src/.*", ".*target/.*", ".*ordered-multimap-0.6.0/.*"]
 
 [workspace.dependencies]
-anyhow         = "1.0.91"
+anyhow         = "1.0.97"
 async-trait    = "0.1.87"
-chrono         = "0.4.39"
-clap           = "4.5.26"
+chrono         = "0.4.40"
+clap           = "4.5.32"
 colored        = "2.1.0"
 config         = "0.14.0"
 dialoguer      = "0.11.0"
@@ -50,9 +50,11 @@ serde          = "1.0.217"
 serde_json     = "1.0.135"
 textwrap       = "0.16.0"
 tokio          = "1.43.0"
-tokio-test     = "0.4.4"
 wait-timeout   = "0.2.0"
-wiremock       = "0.6.2"
+
+## 测试相关
+tokio-test = "0.4.4"
+wiremock   = "0.6.3"
 
 ## 日志
 tracing            = "0.1.41"
