@@ -281,6 +281,7 @@ impl<'a> NodeFactory<'a> {
           .collect::<Vec<String>>();
 
         if responses.is_empty() {
+          println!("😿 Local node list is empty");
           return None;
         }
 
@@ -288,13 +289,7 @@ impl<'a> NodeFactory<'a> {
       })
       .unwrap_or_default();
 
-    trace_if!(|| {
-      trace!(
-        r#"Local node list
-{}"#,
-        local_node_list.join(",")
-      );
-    });
+    trace!("local_node_list---->: {:?}", &local_node_list);
 
     if args.compact {
       local_node_list.into_iter().for_each(|v| {
