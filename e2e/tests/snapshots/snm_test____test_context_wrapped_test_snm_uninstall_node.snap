@@ -30,5 +30,5 @@ id: 4
 is: snm node list --compact
 
 
-stdout:
+stdout:😿 Local node list is empty
 stderr:
