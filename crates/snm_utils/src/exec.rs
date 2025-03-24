@@ -68,11 +68,17 @@ first binary: {}"#,
     );
   });
 
-  if c.wait_timeout(Duration::from_secs(6000))?.is_none() {
+  let res = c.wait_timeout(Duration::from_secs(6000))?;
+
+  if let Some(status) = res {
+    if status.success() {
+      return Ok(());
+    } else {
+      bail!("command {} failed", bin_name);
+    }
+  } else {
     bail!("command {} timeout", bin_name);
   }
-
-  Ok(())
 }
 
 fn create_path_with_additional_dirs(additional_paths: Vec<String>) -> anyhow::Result<String> {
