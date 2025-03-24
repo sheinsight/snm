@@ -8,7 +8,7 @@ is: snm node install 20.0.0
 
 stdout:🎉 Node v20.0.0 is installed
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 2
@@ -17,7 +17,7 @@ is: snm node default 20.0.0
 
 stdout:🎉 Node v20.0.0 is now default
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 3
@@ -26,7 +26,7 @@ is: npm -v
 
 stdout:9.6.4
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 4
@@ -35,4 +35,4 @@ is: node index.cjs
 
 stdout:18.3.1
 stderr:
-status:exit status: 0
+status:0

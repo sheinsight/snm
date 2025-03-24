@@ -8,7 +8,7 @@ is: snm node install 20.0.0
 
 stdout:🎉 Node v20.0.0 is installed
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 2
@@ -17,7 +17,7 @@ is: snm node list
 
 stdout:20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 3
@@ -26,7 +26,7 @@ is: snm node default 20.0.0
 
 stdout:🎉 Node v20.0.0 is now default
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 4
@@ -35,7 +35,7 @@ is: snm node list
 
 stdout:-> 20.0.0       npm 9.6.4            openssl 3.0.8+quic   died on 2026-04-30     Iron
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 5
@@ -44,7 +44,7 @@ is: snm node list --compact
 
 stdout:-> 20.0.0
 stderr:
-status:exit status: 0
+status:0
 
 
 id: 6
@@ -583,4 +583,4 @@ stdout:4.0.0        npm 2.14.2           openssl 1.0.2d       died on 2018-04-30
    23.5.0       npm 10.9.2           openssl 3.0.15+quic  died on 2025-06-01               
    23.6.0       npm 10.9.2           openssl 3.0.15+quic  died on 2025-06-01
 stderr:
-status:exit status: 0
+status:0

@@ -8,4 +8,4 @@ is: node -v
 
 stdout:v20.0.0
 stderr:
-status:exit status: 0
+status:0

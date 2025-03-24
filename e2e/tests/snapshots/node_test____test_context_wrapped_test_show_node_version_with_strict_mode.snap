@@ -8,4 +8,4 @@ is: node -v
 
 stdout:
 stderr:Error: In strict mode, a .node-version file must be configured in the current directory.
-status:exit status: 1
+status:1

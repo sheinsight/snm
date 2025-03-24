@@ -299,7 +299,7 @@ status:{}
 "#,
       String::from_utf8(output.stdout.clone())?.trim().to_string(),
       String::from_utf8(output.stderr.clone())?.trim().to_string(),
-      output.status
+      output.status.clone().code().unwrap_or(0)
     );
 
     Ok(res)
