@@ -8,6 +8,7 @@ is: snm node install 20.0.0
 
 stdout:🎉 Node v20.0.0 is installed
 stderr:
+status:exit status: 0
 
 
 id: 2
@@ -16,6 +17,7 @@ is: snm node list --compact
 
 stdout:20.0.0
 stderr:
+status:exit status: 0
 
 
 id: 3
@@ -24,6 +26,7 @@ is: snm node default 20.0.0
 
 stdout:🎉 Node v20.0.0 is now default
 stderr:
+status:exit status: 0
 
 
 id: 4
@@ -32,3 +35,4 @@ is: snm node list --compact
 
 stdout:-> 20.0.0
 stderr:
+status:exit status: 0

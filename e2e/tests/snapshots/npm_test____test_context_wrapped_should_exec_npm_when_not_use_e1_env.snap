@@ -8,6 +8,7 @@ is: snm node install 20.0.0
 
 stdout:🎉 Node v20.0.0 is installed
 stderr:
+status:exit status: 0
 
 
 id: 2
@@ -16,6 +17,7 @@ is: snm node default 20.0.0
 
 stdout:🎉 Node v20.0.0 is now default
 stderr:
+status:exit status: 0
 
 
 id: 3
@@ -24,3 +26,4 @@ is: npm -v
 
 stdout:
 stderr:Error: Package manager mismatch, expect: pnpm, actual: npm
+status:exit status: 1

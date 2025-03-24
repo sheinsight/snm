@@ -8,3 +8,4 @@ is: npm -v
 
 stdout:
 stderr:Error: No default Node.js version found
+status:exit status: 1

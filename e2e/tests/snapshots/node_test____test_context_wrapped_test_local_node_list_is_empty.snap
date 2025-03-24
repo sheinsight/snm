@@ -8,3 +8,4 @@ is: snm node list --compact
 
 stdout:😿 Local node list is empty
 stderr:
+status:exit status: 0
