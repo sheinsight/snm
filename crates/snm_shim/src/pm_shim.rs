@@ -4,7 +4,7 @@ use anyhow::bail;
 use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
 use snm_pm::{package_json::PJson, pm::SPM};
-use snm_utils::exec::exec_cli;
+use snm_utils::{exec::exec_cli, FindUp};
 
 pub struct PmShim {
   pub args: Vec<String>,
@@ -30,28 +30,50 @@ impl PmShim {
       .map(|item| item == "1".to_string())
       .unwrap_or(false);
 
-    if !PJson::exists(&self.snm_config.workspace) || is_escape {
-      return exec_cli(
-        &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &self.paths,
-        true,
-      );
+    let mut res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
+
+    if res.is_empty() {
+      bail!("not found package.json")
     }
 
-    if !SPM::exists(&self.snm_config.workspace)? {
+    res.reverse();
+
+    let Some(spm) = res.iter().find_map(|item| {
+      let dir = item.parent().unwrap().to_path_buf();
+      return SPM::try_from_config_file(&dir, &self.snm_config).ok();
+    }) else {
       if self.snm_config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       }
-
       return exec_cli(
         &[&[bin_name.clone(), command.to_owned()], args].concat(),
         &self.paths,
         true,
       );
-    }
+    };
+
+    // if !PJson::exists(&self.snm_config.workspace) || is_escape {
+    //   return exec_cli(
+    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+    //     &self.paths,
+    //     true,
+    //   );
+    // }
+
+    // if !SPM::exists(&self.snm_config.workspace)? {
+    //   if self.snm_config.strict {
+    //     bail!("You have not correctly configured packageManager in package.json");
+    //   }
+
+    //   return exec_cli(
+    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
+    //     &self.paths,
+    //     true,
+    //   );
+    // }
 
     // 处理配置了包管理器的情况
-    let spm = SPM::try_from(&self.snm_config.workspace, &self.snm_config)?;
+    // let spm = SPM::try_from(&self.snm_config.workspace, &self.snm_config)?;
     let pm = &spm.pm;
 
     // 传进来的有可能是绝对路径, 如果是绝对路径的的话，取 file_name 判断一下。

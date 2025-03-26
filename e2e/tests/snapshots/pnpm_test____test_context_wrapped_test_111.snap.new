@@ -1,0 +1,12 @@
+---
+source: e2e/tests/pnpm_test.rs
+assertion_line: 26
+expression: res
+---
+id: 1
+is: node -v
+
+
+stdout:v20.0.0
+stderr:
+status:0

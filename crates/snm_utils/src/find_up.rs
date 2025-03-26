@@ -25,7 +25,6 @@ impl<P: AsRef<Path>> FindUp<P> {
       }
       cwd = dir;
     }
-    println!("file: {:?}", res);
 
     Ok(res)
   }

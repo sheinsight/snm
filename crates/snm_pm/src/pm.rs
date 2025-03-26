@@ -83,7 +83,7 @@ impl<'a> SPM<'a> {
     Ok(Self { config, pm })
   }
 
-  fn try_from_config_file(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
+  pub fn try_from_config_file(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
     let package_json = PJson::from(dir)?;
 
     if let Some(raw) = package_json.package_manager {

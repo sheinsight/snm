@@ -12,10 +12,12 @@ async fn test_111(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   ctx.exec("snm setup", false)?;
   ctx.add_snapshot("node -v")?;
 
+  // ctx.add_snapshot("snm run node")?;
+
   // ✅ 这个可以，因为被 pnpm 劫持了， 就会像环境变量塞数据，
-  // ctx.exec("pnpm run node", true)?;
+  ctx.exec("snm run node", true)?;
   // ❌ 这个不行，因为没有被 pnpm 劫持，就拿不到 pm
-  ctx.exec("node node.cjs", true)?;
+  // ctx.exec("node node.cjs", true)?;
   // ❌ 需要特别注意的是只对当前环境生效，因此 pnpm -v && node node.cjs 不行的，因为不是同一个进程链路了
   // ctx.exec("pnpm -v && node node.cjs", true)?;
 

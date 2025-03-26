@@ -116,7 +116,7 @@ fn check_snm_binary(bin_name: &str, binaries: &[std::path::PathBuf]) -> anyhow::
   if binaries
     .first()
     .and_then(|b| b.parent())
-    .zip(snm)
+    .zip(snm.clone())
     .map_or(false, |(p1, p2)| p1 == p2)
   {
     bail!("'{}' is not a valid command", bin_name);
