@@ -45,6 +45,7 @@
         "serde",
         "SHASUMS",
         "snode",
+        "softprops",
         "taplo",
         "tempdir",
         "tempfile",
