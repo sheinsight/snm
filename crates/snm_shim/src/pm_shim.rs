@@ -26,24 +26,15 @@ impl PmShim {
       bail!(r#"deconstruct args failed, args: {:?}"#, self.args);
     };
 
-    let is_escape = var("e")
-      .map(|item| item == "1".to_string())
-      .unwrap_or(false);
-
     let res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
 
     if res.is_empty() {
-      if is_escape {
-        return exec_cli(
-          &[&[bin_name.clone(), command.to_owned()], args].concat(),
-          &self.paths,
-          true,
-        );
-      }
-      bail!("not found package.json")
+      return exec_cli(
+        &[&[bin_name.clone(), command.to_owned()], args].concat(),
+        &self.paths,
+        true,
+      );
     }
-
-    // res.reverse();
 
     let Some(spm) = res.iter().find_map(|item| {
       let dir = item.parent().unwrap().to_path_buf();
@@ -58,26 +49,6 @@ impl PmShim {
         true,
       );
     };
-
-    // if !PJson::exists(&self.snm_config.workspace) || is_escape {
-    //   return exec_cli(
-    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
-    //     &self.paths,
-    //     true,
-    //   );
-    // }
-
-    // if !SPM::exists(&self.snm_config.workspace)? {
-    //   if self.snm_config.strict {
-    //     bail!("You have not correctly configured packageManager in package.json");
-    //   }
-
-    //   return exec_cli(
-    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
-    //     &self.paths,
-    //     true,
-    //   );
-    // }
 
     // 处理配置了包管理器的情况
     // let spm = SPM::try_from(&self.snm_config.workspace, &self.snm_config)?;
