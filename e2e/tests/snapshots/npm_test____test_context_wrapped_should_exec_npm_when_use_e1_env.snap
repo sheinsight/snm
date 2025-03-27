@@ -24,6 +24,6 @@ id: 3
 is: npm -v
 
 
-stdout:9.6.4
-stderr:
-status:0
+stdout:
+stderr:Error: Package manager mismatch, expect: pnpm, actual: npm
+status:1

@@ -33,6 +33,13 @@ impl PmShim {
     let mut res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
 
     if res.is_empty() {
+      if is_escape {
+        return exec_cli(
+          &[&[bin_name.clone(), command.to_owned()], args].concat(),
+          &self.paths,
+          true,
+        );
+      }
       bail!("not found package.json")
     }
 
@@ -93,7 +100,7 @@ impl PmShim {
       bin_name
     };
 
-    if bin_name != pm.name() && bin_name != "npx" {
+    if bin_name != pm.name() && bin_name != "npx" && bin_name != "pnpx" {
       bail!(
         "Package manager mismatch, expect: {}, actual: {}",
         pm.name().green(),

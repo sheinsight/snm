@@ -1,6 +1,5 @@
 ---
 source: e2e/tests/pnpm_test.rs
-assertion_line: 26
 expression: res
 ---
 id: 1
