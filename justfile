@@ -1,6 +1,6 @@
 setup:
   cargo install --locked cargo-binstall
-  cargo binstall taplo-cli cargo-insta cargo-deny -y --force
+  cargo binstall taplo-cli cargo-insta cargo-deny watchexec-cli -y --force
   @echo '✅ Setup complete!'
 
 ready:
@@ -36,7 +36,8 @@ prerelease:
 
 watch:
     echo "Running the project..."
-    cargo watch -x build
+    # cargo watch -x build
+    watchexec -r -e rs cargo build
 
 test:
     echo "Running tests..."
@@ -48,7 +49,8 @@ e2e:
 
 e2e-watch:
     echo "Watching end-to-end tests..."
-    cargo watch -q -c -w crates -w e2e -x "insta test -p e2e --review -- --nocapture"
+    # cargo watch -q -c -w crates -w e2e -x "insta test -p e2e --review -- --nocapture"
+    watchexec -r -e rs cargo insta test -p e2e --review -- --nocapture
 
 ci-e2e:
     echo "Running end-to-end tests..."

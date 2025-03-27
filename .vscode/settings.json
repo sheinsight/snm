@@ -53,6 +53,7 @@
         "textwrap",
         "thiserror",
         "Unalias",
+        "watchexec",
         "wiremock",
         "yarnpkg"
     ]
