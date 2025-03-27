@@ -24,6 +24,6 @@ id: 3
 is: npm -v
 
 
-stdout:
-stderr:Error: not found package.json
-status:1
+stdout:9.6.4
+stderr:
+status:0
