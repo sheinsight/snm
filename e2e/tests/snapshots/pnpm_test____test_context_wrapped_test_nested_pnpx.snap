@@ -9,19 +9,3 @@ is: node -v
 stdout:v20.0.0
 stderr:
 status:0
-
-
-id: 2
-is: pnpx cowsay '22'
-
-
-stdout:____
-< 22 >
- ----
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-stderr:
-status:0

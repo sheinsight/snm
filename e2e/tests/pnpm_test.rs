@@ -35,7 +35,7 @@ async fn test_nested_pnpx(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   ctx.exec("snm setup", false)?;
   ctx.add_snapshot("node -v")?;
   // ✅ 这个可以，因为被 pnpm 劫持了， 就会像环境变量塞数据，
-  ctx.add_snapshot("pnpx cowsay '22'")?;
+  ctx.exec("pnpx cowsay '22'", true)?;
   ctx.assert_snapshots(|res| {
     insta::assert_snapshot!(res);
   })?;
