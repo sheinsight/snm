@@ -30,7 +30,7 @@ impl PmShim {
       .map(|item| item == "1".to_string())
       .unwrap_or(false);
 
-    let mut res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
+    let res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
 
     if res.is_empty() {
       if is_escape {
@@ -43,7 +43,7 @@ impl PmShim {
       bail!("not found package.json")
     }
 
-    res.reverse();
+    // res.reverse();
 
     let Some(spm) = res.iter().find_map(|item| {
       let dir = item.parent().unwrap().to_path_buf();
