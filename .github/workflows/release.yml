@@ -1,5 +1,6 @@
 name: Release
-
+env:
+  RUST_BACKTRACE: full
 # on:
 #   release:
 #     types: [published]
@@ -59,15 +60,21 @@ jobs:
           # restore-keys: |
           #   ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Run tests
+      - name: Init just
         run: | 
           cargo install just
+
+      - name: Just Setup
+        run: | 
           just setup
+
+      - name: Just Ready
+        run: | 
           just ready
+
+      - name: Just E2E
+        run: | 
           just ci-e2e
-          # cargo test --workspace --exclude e2e -- --nocapture
-        env:
-          RUST_BACKTRACE: full
 
   Building:
     needs: Testing
