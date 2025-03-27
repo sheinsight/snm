@@ -45,6 +45,20 @@ jobs:
         with:
           override: true
           target: ${{ matrix.target }}
+      # 缓存
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
+          # restore-keys: |
+          #   ${{ runner.os }}-${{ matrix.target }}-cargo-
+
       - name: Run tests
         run: | 
           cargo install just
@@ -94,6 +108,21 @@ jobs:
         with:
           override: true
           target: ${{ matrix.target }}
+
+      # 缓存
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
+          # restore-keys: |
+          #   ${{ runner.os }}-${{ matrix.target }}-cargo-
+      
       - name: Build Binary
         uses: actions-rs/cargo@v1
         with:
@@ -105,35 +134,12 @@ jobs:
           for file in snm snm-shim; do
             strip "target/${{ matrix.target }}/release/$file"
           done
-      - name: Create Archive
-        shell: bash
-        run: |
-          mkdir archive
-          cp LICENSE README.md target/${{ matrix.target }}/release/{snm,snm-shim} archive/
-          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
-          ls -l
-          ls -l archive
-          ls -l target/${{ matrix.target }}/release
-      - name: Calculate SHA256 Checksum
-        run: |
-          echo "Calculating SHA256 for ${{ matrix.target }}.tar.gz..."
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            certutil -hashfile "${{ matrix.target }}.tar.gz" SHA256 > "${{ matrix.target }}.sha256"
-          else
-            shasum -a 256 ${{ matrix.target }}.tar.gz | tee ${{ matrix.target }}.sha256
-          fi
-          cat ${{ matrix.target }}.sha256
-        shell: bash
       - name: Upload Artifacts tar.gz
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: ${{ matrix.target }}.tar.gz
-      - name: Upload Artifacts sha256
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.target }}.sha256
-          path: ${{ matrix.target }}.sha256
+   
 
   publish:
     name: Publish To Github Release
@@ -161,12 +167,11 @@ jobs:
           name: ${{ github.ref_name }}
           files: |
             **/*.tar.gz
-            **/*.sha256
-            - name: Update Release
-            if: startsWith(github.ref, 'refs/tags/')
-            run: | 
-              echo "Updating release..."
-              gh release edit ${{ github.ref_name }} --draft=false --latest
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: | 
+          echo "Updating release..."
+          gh release edit ${{ github.ref_name }} --draft=false --latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
  
