@@ -71,7 +71,8 @@ impl PmShim {
       bin_name
     };
 
-    if bin_name != pm.name() && bin_name != "npx" && bin_name != "pnpx" {
+    let matched = &[pm.name(), "npx", "pnpx"].contains(&bin_name);
+    if !matched {
       bail!(
         "Package manager mismatch, expect: {}, actual: {}",
         pm.name().green(),
