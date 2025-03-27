@@ -10,6 +10,7 @@ setup:
 ready:
   just fmt    
   cargo c --verbose
+  # t 包含了 e2e 测试，所以必须要 build 一下
   cargo b --verbose
   cargo t
   #just ci-e2e
