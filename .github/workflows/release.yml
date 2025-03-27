@@ -62,11 +62,9 @@ jobs:
           #   ${{ runner.os }}-${{ matrix.target }}-cargo-
 
       - name: Install just
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to DEST
-        # uses: taiki-e/install-action@v2
-        # with:
-        #   tool: just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Just Setup
         run: | 
