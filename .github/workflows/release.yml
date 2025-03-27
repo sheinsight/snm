@@ -1,6 +1,7 @@
 name: Release
 env:
   RUST_BACKTRACE: full
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 # on:
 #   release:
 #     types: [published]
@@ -60,9 +61,10 @@ jobs:
           # restore-keys: |
           #   ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Init just
-        run: | 
-          cargo install just
+      - name: Install just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Just Setup
         run: | 

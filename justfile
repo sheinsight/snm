@@ -1,7 +1,10 @@
+
+
+    
+
 setup:
-  cargo install --locked cargo-binstall
-  cargo binstall taplo-cli cargo-insta cargo-deny -y --force
-  cargo binstall watchexec-cli --version 2.2.1 -y --force 
+  curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+  cargo binstall cargo-insta taplo-cli cargo-deny watchexec-cli@2.2.1 -y --force
   @echo '✅ Setup complete!'
 
 ready:
