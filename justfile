@@ -1,7 +1,7 @@
 setup:
   cargo install --locked cargo-binstall
   cargo binstall taplo-cli cargo-insta cargo-deny -y --force
-  cargo binstall watchexec-cli --version 2.2.0 -y --force --no-fallback
+  cargo binstall watchexec-cli --version 2.2.1 -y --force 
   @echo '✅ Setup complete!'
 
 ready:

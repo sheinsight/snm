@@ -2,7 +2,7 @@
 [package]
 edition = "2021"
 name    = "snm_config"
-version = "0.1.0-36"
+version = "0.1.0-37"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
