@@ -1,6 +1,7 @@
 setup:
   cargo install --locked cargo-binstall
-  cargo binstall taplo-cli cargo-insta cargo-deny cargo-watch -y --force
+  cargo binstall taplo-cli cargo-insta cargo-deny -y --force
+  cargo binstall cargo-watch --version 8.5.2 -y --force
   # cargo install taplo-cli cargo-release cargo-insta cargo-deny cargo-watch 
   @echo '✅ Setup complete!'
 
