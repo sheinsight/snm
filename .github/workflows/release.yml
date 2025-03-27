@@ -72,7 +72,7 @@ jobs:
 
       - name: Just Ready
         run: | 
-          cargo t
+          just ready
 
       - name: Just E2E
         run: | 
