@@ -56,6 +56,7 @@ impl PmShim {
 
     // 传进来的有可能是绝对路径, 如果是绝对路径的的话，取 file_name 判断一下。
     // 同时需要保证直取命令的名称，方便 后续的 json.get_bin_with_name(bin_name) 获取到对应 js 的真实路径
+    // 主要用来拦截处理 snm 自己创建的 symlink , windows 下 symlink 拿到的是绝对路径
     let bin_name = if Path::new(bin_name).is_absolute() {
       Path::new(bin_name)
         .file_name()
