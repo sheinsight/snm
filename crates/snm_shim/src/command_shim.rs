@@ -6,7 +6,7 @@ use std::{
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
-use snm_utils::{consts::SNM_PREFIX, FindUp};
+use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
 
 use crate::{node_shim::NodeShim, pm_shim::PmShim};
