@@ -6,7 +6,7 @@ use std::{
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_node::SNode;
-use snm_utils::consts::SNM_PREFIX;
+use snm_utils::{consts::SNM_PREFIX, FindUp};
 use tracing::trace;
 
 use crate::{node_shim::NodeShim, pm_shim::PmShim};
@@ -36,7 +36,7 @@ impl CommandShim {
 
     let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-    let snode = SNode::try_from(snm_config.clone())?;
+    let snode = SNode::find_up(snm_config.clone())?;
 
     let bin_dir = snode.get_bin_dir().await?;
 

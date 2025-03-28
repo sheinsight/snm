@@ -7,7 +7,10 @@ use std::{
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME};
+use snm_utils::{
+  consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
+  FindUp,
+};
 pub mod factory;
 pub use factory::*;
 pub mod downloader;
@@ -19,6 +22,23 @@ pub struct SNode {
 }
 
 impl SNode {
+  pub fn find_up(config: SnmConfig) -> anyhow::Result<Self> {
+    let node_version_file = FindUp::new(&config.workspace).find(".node-version")?;
+
+    let v = node_version_file
+      .iter()
+      .find_map(|item| Self::read_version_file(item));
+
+    if let Some(v) = v {
+      return Ok(Self {
+        version: Some(v),
+        config,
+      });
+    } else {
+      Self::try_from(config)
+    }
+  }
+
   pub fn try_from(config: SnmConfig) -> anyhow::Result<Self> {
     Self::from_env(config.clone())
       .or_else(|_| Self::from_config_file(config.clone()))
@@ -32,7 +52,7 @@ impl SNode {
       })
   }
 
-  fn from_config_file(config: SnmConfig) -> anyhow::Result<Self> {
+  pub fn from_config_file(config: SnmConfig) -> anyhow::Result<Self> {
     let file_path = config.workspace.join(NODE_VERSION_FILE_NAME);
     let version =
       Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
