@@ -1,7 +1,7 @@
 [package]
 edition = "2024"
 name    = "snm_test_utils"
-version = "0.1.0-49"
+version = "0.1.0-50"
 
 [dependencies]
 anyhow       = { workspace = true }

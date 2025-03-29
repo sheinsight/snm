@@ -47,11 +47,6 @@ impl PJson {
           raw.internal_bin = Some(Self::parse_bin(&dir, bin));
         });
 
-        // 处理 package_manager
-        // raw.package_manager.as_ref().map(|pm| {
-        //     raw.internal_package_manager = PackageManager::parse(pm);
-        // });
-
         raw
       })
       .with_context(|| format!("Failed to parse package.json: {}", raw_file_path.display()))
@@ -86,25 +81,12 @@ impl PJson {
 }
 
 impl PJson {
-  pub fn exists(dir: &PathBuf) -> bool {
-    dir.join("package.json").exists()
-  }
-
   pub fn get_bin_with_name(&self, name: &str) -> anyhow::Result<PathBuf> {
     self
       .internal_bin
       .as_ref()
       .and_then(|bin| bin.get(name).cloned())
       .with_context(|| format!("Bin not found: {}", name))
-  }
-
-  pub fn enumerate_bin<F>(&self, f: F)
-  where
-    F: Fn(&str, &PathBuf),
-  {
-    for (k, v) in self.internal_bin.as_ref().unwrap() {
-      f(k, v)
-    }
   }
 }
 
