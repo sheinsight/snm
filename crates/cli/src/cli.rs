@@ -6,6 +6,7 @@ use std::{
   process::Command,
 };
 
+use anyhow::bail;
 use clap::{command, crate_authors, crate_name, crate_version, CommandFactory, Parser};
 use colored::Colorize;
 use serde::Serialize;
@@ -115,7 +116,9 @@ impl SnmCli {
         }
       }
       SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
-        let spm = SPM::try_from(&snm_config.workspace, &snm_config)?;
+        let Some(spm) = SPM::from_config_file(&snm_config) else {
+          bail!("You have not correctly configured packageManager in package.json");
+        };
         trace!("Get spm: {:#?}", &spm);
         let pm = spm.pm;
         let handler = pm.get_ops();

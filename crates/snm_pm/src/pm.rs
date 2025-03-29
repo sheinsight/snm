@@ -1,8 +1,8 @@
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::consts::ENV_KEY_FOR_SNM_PM;
+use snm_utils::FindUp;
 
 use crate::{
   downloader::PackageManagerDownloader,
@@ -69,38 +69,76 @@ pub struct SPM<'a> {
 }
 
 impl<'a> SPM<'a> {
-  pub fn try_from(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    Self::try_from_env(config).or_else(|_| Self::try_from_config_file(dir, config))
-  }
+  // pub fn try_from(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
+  //   Self::try_from_env(config).or_else(|_| Self::try_from_config_file(dir, config))
+  // }
 
-  pub fn exists(dir: &PathBuf) -> anyhow::Result<bool> {
-    let package_json = PJson::from(dir)?;
-    Ok(package_json.package_manager.is_some())
-  }
+  // pub fn exists(dir: &PathBuf) -> anyhow::Result<bool> {
+  //   let package_json = PJson::from(dir)?;
+  //   Ok(package_json.package_manager.is_some())
+  // }
 
-  pub fn try_from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let pm = PM::parse(raw)?;
-    Ok(Self { config, pm })
-  }
+  // pub fn try_from_str(raw: &str, config: &'a SnmConfig) -> anyhow::Result<Self> {
+  //   let pm = PM::parse(raw)?;
+  //   Ok(Self { config, pm })
+  // }
 
-  pub fn try_from_config_file(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let package_json = PJson::from(dir)?;
+  pub fn from_config_file(config: &'a SnmConfig) -> Option<Self> {
+    let Ok(vecs) = FindUp::new(&config.workspace).find("package.json") else {
+      return None;
+    };
 
-    if let Some(raw) = package_json.package_manager {
-      let pm = PM::parse(&raw)?;
-      return Ok(Self { config, pm });
+    if vecs.is_empty() {
+      return None;
     }
-    bail!("No package manager found");
+
+    let Some(spm) = vecs.iter().find_map(|item| {
+      let Some(dir) = item.parent() else {
+        return None;
+      };
+
+      let Some(package_json) = PJson::from(dir).ok() else {
+        return None;
+      };
+
+      let Some(raw) = package_json.package_manager else {
+        return None;
+      };
+
+      let Some(pm) = PM::parse(&raw).ok() else {
+        return None;
+      };
+
+      Some(pm)
+    }) else {
+      return None;
+    };
+
+    Some(Self { config, pm: spm })
   }
 
-  fn try_from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
-    let raw = env::var(ENV_KEY_FOR_SNM_PM)?;
-    let pm = PM::parse(&raw)?;
-    Ok(Self { config, pm })
-  }
+  // pub fn try_from_config_file(dir: &PathBuf, config: &'a SnmConfig) -> anyhow::Result<Self> {
+  //   let package_json = PJson::from(dir)?;
+
+  //   if let Some(raw) = package_json.package_manager {
+  //     let pm = PM::parse(&raw)?;
+  //     return Ok(Self { config, pm });
+  //   }
+  //   bail!("No package manager found");
+  // }
+
+  // fn try_from_env(config: &'a SnmConfig) -> anyhow::Result<Self> {
+  //   let raw = env::var(ENV_KEY_FOR_SNM_PM)?;
+  //   let pm = PM::parse(&raw)?;
+  //   Ok(Self { config, pm })
+  // }
 
   pub async fn ensure_bin_dir(&self) -> anyhow::Result<PathBuf> {
-    let spm = SPM::try_from(&self.config.workspace, self.config)?;
+    // let spm = SPM::try_from(&self.config.workspace, self.config)?;
+
+    let Some(spm) = SPM::from_config_file(&self.config) else {
+      bail!("No package manager found");
+    };
 
     let pm = spm.pm;
 

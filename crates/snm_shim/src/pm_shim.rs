@@ -4,7 +4,7 @@ use anyhow::bail;
 use colored::Colorize;
 use snm_config::snm_config::SnmConfig;
 use snm_pm::{package_json::PJson, pm::SPM};
-use snm_utils::{exec::exec_cli, FindUp};
+use snm_utils::exec::exec_cli;
 
 pub struct PmShim {
   pub args: Vec<String>,
@@ -26,20 +26,7 @@ impl PmShim {
       bail!(r#"deconstruct args failed, args: {:?}"#, self.args);
     };
 
-    let res = FindUp::new(&self.snm_config.workspace).find("package.json")?;
-
-    if res.is_empty() {
-      return exec_cli(
-        &[&[bin_name.clone(), command.to_owned()], args].concat(),
-        &self.paths,
-        true,
-      );
-    }
-
-    let Some(spm) = res.iter().find_map(|item| {
-      let dir = item.parent().unwrap().to_path_buf();
-      return SPM::try_from_config_file(&dir, &self.snm_config).ok();
-    }) else {
+    let Some(spm) = SPM::from_config_file(&self.snm_config) else {
       if self.snm_config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       }

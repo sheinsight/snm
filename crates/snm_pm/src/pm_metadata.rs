@@ -1,10 +1,8 @@
-use std::env;
-
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use snm_utils::{
-  consts::{ENV_KEY_FOR_SNM_PM, YARN_PACKAGE_NAME, YARNPKG_PACKAGE_NAME},
+  consts::{YARN_PACKAGE_NAME, YARNPKG_PACKAGE_NAME},
   ver::ver_gt_1,
 };
 
@@ -80,10 +78,6 @@ impl PackageManagerMetadata {
         YARN_PACKAGE_NAME
       }
     };
-
-    unsafe {
-      env::set_var(ENV_KEY_FOR_SNM_PM, raw);
-    }
 
     Ok(Self {
       full_name: library_name.to_owned(),
