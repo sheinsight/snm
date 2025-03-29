@@ -1,5 +1,4 @@
 use std::{
-  env,
   fs::read_to_string,
   path::{Path, PathBuf},
 };
@@ -7,10 +6,7 @@ use std::{
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::{
-  consts::{ENV_KEY_FOR_SNM_NODE, NODE_VERSION_FILE_NAME},
-  FindUp,
-};
+use snm_utils::{consts::NODE_VERSION_FILE_NAME, FindUp};
 pub mod factory;
 pub use factory::*;
 pub mod downloader;
@@ -35,21 +31,12 @@ impl SNode {
         config,
       });
     } else {
-      Self::try_from(config)
-    }
-  }
+      if config.strict {
+        bail!("In strict mode, a .node-version file must be configured in the current directory.");
+      }
 
-  pub fn try_from(config: SnmConfig) -> anyhow::Result<Self> {
-    Self::from_env(config.clone())
-      .or_else(|_| Self::from_config_file(config.clone()))
-      .or_else(|_| {
-        if config.strict {
-          bail!(
-            "In strict mode, a .node-version file must be configured in the current directory."
-          );
-        }
-        Self::from_default(config)
-      })
+      Self::from_default(config)
+    }
   }
 
   pub fn from_config_file(config: SnmConfig) -> anyhow::Result<Self> {
@@ -57,14 +44,6 @@ impl SNode {
     let version =
       Self::read_version_file(&file_path).with_context(|| "Invalid node version file")?;
 
-    Ok(Self {
-      version: Some(version),
-      config,
-    })
-  }
-
-  fn from_env(config: SnmConfig) -> anyhow::Result<Self> {
-    let version = env::var(ENV_KEY_FOR_SNM_NODE)?;
     Ok(Self {
       version: Some(version),
       config,
@@ -101,7 +80,6 @@ impl SNode {
     if version_parts.len() != 3 || version_parts.iter().any(|s| s.parse::<u32>().is_err()) {
       return None;
     }
-    env::set_var(ENV_KEY_FOR_SNM_NODE, &version);
     Some(version)
   }
 }
