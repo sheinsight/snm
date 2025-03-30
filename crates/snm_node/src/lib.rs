@@ -6,9 +6,10 @@ use std::{
 use anyhow::{bail, Context};
 use downloader::NodeDownloader;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::{consts::NODE_VERSION_FILE_NAME, FindUp};
+use snm_utils::consts::NODE_VERSION_FILE_NAME;
 pub mod factory;
 pub use factory::*;
+use up_finder::UpFinder;
 pub mod downloader;
 
 #[derive(Debug, Clone)]
@@ -19,7 +20,13 @@ pub struct SNode {
 
 impl SNode {
   pub fn find_up(config: SnmConfig) -> anyhow::Result<Self> {
-    let node_version_file = FindUp::new(&config.workspace).find(".node-version")?;
+    let find_up = UpFinder::builder()
+      .cwd(&config.workspace) // 从当前目录开始
+      .build();
+
+    let node_version_file = find_up.find_up(".node-version");
+
+    // let node_version_file = FindUp::new(&config.workspace).find(".node-version")?;
 
     let v = node_version_file
       .iter()

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::FindUp;
+use up_finder::UpFinder;
 
 use crate::{
   downloader::PackageManagerDownloader,
@@ -70,9 +70,11 @@ pub struct SPM<'a> {
 
 impl<'a> SPM<'a> {
   pub fn from_config_file(config: &'a SnmConfig) -> Option<Self> {
-    let Ok(vecs) = FindUp::new(&config.workspace).find("package.json") else {
-      return None;
-    };
+    let find_up = UpFinder::builder()
+      .cwd(&config.workspace) // 从当前目录开始
+      .build();
+
+    let vecs = find_up.find_up("package.json");
 
     if vecs.is_empty() {
       return None;

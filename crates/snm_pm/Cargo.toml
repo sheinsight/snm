@@ -21,3 +21,4 @@ snm_config = { path = "../snm_config" }
 snm_utils  = { path = "../snm_utils" }
 tokio      = { workspace = true, features = ["macros"] }
 tracing    = { workspace = true }
+up_finder  = { workspace = true }

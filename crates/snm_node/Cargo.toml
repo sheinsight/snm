@@ -22,4 +22,5 @@ sha2           = "0.10.2"
 snm_config     = { path = "../snm_config" }
 snm_utils      = { path = "../snm_utils" }
 tracing        = { workspace = true }
+up_finder      = { workspace = true }
 uuid           = { workspace = true, features = ["v4"] }

@@ -50,6 +50,7 @@ serde          = "=1.0.217"
 serde_json     = "=1.0.135"
 textwrap       = "=0.16.0"
 tokio          = "=1.43.0"
+up_finder      = "=0.0.2"
 wait-timeout   = "=0.2.0"
 
 ## 测试相关
