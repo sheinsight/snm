@@ -1,17 +1,13 @@
 use std::{
-  fs::File,
-  io::BufReader,
   path::{Path, PathBuf},
+  time::Duration,
 };
 
 use anyhow::bail;
-use sha1::{Digest, Sha1};
+use hashery::Hashery;
+use robust_downloader::RobustDownloader;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::{
-  download::{DownloadBuilder, WriteStrategy},
-  tarball::ArchiveExtension,
-  trace_if,
-};
+use snm_utils::tarball::ArchiveExtension;
 use tracing::trace;
 
 use crate::pm_metadata::PackageManagerMetadata;
@@ -63,48 +59,39 @@ impl<'a> PackageManagerDownloader<'a> {
 
     let download_url = self.get_download_url(version);
 
-    trace_if!(|| {
-      trace!("Start download from: {}", download_url);
-    });
+    trace!("Start download from: {}", download_url);
 
-    let downloaded_file_path_buf = self
+    let downloaded_file = self
       .snm_config
       .download_dir
       .join(&metadata.full_name)
       .join(version)
       .join(format!("{}-{}.tgz", &metadata.full_name, version));
 
-    DownloadBuilder::new()?
-      .retries(3)
-      .timeout(self.snm_config.download_timeout_secs)
-      .write_strategy(WriteStrategy::WriteAfterDelete)
-      .download(&download_url, &downloaded_file_path_buf)
+    let downloader = RobustDownloader::builder()
+      .connect_timeout(Duration::from_secs(self.snm_config.download_timeout_secs))
+      .max_concurrent(2)
+      .build();
+
+    downloader
+      .download(vec![(download_url, &downloaded_file)])
       .await?;
 
-    trace_if!(|| {
-      trace!(
-        r#"Download success: 
-from: {}
-to: {}"#,
-        download_url,
-        downloaded_file_path_buf.to_string_lossy(),
-      );
-    });
-
-    Ok(downloaded_file_path_buf)
+    Ok(downloaded_file)
   }
 
   async fn verify_shasum<T: AsRef<Path>>(&self, file_path: T, version: &str) -> anyhow::Result<()> {
     let expect_shasum = self.get_expect_shasum(version).await?;
 
-    let actual_shasum = self.get_actual_shasum(file_path)?;
+    let hasher = Hashery::builder()
+      .algorithm(hashery::Algorithm::SHA1)
+      .build();
+    let actual_shasum = hasher.digest(file_path).await?;
 
-    trace_if!(|| {
-      trace!(
-        "Verify shasum: expect: {}, actual: {}",
-        expect_shasum, actual_shasum
-      );
-    });
+    trace!(
+      "Verify shasum: expect: {}, actual: {}",
+      expect_shasum, actual_shasum
+    );
 
     if expect_shasum != actual_shasum {
       bail!("SHASUM mismatch");
@@ -118,9 +105,7 @@ to: {}"#,
 
     let resp = reqwest::get(&url).await?.json::<NpmResponse>().await?;
 
-    trace_if!(|| {
-      trace!("Get expect shasum from: {} is {}", url, resp.dist.shasum);
-    });
+    trace!("Get expect shasum from: {} is {}", url, resp.dist.shasum);
 
     Ok(resp.dist.shasum)
   }
@@ -135,17 +120,6 @@ to: {}"#,
       library_name = &metadata.full_name,
       version = version
     )
-  }
-
-  fn get_actual_shasum<T: AsRef<Path>>(
-    &self,
-    downloaded_file_path_buf: T,
-  ) -> anyhow::Result<String> {
-    let file = File::open(downloaded_file_path_buf)?;
-    let mut reader = BufReader::new(file);
-    let mut hasher = Sha1::new();
-    std::io::copy(&mut reader, &mut hasher)?;
-    Ok(format!("{:x}", hasher.finalize()))
   }
 
   fn get_download_url(&self, version: &str) -> String {

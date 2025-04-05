@@ -44,18 +44,20 @@ insta          = "=1.36.1"
 itertools      = "=0.13.0"
 regex          = "=1.11.1"
 remove_dir_all = "=1.0.0"
-reqwest        = { version = "=0.12.14", default-features = false, features = ["rustls-tls"] }
+reqwest        = { version = "0.12.14", default-features = false, features = ["rustls-tls"] }
 semver         = "=1.0.24"
 serde          = "=1.0.217"
 serde_json     = "=1.0.135"
 textwrap       = "=0.16.0"
-tokio          = "=1.43.0"
+tokio          = "1.43.0"
 up_finder      = "=0.0.2"
 wait-timeout   = "=0.2.0"
 
 ## 测试相关
 tokio-test = "=0.4.4"
 wiremock   = "=0.6.3"
+
+robust_downloader = "0.0.4"
 
 ## 日志
 tracing            = "=0.1.41"
@@ -67,12 +69,12 @@ backoff-macro = "=0.2.0"
 
 
 ## 进度条
-indicatif = "=0.17.8"
+indicatif = "0.17.8"
 
 tempfile = "=3.16.0"
 
-
-which = "=7.0.1"
+hashery = "0.0.1"
+which   = "=7.0.1"
 
 test-context = "=0.3.0"
 uuid         = "=1.12.1"

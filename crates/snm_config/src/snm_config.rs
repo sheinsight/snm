@@ -1,6 +1,5 @@
 use std::{
   env::current_dir,
-  fmt::Display,
   fs,
   path::{Path, PathBuf},
 };
@@ -9,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use snm_npmrc::NpmrcReader;
 use snm_utils::consts::SNM_PREFIX;
 
-use crate::env_snm_config::EnvSnmConfig;
+use crate::{env_snm_config::EnvSnmConfig, platform::Platform};
 
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct SnmConfig {
   pub node_bin_dir: PathBuf,
   pub download_dir: PathBuf,
@@ -23,15 +22,7 @@ pub struct SnmConfig {
   pub npm_registry: String,
   pub workspace: PathBuf,
   pub strict: bool,
-}
-
-impl Display for SnmConfig {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    if let Ok(json) = serde_json::to_string_pretty(self) {
-      return write!(f, "{}", json);
-    }
-    write!(f, "{:?}", self)
-  }
+  pub platform: Platform,
 }
 
 impl SnmConfig {
@@ -87,6 +78,7 @@ impl SnmConfig {
       download_timeout_secs: config.download_timeout_secs.unwrap_or(30),
       npm_registry: npm_registry,
       strict: strict,
+      platform: Platform::default(),
     })
   }
 }

@@ -18,9 +18,11 @@ reqwest        = { workspace = true, features = ["json", "blocking", "stream", "
 semver         = { workspace = true }
 serde          = { workspace = true, features = ["derive"] }
 serde_json     = { workspace = true }
-sha2           = "0.10.2"
 snm_config     = { path = "../snm_config" }
 snm_utils      = { path = "../snm_utils" }
 tracing        = { workspace = true }
 up_finder      = { workspace = true }
 uuid           = { workspace = true, features = ["v4"] }
+
+hashery           = { workspace = true }
+robust_downloader = { workspace = true }
