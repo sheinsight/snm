@@ -1,12 +1,10 @@
 use std::{
   env::{join_paths, split_paths},
-  process::{Command, Stdio},
-  time::Duration,
+  process::{exit, Command, Stdio},
 };
 
 use anyhow::bail;
 use tracing::trace;
-use wait_timeout::ChildExt;
 
 use crate::trace_if;
 
@@ -51,33 +49,18 @@ first binary: {}"#,
 
   let program = binaries.first().unwrap();
 
-  let mut c = Command::new(program)
+  let output = Command::new(program)
     .args(args)
     .env("PATH", new_path.clone())
     .stdout(Stdio::inherit())
     .stderr(Stdio::inherit())
     .stdin(Stdio::inherit())
-    .spawn()?;
+    .output()?;
 
-  trace_if!(|| {
-    trace!(
-      r#"exec command: 
-    {} {}"#,
-      &bin_name,
-      args.join(" ")
-    );
-  });
-
-  let res = c.wait_timeout(Duration::from_secs(6000))?;
-
-  if let Some(status) = res {
-    if status.success() {
-      return Ok(());
-    } else {
-      bail!("command {} failed", bin_name);
-    }
+  if output.status.success() {
+    Ok(())
   } else {
-    bail!("command {} timeout", bin_name);
+    exit(output.status.code().unwrap_or(1));
   }
 }
 
