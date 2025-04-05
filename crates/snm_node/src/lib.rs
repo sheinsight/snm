@@ -101,18 +101,6 @@ impl SNode {
     Ok(v.to_string())
   }
 
-  // pub async fn get_node_modules_dir(&self) -> anyhow::Result<PathBuf> {
-  //   let node_home_dir = self.ensure_node().await?;
-
-  //   #[cfg(windows)]
-  //   let node_modules_dir = node_home_dir.join("node_modules");
-
-  //   #[cfg(not(windows))]
-  //   let node_modules_dir = node_home_dir.join("lib").join("node_modules");
-
-  //   Ok(node_modules_dir)
-  // }
-
   pub async fn get_bin_dir(&self) -> anyhow::Result<PathBuf> {
     let node_home_dir = self.ensure_node().await?;
 
@@ -124,10 +112,6 @@ impl SNode {
 
     Ok(bin_dir)
   }
-
-  // pub async fn get_home_dir(&self) -> anyhow::Result<PathBuf> {
-  //   self.ensure_node().await
-  // }
 
   async fn ensure_node(&self) -> anyhow::Result<PathBuf> {
     let version = self.get_version()?;
@@ -154,30 +138,6 @@ impl SNode {
 
     Ok(node_home_dir)
   }
-
-  // pub async fn ensure_node_and_return_dir(&self) -> anyhow::Result<PathBuf> {
-  //   let version = self.get_version()?;
-
-  //   self.check_v(&version)?;
-
-  //   let node_dir = self.config.node_bin_dir.join(&version);
-
-  //   let (node_bin_dir, exe_name) = if cfg!(windows) {
-  //     (node_dir.clone(), "node.exe")
-  //   } else {
-  //     (node_dir.join("bin"), "node")
-  //   };
-
-  //   // 优化: 提前计算最终返回值
-  //   let node_exe = node_bin_dir.join(exe_name);
-
-  //   // 优化: 只在文件不存在时下载
-  //   if !node_exe.try_exists()? {
-  //     NodeDownloader::new(self.config).download(&version).await?;
-  //   }
-
-  //   Ok(node_dir)
-  // }
 
   fn check_v(&self, version: &str) -> anyhow::Result<()> {
     if self.config.node_white_list.is_empty() {

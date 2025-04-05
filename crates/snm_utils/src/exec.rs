@@ -73,15 +73,13 @@ fn create_path_with_additional_dirs(additional_paths: Vec<String>) -> anyhow::Re
 
   let n = join_paths(path_chunks)?.to_string_lossy().into_owned();
 
-  trace_if!(|| {
-    trace!(
-      r#"Diff PATH ENV
+  trace!(
+    r#"Diff PATH ENV
 NEW: {}
 OLD: {}"#,
-      n,
-      o
-    );
-  });
+    n,
+    o
+  );
 
   Ok(n)
 }
@@ -91,10 +89,8 @@ fn check_snm_binary(bin_name: &str, binaries: &[std::path::PathBuf]) -> anyhow::
     .ok()
     .and_then(|p| p.parent().map(|p| p.to_owned()));
 
-  trace_if!(|| {
-    trace!("Binaries: {:?}", binaries);
-    trace!("Snm: {:?}", snm);
-  });
+  trace!("Binaries: {:?}", binaries);
+  trace!("Snm: {:?}", snm);
 
   if binaries
     .first()
