@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name    = "snm_downloader"
+version = "0.1.0"
+
+[dependencies]
+anyhow            = { workspace = true }
+async-trait       = { workspace = true }
+reqwest           = { workspace = true, features = ["json"] }
+robust_downloader = { workspace = true }
+serde             = { workspace = true, features = ["derive"] }
+snm_config        = { path = "../snm_config" }
+snm_utils         = { path = "../snm_utils" }
+typed-builder     = { workspace = true }

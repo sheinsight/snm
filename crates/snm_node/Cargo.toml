@@ -24,5 +24,5 @@ tracing        = { workspace = true }
 up_finder      = { workspace = true }
 uuid           = { workspace = true, features = ["v4"] }
 
-hashery           = { workspace = true }
 robust_downloader = { workspace = true }
+snm_downloader    = { path = "../snm_downloader" }

@@ -8,10 +8,9 @@ use schedule::Schedule;
 use semver::Version;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
+use snm_downloader::{download_resource, DownloadNodeResource};
 use snm_utils::trace_if;
 use tracing::trace;
-
-use crate::downloader::NodeDownloader;
 
 pub mod lts;
 pub mod metadata;
@@ -186,9 +185,12 @@ impl<'a> NodeFactory<'a> {
       }
     }
 
-    NodeDownloader::new(self.config)
-      .download(&args.version)
-      .await?;
+    let resource = DownloadNodeResource::builder()
+      .config(self.config)
+      .bin_name(String::from("node"))
+      .build();
+
+    download_resource(resource, &args.version).await?;
 
     println!("🎉 Node v{} is installed", &args.version.bright_green());
 

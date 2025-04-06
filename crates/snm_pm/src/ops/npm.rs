@@ -343,11 +343,10 @@ mod tests {
       frozen: false,
     })?;
 
-    assert_eq!(cmd, vec![
-      "npm",
-      "install",
-      "@scope/package package-with-space"
-    ]);
+    assert_eq!(
+      cmd,
+      vec!["npm", "install", "@scope/package package-with-space"]
+    );
     Ok(())
   }
 }

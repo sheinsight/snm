@@ -6,7 +6,7 @@ use std::{
 use anyhow::{bail, Context};
 use lazy_regex::regex;
 use snm_config::snm_config::SnmConfig;
-use snm_node::downloader::NodeDownloader;
+use snm_downloader::{download_resource, DownloadNodeResource};
 use snm_utils::consts::{NODE_VERSION_FILE_NAME, SNM_PREFIX};
 use tokio::fs::read_to_string;
 use tracing::trace;
@@ -81,7 +81,12 @@ impl CommandShim {
     };
 
     if !node_exe.try_exists()? {
-      NodeDownloader::new(&config).download(&version).await?;
+      let resource = DownloadNodeResource::builder()
+        .config(config)
+        .bin_name(String::from("node"))
+        .build();
+
+      download_resource(resource, &version).await?;
     }
 
     let node_bin_dir = if cfg!(windows) {

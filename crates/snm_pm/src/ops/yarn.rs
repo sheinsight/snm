@@ -333,11 +333,10 @@ mod tests {
       frozen: false,
     })?;
 
-    assert_eq!(cmd, vec![
-      "yarn",
-      "add",
-      "@scope/package package-with-space"
-    ]);
+    assert_eq!(
+      cmd,
+      vec!["yarn", "add", "@scope/package package-with-space"]
+    );
     Ok(())
   }
 }

@@ -11,6 +11,7 @@ members = [
   "e2e",
   "demo",
   "crates/snm_test_utils",
+  "crates/snm_downloader",
 ]
 
 resolver = "2"
@@ -58,7 +59,9 @@ wait-timeout   = "=0.2.0"
 tokio-test = "=0.4.4"
 wiremock   = "=0.6.3"
 
-robust_downloader = "0.0.4"
+robust_downloader = "0.0.6"
+
+typed-builder = "0.21.0"
 
 ## 日志
 tracing            = "=0.1.41"

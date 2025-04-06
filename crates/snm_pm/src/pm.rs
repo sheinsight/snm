@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
+use snm_downloader::{DownloadPackageManagerResource, download_resource};
 use up_finder::UpFinder;
 
 use crate::{
-  downloader::PackageManagerDownloader,
   ops::{
     npm::NpmCommandLine, ops::PackageManagerOps, pnpm::PnpmCommandLine, yarn::YarnCommandLine,
     yarn_berry::YarnBerryCommandLine,
@@ -123,9 +123,12 @@ impl<'a> SPM<'a> {
     let file = dir.join("package.json");
 
     if !file.try_exists()? {
-      dir = PackageManagerDownloader::new(pm.metadata(), self.config)
-        .download_pm(pm.version())
-        .await?;
+      let resource = DownloadPackageManagerResource::builder()
+        .config(self.config)
+        .bin_name(pm.name().to_string())
+        .build();
+
+      dir = download_resource(resource, pm.version()).await?;
     }
 
     Ok(dir)

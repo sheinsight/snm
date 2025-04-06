@@ -19,6 +19,7 @@ dirs               = { workspace = true }
 lazy-regex         = { workspace = true }
 once_cell          = "1.19"
 snm_config         = { path = "../snm_config" }
+snm_downloader     = { path = "../snm_downloader" }
 snm_node           = { path = "../snm_node" }
 snm_pm             = { path = "../snm_pm" }
 snm_utils          = { path = "../snm_utils" }
