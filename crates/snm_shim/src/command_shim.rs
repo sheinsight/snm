@@ -1,13 +1,16 @@
 use std::{
   env::{current_dir, Args},
-  path::Path,
+  path::{Path, PathBuf},
 };
 
-use anyhow::bail;
+use anyhow::{bail, Context};
+use lazy_regex::regex;
 use snm_config::snm_config::SnmConfig;
-use snm_node::SNode;
-use snm_utils::consts::SNM_PREFIX;
+use snm_node::downloader::NodeDownloader;
+use snm_utils::consts::{NODE_VERSION_FILE_NAME, SNM_PREFIX};
+use tokio::fs::read_to_string;
 use tracing::trace;
+use up_finder::UpFinder;
 
 use crate::{node_shim::NodeShim, pm_shim::PmShim};
 
@@ -30,26 +33,98 @@ impl CommandShim {
   pub async fn from_args(args: Args) -> anyhow::Result<Self> {
     let args = args.collect::<Vec<String>>();
 
+    let Some(actual_bin_name) = args.first() else {
+      bail!("No binary name provided in arguments {:#?}", args);
+    };
+
     trace!(r#"try_from args: {:#?}"#, args);
 
     let cwd = current_dir()?;
 
     let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-    let snode = SNode::find_up(snm_config.clone())?;
-
-    let bin_dir = snode.get_bin_dir().await?;
+    let bin_dir = Self::find_node_bin_dir(&snm_config).await?;
 
     let paths = vec![bin_dir.to_string_lossy().into_owned()];
 
-    if let Some(actual_bin_name) = args.first() {
-      if actual_bin_name == "node" {
-        Ok(CommandShim::Node(NodeShim::new(args, paths)))
-      } else {
-        Ok(CommandShim::Pm(PmShim::new(args, paths, snm_config)))
-      }
+    if actual_bin_name == "node" {
+      Ok(CommandShim::Node(NodeShim::new(args, paths)))
     } else {
-      bail!("No binary name provided in arguments {:#?}", args);
+      Ok(CommandShim::Pm(PmShim::new(args, paths, snm_config)))
     }
+  }
+
+  async fn find_node_bin_dir(config: &SnmConfig) -> anyhow::Result<PathBuf> {
+    let find_up = UpFinder::builder()
+      .cwd(&config.workspace) // 从当前目录开始
+      .build();
+
+    let files = find_up.find_up(NODE_VERSION_FILE_NAME);
+
+    if files.is_empty() && config.strict {
+      bail!("In strict mode, a .node-version file must be configured in the current directory.");
+    }
+
+    let version = if let Some(file) = files.first() {
+      let raw_version = read_to_string(file).await?;
+      Self::parse_node_version(raw_version, Some(file)).await?
+    } else {
+      Self::get_default_version(config).await?
+    };
+
+    let node_home_dir = config.node_bin_dir.join(&version);
+
+    let node_exe = if cfg!(windows) {
+      node_home_dir.join("node.exe")
+    } else {
+      node_home_dir.join("bin").join("node")
+    };
+
+    if !node_exe.try_exists()? {
+      NodeDownloader::new(&config).download(&version).await?;
+    }
+
+    let node_bin_dir = if cfg!(windows) {
+      node_home_dir
+    } else {
+      node_home_dir.join("bin")
+    };
+
+    Ok(node_bin_dir)
+  }
+
+  async fn parse_node_version(
+    raw_version: String,
+    file_path: Option<&Path>,
+  ) -> anyhow::Result<String> {
+    let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
+    if !r.is_match(&raw_version) {
+      bail!(
+        "Invalid Node.js version format: {:#?}{}",
+        &raw_version,
+        file_path.map_or(String::new(), |p| format!(" in {:#?}", p))
+      );
+    }
+    Ok(
+      raw_version
+        .to_lowercase()
+        .trim_start_matches("v")
+        .trim()
+        .to_string(),
+    )
+  }
+
+  async fn get_default_version(config: &SnmConfig) -> anyhow::Result<String> {
+    let default_dir = config.node_bin_dir.join("default");
+
+    if !default_dir.try_exists()? {
+      bail!("No default Node.js version found");
+    }
+
+    default_dir
+      .read_link()?
+      .file_name()
+      .map(|s| s.to_string_lossy().into_owned())
+      .with_context(|| "Invalid symbolic link for default Node.js version")
   }
 }
