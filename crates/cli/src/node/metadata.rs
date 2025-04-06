@@ -1,8 +1,9 @@
-use std::fmt;
+use std::{collections::HashMap, fmt, time::Duration};
 
 use chrono::{NaiveDate, Utc};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use snm_config::snm_config::SnmConfig;
 
 use super::lts::Lts;
 
@@ -89,4 +90,25 @@ pub struct ScheduleMetadata {
   pub lts: Option<String>,
   pub codename: Option<String>,
   pub version: Option<String>,
+}
+
+impl ScheduleMetadata {
+  pub async fn fetch(snm_config: &SnmConfig) -> anyhow::Result<HashMap<String, ScheduleMetadata>> {
+    let url = format!(
+      "{host}/nodejs/Release/main/schedule.json",
+      host = snm_config.node_github_resource_host
+    );
+
+    let client = reqwest::Client::builder()
+      .timeout(Duration::from_secs(snm_config.download_timeout_secs))
+      .build()?;
+    let resp = client
+      .get(&url)
+      .send()
+      .await?
+      .json::<HashMap<String, ScheduleMetadata>>()
+      .await?;
+
+    Ok(resp)
+  }
 }

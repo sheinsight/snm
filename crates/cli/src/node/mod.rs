@@ -1,20 +1,18 @@
+mod lts;
+mod metadata;
+
 use std::{collections::HashMap, fmt::Display, fs, ops::Not, path::PathBuf, time::Duration};
 
 use colored::*;
 use dialoguer::Confirm;
 use itertools::Itertools;
-use metadata::NodeMetadata;
-use schedule::Schedule;
+use metadata::{NodeMetadata, ScheduleMetadata};
 use semver::Version;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{download_resource, DownloadNodeResource};
 use snm_utils::trace_if;
 use tracing::trace;
-
-pub mod lts;
-pub mod metadata;
-pub mod schedule;
 
 #[derive(Debug, clap::Args, Serialize)]
 pub struct DefaultArgs {
@@ -339,7 +337,7 @@ impl<'a> NodeFactory<'a> {
       .and_then(|p| p.file_name().map(|n| n.to_owned()))
       .map(|name| name.to_string_lossy().into_owned());
 
-    let x = Schedule::new(self.config).await?;
+    let x = ScheduleMetadata::fetch(self.config).await?;
 
     let node_list_url = format!("{host}/index.json", host = self.config.node_dist_url);
 
@@ -354,15 +352,6 @@ impl<'a> NodeFactory<'a> {
       .await?
       .into_iter()
       .filter_map(|node| {
-        // if let Some((major, _)) = node.version.split_once('.') {
-        //     if major == "v0" {
-        //         return None;
-        //     }
-        //     let schedule = x.get(major);
-        //     return Some(NodeMetadata { schedule, ..node });
-        // }
-        // None
-
         node
           .version
           .to_owned()
@@ -370,19 +359,10 @@ impl<'a> NodeFactory<'a> {
           .and_then(|(major, _)| {
             (major != "v0").then(|| NodeMetadata {
               default: default_version.as_ref().map(|v| v.eq(&node.version[1..])),
-              schedule: x.get(major),
+              schedule: x.get(major).map(|s| s.clone()),
               ..node
             })
           })
-
-        // if let Some((major, _)) = node.version.clone().split_once('.') {
-        //     return (major != "v0").then(|| NodeMetadata {
-        //         schedule: x.get(major),
-        //         ..node
-        //     });
-        // }
-
-        // None
       })
       .sorted_by_cached_key(|node| Version::parse(&node.version[1..]).ok())
       .collect();

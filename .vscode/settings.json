@@ -11,13 +11,12 @@
     // "dependi.decoration.compatible.template":"🟢",
     // "dependi.decoration.incompatible.template":"🔴",
     // "dependi.decoration.position":"before",
-    "rust-analyzer.linkedProjects": [
-        "./crates/cli/Cargo.toml",
-        "./crates/snm_npmrc/Cargo.toml",
-        "./crates/snm_config/Cargo.toml",
-        "./crates/snm_utils/Cargo.toml",
-        "./crates/snm_node/Cargo.toml",
-    ],
+    // "rust-analyzer.linkedProjects": [
+    //     "./crates/cli/Cargo.toml",
+    //     "./crates/snm_npmrc/Cargo.toml",
+    //     "./crates/snm_config/Cargo.toml",
+    //     "./crates/snm_utils/Cargo.toml"
+    // ],
     "cSpell.words": [
         "aarch",
         "armv",

@@ -17,7 +17,6 @@ serde_json = { workspace = true }
 semver = { workspace = true }
 snm_utils = { path = "../crates/snm_utils" }
 snm_test_utils = { path = "../crates/snm_test_utils" }
-snm_node = { path = "../crates/snm_node" }
 snm_config = { path = "../crates/snm_config" }
 dunce = { workspace = true }
 reqwest = { workspace = true, default-features = false }

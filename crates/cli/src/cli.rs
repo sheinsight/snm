@@ -95,7 +95,8 @@ impl SnmCli {
 
     match self.command {
       SnmCommands::Node { command } => {
-        let nm = snm_node::factory::NodeFactory::new(&snm_config);
+        // let nm = snm_node::factory::NodeFactory::new(&snm_config);
+        let nm = crate::node::NodeFactory::new(&snm_config);
         match command {
           NodeManageCommands::Default(args) => {
             trace!("Set default node: {:#?}", args);

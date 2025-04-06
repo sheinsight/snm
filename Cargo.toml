@@ -5,7 +5,6 @@ members = [
   "crates/snm_npmrc",
   "crates/snm_config",
   "crates/snm_utils",
-  "crates/snm_node",
   "crates/snm_shim",
   "crates/dev-tools",
   "e2e",
@@ -116,7 +115,6 @@ snm_cli        = { path = "./crates/cli" }
 snm_config     = { path = "./crates/snm_config" }
 snm_dev_tools  = { path = "./crates/dev-tools" }
 snm_downloader = { path = "./crates/snm_downloader" }
-snm_node       = { path = "./crates/snm_node" }
 snm_npmrc      = { path = "./crates/snm_npmrc" }
 snm_pm         = { path = "./crates/snm_pm" }
 snm_shim       = { path = "./crates/snm_shim" }

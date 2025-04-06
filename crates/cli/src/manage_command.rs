@@ -3,11 +3,11 @@ use serde::Serialize;
 #[derive(Subcommand, Debug, Serialize)]
 pub enum NodeManageCommands {
   /// Set default npm version
-  Default(snm_node::factory::DefaultArgs),
+  Default(crate::node::DefaultArgs),
   /// Install npm
-  Install(snm_node::factory::InstallArgs),
+  Install(crate::node::InstallArgs),
   /// Uninstall npm
-  Uninstall(snm_node::factory::UninstallArgs),
+  Uninstall(crate::node::UninstallArgs),
   /// List installed npm versions
-  List(snm_node::factory::ListArgs),
+  List(crate::node::ListArgs),
 }

@@ -22,6 +22,7 @@ colored            = { workspace = true }
 dialoguer          = { workspace = true }
 dirs               = { workspace = true }
 glob               = "0.3.2"
+itertools          = { workspace = true }
 regex              = { workspace = true }
 reqwest            = { workspace = true, features = ["json", "blocking", "stream", "rustls-tls"] }
 semver             = { workspace = true }
@@ -31,11 +32,10 @@ tokio              = { workspace = true, features = ["full"] }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
-snm_config = { workspace = true }
-snm_node   = { workspace = true }
-snm_pm     = { workspace = true }
-snm_utils  = { workspace = true }
-
+snm_config     = { workspace = true }
+snm_downloader = { workspace = true }
+snm_pm         = { workspace = true }
+snm_utils      = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
