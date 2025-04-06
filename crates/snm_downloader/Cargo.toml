@@ -7,7 +7,7 @@ version = "0.1.0"
 anyhow            = { workspace = true }
 async-trait       = { workspace = true }
 reqwest           = { workspace = true, features = ["json"] }
-robust_downloader = { workspace = true }
+robust_downloader = { workspace = true, features = ["sha1"] }
 serde             = { workspace = true, features = ["derive"] }
 typed-builder     = { workspace = true }
 
