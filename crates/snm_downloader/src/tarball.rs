@@ -1,13 +1,11 @@
 use std::{fs::File, path::PathBuf};
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use flate2::read::GzDecoder;
 use tar::Archive;
 use tracing::trace;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
-
-use crate::trace_if;
 
 #[derive(Debug)]
 pub enum ArchiveExtension {
@@ -42,15 +40,12 @@ impl ArchiveExtension {
   }
 
   pub fn decompress(&self, target_dir: &PathBuf) -> anyhow::Result<()> {
-    trace_if!(|| {
-      trace!(
-        r#"Decompressing archive
+    trace!(
+      r#"Decompressing archive
 source: {:?}
 target: {:?}"#,
-        self,
-        target_dir
-      );
-    });
+      self, target_dir
+    );
 
     if target_dir.try_exists()? {
       std::fs::remove_dir_all(target_dir)?;
@@ -83,14 +78,11 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace_if!(|| {
-            trace!(
-              r#"Unpacking file: 
+          trace!(
+            r#"Unpacking file: 
 {:?} -> {:?}"#,
-              path,
-              target
-            );
-          });
+            path, target
+          );
 
           entry.unpack(&target)?;
         }
@@ -119,14 +111,11 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace_if!(|| {
-            trace!(
-              r#"Unpacking file: 
+          trace!(
+            r#"Unpacking file: 
 {:?} -> {:?}"#,
-              path,
-              target
-            );
-          });
+            path, target
+          );
 
           entry.unpack(&target)?;
         }
@@ -155,14 +144,11 @@ target: {:?}"#,
 
           self.ensure_parent_dir(&target)?;
 
-          trace_if!(|| {
-            trace!(
-              r#"Copying file: 
+          trace!(
+            r#"Copying file: 
 {:?} -> {:?}"#,
-              path,
-              target
-            );
-          });
+            path, target
+          );
 
           // 只复制文件
           let mut outfile = std::fs::File::create(&target)?;

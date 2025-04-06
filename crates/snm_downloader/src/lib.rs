@@ -1,11 +1,11 @@
 use robust_downloader::RobustDownloader;
 use std::path::PathBuf;
-
-use snm_utils::tarball::ArchiveExtension;
+use tarball::ArchiveExtension;
 
 mod resource;
 mod resource_node;
 mod resource_package_manager;
+mod tarball;
 
 pub use resource::DownloadResource;
 pub use resource_node::DownloadNodeResource;
