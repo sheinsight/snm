@@ -6,23 +6,22 @@ version = "0.1.0-51"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow         = { workspace = true }
-chrono         = { workspace = true }
-clap           = { workspace = true, features = ["derive", "cargo"] }
-colored        = { workspace = true }
-dialoguer      = { workspace = true }
-fs_extra       = { workspace = true }
-itertools      = { workspace = true }
-remove_dir_all = { workspace = true }
-reqwest        = { workspace = true, features = ["json", "blocking", "stream", "rustls-tls"] }
-semver         = { workspace = true }
-serde          = { workspace = true, features = ["derive"] }
-serde_json     = { workspace = true }
-snm_config     = { path = "../snm_config" }
-snm_utils      = { path = "../snm_utils" }
-tracing        = { workspace = true }
-up_finder      = { workspace = true }
-uuid           = { workspace = true, features = ["v4"] }
-
+anyhow            = { workspace = true }
+chrono            = { workspace = true }
+clap              = { workspace = true, features = ["derive", "cargo"] }
+colored           = { workspace = true }
+dialoguer         = { workspace = true }
+itertools         = { workspace = true }
+remove_dir_all    = { workspace = true }
+reqwest           = { workspace = true, features = ["json", "blocking", "stream", "rustls-tls"] }
 robust_downloader = { workspace = true }
-snm_downloader    = { path = "../snm_downloader" }
+semver            = { workspace = true }
+serde             = { workspace = true, features = ["derive"] }
+serde_json        = { workspace = true }
+tracing           = { workspace = true }
+up_finder         = { workspace = true }
+uuid              = { workspace = true, features = ["v4"] }
+
+snm_config     = { workspace = true }
+snm_downloader = { workspace = true }
+snm_utils      = { workspace = true }

@@ -7,7 +7,6 @@ version = "0.1.0-51"
 
 [dependencies]
 anyhow             = { workspace = true }
-backoff            = { workspace = true, features = ["tokio"] }
 colored            = { workspace = true }
 config             = { workspace = true }
 dialoguer          = { workspace = true }
@@ -23,7 +22,6 @@ tar                = "0.4.40"
 tokio              = { workspace = true }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-wait-timeout       = { workspace = true }
 which              = { workspace = true }
 xz2                = { version = "0.1.7", features = ["static"] }
 zip                = "2.1.3"

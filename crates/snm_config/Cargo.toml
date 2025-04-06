@@ -12,10 +12,11 @@ config       = { workspace = true }
 dirs         = { workspace = true }
 serde        = { workspace = true, features = ["derive"] }
 serde_json   = { workspace = true }
-snm_npmrc    = { path = "../snm_npmrc" }
-snm_utils    = { path = "../snm_utils" }
 test-context = { workspace = true }
 tokio        = { workspace = true, features = ["macros"] }
+
+snm_npmrc = { workspace = true }
+snm_utils = { workspace = true }
 
 
 [dev-dependencies]

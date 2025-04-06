@@ -9,6 +9,7 @@ async-trait       = { workspace = true }
 reqwest           = { workspace = true, features = ["json"] }
 robust_downloader = { workspace = true }
 serde             = { workspace = true, features = ["derive"] }
-snm_config        = { path = "../snm_config" }
-snm_utils         = { path = "../snm_utils" }
 typed-builder     = { workspace = true }
+
+snm_config = { workspace = true }
+snm_utils  = { workspace = true }

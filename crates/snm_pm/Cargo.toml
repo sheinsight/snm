@@ -17,9 +17,10 @@ robust_downloader = { workspace = true, features = ["sha1"] }
 semver            = { workspace = true }
 serde             = { workspace = true, features = ["derive"] }
 serde_json        = { workspace = true }
-snm_config        = { path = "../snm_config" }
-snm_downloader    = { path = "../snm_downloader" }
-snm_utils         = { path = "../snm_utils" }
 tokio             = { workspace = true, features = ["macros"] }
 tracing           = { workspace = true }
 up_finder         = { workspace = true }
+
+snm_config     = { workspace = true }
+snm_downloader = { workspace = true }
+snm_utils      = { workspace = true }

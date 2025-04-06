@@ -13,4 +13,4 @@ test-context = { workspace = true }
 tokio        = { workspace = true, features = ["macros", "test-util"] }
 
 [dev-dependencies]
-snm_test_utils = { path = "../snm_test_utils" }
+snm_test_utils = { workspace = true }

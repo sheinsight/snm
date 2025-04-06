@@ -27,13 +27,15 @@ reqwest            = { workspace = true, features = ["json", "blocking", "stream
 semver             = { workspace = true }
 serde              = { workspace = true, features = ["derive"] }
 serde_json         = { workspace = true }
-snm_config         = { path = "../snm_config" }
-snm_node           = { path = "../snm_node" }
-snm_pm             = { path = "../snm_pm" }
-snm_utils          = { path = "../snm_utils" }
 tokio              = { workspace = true, features = ["full"] }
 tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+snm_config = { workspace = true }
+snm_node   = { workspace = true }
+snm_pm     = { workspace = true }
+snm_utils  = { workspace = true }
+
 
 [dev-dependencies]
 tokio-test = { workspace = true }
