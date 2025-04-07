@@ -7,18 +7,14 @@ on:
     branches: [dev]
 
 jobs:
-  test-building:
-    name: Cross-platform build
+  build-linux:
+    name: Build for Linux
     runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
-          - x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
-          - x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
-          - x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
-          - x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
-          - aarch64-apple-darwin        # Apple Silicon Mac
-          - x86_64-apple-darwin         # Intel Mac
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
       fail-fast: false
     steps:
       - name: Checkout code
@@ -37,3 +33,55 @@ jobs:
 
       - name: Build with cross
         run: cross build --verbose --release --target ${{ matrix.target }}
+
+  build-windows:
+    name: Build for Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+          - x86_64-pc-windows-gnu
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Build with cargo
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+
+  build-macos:
+    name: Build for macOS
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Build with cargo
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
