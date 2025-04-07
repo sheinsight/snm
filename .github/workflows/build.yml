@@ -39,13 +39,13 @@ jobs:
         run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
         env:
-          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main
+          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
 
       - name: Build with cross
         run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
         env:
-          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-musl:main
+          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
 
   build-windows:
     name: Build for Windows
