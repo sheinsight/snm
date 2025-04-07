@@ -42,11 +42,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+
+      - name: Stepup
+        uses: ./.github/actions/setup
         with:
-          override: true
           target: ${{ matrix.target }}
+
+      # - name: Install Rust
+      #   uses: actions-rust-lang/setup-rust-toolchain@v1
+      #   with:
+      #     override: true
+      #     target: ${{ matrix.target }}
       # 缓存
       # - name: Cache
       #   uses: actions/cache@v4
@@ -61,10 +68,10 @@ jobs:
       #     # restore-keys: |
       #     #   ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Install just
-        uses: taiki-e/install-action@v2
-        with:
-          tool: just
+      # - name: Install just
+      #   uses: taiki-e/install-action@v2
+      #   with:
+      #     tool: just
 
       - name: Just Setup
         run: | 
@@ -79,6 +86,7 @@ jobs:
           just ci-e2e
 
   matrix-build:
+    needs: Testing
     strategy:
       matrix:
         include:
