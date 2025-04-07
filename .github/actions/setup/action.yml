@@ -14,6 +14,7 @@ runs:
       with:
         override: true
         target: ${{ inputs.target }}
+        cache: false
 
     - name: Setup just and cross
       uses: taiki-e/install-action@v2
