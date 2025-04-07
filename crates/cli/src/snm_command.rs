@@ -28,7 +28,7 @@ pub enum SnmCommands {
     command: NodeManageCommands,
   },
 
-  #[command(name = "setup", about = "Setup snm.")]
+  #[command(name = "setup", about = "Setup snm." , visible_aliases = ["st"])]
   SetUp,
   // #[command(name = "ai-commit", about = "Commit ai.")]
   // AiCommit,
