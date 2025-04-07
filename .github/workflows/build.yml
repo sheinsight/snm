@@ -37,6 +37,8 @@ jobs:
 
       - name: Build with cross
         run: cross build --verbose --release --target ${{ matrix.target }}
+        env:
+          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main
 
   build-windows:
     name: Build for Windows
