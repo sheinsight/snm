@@ -7,6 +7,49 @@ on:
     branches: [dev]
 
 jobs:
+
   matrix-build:
-    uses: ./.github/workflows/build.yml
+    
+    strategy:
+      matrix:
+        include:
+          # Linux targets (GNU)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+          # Linux targets (MUSL)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
+
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
+
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin        # Apple Silicon Mac
+          - os: macos-13
+            target: x86_64-apple-darwin         # Intel Mac
+
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          override: true
+          target: ${{ matrix.target }}
+      - name: Build
+        uses: ./.github/actions/build/action.yml
+        with:
+          target: ${{ matrix.target }}
+          os: ${{ matrix.os }}
+          use-cross: ${{ matrix.use-cross }}
+          cross-image: ${{ matrix.cross-image }}
  

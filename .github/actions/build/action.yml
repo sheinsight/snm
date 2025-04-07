@@ -1,0 +1,56 @@
+name: 'Build Rust Project'
+description: '为特定平台构建 Rust 项目'
+author: 'Your Name'
+
+inputs:
+  target:
+    description: '目标平台，如 x86_64-unknown-linux-gnu'
+    required: true
+  os:
+    description: '操作系统类型 (linux/windows/macos)'
+    required: true
+  use-cross:
+    description: '是否使用 cross 进行构建'
+    required: false
+    default: 'false'
+  cross-image:
+    description: 'cross 构建使用的 Docker 镜像'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        override: true
+        target: ${{ inputs.target }}
+
+    - name: Install cross
+      if: inputs.use-cross == 'true'
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cross
+
+    - name: Build with cross
+      if: inputs.use-cross == 'true'
+      shell: bash
+      run: |
+        cross build --verbose --release --target ${{ inputs.target }}
+      env:
+        CROSS_IMAGE: ${{ inputs.cross-image }}
+
+    - name: Build with cargo
+      if: inputs.use-cross != 'true'
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --verbose --release --target ${{ inputs.target }}
+
+    - name: Strip Binary
+      if: inputs.os != 'windows'
+      shell: bash
+      run: |
+        for file in snm snm-shim; do
+          strip "target/${{ inputs.target }}/release/$file"
+        done
