@@ -12,5 +12,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Building
-        uses: ./.github/workflows/build-platform.yml
+        uses: ./.github/workflows/build.yml
  
