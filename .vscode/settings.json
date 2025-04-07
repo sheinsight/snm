@@ -35,6 +35,7 @@
         "insta",
         "Itertools",
         "justfile",
+        "msvc",
         "nocapture",
         "outpath",
         "pnpx",
