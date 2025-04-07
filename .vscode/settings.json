@@ -43,6 +43,7 @@
         "reqwest",
         "rexpect",
         "rsplit",
+        "RUSTFLAGS",
         "rustls",
         "serde",
         "SHASUMS",

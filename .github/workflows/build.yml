@@ -35,17 +35,21 @@ jobs:
         with:
           tool: cross
 
-      - name: Build with cross
+      - name: Build with cross (GNU)
         run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
         env:
           CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+          CROSS_CONTAINER_OPTS: "--security-opt seccomp=unconfined"
+          RUSTFLAGS: "-C target-feature=+crt-static"
 
-      - name: Build with cross
+      - name: Build with cross (MUSL)
         run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
         env:
           CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
+          CROSS_CONTAINER_OPTS: "--security-opt seccomp=unconfined"
+          RUSTFLAGS: "-C target-feature=+crt-static"
 
   build-windows:
     name: Build for Windows
