@@ -66,7 +66,7 @@ impl CommandShim {
     }
 
     let version = if let Some(file) = files.first() {
-      let raw_version = read_to_string(file).await?;
+      let raw_version = read_to_string(file).await?.trim().to_string();
       Self::parse_node_version(raw_version, Some(file)).await?
     } else {
       Self::get_default_version(config).await?

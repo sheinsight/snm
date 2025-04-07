@@ -117,7 +117,7 @@ impl<'a> SPM<'a> {
     let mut dir = self
       .config
       .node_modules_dir
-      .join(pm.full_name())
+      .join(pm.name())
       .join(pm.version());
 
     let file = dir.join("package.json");

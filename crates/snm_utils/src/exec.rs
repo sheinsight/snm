@@ -6,8 +6,6 @@ use std::{
 use anyhow::bail;
 use tracing::trace;
 
-use crate::trace_if;
-
 pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> anyhow::Result<()> {
   trace!("exec_cli args: {:#?}", args);
 
@@ -25,42 +23,30 @@ pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> any
     check_snm_binary(bin_name, &binaries)?;
   }
 
-  trace_if!(|| {
-    if let Some(binary) = binaries.first() {
-      trace!(
-        r#"which {}
-first binary: {}"#,
-        bin_name,
-        binary.to_string_lossy()
-      );
-      if binary.is_symlink() {
-        trace!("Binary {} is symlink", binary.to_string_lossy());
-        if let Ok(target) = std::fs::read_link(binary) {
-          trace!(
-            r#"Symlink:
-{} symlink from {:?}"#,
-            binary.to_string_lossy(),
-            target.to_string_lossy()
-          );
-        }
-      }
+  if let Some(program) = binaries.first() {
+    trace!("which first binary:{:#?}", program);
+
+    if program.is_symlink() {
+      trace!("program is symlink");
+      let target = std::fs::read_link(program)?;
+      trace!("target: {:#?}", target);
     }
-  });
 
-  let program = binaries.first().unwrap();
+    let output = Command::new(program)
+      .args(args)
+      .env("PATH", new_path.clone())
+      .stdout(Stdio::inherit())
+      .stderr(Stdio::inherit())
+      .stdin(Stdio::inherit())
+      .output()?;
 
-  let output = Command::new(program)
-    .args(args)
-    .env("PATH", new_path.clone())
-    .stdout(Stdio::inherit())
-    .stderr(Stdio::inherit())
-    .stdin(Stdio::inherit())
-    .output()?;
-
-  if output.status.success() {
-    Ok(())
+    if output.status.success() {
+      Ok(())
+    } else {
+      exit(output.status.code().unwrap_or(1));
+    }
   } else {
-    exit(output.status.code().unwrap_or(1));
+    bail!(r#"No binary found in PATH , You can try to install it by `snm setup`"#);
   }
 }
 
