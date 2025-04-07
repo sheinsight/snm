@@ -1,0 +1,24 @@
+name: Setup
+
+inputs:
+  target:
+    description: '目标平台，如 x86_64-unknown-linux-gnu'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        override: true
+        target: ${{ inputs.target }}
+
+    - name: Setup just and cross
+      uses: taiki-e/install-action@v2
+      with:
+        tool: just,cross
+
