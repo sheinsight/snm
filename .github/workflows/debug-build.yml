@@ -9,7 +9,6 @@ on:
 jobs:
 
   matrix-build:
-    
     strategy:
       matrix:
         include:
@@ -36,7 +35,8 @@ jobs:
           - os: macos-13
             target: x86_64-apple-darwin         # Intel Mac
 
-    runs-on: ubuntu-22.04
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
