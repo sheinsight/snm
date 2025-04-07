@@ -116,18 +116,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - uses: ./.github/actions/setup
+      - name: Setup ${{ matrix.target }}
+        uses: ./.github/actions/setup
         with:
           target: ${{ matrix.target }}
       
-      - uses: ./.github/actions/build
+      - name: Build ${{ matrix.target }}
+        uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
           os: ${{ matrix.os }}
           use-cross: ${{ matrix.use-cross }}
           cross-image: ${{ matrix.cross-image }}
       
-      - uses: ./.github/actions/upload
+      - name: Upload ${{ matrix.target }}
+        uses: ./.github/actions/upload
         with:
           target: ${{ matrix.target }}
 
