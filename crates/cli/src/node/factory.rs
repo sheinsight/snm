@@ -108,6 +108,49 @@ impl<'a> NodeFactory<'a> {
     Ok(binary_exists)
   }
 
+  async fn get_remote_node(&self) -> anyhow::Result<Vec<NodeMetadata>> {
+    let default_version = self
+      .config
+      .node_bin_dir
+      .join("default")
+      .read_link()
+      .ok()
+      .and_then(|p| p.file_name().map(|n| n.to_owned()))
+      .map(|name| name.to_string_lossy().into_owned());
+
+    let x = ScheduleMetadata::fetch(self.config).await?;
+
+    let node_list_url = format!("{host}/index.json", host = self.config.node_dist_url);
+
+    let client = reqwest::Client::new();
+
+    let node_vec: Vec<NodeMetadata> = client
+      .get(&node_list_url)
+      .timeout(Duration::from_secs(10))
+      .send()
+      .await?
+      .json::<Vec<NodeMetadata>>()
+      .await?
+      .into_iter()
+      .filter_map(|node| {
+        node
+          .version
+          .to_owned()
+          .split_once('.')
+          .and_then(|(major, _)| {
+            (major != "v0").then(|| NodeMetadata {
+              default: default_version.as_ref().map(|v| v.eq(&node.version[1..])),
+              schedule: x.get(major).map(|s| s.clone()),
+              ..node
+            })
+          })
+      })
+      .sorted_by_cached_key(|node| Version::parse(&node.version[1..]).ok())
+      .collect();
+
+    Ok(node_vec)
+  }
+
   pub async fn set_default(&self, args: DefaultArgs) -> anyhow::Result<()> {
     trace!(r#"Start set default node , args: {:#?}"#, args);
 
@@ -290,48 +333,5 @@ impl<'a> NodeFactory<'a> {
       });
 
     Ok(())
-  }
-
-  async fn get_remote_node(&self) -> anyhow::Result<Vec<NodeMetadata>> {
-    let default_version = self
-      .config
-      .node_bin_dir
-      .join("default")
-      .read_link()
-      .ok()
-      .and_then(|p| p.file_name().map(|n| n.to_owned()))
-      .map(|name| name.to_string_lossy().into_owned());
-
-    let x = ScheduleMetadata::fetch(self.config).await?;
-
-    let node_list_url = format!("{host}/index.json", host = self.config.node_dist_url);
-
-    let client = reqwest::Client::new();
-
-    let node_vec: Vec<NodeMetadata> = client
-      .get(&node_list_url)
-      .timeout(Duration::from_secs(10))
-      .send()
-      .await?
-      .json::<Vec<NodeMetadata>>()
-      .await?
-      .into_iter()
-      .filter_map(|node| {
-        node
-          .version
-          .to_owned()
-          .split_once('.')
-          .and_then(|(major, _)| {
-            (major != "v0").then(|| NodeMetadata {
-              default: default_version.as_ref().map(|v| v.eq(&node.version[1..])),
-              schedule: x.get(major).map(|s| s.clone()),
-              ..node
-            })
-          })
-      })
-      .sorted_by_cached_key(|node| Version::parse(&node.version[1..]).ok())
-      .collect();
-
-    Ok(node_vec)
   }
 }
