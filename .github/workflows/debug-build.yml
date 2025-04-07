@@ -35,7 +35,7 @@ jobs:
           - os: macos-13
             target: x86_64-apple-darwin         # Intel Mac
 
-    name: ${{ matrix.os }}
+    name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
