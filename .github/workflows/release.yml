@@ -79,34 +79,58 @@ jobs:
           just ci-e2e
 
   matrix-build:
-    needs: Testing
-    uses: ./.github/workflows/build.yml
+    strategy:
+      matrix:
+        include:
+          # Linux targets (GNU)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+          # Linux targets (MUSL)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
+
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
+
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin        # Apple Silicon Mac
+          - os: macos-13
+            target: x86_64-apple-darwin         # Intel Mac
+            
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          target: ${{ matrix.target }}
+      - name: Build ${{ matrix.target }}
+        uses: ./.github/actions/build
+        with:
+          target: ${{ matrix.target }}
+          os: ${{ matrix.os }}
+          use-cross: ${{ matrix.use-cross }}
+          cross-image: ${{ matrix.cross-image }}
+      - name: Upload ${{ matrix.target }}
+        uses: ./.github/actions/upload
+        with:
+          target: ${{ matrix.target }}
 
   publish:
-    name: Publish To Github Release
-    runs-on: ubuntu-latest
     needs: matrix-build
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code  # 添加这一步
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0     # 获取完整的 git 历史
-      - uses: actions/download-artifact@v4
-      - name: Display structure of downloaded files
-        run: ls -R
-      - name: Create Draft Release Upload Release Asset
-        id: upload-release-asset
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish
+        uses: ./.github/actions/publish
         with:
           tag_name: ${{ github.ref_name }}
-          draft: true
-          prerelease: false
-          files: |
-            **/*.tar.gz
-      - name: Update Release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: | 
-          echo "Updating release..."
-          gh release edit ${{ github.ref_name }} --draft=false --latest
  
