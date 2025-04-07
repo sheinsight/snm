@@ -30,7 +30,6 @@ pub enum SnmCommands {
 
   #[command(name = "setup", about = "Setup snm.")]
   SetUp,
-
-  #[command(name = "ai-commit", about = "Commit ai.")]
-  AiCommit,
+  // #[command(name = "ai-commit", about = "Commit ai.")]
+  // AiCommit,
 }
