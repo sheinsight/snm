@@ -14,7 +14,7 @@ pub enum SnmCommands {
   Install(InstallArgs),
 
   #[command(
-    visible_aliases=["un"],
+    visible_aliases=["ui"],
     about = "Remove a package.",
   )]
   Uninstall(RemoveArgs),
