@@ -10,7 +10,7 @@ name = 'tools'
 path = "./src/main.rs"
 
 [dependencies]
-glob      = "0.3.1"
+glob      = { workspace = true }
 inquire   = "0.7.5"
-semver    = "1.0.23"
+semver    = { workspace = true }
 toml_edit = "0.22.14"

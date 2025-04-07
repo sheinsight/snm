@@ -10,10 +10,10 @@ version = "0.1.0-52"
 anyhow       = { workspace = true }
 config       = { workspace = true }
 dirs         = { workspace = true }
-serde        = { workspace = true, features = ["derive"] }
+serde        = { workspace = true }
 serde_json   = { workspace = true }
 test-context = { workspace = true }
-tokio        = { workspace = true, features = ["macros"] }
+tokio        = { workspace = true }
 
 snm_npmrc = { workspace = true }
 snm_utils = { workspace = true }

@@ -7,13 +7,13 @@ version = "0.1.0-52"
 anyhow            = { workspace = true }
 async-trait       = { workspace = true }
 flate2            = { workspace = true }
-reqwest           = { workspace = true, features = ["json"] }
-robust_downloader = { workspace = true, features = ["sha1"] }
-serde             = { workspace = true, features = ["derive"] }
+reqwest           = { workspace = true }
+robust_downloader = { workspace = true }
+serde             = { workspace = true }
 tar               = { workspace = true }
 tracing           = { workspace = true }
 typed-builder     = { workspace = true }
-xz2               = { workspace = true, features = ["static"] }
+xz2               = { workspace = true }
 zip               = { workspace = true }
 
 snm_config = { workspace = true }

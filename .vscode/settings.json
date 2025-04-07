@@ -30,6 +30,7 @@
         "flate",
         "fmtln",
         "hasher",
+        "hashery",
         "indicatif",
         "insta",
         "Itertools",
