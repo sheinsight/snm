@@ -46,7 +46,7 @@ jobs:
           override: true
           target: ${{ matrix.target }}
       - name: Build
-        uses: ./.github/actions/build/action.yml
+        uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
           os: ${{ matrix.os }}
