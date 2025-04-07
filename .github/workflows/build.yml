@@ -47,6 +47,12 @@ jobs:
         env:
           CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
 
+      - name: Strip Binary (Linux and macOS only)
+        run: |
+          for file in snm snm-shim; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
+
       - name: Create Archive
         shell: bash
         run: |
@@ -130,6 +136,12 @@ jobs:
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
+        
+      - name: Strip Binary (Linux and macOS only)
+        run: |
+          for file in snm snm-shim; do
+            strip "target/${{ matrix.target }}/release/$file"
+          done
 
       - name: Create Archive
         shell: bash
