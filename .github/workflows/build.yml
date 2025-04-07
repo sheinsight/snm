@@ -35,11 +35,18 @@ jobs:
         with:
           tool: cross
 
-      - name: Build with cross (GNU)
-        run: cross build --verbose --release --target ${{ matrix.target }}
+      # - name: Build with cross (GNU)
+      #   run: cross build --verbose --release --target ${{ matrix.target }}
+      #   if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
+      #   env:
+      #     CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+
+      - name: Build with cargo
+        uses: actions-rs/cargo@v1
         if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
-        env:
-          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+        with:
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
 
       - name: Build with cross (MUSL)
         run: cross build --verbose --release --target ${{ matrix.target }}

@@ -9,5 +9,4 @@ on:
 jobs:
   build-linux:
     uses: ./.github/workflows/build.yml
-    # 如果 build.yml 不需要参数，则不需要 with 部分
  
