@@ -8,45 +8,21 @@ on:
 
 jobs:
   test-building:
-    name: Test building
+    name: Cross-platform build
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-            # Linux targets (GNU)
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
-            # Linux targets (MUSL)
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
-            
-            # Windows targets
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
-          - os: windows-latest
-            target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
-
-            # macOS targets
-          - os: macos-14
-            target: aarch64-apple-darwin        # Apple Silicon Mac
-          - os: macos-13
-            target: x86_64-apple-darwin         # Intel Mac
+        target:
+          - x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
+          - x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
+          - x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
+          - x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
+          - aarch64-apple-darwin        # Apple Silicon Mac
+          - x86_64-apple-darwin         # Intel Mac
       fail-fast: false
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Install Dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          # 安装 musl 工具链
-          sudo apt-get install -y musl-tools
-          # 安装交叉编译工具
-          sudo apt-get install -y musl-dev
-          sudo ln -s /usr/bin/musl-gcc /usr/bin/x86_64-linux-musl-gcc
-          # 确保工具链可用
-          which x86_64-linux-musl-gcc || echo "GCC for musl not found"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -54,15 +30,10 @@ jobs:
           override: true
           target: ${{ matrix.target }}
 
-      # - name: Debug OpenSSL dependency
-      #   if: matrix.os == 'ubuntu-latest' && matrix.target == 'x86_64-unknown-linux-musl'
-      #   run: |
-      #     cargo tree --target x86_64-unknown-linux-musl -i openssl-sys
-      #     # 也可以检查所有依赖
-      #     cargo tree --target x86_64-unknown-linux-musl | grep -i openssl
-
-      - name: Build Binary
-        uses: actions-rs/cargo@v1
+      - name: Install cross
+        uses: taiki-e/install-action@v2
         with:
-          command: build
-          args: --verbose --release --target ${{ matrix.target }}
+          tool: cross
+
+      - name: Build with cross
+        run: cross build --verbose --release --target ${{ matrix.target }}
