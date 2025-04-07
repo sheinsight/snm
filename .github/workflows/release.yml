@@ -48,18 +48,18 @@ jobs:
           override: true
           target: ${{ matrix.target }}
       # 缓存
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
-          # restore-keys: |
-          #   ${{ runner.os }}-${{ matrix.target }}-cargo-
+      # - name: Cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
+      #     # restore-keys: |
+      #     #   ${{ runner.os }}-${{ matrix.target }}-cargo-
 
       - name: Install just
         uses: taiki-e/install-action@v2
@@ -126,30 +126,33 @@ jobs:
           target: ${{ matrix.target }}
 
       # 缓存
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
-          # restore-keys: |
-          #   ${{ runner.os }}-${{ matrix.target }}-cargo-
+      # - name: Cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock', 'justfile') }}
+      #     # restore-keys: |
+      #     #   ${{ runner.os }}-${{ matrix.target }}-cargo-
       
       - name: Build Binary
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
+
+
       - name: Strip Binary (Linux and macOS only)
         if: matrix.os != 'windows-latest'
         run: |
           for file in snm snm-shim; do
             strip "target/${{ matrix.target }}/release/$file"
           done
+          
       - name: Create Archive
         shell: bash
         run: |
@@ -159,6 +162,7 @@ jobs:
           ls -l
           ls -l archive
           ls -l target/${{ matrix.target }}/release
+
       - name: Upload Artifacts tar.gz
         uses: actions/upload-artifact@v4
         with:

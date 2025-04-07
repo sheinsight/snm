@@ -7,6 +7,6 @@ on:
     branches: [dev]
 
 jobs:
-  build-linux:
+  matrix-build:
     uses: ./.github/workflows/build.yml
  

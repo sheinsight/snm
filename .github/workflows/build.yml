@@ -35,24 +35,33 @@ jobs:
         with:
           tool: cross
 
-      # - name: Build with cross (GNU)
-      #   run: cross build --verbose --release --target ${{ matrix.target }}
-      #   if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
-      #   env:
-      #     CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
-
-      - name: Build with cargo
-        uses: actions-rs/cargo@v1
+      - name: Build with cross (GNU)
+        run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
-        with:
-          command: build
-          args: --verbose --release --target ${{ matrix.target }}
+        env:
+          CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
 
       - name: Build with cross (MUSL)
         run: cross build --verbose --release --target ${{ matrix.target }}
         if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
         env:
           CROSS_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
+
+      - name: Create Archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{snm,snm-shim} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
+          ls -l
+          ls -l archive
+          ls -l target/${{ matrix.target }}/release
+
+      - name: Upload Artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
 
   build-windows:
     name: Build for Windows
@@ -78,6 +87,22 @@ jobs:
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Create Archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{snm,snm-shim} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
+          ls -l
+          ls -l archive
+          ls -l target/${{ matrix.target }}/release
+
+      - name: Upload Artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
 
   build-macos:
     name: Build for macOS
@@ -105,3 +130,19 @@ jobs:
         with:
           command: build
           args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Create Archive
+        shell: bash
+        run: |
+          mkdir archive
+          cp LICENSE README.md target/${{ matrix.target }}/release/{snm,snm-shim} archive/
+          tar -czf ${{ matrix.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
+          ls -l
+          ls -l archive
+          ls -l target/${{ matrix.target }}/release
+
+      - name: Upload Artifacts tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}.tar.gz
