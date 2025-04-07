@@ -7,8 +7,8 @@ on:
     branches: [dev]
 
 jobs:
-  unit-testing:
-    name: Unit testing
+  test-building:
+    name: Test building
     strategy:
       matrix:
         include:
