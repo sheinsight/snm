@@ -12,6 +12,7 @@ runs:
       uses: actions/download-artifact@v4
     
     - name: Display structure of downloaded files
+      shell: bash
       run: ls -R
 
     - name: Create Draft Release Upload Release Asset
@@ -27,6 +28,7 @@ runs:
 
     - name: Update Release
       if: startsWith(inputs.tag_name, 'refs/tags/')
+      shell: bash
       run: | 
         echo "Updating release..."
         gh release edit ${{ inputs.tag_name }} --draft=false --latest
