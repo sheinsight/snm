@@ -40,16 +40,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           override: true
           target: ${{ matrix.target }}
-      - name: Build
+
+      - name: Build ${{ matrix.target }}
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
           os: ${{ matrix.os }}
           use-cross: ${{ matrix.use-cross }}
           cross-image: ${{ matrix.cross-image }}
+
+      - name: Upload ${{ matrix.target }}
+        uses: ./.github/actions/upload
+        with:
+          target: ${{ matrix.target }}
  

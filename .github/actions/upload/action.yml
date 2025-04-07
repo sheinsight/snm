@@ -1,1 +1,25 @@
 name: Upload Artifacts tar.gz
+
+inputs:
+  target:
+    description: '目标平台，如 x86_64-unknown-linux-gnu'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create Archive
+      shell: bash
+      run: |
+        mkdir archive
+          cp LICENSE README.md target/${{ inputs.target }}/release/{snm,snm-shim} archive/
+          tar -czf ${{ inputs.target }}.tar.gz -C archive LICENSE README.md snm snm-shim
+          ls -l
+          ls -l archive
+          ls -l target/${{ inputs.target }}/release
+
+    - name: Upload Artifacts tar.gz
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.target }}
+        path: ${{ inputs.target }}.tar.gz
