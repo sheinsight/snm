@@ -48,7 +48,7 @@ runs:
         args: --verbose --release --target ${{ inputs.target }}
 
     - name: Strip Binary
-      if: inputs.os != 'windows'
+      if: ${{ !contains(inputs.os, 'windows') }}
       shell: bash
       run: |
         for file in snm snm-shim; do
