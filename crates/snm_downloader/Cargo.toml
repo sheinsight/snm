@@ -1,7 +1,7 @@
 [package]
 edition = "2024"
 name    = "snm_downloader"
-version = "0.1.0-55"
+version = "0.1.0-56"
 
 [dependencies]
 anyhow            = { workspace = true }
