@@ -2,8 +2,10 @@ name: building-platform-binary
 
 on:
   workflow_call:
-    inputs:
-
+    # inputs:
+    #   target:
+    #     required: true
+    #     type: string
     
 env:
   APP_NAME: snm
