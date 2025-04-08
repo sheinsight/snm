@@ -113,7 +113,7 @@ impl CommandShim {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use lazy_regex::regex;
 
   #[test]
   fn test_trim() {
