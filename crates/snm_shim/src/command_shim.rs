@@ -103,7 +103,7 @@ impl CommandShim {
     file_path: Option<&Path>,
   ) -> anyhow::Result<String> {
     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
-    if !r.is_match(&raw_version) {
+    if !r.is_match(&raw_version.trim()) {
       bail!(
         "Invalid Node.js version format: {:#?}{}",
         &raw_version,
