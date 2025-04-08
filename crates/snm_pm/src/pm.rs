@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
+use snm_utils::ver::ver_gt_1;
 use up_finder::UpFinder;
 
 use crate::{
@@ -18,7 +19,7 @@ use crate::{
 pub enum PM {
   Npm(PackageManagerMetadata),
   Yarn(PackageManagerMetadata),
-  YarnBerry(PackageManagerMetadata),
+  // YarnBerry(PackageManagerMetadata),
   Pnpm(PackageManagerMetadata),
 }
 
@@ -26,8 +27,14 @@ impl PM {
   pub fn get_ops(&self) -> Box<dyn PackageManagerOps> {
     match self {
       Self::Npm(_) => Box::new(NpmCommandLine::new()),
-      Self::Yarn(_) => Box::new(YarnCommandLine::new()),
-      Self::YarnBerry(_) => Box::new(YarnBerryCommandLine::new()),
+      Self::Yarn(_) => {
+        if ver_gt_1(&self.version()).unwrap_or(false) {
+          Box::new(YarnBerryCommandLine::new())
+        } else {
+          Box::new(YarnCommandLine::new())
+        }
+      }
+      // Self::YarnBerry(_) => Box::new(YarnBerryCommandLine::new()),
       Self::Pnpm(_) => Box::new(PnpmCommandLine::new()),
     }
   }
@@ -36,13 +43,15 @@ impl PM {
 impl PM {
   pub fn metadata(&self) -> &PackageManagerMetadata {
     match self {
-      Self::Npm(a) | Self::Yarn(a) | Self::YarnBerry(a) | Self::Pnpm(a) => a,
+      Self::Npm(a) | Self::Yarn(a) | 
+      // Self::YarnBerry(a) | 
+      Self::Pnpm(a) => a,
     }
   }
 
-  pub fn full_name(&self) -> &str {
-    self.metadata().full_name.as_str()
-  }
+  // pub fn full_name(&self) -> &str {
+  //   self.metadata().full_name.as_str()
+  // }
 
   pub fn name(&self) -> &str {
     self.metadata().name.as_str()
@@ -151,7 +160,7 @@ mod tests {
       _ => panic!("Expected Pnpm variant"),
     };
 
-    assert_eq!(info.full_name, "pnpm");
+    assert_eq!(info.name, "pnpm");
     assert_eq!(info.version, "9.0.0");
   }
 
@@ -159,7 +168,7 @@ mod tests {
   fn test_parse_package_manager_with_pnpm_and_hash() {
     let pm = PM::parse("pnpm@9.0.0+sha.1234567890").expect("Should parse PNPM package manager");
 
-    assert_eq!(pm.full_name(), "pnpm");
+    assert_eq!(pm.name(), "pnpm");
     assert_eq!(pm.version(), "9.0.0");
     assert_eq!(pm.hash().unwrap().method, "sha");
     assert_eq!(pm.hash().unwrap().value, "1234567890");
@@ -169,7 +178,7 @@ mod tests {
   fn test_parse_package_manager_with_npm() {
     let pm = PM::parse("npm@10.0.0").expect("Should parse NPM package manager");
 
-    assert_eq!(pm.full_name(), "npm");
+    assert_eq!(pm.name(), "npm");
     assert_eq!(pm.version(), "10.0.0");
   }
 }
