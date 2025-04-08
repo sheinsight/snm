@@ -98,27 +98,6 @@ impl CommandShim {
     Ok(node_bin_dir)
   }
 
-  async fn parse_node_version(raw_version: String, file: &Path) -> anyhow::Result<String> {
-    let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
-
-    let version = raw_version.trim();
-
-    if !r.is_match(&version) {
-      bail!(
-        "Invalid Node.js version format: {} in {:#?}",
-        &version,
-        file
-      );
-    }
-    Ok(
-      raw_version
-        .to_lowercase()
-        .trim_start_matches("v")
-        .trim()
-        .to_string(),
-    )
-  }
-
   async fn get_default_version(config: &SnmConfig) -> anyhow::Result<String> {
     let default_dir = config.node_bin_dir.join("default");
 

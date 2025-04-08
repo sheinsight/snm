@@ -22,23 +22,31 @@ impl<P: AsRef<Path>> NodeVersion<P> {
     if !r.is_match(&val) {
       bail!(
         "Invalid Node.js version format: {} in {:#?}",
-        &val,
+        raw,
         file_name
       );
     }
 
     Ok(Self {
-      raw,
+      raw: raw.to_string(),
       val,
       file: Some(file),
     })
   }
 
-  pub fn from(raw: &str) -> Self {
-    Self {
-      raw: raw.to_string(),
-      val: raw.trim().to_lowercase().trim_start_matches("v").to_owned(),
-      file: None,
+  pub fn from(raw: &str) -> anyhow::Result<Self> {
+    let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
+
+    let val = raw.trim().to_lowercase().trim_start_matches("v").to_owned();
+
+    if !r.is_match(&val) {
+      bail!("Invalid Node.js version format: {}", &raw);
     }
+
+    Ok(Self {
+      raw: raw.to_string(),
+      val,
+      file: None,
+    })
   }
 }
