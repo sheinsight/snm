@@ -88,7 +88,7 @@ wiremock     = "=0.6.3"
 
 # 自维护
 hashery           = "0.0.1"
-robust_downloader = { version = "0.0.7", default-features = false, features = ["rustls", "sha1", "sha2"] }
+robust_downloader = { version = "0.0.9", default-features = false, features = ["rustls", "sha1", "sha2"] }
 up_finder         = "0.0.4"
 
 

@@ -6,7 +6,7 @@ use lazy_regex::regex;
 pub struct NodeVersion<P: AsRef<Path>> {
   pub raw: String,
   pub val: String,
-  pub file: P,
+  pub file: Option<P>,
 }
 
 impl<P: AsRef<Path>> NodeVersion<P> {
@@ -27,6 +27,18 @@ impl<P: AsRef<Path>> NodeVersion<P> {
       );
     }
 
-    Ok(Self { raw, val, file })
+    Ok(Self {
+      raw,
+      val,
+      file: Some(file),
+    })
+  }
+
+  pub fn from(raw: &str) -> Self {
+    Self {
+      raw: raw.to_string(),
+      val: raw.trim().to_lowercase().trim_start_matches("v").to_owned(),
+      file: None,
+    }
   }
 }
