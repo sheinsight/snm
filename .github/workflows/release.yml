@@ -145,4 +145,4 @@ jobs:
         uses: ./.github/actions/publish
         with:
           tag_name: ${{ github.ref_name }}
- 
+          tag: ${{ github.ref }}

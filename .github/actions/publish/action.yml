@@ -4,6 +4,9 @@ inputs:
   tag_name:
     description: '发布的标签名称'
     required: true
+  tag:
+    description: '发布的标签名称'
+    required: true
 
 runs:
   using: "composite"
@@ -18,7 +21,7 @@ runs:
     - name: Create Draft Release Upload Release Asset
       id: upload-release-asset
       uses: softprops/action-gh-release@v2
-      if: startsWith(inputs.tag_name, 'refs/tags/')
+      # if: startsWith(inputs.tag_name, 'refs/tags/')
       with:
         tag_name: ${{ inputs.tag_name }}
         draft: true
@@ -27,7 +30,7 @@ runs:
           **/*.tar.gz
 
     - name: Update Release
-      if: startsWith(inputs.tag_name, 'refs/tags/')
+      # if: startsWith(inputs.tag_name, 'refs/tags/')
       shell: bash
       run: | 
         echo "Updating release..."

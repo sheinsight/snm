@@ -145,7 +145,7 @@ mod tests {
     let v = r#"18.19.0
 "#;
 
-    let v = v.trim().to_string();
+    let v = v.trim();
 
     assert_eq!(v, "18.19.0");
     assert!(r.is_match(&v));
