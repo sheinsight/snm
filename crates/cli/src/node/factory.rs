@@ -208,9 +208,11 @@ impl<'a> NodeFactory<'a> {
       .bin_name(String::from("node"))
       .build();
 
-    download_resource(resource, &args.version).await?;
+    let node_version = snm_utils::NodeVersion::try_from_str(&args.version)?;
 
-    println!("🎉 Node v{} is installed", &args.version.bright_green());
+    download_resource(resource, &node_version.val).await?;
+
+    println!("🎉 Node v{} is installed", &node_version.val.bright_green());
 
     Ok(())
   }

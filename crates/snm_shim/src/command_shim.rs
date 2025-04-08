@@ -64,7 +64,7 @@ impl CommandShim {
     }
 
     let version = if let Some(file) = files.first() {
-      let node_version = snm_utils::NodeVersion::parse(file).await?;
+      let node_version = snm_utils::NodeVersion::try_from_file(file).await?;
       node_version.val
     } else {
       Self::get_default_version(config).await?
