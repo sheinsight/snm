@@ -4,11 +4,9 @@ use std::{
 };
 
 use anyhow::{bail, Context};
-use lazy_regex::regex;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{download_resource, DownloadNodeResource};
 use snm_utils::consts::{NODE_VERSION_FILE_NAME, SNM_PREFIX};
-use tokio::fs::read_to_string;
 use tracing::trace;
 use up_finder::UpFinder;
 
