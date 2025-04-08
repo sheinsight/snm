@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::bail;
 use lazy_regex::regex;
 
+#[derive(Debug, Clone)]
 pub struct NodeVersion {
   pub raw: String,
   pub val: String,
