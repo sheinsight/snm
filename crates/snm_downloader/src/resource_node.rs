@@ -94,10 +94,16 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
     'life0: 'async_trait,
   {
     Box::pin(async move {
+      let version = version
+        .trim()
+        .to_lowercase()
+        .trim_start_matches("v")
+        .to_owned();
+
       let sha256_url = format!(
         "{host}/v{version}/SHASUMS256.txt",
         host = self.config.node_dist_url,
-        version = version
+        version = &version
       );
 
       let client = reqwest::Client::builder()
@@ -108,7 +114,7 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
 
       let shasums = self.parse_shasum(&sha256_str);
 
-      let file_name = self.get_artifact_name(version);
+      let file_name = self.get_artifact_name(&version);
 
       let sha256 = shasums
         .get(&file_name)

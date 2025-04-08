@@ -67,7 +67,7 @@ impl CommandShim {
 
     let version = if let Some(file) = files.first() {
       let raw_version = read_to_string(file).await?.trim().to_string();
-      Self::parse_node_version(raw_version, Some(file)).await?
+      Self::parse_node_version(raw_version, file).await?
     } else {
       Self::get_default_version(config).await?
     };
@@ -98,19 +98,16 @@ impl CommandShim {
     Ok(node_bin_dir)
   }
 
-  async fn parse_node_version(
-    raw_version: String,
-    file_path: Option<&Path>,
-  ) -> anyhow::Result<String> {
+  async fn parse_node_version(raw_version: String, file: &Path) -> anyhow::Result<String> {
     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
 
     let version = raw_version.trim();
 
     if !r.is_match(&version) {
       bail!(
-        "Invalid Node.js version format: {}{}",
-        &raw_version,
-        file_path.map_or(String::new(), |p| format!(" in {:#?}", p))
+        "Invalid Node.js version format: {} in {:#?}",
+        &version,
+        file
       );
     }
     Ok(
