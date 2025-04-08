@@ -103,9 +103,12 @@ impl CommandShim {
     file_path: Option<&Path>,
   ) -> anyhow::Result<String> {
     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
-    if !r.is_match(&raw_version.trim()) {
+
+    let version = raw_version.trim();
+
+    if !r.is_match(&version) {
       bail!(
-        "Invalid Node.js version format: {:#?}{}",
+        "Invalid Node.js version format: {}{}",
         &raw_version,
         file_path.map_or(String::new(), |p| format!(" in {:#?}", p))
       );
@@ -131,5 +134,23 @@ impl CommandShim {
       .file_name()
       .map(|s| s.to_string_lossy().into_owned())
       .with_context(|| "Invalid symbolic link for default Node.js version")
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_trim() {
+    let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
+
+    let v = r#"18.19.0
+"#;
+
+    let v = v.trim().to_string();
+
+    assert_eq!(v, "18.19.0");
+    assert!(r.is_match(&v));
   }
 }
