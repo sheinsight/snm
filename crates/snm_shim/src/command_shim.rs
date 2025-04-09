@@ -52,7 +52,7 @@ impl CommandShim {
     }
   }
 
-  async fn find_node_bin_dir(config: &SnmConfig) -> anyhow::Result<PathBuf> {
+  async fn read_node_version(config: &SnmConfig) -> anyhow::Result<String> {
     let find_up = UpFinder::builder()
       .cwd(&config.workspace) // 从当前目录开始
       .build();
@@ -72,6 +72,12 @@ impl CommandShim {
     } else {
       Self::get_default_version(config).await?
     };
+
+    Ok(version)
+  }
+
+  async fn find_node_bin_dir(config: &SnmConfig) -> anyhow::Result<PathBuf> {
+    let version = Self::read_node_version(config).await?;
 
     let node_home_dir = config.node_bin_dir.join(&version);
 
