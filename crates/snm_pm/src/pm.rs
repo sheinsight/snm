@@ -19,7 +19,6 @@ use crate::{
 pub enum PM {
   Npm(PackageManagerMetadata),
   Yarn(PackageManagerMetadata),
-  // YarnBerry(PackageManagerMetadata),
   Pnpm(PackageManagerMetadata),
 }
 
@@ -34,7 +33,6 @@ impl PM {
           Box::new(YarnCommandLine::new())
         }
       }
-      // Self::YarnBerry(_) => Box::new(YarnBerryCommandLine::new()),
       Self::Pnpm(_) => Box::new(PnpmCommandLine::new()),
     }
   }
@@ -46,10 +44,6 @@ impl PM {
       Self::Npm(a) | Self::Yarn(a) | Self::Pnpm(a) => a,
     }
   }
-
-  // pub fn full_name(&self) -> &str {
-  //   self.metadata().full_name.as_str()
-  // }
 
   pub fn name(&self) -> &str {
     self.metadata().name.as_str()
@@ -113,8 +107,6 @@ impl<'a> SPM<'a> {
   }
 
   pub async fn ensure_bin_dir(&self) -> anyhow::Result<PathBuf> {
-    // let spm = SPM::try_from(&self.config.workspace, self.config)?;
-
     let Some(spm) = SPM::from_config_file(&self.config) else {
       bail!("No package manager found");
     };

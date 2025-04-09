@@ -1,16 +1,10 @@
+use crate::pm::PM;
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use regex::Regex;
-// use snm_utils::{
-//   consts::{YARN_PACKAGE_NAME, YARNPKG_PACKAGE_NAME},
-//   ver::ver_gt_1,
-// };
-
-use crate::pm::PM;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata {
-  // pub full_name: String,
   pub version: String,
   pub hash: Option<PackageManagerHash>,
   pub name: String,
@@ -33,7 +27,6 @@ impl Into<PM> for PackageManagerMetadata {
     match self.name.as_str() {
       "npm" => PM::Npm(self),
       "yarn" => PM::Yarn(self),
-      // "@yarnpkg/cli-dist" => PM::YarnBerry(self),
       "pnpm" => PM::Pnpm(self),
       _ => unreachable!(),
     }
@@ -69,18 +62,7 @@ impl PackageManagerMetadata {
       })
       .map(|(method, value)| PackageManagerHash::new(method, value));
 
-    // let library_name = if name != YARN_PACKAGE_NAME {
-    //   &name
-    // } else {
-    //   if ver_gt_1(&version)? {
-    //     YARNPKG_PACKAGE_NAME
-    //   } else {
-    //     YARN_PACKAGE_NAME
-    //   }
-    // };
-
     Ok(Self {
-      // full_name: library_name.to_owned(),
       version,
       hash,
       name,
