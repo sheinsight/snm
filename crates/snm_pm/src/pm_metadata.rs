@@ -1,7 +1,6 @@
 use crate::pm::PM;
-use anyhow::Context;
-use once_cell::sync::Lazy;
-use regex::Regex;
+use anyhow::bail;
+use lazy_regex::regex_captures;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PackageManagerMetadata {
@@ -35,37 +34,38 @@ impl Into<PM> for PackageManagerMetadata {
 
 impl PackageManagerMetadata {
   pub fn from_str(raw: &str) -> anyhow::Result<Self> {
-    static REGEX: Lazy<Regex> = Lazy::new(|| {
-      Regex::new(r"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$")
-                .expect("Invalid regex pattern")
-    });
-    let captures = REGEX
-      .captures(raw)
-      .with_context(|| format!("Failed to capture package manager: {}", raw))?;
-
-    let name = captures
-      .name("name")
-      .map(|m| m.as_str().to_string())
-      .with_context(|| "Missing package name")?;
-
-    let version = captures
-      .name("version")
-      .map(|m| m.as_str().to_string())
-      .with_context(|| "Missing version")?;
-
-    let hash = captures
-      .name("hash_method")
-      .and_then(|method| {
-        captures
-          .name("hash_value")
-          .map(|value| (method.as_str().to_string(), value.as_str().to_string()))
-      })
-      .map(|(method, value)| PackageManagerHash::new(method, value));
+    let Some((_, name, version, _hash_method, _hash_value)) = regex_captures!(
+      r#"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$"#,
+      raw
+    ) else {
+      bail!("Failed to capture package manager: {}", raw);
+    };
 
     Ok(Self {
-      version,
-      hash,
-      name,
+      version: version.to_string(),
+      // TODO: 🤔 究竟以哪个 hash 为主？？ 远程的 meta 也有 hash 文件啊
+      // 这是不是 corepack 的设计缺陷
+      // hash: Some(PackageManagerHash::new(
+      //   hash_method.to_string(),
+      //   hash_value.to_string(),
+      // )),
+      hash: None,
+      name: name.to_string(),
     })
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use lazy_regex::regex_captures;
+
+  #[test]
+  fn test_parse_package_manager_metadata() {
+    let (raw, name, version, hash_method, hash_value) = regex_captures!(r#"^(?P<name>\w+)@(?P<version>[^+]+)(?:\+(?P<hash_method>sha\d*)\.(?P<hash_value>[a-fA-F0-9]+))?$"#, "npm@10.0.0+sha.1234567890").unwrap();
+    assert_eq!(raw, "npm@10.0.0+sha.1234567890");
+    assert_eq!(name, "npm");
+    assert_eq!(version, "10.0.0");
+    assert_eq!(hash_method, "sha");
+    assert_eq!(hash_value, "1234567890");
   }
 }
