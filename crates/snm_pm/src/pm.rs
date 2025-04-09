@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
 use snm_utils::ver::ver_gt_1;
@@ -123,9 +122,10 @@ impl<'a> SPM<'a> {
       let resource = DownloadPackageManagerResource::builder()
         .config(self.config)
         .bin_name(self.pm.name().to_string())
+        .version(self.pm.version().to_string())
         .build();
 
-      dir = download_resource(resource, self.pm.version()).await?;
+      dir = download_resource(resource).await?;
     }
 
     Ok(dir)

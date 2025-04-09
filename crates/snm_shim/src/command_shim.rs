@@ -91,9 +91,10 @@ impl CommandShim {
       let resource = DownloadNodeResource::builder()
         .config(config)
         .bin_name(String::from("node"))
+        .version(version.clone())
         .build();
 
-      download_resource(resource, &version).await?;
+      download_resource(resource).await?;
     }
 
     let node_bin_dir = if cfg!(windows) {

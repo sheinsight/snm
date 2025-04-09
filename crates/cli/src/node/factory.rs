@@ -203,14 +203,15 @@ impl<'a> NodeFactory<'a> {
       }
     }
 
+    let node_version = snm_utils::NodeVersion::try_from_str(&args.version)?;
+
     let resource = DownloadNodeResource::builder()
       .config(self.config)
       .bin_name(String::from("node"))
+      .version(node_version.val.clone())
       .build();
 
-    let node_version = snm_utils::NodeVersion::try_from_str(&args.version)?;
-
-    download_resource(resource, &node_version.val).await?;
+    download_resource(resource).await?;
 
     println!("🎉 Node v{} is installed", &node_version.val.bright_green());
 

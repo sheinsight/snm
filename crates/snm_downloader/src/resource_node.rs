@@ -11,10 +11,11 @@ use crate::DownloadResource;
 pub struct DownloadNodeResource<'a> {
   pub config: &'a SnmConfig,
   pub bin_name: String,
+  pub version: String,
 }
 
 impl<'a> DownloadNodeResource<'a> {
-  fn parse_shasum(&self, content: &str) -> HashMap<String, String> {
+  fn parse_shasum(content: &str) -> HashMap<String, String> {
     content
       .lines()
       .filter_map(|line| {
@@ -29,13 +30,13 @@ impl<'a> DownloadNodeResource<'a> {
 }
 
 impl<'a> DownloadResource for DownloadNodeResource<'a> {
-  fn get_extract_path(&self, version: &str) -> PathBuf {
-    let file_name = self.get_artifact_name(version);
+  fn get_extract_path(&self) -> PathBuf {
+    let file_name = self.get_artifact_name();
     self
       .config
       .download_dir
       .join("node")
-      .join(version)
+      .join(&self.version)
       .join(file_name)
   }
 
@@ -43,33 +44,29 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
     Duration::from_secs(self.config.download_timeout_secs)
   }
 
-  fn get_download_url(&self, version: &str) -> String {
+  fn get_download_url(&self) -> String {
     format!(
       "{host}/v{version}/{artifact_name}",
       host = self.config.node_dist_url,
-      version = version,
-      artifact_name = self.get_artifact_name(version)
+      version = &self.version,
+      artifact_name = self.get_artifact_name()
     )
   }
 
-  fn get_artifact_name(&self, version: &str) -> String {
+  fn get_artifact_name(&self) -> String {
     format!(
       "{bin_name}-v{version}-{os}-{arch}.{ext}",
       bin_name = self.bin_name,
-      version = version,
+      version = &self.version,
       os = self.config.platform.os,
       arch = self.config.platform.arch,
       ext = self.config.platform.ext
     )
   }
 
-  fn get_download_item(
-    &self,
-    version: &str,
-    integrity: Option<Integrity>,
-  ) -> DownloadItem<String, PathBuf> {
-    let url = self.get_download_url(version);
-    let target = self.get_extract_path(version);
+  fn get_download_item(&self, integrity: Option<Integrity>) -> DownloadItem<String, PathBuf> {
+    let url = self.get_download_url();
+    let target = self.get_extract_path();
 
     match integrity {
       Some(integrity) => DownloadItem::builder()
@@ -81,18 +78,21 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
     }
   }
 
-  fn get_decompress_dir(&self, version: &str) -> PathBuf {
-    self.config.node_bin_dir.join(&version)
+  fn get_decompress_dir(&self) -> PathBuf {
+    self.config.node_bin_dir.join(&self.version)
   }
 
-  fn get_expect_shasum<'life0, 'async_trait>(
-    &'life0 self,
-    version: &'life0 str,
+  fn get_expect_shasum<'async_trait>(
+    &self,
   ) -> Pin<Box<dyn Future<Output = anyhow::Result<Integrity>> + Send + 'async_trait>>
   where
     Self: 'async_trait,
-    'life0: 'async_trait,
   {
+    let version = self.version.clone();
+    let node_dist_url = self.config.node_dist_url.clone();
+    let timeout = self.get_timeout_secs();
+    let file_name = self.get_artifact_name();
+
     Box::pin(async move {
       let version = version
         .trim()
@@ -102,19 +102,15 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
 
       let sha256_url = format!(
         "{host}/v{version}/SHASUMS256.txt",
-        host = self.config.node_dist_url,
+        host = node_dist_url,
         version = &version
       );
 
-      let client = reqwest::Client::builder()
-        .timeout(self.get_timeout_secs())
-        .build()?;
+      let client = reqwest::Client::builder().timeout(timeout).build()?;
 
       let sha256_str = client.get(sha256_url).send().await?.text().await?;
 
-      let shasums = self.parse_shasum(&sha256_str);
-
-      let file_name = self.get_artifact_name(&version);
+      let shasums = Self::parse_shasum(&sha256_str);
 
       let sha256 = shasums
         .get(&file_name)
