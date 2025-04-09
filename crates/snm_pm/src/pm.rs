@@ -43,9 +43,7 @@ impl PM {
 impl PM {
   pub fn metadata(&self) -> &PackageManagerMetadata {
     match self {
-      Self::Npm(a) | Self::Yarn(a) | 
-      // Self::YarnBerry(a) | 
-      Self::Pnpm(a) => a,
+      Self::Npm(a) | Self::Yarn(a) | Self::Pnpm(a) => a,
     }
   }
 
