@@ -107,27 +107,25 @@ impl<'a> SPM<'a> {
   }
 
   pub async fn ensure_bin_dir(&self) -> anyhow::Result<PathBuf> {
-    let Some(spm) = SPM::from_config_file(&self.config) else {
-      bail!("No package manager found");
-    };
-
-    let pm = spm.pm;
+    // let Some(spm) = SPM::from_config_file(&self.config) else {
+    //   bail!("No package manager found");
+    // };
 
     let mut dir = self
       .config
       .node_modules_dir
-      .join(pm.name())
-      .join(pm.version());
+      .join(self.pm.name())
+      .join(self.pm.version());
 
     let file = dir.join("package.json");
 
     if !file.try_exists()? {
       let resource = DownloadPackageManagerResource::builder()
         .config(self.config)
-        .bin_name(pm.name().to_string())
+        .bin_name(self.pm.name().to_string())
         .build();
 
-      dir = download_resource(resource, pm.version()).await?;
+      dir = download_resource(resource, self.pm.version()).await?;
     }
 
     Ok(dir)
