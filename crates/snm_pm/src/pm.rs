@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
 use snm_utils::ver::ver_gt_1;
@@ -11,7 +12,7 @@ use crate::{
     yarn_berry::YarnBerryCommandLine,
   },
   package_json::PJson,
-  pm_metadata::{PackageManagerHash, PackageManagerMetadata},
+  pm_metadata::PackageManagerMetadata,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -52,13 +53,14 @@ impl PM {
     self.metadata().version.as_str()
   }
 
-  pub fn hash(&self) -> Option<&PackageManagerHash> {
-    self.metadata().hash.as_ref()
-  }
-
   pub fn parse(raw: &str) -> anyhow::Result<PM> {
-    let pm = PackageManagerMetadata::from_str(&raw)?.into();
-    Ok(pm)
+    let pm = PackageManagerMetadata::from_str(&raw)?;
+    match pm.name.as_str() {
+      "npm" => Ok(PM::Npm(pm)),
+      "yarn" => Ok(PM::Yarn(pm)),
+      "pnpm" => Ok(PM::Pnpm(pm)),
+      _ => bail!("Unsupported package manager: {}", pm.name),
+    }
   }
 }
 
@@ -158,10 +160,6 @@ mod tests {
 
     assert_eq!(pm.name(), "pnpm");
     assert_eq!(pm.version(), "9.0.0");
-    // assert_eq!(pm.hash().unwrap().method, "sha");
-    // assert_eq!(pm.hash().unwrap().value, "1234567890");
-    // 临时的调整为 总是 none
-    assert!(pm.hash().is_none());
   }
 
   #[test]
