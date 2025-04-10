@@ -1,9 +1,11 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::bail;
+use lazy_regex::regex_captures;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
 use snm_utils::ver::ver_gt_1;
+use strum::EnumString;
 use up_finder::UpFinder;
 
 use crate::{
@@ -12,62 +14,74 @@ use crate::{
     yarn_berry::YarnBerryCommandLine,
   },
   package_json::PJson,
-  pm_metadata::PackageManagerMetadata,
 };
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum PM {
-  Npm(PackageManagerMetadata),
-  Yarn(PackageManagerMetadata),
-  Pnpm(PackageManagerMetadata),
+#[derive(Debug, PartialEq, Eq, Clone, strum::Display, EnumString, strum::AsRefStr)]
+#[strum(serialize_all = "lowercase")]
+pub enum PackageManagerKind {
+  Npm,
+  Yarn,
+  Pnpm,
 }
 
-impl PM {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct PackageManager {
+  kind: PackageManagerKind,
+  version: String,
+}
+
+impl PackageManager {
   pub fn get_ops(&self) -> Box<dyn PackageManagerOps> {
-    match self {
-      Self::Npm(_) => Box::new(NpmCommandLine::new()),
-      Self::Yarn(_) => {
-        if ver_gt_1(&self.version()).unwrap_or(false) {
+    match self.kind {
+      PackageManagerKind::Npm => Box::new(NpmCommandLine::new()),
+      PackageManagerKind::Yarn => {
+        if ver_gt_1(&self.version).unwrap_or(false) {
           Box::new(YarnBerryCommandLine::new())
         } else {
           Box::new(YarnCommandLine::new())
         }
       }
-      Self::Pnpm(_) => Box::new(PnpmCommandLine::new()),
+      PackageManagerKind::Pnpm => Box::new(PnpmCommandLine::new()),
     }
   }
 }
 
-impl PM {
-  pub fn metadata(&self) -> &PackageManagerMetadata {
-    match self {
-      Self::Npm(a) | Self::Yarn(a) | Self::Pnpm(a) => a,
-    }
+impl PackageManager {
+  pub fn new(kind: PackageManagerKind, version: String) -> Self {
+    Self { kind, version }
   }
 
   pub fn name(&self) -> &str {
-    self.metadata().name.as_str()
+    self.kind.as_ref()
   }
 
   pub fn version(&self) -> &str {
-    self.metadata().version.as_str()
+    &self.version
   }
+}
 
-  pub fn parse(raw: &str) -> anyhow::Result<PM> {
-    let pm = PackageManagerMetadata::from_str(&raw)?;
-    match pm.name.as_str() {
-      "npm" => Ok(PM::Npm(pm)),
-      "yarn" => Ok(PM::Yarn(pm)),
-      "pnpm" => Ok(PM::Pnpm(pm)),
-      _ => bail!("Unsupported package manager: {}", pm.name),
-    }
+impl FromStr for PackageManager {
+  type Err = anyhow::Error;
+
+  fn from_str(raw: &str) -> Result<Self, Self::Err> {
+    let Some((_, name, version)) = regex_captures!(
+      r#"^(?P<name>npm|yarn|pnpm)@(?P<version>[^+]+)(?:\+.+)?$"#,
+      raw
+    ) else {
+      bail!("Failed to capture package manager: {}", raw);
+    };
+
+    let kind = PackageManagerKind::try_from(name)
+      .map_err(|_| anyhow::anyhow!("Unsupported package manager: {}, Raw: {}", name, raw))?;
+
+    Ok(PackageManager::new(kind, version.to_string()))
   }
 }
 
 #[derive(Debug)]
 pub struct SPM<'a> {
   pub config: &'a SnmConfig,
-  pub pm: PM,
+  pub pm: PackageManager,
 }
 
 impl<'a> SPM<'a> {
@@ -95,7 +109,7 @@ impl<'a> SPM<'a> {
         return None;
       };
 
-      let Some(pm) = PM::parse(&raw).ok() else {
+      let Some(pm) = PackageManager::from_str(&raw).ok() else {
         return None;
       };
 
@@ -108,10 +122,6 @@ impl<'a> SPM<'a> {
   }
 
   pub async fn ensure_bin_dir(&self) -> anyhow::Result<PathBuf> {
-    // let Some(spm) = SPM::from_config_file(&self.config) else {
-    //   bail!("No package manager found");
-    // };
-
     let mut dir = self
       .config
       .node_modules_dir
@@ -141,22 +151,24 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_pnpm() {
-    let pm = PM::parse("pnpm@9.0.0").expect("Should parse PNPM package manager");
+    let pm = PackageManager::from_str("pnpm@9.0.0").expect("Should parse PNPM package manager");
 
-    assert!(matches!(pm, PM::Pnpm(_)));
+    assert!(matches!(
+      pm,
+      PackageManager {
+        kind: PackageManagerKind::Pnpm,
+        ..
+      }
+    ));
 
-    let info = match pm {
-      PM::Pnpm(a) => a,
-      _ => panic!("Expected Pnpm variant"),
-    };
-
-    assert_eq!(info.name, "pnpm");
-    assert_eq!(info.version, "9.0.0");
+    assert_eq!(pm.name(), "pnpm");
+    assert_eq!(pm.version(), "9.0.0");
   }
 
   #[test]
   fn test_parse_package_manager_with_pnpm_and_hash() {
-    let pm = PM::parse("pnpm@9.0.0+sha.1234567890").expect("Should parse PNPM package manager");
+    let pm = PackageManager::from_str("pnpm@9.0.0+sha.1234567890")
+      .expect("Should parse PNPM package manager");
 
     assert_eq!(pm.name(), "pnpm");
     assert_eq!(pm.version(), "9.0.0");
@@ -164,7 +176,7 @@ mod tests {
 
   #[test]
   fn test_parse_package_manager_with_npm() {
-    let pm = PM::parse("npm@10.0.0").expect("Should parse NPM package manager");
+    let pm = PackageManager::from_str("npm@10.0.0").expect("Should parse NPM package manager");
 
     assert_eq!(pm.name(), "npm");
     assert_eq!(pm.version(), "10.0.0");

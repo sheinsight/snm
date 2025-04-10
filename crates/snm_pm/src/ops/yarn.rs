@@ -103,12 +103,14 @@ impl PackageManagerOps for YarnCommandLine {
 
 #[cfg(test)]
 mod tests {
+  use std::str::FromStr;
+
   use super::*;
-  use crate::{ops::ops::RunArgs, pm::PM};
+  use crate::{ops::ops::RunArgs, pm::PackageManager};
 
   #[tokio::test]
   async fn should_parse_yarn_command() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -127,7 +129,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_frozen() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -146,7 +148,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_save_prod() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -166,7 +168,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_save_dev() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -185,7 +187,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_save_peer() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -204,7 +206,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_save_optional() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -223,7 +225,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_save_exact() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
@@ -242,7 +244,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_run() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.run(RunArgs {
@@ -256,7 +258,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_run_with_passthrough_args() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.run(RunArgs {
@@ -270,7 +272,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_fail_when_save_peer_and_optional_are_set() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let result = ops.install(InstallArgs {
@@ -289,7 +291,7 @@ mod tests {
 
   // #[tokio::test]
   // async fn should_parse_yarn_command_with_empty_command() -> anyhow::Result<()> {
-  //   let pm = PM::parse("yarn@1.22.0")?;
+  //   let pm = PackageManager::from_str("yarn@1.22.0")?;
   //   let ops = pm.get_ops();
 
   //   let result = ops.run(RunArgs {
@@ -303,7 +305,7 @@ mod tests {
 
   #[tokio::test]
   async fn should_parse_yarn_command_with_remove_multiple_packages() -> anyhow::Result<()> {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.remove(RemoveArgs {
@@ -317,7 +319,7 @@ mod tests {
   #[tokio::test]
   async fn should_parse_yarn_command_with_special_characters_in_package_spec() -> anyhow::Result<()>
   {
-    let pm = PM::parse("yarn@1.22.0")?;
+    let pm = PackageManager::from_str("yarn@1.22.0")?;
     let ops = pm.get_ops();
 
     let cmd = ops.install(InstallArgs {
