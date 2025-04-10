@@ -1,7 +1,8 @@
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf, time::Duration};
 
 use anyhow::{Context, bail};
 use flate2::read::GzDecoder;
+use indicatif::{ProgressBar, ProgressStyle};
 use tar::Archive;
 use tracing::trace;
 use xz2::read::XzDecoder;
@@ -53,6 +54,22 @@ target: {:?}"#,
       std::fs::create_dir_all(target_dir)?;
     }
 
+    // 统一的 Spinner 样式设置
+    let spinner_style = ProgressStyle::default_spinner()
+      .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "-"])
+      .template("{spinner:.blue} {msg}")?;
+
+    let source_file_name = match self {
+      ArchiveExtension::Tgz(p) | ArchiveExtension::Xz(p) | ArchiveExtension::Zip(p) => {
+        p.file_name().unwrap_or_default()
+      }
+    };
+
+    let pb = ProgressBar::new_spinner();
+    pb.enable_steady_tick(Duration::from_millis(120));
+    pb.set_style(spinner_style); // 克隆样式应用到进度条
+    pb.set_message(format!("Extracting {:?}...", source_file_name));
+
     match self {
       ArchiveExtension::Tgz(source_file) => {
         let decoder = GzDecoder::new(File::open(source_file)?);
@@ -78,11 +95,9 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace!(
-            r#"Unpacking file: 
-{:?} -> {:?}"#,
-            path, target
-          );
+          trace!(r#"Unpacking file: {:?} -> {:?}"#, path, target);
+
+          pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 
           entry.unpack(&target)?;
         }
@@ -111,11 +126,9 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace!(
-            r#"Unpacking file: 
-{:?} -> {:?}"#,
-            path, target
-          );
+          trace!(r#"Unpacking file: {:?} -> {:?}"#, path, target);
+
+          pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 
           entry.unpack(&target)?;
         }
@@ -144,11 +157,9 @@ target: {:?}"#,
 
           self.ensure_parent_dir(&target)?;
 
-          trace!(
-            r#"Copying file: 
-{:?} -> {:?}"#,
-            path, target
-          );
+          trace!(r#"Copying file: {:?} -> {:?}"#, path, target);
+
+          pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 
           // 只复制文件
           let mut outfile = std::fs::File::create(&target)?;
@@ -157,6 +168,7 @@ target: {:?}"#,
       }
     }
 
+    pb.finish_and_clear();
     Ok(())
   }
 }

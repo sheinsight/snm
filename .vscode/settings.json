@@ -29,6 +29,7 @@
         "exclu",
         "flate",
         "fmtln",
+        "fslock",
         "hasher",
         "hashery",
         "indicatif",

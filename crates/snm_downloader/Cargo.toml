@@ -7,6 +7,7 @@ version = "0.1.0-66"
 anyhow            = { workspace = true }
 async-trait       = { workspace = true }
 flate2            = { workspace = true }
+indicatif         = { workspace = true }
 reqwest           = { workspace = true }
 robust_downloader = { workspace = true }
 serde             = { workspace = true }
