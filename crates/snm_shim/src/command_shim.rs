@@ -1,14 +1,12 @@
 use std::{
   env::{current_dir, Args},
-  path::{Path, PathBuf},
+  path::Path,
 };
 
-use anyhow::{bail, Context};
+use anyhow::bail;
 use snm_config::snm_config::SnmConfig;
-use snm_downloader::{download_resource, DownloadNodeResource};
-use snm_utils::consts::{NODE_VERSION_FILE_NAME, SNM_PREFIX};
+use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
-use up_finder::UpFinder;
 
 use crate::{node_shim::NodeShim, pm_shim::PmShim};
 
@@ -41,7 +39,9 @@ impl CommandShim {
 
     let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-    let bin_dir = Self::find_node_bin_dir(&snm_config).await?;
+    let node_setup = snm_node::NodeSetup::from(snm_config.clone());
+
+    let bin_dir = node_setup.resolve_node_bin_dir().await?;
 
     let paths = vec![bin_dir.to_string_lossy().into_owned()];
 
@@ -50,74 +50,6 @@ impl CommandShim {
     } else {
       Ok(CommandShim::Pm(PmShim::new(args, paths, snm_config)))
     }
-  }
-
-  async fn read_node_version(config: &SnmConfig) -> anyhow::Result<String> {
-    let find_up = UpFinder::builder()
-      .cwd(&config.workspace) // 从当前目录开始
-      .build();
-
-    let files = find_up.find_up(NODE_VERSION_FILE_NAME);
-
-    if files.is_empty() && config.strict {
-      bail!("In strict mode, a .node-version file must be configured in the current directory.");
-    }
-
-    let version = if let Some(file) = files.first() {
-      let node_version = snm_utils::NodeVersion::try_from_file(file).await?;
-
-      trace!(r#"find node version: {:#?}"#, node_version);
-
-      node_version.val
-    } else {
-      Self::get_default_version(config).await?
-    };
-
-    Ok(version)
-  }
-
-  async fn find_node_bin_dir(config: &SnmConfig) -> anyhow::Result<PathBuf> {
-    let version = Self::read_node_version(config).await?;
-
-    let node_home_dir = config.node_bin_dir.join(&version);
-
-    let node_exe = if cfg!(windows) {
-      node_home_dir.join("node.exe")
-    } else {
-      node_home_dir.join("bin").join("node")
-    };
-
-    if !node_exe.try_exists()? {
-      let resource = DownloadNodeResource::builder()
-        .config(config)
-        .bin_name(String::from("node"))
-        .version(version.clone())
-        .build();
-
-      download_resource(resource).await?;
-    }
-
-    let node_bin_dir = if cfg!(windows) {
-      node_home_dir
-    } else {
-      node_home_dir.join("bin")
-    };
-
-    Ok(node_bin_dir)
-  }
-
-  async fn get_default_version(config: &SnmConfig) -> anyhow::Result<String> {
-    let default_dir = config.node_bin_dir.join("default");
-
-    if !default_dir.try_exists()? {
-      bail!("No default Node.js version found");
-    }
-
-    default_dir
-      .read_link()?
-      .file_name()
-      .map(|s| s.to_string_lossy().into_owned())
-      .with_context(|| "Invalid symbolic link for default Node.js version")
   }
 }
 

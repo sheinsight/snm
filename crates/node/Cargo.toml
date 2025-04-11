@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name    = "snm_node"
+version = "0.1.0"
+
+[dependencies]
+anyhow         = { workspace = true }
+lazy-regex     = { workspace = true }
+snm_config     = { workspace = true }
+snm_downloader = { workspace = true }
+snm_utils      = { workspace = true }
+tokio          = { workspace = true }
+typed-builder  = { workspace = true }
+up_finder      = { workspace = true }

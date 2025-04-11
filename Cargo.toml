@@ -11,6 +11,7 @@ members = [
   "demo",
   "crates/snm_test_utils",
   "crates/snm_downloader",
+  "crates/node",
 ]
 
 resolver = "2"
@@ -120,11 +121,11 @@ snm_cli        = { path = "./crates/cli" }
 snm_config     = { path = "./crates/snm_config" }
 snm_dev_tools  = { path = "./crates/dev-tools" }
 snm_downloader = { path = "./crates/snm_downloader" }
+snm_node       = { path = "./crates/node" }
 snm_npmrc      = { path = "./crates/snm_npmrc" }
 snm_pm         = { path = "./crates/snm_pm" }
 snm_shim       = { path = "./crates/snm_shim" }
 snm_test_utils = { path = "./crates/snm_test_utils" }
 snm_utils      = { path = "./crates/snm_utils" }
-
 # [profile.test]
 # test-threads = 1
