@@ -15,7 +15,7 @@ impl NodeVersionHome {
   pub fn bin_dir(&self) -> PathBuf {
     let dir = &self.0;
     if cfg!(windows) {
-      dir.join("bin")
+      dir.to_owned()
     } else {
       dir.join("bin")
     }
