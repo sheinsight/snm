@@ -2,8 +2,9 @@ use std::path::Path;
 
 use anyhow::bail;
 use colored::Colorize;
+use package_json_parser::PackageJsonParser;
 use snm_config::snm_config::SnmConfig;
-use snm_pm::{package_json::PJson, pm::SPM};
+use snm_pm::pm::SPM;
 use snm_utils::exec::exec_cli;
 
 pub struct PmShim {
@@ -69,9 +70,17 @@ impl PmShim {
     }
 
     let dir = spm.ensure_bin_dir().await?;
-    let json = PJson::from(dir)?;
 
-    if let Ok(file) = json.get_bin_with_name(bin_name) {
+    let json = PackageJsonParser::parse(dir.join("package.json"))?;
+
+    // let json = PJson::from(dir)?;
+
+    let map = json.bin_to_hash_map()?;
+
+    // let x = map.get(bin_name);
+
+    if let Some(file) = map.get(bin_name) {
+      let file = dir.join(file);
       exec_cli(
         &[
           &[
@@ -92,6 +101,28 @@ impl PmShim {
         true,
       )?;
     }
+
+    // if let Ok(file) = json.get_bin_with_name(bin_name) {
+    //   exec_cli(
+    //     &[
+    //       &[
+    //         "node".to_string(),
+    //         file.to_string_lossy().into_owned(),
+    //         command.to_owned(),
+    //       ],
+    //       args,
+    //     ]
+    //     .concat(),
+    //     &self.paths,
+    //     true,
+    //   )?;
+    // } else {
+    //   exec_cli(
+    //     &[&[bin_name.to_string(), command.to_owned()], args].concat(),
+    //     &self.paths,
+    //     true,
+    //   )?;
+    // }
 
     Ok(())
   }

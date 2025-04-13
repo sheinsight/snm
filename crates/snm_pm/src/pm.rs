@@ -2,18 +2,16 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::bail;
 use lazy_regex::regex_captures;
+use package_json_parser::PackageJsonParser;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
 use snm_utils::ver::ver_gt_1;
 use strum::EnumString;
 use up_finder::UpFinder;
 
-use crate::{
-  ops::{
-    npm::NpmCommandLine, ops::PackageManagerOps, pnpm::PnpmCommandLine, yarn::YarnCommandLine,
-    yarn_berry::YarnBerryCommandLine,
-  },
-  package_json::PJson,
+use crate::ops::{
+  npm::NpmCommandLine, ops::PackageManagerOps, pnpm::PnpmCommandLine, yarn::YarnCommandLine,
+  yarn_berry::YarnBerryCommandLine,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, strum::Display, EnumString, strum::AsRefStr)]
@@ -97,19 +95,23 @@ impl<'a> SPM<'a> {
     }
 
     let Some(spm) = vecs.iter().find_map(|item| {
-      let Some(dir) = item.parent() else {
+      // let Some(dir) = item.parent() else {
+      //   return None;
+      // };
+
+      let Ok(package_json) = PackageJsonParser::parse(item) else {
         return None;
       };
 
-      let Some(package_json) = PJson::from(dir).ok() else {
-        return None;
-      };
+      // let Some(package_json) = PJson::from(dir).ok() else {
+      //   return None;
+      // };
 
       let Some(raw) = package_json.package_manager else {
         return None;
       };
 
-      let Some(pm) = PackageManager::from_str(&raw).ok() else {
+      let Some(pm) = PackageManager::from_str(&raw.0).ok() else {
         return None;
       };
 
