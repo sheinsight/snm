@@ -11,7 +11,7 @@ members = [
   "demo",
   "crates/snm_test_utils",
   "crates/snm_downloader",
-  "crates/node",
+  "crates/node", "crates/package_manager",
 ]
 
 resolver = "2"

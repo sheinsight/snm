@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name    = "package_manager"
+version = "0.1.0"
+
+[dependencies]
+anyhow     = { workspace = true }
+lazy-regex = { workspace = true }
+snm_config = { workspace = true }
+strum      = { workspace = true }
+up_finder  = { workspace = true }
