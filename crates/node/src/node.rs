@@ -9,17 +9,17 @@ use up_finder::UpFinder;
 use crate::{NodeVersion, NodeVersionHome};
 
 #[derive(Debug)]
-pub struct NodeSetup {
+pub struct NodeResolver {
   config: SnmConfig,
 }
 
-impl From<SnmConfig> for NodeSetup {
+impl From<SnmConfig> for NodeResolver {
   fn from(config: SnmConfig) -> Self {
     Self { config }
   }
 }
 
-impl NodeSetup {
+impl NodeResolver {
   pub async fn resolve_node_bin_dir(&self) -> anyhow::Result<PathBuf> {
     let nv = self.resolve_node_version()?;
 
@@ -37,7 +37,7 @@ impl NodeSetup {
   }
 }
 
-impl NodeSetup {
+impl NodeResolver {
   fn resolve_node_version(&self) -> anyhow::Result<NodeVersion> {
     let nv = if let Some(nv) = self.find_up_node_version()? {
       nv

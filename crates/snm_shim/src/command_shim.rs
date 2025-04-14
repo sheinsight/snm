@@ -39,7 +39,7 @@ impl CommandShim {
 
     let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-    let node_setup = snm_node::NodeSetup::from(snm_config.clone());
+    let node_setup = snm_node::NodeResolver::from(snm_config.clone());
 
     let bin_dir = node_setup.resolve_node_bin_dir().await?;
 

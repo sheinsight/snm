@@ -7,11 +7,11 @@ use up_finder::UpFinder;
 
 use crate::PackageManager;
 
-pub struct PackageManagerSetup {
+pub struct PackageManagerResolver {
   pub config: SnmConfig,
 }
 
-impl PackageManagerSetup {
+impl PackageManagerResolver {
   pub fn find_up_package_manager(&self) -> anyhow::Result<Option<PackageManager>> {
     let find_up = UpFinder::builder().cwd(&self.config.workspace).build();
 
