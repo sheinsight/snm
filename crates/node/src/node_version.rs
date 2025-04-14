@@ -12,11 +12,16 @@ pub struct NodeVersion {
 impl TryFrom<String> for NodeVersion {
   type Error = anyhow::Error;
   fn try_from(raw: String) -> Result<Self, Self::Error> {
+    let raw_trim = raw.trim().to_lowercase();
+
     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
-    if !r.is_match(&raw) {
+
+    if !r.is_match(&raw_trim) {
       bail!("Invalid Node.js version format: {}", raw);
     }
-    let val = raw.trim().to_lowercase().trim_start_matches("v").to_owned();
+
+    let val = raw_trim.trim_start_matches("v").to_owned();
+
     Ok(Self {
       raw: Some(raw.to_owned()),
       val,
@@ -32,42 +37,24 @@ impl TryFrom<PathBuf> for NodeVersion {
   }
 }
 
-// impl NodeVersion {
-//   pub async fn try_from_file<P: AsRef<Path>>(file: P) -> anyhow::Result<Self> {
-//     let raw = read_to_string(&file)?;
+#[cfg(test)]
+mod test {
+  use anyhow::bail;
+  use lazy_regex::regex;
 
-//     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
+  #[test]
+  fn should_xx() -> anyhow::Result<()> {
+    let raw = r#"v20.0.0
+    
+    
+    "#;
+    let raw = raw.trim().to_lowercase();
+    let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
 
-//     if !r.is_match(&raw) {
-//       bail!("Invalid Node.js version format: {}", raw);
-//     }
+    if !r.is_match(&raw) {
+      bail!("Invalid Node.js version format: {}", raw);
+    }
 
-//     let val = raw.trim().to_lowercase().trim_start_matches("v").to_owned();
-
-//     Ok(Self {
-//       raw: Some(raw.to_owned()),
-//       val,
-//     })
-//   }
-
-//   pub fn try_default<P: AsRef<Path>>(node_bin_dir: P) -> anyhow::Result<Self> {
-//     let default_dir = node_bin_dir.as_ref().join("default");
-
-//     if !default_dir.try_exists()? {
-//       bail!("No default Node.js version found");
-//     }
-
-//     let val = default_dir
-//       .read_link()?
-//       .file_name()
-//       .map(|v| v.to_string_lossy().into_owned())
-//       .ok_or_else(|| {
-//         anyhow::anyhow!(
-//           "Failed to read default Node.js version from symlink: {:?}",
-//           default_dir
-//         )
-//       })?;
-
-//     Ok(Self { raw: None, val })
-//   }
-// }
+    Ok(())
+  }
+}

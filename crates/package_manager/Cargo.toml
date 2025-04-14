@@ -4,8 +4,9 @@ name    = "package_manager"
 version = "0.1.0-67"
 
 [dependencies]
-anyhow     = { workspace = true }
-lazy-regex = { workspace = true }
-snm_config = { workspace = true }
-strum      = { workspace = true }
-up_finder  = { workspace = true }
+anyhow              = { workspace = true }
+lazy-regex          = { workspace = true }
+package_json_parser = { workspace = true }
+snm_config          = { workspace = true }
+strum               = { workspace = true }
+up_finder           = { workspace = true }

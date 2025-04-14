@@ -1,6 +1,0 @@
-{
-    "bin":{
-        "npm":"./bin/npm.cjs",
-        "npx":"./bin/npx.cjs"
-    }
-}

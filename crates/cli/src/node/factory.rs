@@ -7,6 +7,7 @@ use semver::Version;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{download_resource, DownloadNodeResource};
+use snm_node::NodeVersion;
 use tracing::trace;
 
 use crate::node::metadata::NodeMetadata;
@@ -203,7 +204,7 @@ impl<'a> NodeFactory<'a> {
       }
     }
 
-    let node_version = snm_utils::NodeVersion::try_from_str(&args.version)?;
+    let node_version = NodeVersion::try_from(args.version.clone())?;
 
     let resource = DownloadNodeResource::builder()
       .config(self.config)
