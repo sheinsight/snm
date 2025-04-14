@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "crates/cli",
-  # "crates/snm_pm",
   "crates/snm_npmrc",
   "crates/snm_config",
   "crates/snm_utils",
@@ -129,6 +128,6 @@ snm_package_manager = { path = "./crates/package_manager" }
 snm_shim            = { path = "./crates/snm_shim" }
 snm_test_utils      = { path = "./crates/snm_test_utils" }
 snm_utils           = { path = "./crates/snm_utils" }
-# snm_pm              = { path = "./crates/snm_pm" }
+
 # [profile.test]
 # test-threads = 1
