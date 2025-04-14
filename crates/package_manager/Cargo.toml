@@ -8,5 +8,6 @@ anyhow              = { workspace = true }
 lazy-regex          = { workspace = true }
 package_json_parser = { workspace = true }
 snm_config          = { workspace = true }
+snm_downloader      = { workspace = true }
 strum               = { workspace = true }
 up_finder           = { workspace = true }
