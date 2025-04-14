@@ -20,15 +20,6 @@ impl From<SnmConfig> for NodeSetup {
 }
 
 impl NodeSetup {
-  fn resolve_node_version(&self) -> anyhow::Result<NodeVersion> {
-    let nv = if let Some(nv) = self.find_up_node_version()? {
-      nv
-    } else {
-      self.find_default_node_version()?
-    };
-    Ok(nv)
-  }
-
   pub async fn resolve_node_bin_dir(&self) -> anyhow::Result<PathBuf> {
     let nv = self.resolve_node_version()?;
 
@@ -43,6 +34,17 @@ impl NodeSetup {
     let node_bin_dir = node_home_dir.bin_dir();
 
     Ok(node_bin_dir)
+  }
+}
+
+impl NodeSetup {
+  fn resolve_node_version(&self) -> anyhow::Result<NodeVersion> {
+    let nv = if let Some(nv) = self.find_up_node_version()? {
+      nv
+    } else {
+      self.find_default_node_version()?
+    };
+    Ok(nv)
   }
 
   async fn ensure_node(&self, node_exe: &PathBuf, nv: &NodeVersion) -> anyhow::Result<()> {
