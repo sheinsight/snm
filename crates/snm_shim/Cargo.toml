@@ -25,8 +25,9 @@ tracing             = { workspace = true }
 tracing-subscriber  = { workspace = true, features = ["env-filter"] }
 up_finder           = { workspace = true }
 
-snm_config     = { workspace = true }
-snm_downloader = { workspace = true }
-snm_node       = { workspace = true }
-snm_pm         = { workspace = true }
-snm_utils      = { workspace = true }
+snm_config          = { workspace = true }
+snm_downloader      = { workspace = true }
+snm_node            = { workspace = true }
+snm_package_manager = { workspace = true }
+# snm_pm              = { workspace = true }
+snm_utils = { workspace = true }

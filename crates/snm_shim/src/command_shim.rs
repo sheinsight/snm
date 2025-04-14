@@ -39,9 +39,9 @@ impl CommandShim {
 
     let snm_config = SnmConfig::from(SNM_PREFIX, &cwd)?;
 
-    let node_setup = snm_node::NodeResolver::from(snm_config.clone());
+    let node_resolver = snm_node::NodeResolver::from(snm_config.clone());
 
-    let bin_dir = node_setup.resolve_node_bin_dir().await?;
+    let bin_dir = node_resolver.resolve_node_bin_dir().await?;
 
     let paths = vec![bin_dir.to_string_lossy().into_owned()];
 

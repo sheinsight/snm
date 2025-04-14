@@ -1,5 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
+use anyhow::bail;
 use package_json_parser::PackageJsonParser;
 use snm_config::snm_config::SnmConfig;
 use snm_downloader::{DownloadPackageManagerResource, download_resource};
@@ -11,14 +12,22 @@ pub struct PackageManagerResolver {
   pub config: SnmConfig,
 }
 
+impl From<SnmConfig> for PackageManagerResolver {
+  fn from(config: SnmConfig) -> Self {
+    Self { config }
+  }
+}
+
 impl PackageManagerResolver {
-  pub fn find_up_package_manager(&self) -> anyhow::Result<Option<PackageManager>> {
+  pub fn find_up_package_manager(&self) -> anyhow::Result<PackageManager> {
     let find_up = UpFinder::builder().cwd(&self.config.workspace).build();
 
     let files = find_up.find_up("package.json");
 
     if files.is_empty() {
-      return Ok(None);
+      if self.config.strict {
+        bail!("You have not correctly configured packageManager in package.json");
+      }
     }
 
     let Some(package_manager_raw) = files.iter().find_map(|item| {
@@ -32,12 +41,17 @@ impl PackageManagerResolver {
 
       Some(raw)
     }) else {
-      return Ok(None);
+      // TODO 未来可能在非严格模式下会尝试存在默认的包管理器
+      if self.config.strict {
+        bail!("You have not correctly configured packageManager in package.json");
+      } else {
+        bail!("You have not correctly configured packageManager in package.json");
+      }
     };
 
     let package_manager = PackageManager::from_str(&package_manager_raw.0)?;
 
-    Ok(Some(package_manager))
+    Ok(package_manager)
   }
 
   pub async fn ensure_package_manager(

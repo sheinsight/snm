@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name    = "package_manager"
+name    = "snm_package_manager"
 version = "0.1.0-68"
 
 [dependencies]

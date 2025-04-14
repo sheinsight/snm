@@ -16,6 +16,10 @@ impl PackageManager {
     Self { kind, version }
   }
 
+  pub fn kind(&self) -> PackageManagerKind {
+    self.kind.to_owned()
+  }
+
   pub fn name(&self) -> &str {
     self.kind.as_ref()
   }

@@ -10,11 +10,13 @@ use clap::{command, crate_authors, crate_name, crate_version, CommandFactory, Pa
 use colored::Colorize;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
-use snm_pm::pm::SPM;
+use snm_package_manager::PackageManagerResolver;
 use snm_utils::{consts::SNM_PREFIX, exec::exec_cli};
 use tracing::trace;
 
-use crate::{manage_command::NodeManageCommands, snm_command::SnmCommands};
+use crate::{
+  manage_command::NodeManageCommands, package_manager::Command, snm_command::SnmCommands,
+};
 
 /// SnmCli 是 snm 的命令行工具
 /// Example:
@@ -116,12 +118,28 @@ impl SnmCli {
         }
       }
       SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
-        let Some(spm) = SPM::from_config_file(&snm_config) else {
+        let resolver = PackageManagerResolver::from(snm_config);
+
+        let Ok(package_manager) = resolver.find_up_package_manager() else {
           bail!("You have not correctly configured packageManager in package.json");
         };
-        trace!("Get spm: {:#?}", &spm);
-        let pm = spm.pm;
-        let handler = pm.get_ops();
+
+        let handler: Box<dyn Command> = match package_manager.kind() {
+          snm_package_manager::PackageManagerKind::Npm => {
+            Box::new(crate::package_manager::NpmCommandLine::new())
+          }
+          snm_package_manager::PackageManagerKind::Yarn => {
+            if snm_utils::ver::ver_gt_1(&package_manager.version())? {
+              Box::new(crate::package_manager::YarnBerryCommandLine::new())
+            } else {
+              Box::new(crate::package_manager::YarnCommandLine::new())
+            }
+          }
+          snm_package_manager::PackageManagerKind::Pnpm => {
+            Box::new(crate::package_manager::PnpmCommandLine::new())
+          }
+        };
+
         let commands = match self.command {
           SnmCommands::Install(install_args) => {
             trace!("Install command: {:#?}", install_args);
@@ -143,62 +161,7 @@ impl SnmCli {
       SnmCommands::SetUp => {
         setup_fig()?;
         setup_symlink()?;
-      } //       SnmCommands::AiCommit => {
-        //         let unified_diff = Command::new("git")
-        //           .args(["diff", "--staged", "--unified=3"])
-        //           .output()?;
-
-        //         let stat_diff = Command::new("git")
-        //           .args(["diff", "--staged", "--stat"])
-        //           .output()?;
-
-        //         let unified_content = String::from_utf8_lossy(&unified_diff.stdout);
-        //         let stat_content = String::from_utf8_lossy(&stat_diff.stdout);
-
-        //         let client = async_openai::Client::new();
-
-        //         let request = async_openai::types::CreateChatCompletionRequestArgs::default()
-        //         .model("gpt-4o")
-        //         .messages([
-        //           async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
-        //             .content("你是一个资深程序员，擅长各种编程语言，特别是 javascript 、typescript、rust、java，并且你还精通 git 。")
-        //             .build()?
-        //             .into(),
-        //           async_openai::types::ChatCompletionRequestUserMessageArgs::default()
-        //             .content(format!(r#"
-        // 请针对我的 git diff 内容生成一份标准的 中文 commit msg 信息,满足以下条件
-        //   - 尽可能的推断出代码改动的意图
-        //   - 请不要回复多余的信息，直接回复 commit msg 的内容
-        //   - commit msg 遵循 angular commit message 格式
-        // "#))
-        //             .build()?
-        //             .into(),
-        //           async_openai::types::ChatCompletionRequestUserMessageArgs::default()
-        //             .content(format!(r#"你可以从接下来的内容中获取 哪些文件被修改、每个文件增删了多少行"#))
-        //             .build()?
-        //             .into(),
-        //             async_openai::types::ChatCompletionRequestUserMessageArgs::default()
-        //             .content(stat_content.to_string())
-        //             .build()?
-        //             .into(),
-        //             async_openai::types::ChatCompletionRequestUserMessageArgs::default()
-        //             .content(format!(r#"你可以从接下来的内容中获取具体每一个文件的修改内容"#))
-        //             .build()?
-        //             .into(),
-        //           async_openai::types::ChatCompletionRequestUserMessageArgs::default()
-        //             .content(unified_content.to_string())
-        //             .build()?
-        //             .into(),
-        //         ])
-        //         .build()?;
-
-        //         let response = client.chat().create(request).await?;
-
-        //         for choice in response.choices {
-        //           println!("{}", choice.message.content.unwrap());
-        //         }
-        //       }
-        //     }
+      }
     }
     Ok(())
   }

@@ -1,6 +1,7 @@
 use clap::Subcommand;
 use serde::Serialize;
-use snm_pm::ops::ops::{InstallArgs, RemoveArgs, RunArgs};
+
+use crate::package_manager::{InstallArgs, RemoveArgs, RunArgs};
 
 use super::manage_command::NodeManageCommands;
 
