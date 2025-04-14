@@ -1,7 +1,7 @@
 mod kind;
 mod manager;
-mod setup;
+mod resolver;
 
 pub use kind::*;
 pub use manager::*;
-pub use setup::*;
+pub use resolver::*;
