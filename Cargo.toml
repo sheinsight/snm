@@ -1,15 +1,15 @@
 [workspace]
 members = [
   "crates/cli",
-  "crates/snm_npmrc",
-  "crates/snm_config",
-  "crates/snm_utils",
-  "crates/snm_shim",
+  "crates/npmrc",
+  "crates/config",
+  "crates/utils",
+  "crates/shim",
   "crates/dev-tools",
   "e2e",
   "demo",
-  "crates/snm_test_utils",
-  "crates/snm_downloader",
+  "crates/test_utils",
+  "crates/downloader",
   "crates/node",
   "crates/package_manager",
 ]
@@ -119,15 +119,15 @@ zip                 = "2.1.3"
 
 # self
 snm_cli             = { path = "./crates/cli" }
-snm_config          = { path = "./crates/snm_config" }
+snm_config          = { path = "./crates/config" }
 snm_dev_tools       = { path = "./crates/dev-tools" }
-snm_downloader      = { path = "./crates/snm_downloader" }
+snm_downloader      = { path = "./crates/downloader" }
 snm_node            = { path = "./crates/node" }
-snm_npmrc           = { path = "./crates/snm_npmrc" }
+snm_npmrc           = { path = "./crates/npmrc" }
 snm_package_manager = { path = "./crates/package_manager" }
-snm_shim            = { path = "./crates/snm_shim" }
-snm_test_utils      = { path = "./crates/snm_test_utils" }
-snm_utils           = { path = "./crates/snm_utils" }
+snm_shim            = { path = "./crates/shim" }
+snm_test_utils      = { path = "./crates/test_utils" }
+snm_utils           = { path = "./crates/utils" }
 
 # [profile.test]
 # test-threads = 1

@@ -20,4 +20,4 @@ snm_utils = { workspace = true }
 
 
 [dev-dependencies]
-snm_test_utils = { path = "../snm_test_utils" }
+snm_test_utils = { workspace = true }
