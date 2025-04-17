@@ -1,117 +1,93 @@
-# snm
+# SNM
+
+<div align="center">
+  <h1>SNM - 智能 Node 管理器</h1>
+  <p>强大的一体化 Node.js 版本与包管理工具</p>
+</div>
 
 [English](./README.md) | 简体中文
 
-snm = [fnm](https://github.com/Schniz/fnm) + [corepack](https://github.com/nodejs/corepack) + [ni](https://github.com/antfu-collective/ni) .
-
 ## ✨ 特性
 
-- 📦 node、npm、pnpm、yarn 版本管理工具
-- 🤡 根据你配置的 `packageManager` 自动的切换对应的包管理器
-- ✅ 检查你使用的命令是否符合 `packageManager` 的约定
-- 😄 根据当前工作目录下 .node-version 文件内声明的 node 版本自动切换
-- 🌟 CodeWhisperer 友好
+SNM 完美结合了 [corepack](https://github.com/nodejs/corepack)、[fnm](https://github.com/Schniz/fnm) 和 [ni](https://github.com/antfu/ni) 的优秀特性：
 
-  ![](./assets/fig.png)
+- 📦 统一管理 Node.js、npm、pnpm 和 Yarn 版本
+- 💡 基于项目配置智能切换包管理器
+- ✅ 自动校验包管理器是否符合 `packageManager` 配置
+- 🔄 根据 `.node-version` 文件自动切换 Node.js 版本
+- 🌟 通过 CodeWhisperer (Fig) 集成提供增强的命令行体验
+- 🚀 基于 Rust 实现的极致性能
+
+![SNM CLI 演示](./assets/fig.png)
 
 ## 🚀 安装
 
-### 使用脚本 (macOS/Linux)
-
-对于 bash 、zsh 和 fish shells ，有一个自动安装脚本。
-
-首先确保 curl 和 unzip 已经安装在您的操作系统上。然后执行：
+### 快速安装（macOS/Linux）
 
 ```bash
-
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash
-
 ```
 
-#### 升级
+### 安装选项
 
-在 macOS 上，只需 brew upgrade snm 即可。
+安装程序支持以下配置选项：
 
-在其他操作系统上，升级 snm 几乎与安装它相同。为了防止在您的 shell 配置文件中出现重复，请在安装命令中添加 --skip-shell。
+#### 自定义安装目录
 
-#### 参数
-
---skip-shell
-
-跳过 shell 环境变量的自动配置。一般用于升级 snm 避免重复注入 shell 。
-
-| 类型 | 配置目录                           |
-| ---- | ---------------------------------- |
-| Bash | $HOME/.bashrc                      |
-| Zsh  | $HOME/.zshrc                       |
-| Fish | $HOME/.config/fish/conf.d/snm.fish |
-
-### 手动安装
-
-#### 使用 Homebrew (macOS/Linux)
-
-```sh
-brew install snm
+```bash
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.snm"
 ```
 
-#### 使用发布二进制文件 (Linux/macOS/Windows)
+#### 跳过 Shell 配置
 
-- 下载适用于您系统的[最新版本二进制文件](https://github.com/sheinsight/snm/releases)
-- 在全局范围内将其放置在`PATH`环境变量中。
-- [Set up your shell for snm](#shell-setup)
+```bash
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --skip-shell
+```
 
-### 删除
+#### 安装指定版本
 
-要删除 snm , 只需要删除您的主目录中的`.snm`文件夹。您还应该编辑您的 shell 配置文件以删除任何对 snm 的引用（即阅读 [设置](#设置) ，并执行相反操作）。
+```bash
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --release "0.0.1-27"
+```
 
-## ⚙️ 设置
+你可以组合多个选项：
 
-在 shell 中我们提供了以下的配置项目：
+```bash
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.snm" --skip-shell --release "0.0.1-27"
+```
 
-| 配置项                        | 默认值                            | 功能描述                        |
-| ----------------------------- | --------------------------------- | ------------------------------- |
-| SNM_NODE_BIN_DIR              | node_bin                          | node 的二进制存储目录           |
-| SNM_DOWNLOAD_DIR              | downloads                         | 文件的下载目录                  |
-| SNM_NODE_MODULES_DIR          | node_modules                      | npm 、pnpm、yarn 的模块存储目录 |
-| SNM_NODE_DIST_URL             | https://nodejs.org/dist           | nodejs 元数据的获取地址         |
-| SNM_DOWNLOAD_TIMEOUT_SECS     | 60                                | 下载超时时间 ( 单位为 `秒` )    |
-| SNM_NODE_GITHUB_RESOURCE_HOST | https://raw.githubusercontent.com | GITHUB_RESOURCE 地址            |
-| SNM_NODE_INSTALL_STRATEGY     | auto                              | node 的安装策略                 |
-| SNM_NODE_WHITE_LIST           | ""                                | node 白名单版本                 |
+## ⚙️ 配置
 
-### SNM_NODE_BIN_DIR
+SNM 可以通过环境变量进行自定义配置：
 
-这是 snm 安装 node 的存储路径，路径规则 `$HOME/.snm/$SNM_NODE_BIN_DIR`
+### 工作空间配置
 
-### SNM_DOWNLOAD_DIR
+| 变量名       | 默认值 | 描述         |
+| ------------ | ------ | ------------ |
+| SNM_HOME_DIR | ~      | 工作空间目录 |
 
-这是 snm 的下载 node、npm、pnpm、yarn 等压缩包的存储路径，路径规则 `$HOME/.snm/$SNM_DOWNLOAD_DIR` , 一般在我们正确解压缩之后会删除下载文件。
+### 远程资源配置
 
-### SNM_NODE_MODULES_DIR
+| 变量名                        | 默认值                            | 描述             |
+| ----------------------------- | --------------------------------- | ---------------- |
+| SNM_NPM_REGISTRY_HOST         | https://registry.npmjs.org        | npm 注册表 URL   |
+| SNM_NODE_DIST_URL             | https://nodejs.org/dist           | Node.js 下载 URL |
+| SNM_NODE_GITHUB_RESOURCE_HOST | https://raw.githubusercontent.com | GitHub 资源主机  |
 
-这是 snm 存放 npm、pnpm、yarn 的目录，路径规则：`$HOME/.snm/$SNM_NODE_MODULES_DIR`
+### 行为设置
 
-### SNM_NODE_DIST_URL
+| 变量名     | 默认值 | 描述                       |
+| ---------- | ------ | -------------------------- |
+| SNM_STRICT | false  | 启用包管理器验证的严格模式 |
 
-snm 获取 node 最新版本信息的地址 , 并且我们的下载前缀也会使用这个。 如果你试图搭建代理站，请保证站点结构与官方一致。
+## 📖 文档
 
-### SNM_DOWNLOAD_TIMEOUT_SECS
+有关详细使用说明和高级配置选项，请访问我们的[文档](https://github.com/sheinsight/snm/wiki)。
 
-下载超时时间，单位为 秒
+## 🤝 贡献
 
-### SNM_NODE_GITHUB_RESOURCE_HOST
+我们欢迎各种形式的贡献！详情请参阅我们的[贡献指南](CONTRIBUTING.md)。
 
-主要用于获取 node schedule 信息，如果你搭建私有代理站点，
+## 📄 许可证
 
-请注意满足路径 `https://raw.githubusercontent.com/nodejs/Release/main/schedule.json`
-
-### SNM_NODE_INSTALL_STRATEGY
-
-node 的安装策略，可选值范围如下：
-
-- ask ( 询问用户是否需要安装，这也是默认值 )
-- auto （ 静默安装 ）
-
-### SNM_NODE_WHITE_LIST
-
-可执行的 node 白名单列表
+MIT License © 2024 [SheinSight](https://github.com/sheinsight)

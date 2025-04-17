@@ -1,182 +1,91 @@
 # SNM
 
-## 🤔 What is SNM ?
+<div align="center">
+  <h1>SNM - Smart Node Manager</h1>
+  <p>A powerful all-in-one Node.js version and package manager</p>
+</div>
 
-snm = corepack + fnm + ni .
+## ✨ Features
 
-- 📦 Node、Npm、Pnpm、Yarn Version Manager
-- 💡 Use the right package manager
-- ✅ Verify if package manager meets the 'packageManager' configuration
-- 🌟 CodeWhisperer ( Fig ) Friendly
+SNM combines the best features of [corepack](https://github.com/nodejs/corepack), [fnm](https://github.com/Schniz/fnm), and [ni](https://github.com/antfu/ni) to provide:
 
-![](./assets/fig.png)
+- 📦 Unified management of Node.js, npm, pnpm, and Yarn versions
+- 💡 Intelligent package manager auto-switching based on project configuration
+- ✅ Automatic validation of package manager against `packageManager` field
+- 🔄 Seamless Node.js version switching based on `.node-version` file
+- 🌟 Enhanced CLI experience with CodeWhisperer (Fig) integration
+- 🚀 Lightning-fast performance with Rust implementation
 
-## ⚙️ How to install
+![SNM CLI Demo](./assets/fig.png)
+
+## 🚀 Installation
+
+### Quick Install (macOS/Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash
 ```
 
-### Parameters
+### Installation Options
 
-`--install-dir`
+The installer supports several configuration options:
 
-Custom installation directory, default is `~/.snm`.
-
-Example:
+#### Custom Installation Directory
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.snm"
 ```
 
-`--skip-shell`
-
-Skip automatic configuration of shell environment variables .
-
-If you install directory to `/bin` directory, you may not need to configure shell environment variables.
-
-Example:
+#### Skip Shell Configuration
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --skip-shell
 ```
 
-`--force-install`
-
-Forcing the use of shell scripts for installation
-
-
-Example:
+#### Install Specific Version
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --force-install
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --release "0.0.1-27"
 ```
 
-`--version`
-
-Specify the installation version
-
-Example:
+You can combine multiple options:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --version "0.0.1-27"
+curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.snm" --skip-shell --release "0.0.1-27"
 ```
 
+## ⚙️ Configuration
 
-Of course, you can combine multiple parameters. Example:
+SNM can be customized through environment variables:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/sheinsight/snm/main/install.sh | bash -s -- --install-dir "./.fnm" --skip-shell --version "0.0.1-27"
-```
+### Workspace Configuration
 
+| Variable     | Default | Description         |
+| ------------ | ------- | ------------------- |
+| SNM_HOME_DIR | ~/      | Workspace directory |
 
-## Environment Variables
+### Remote Resources
 
-### Local directory configuration
+| Variable                      | Default                           | Description          |
+| ----------------------------- | --------------------------------- | -------------------- |
+| SNM_NPM_REGISTRY_HOST         | https://registry.npmjs.org        | npm registry URL     |
+| SNM_NODE_DIST_URL             | https://nodejs.org/dist           | Node.js download URL |
+| SNM_NODE_GITHUB_RESOURCE_HOST | https://raw.githubusercontent.com | GitHub resource host |
 
-|name|default|description|
-|---|---|---|
-|SNM_BASE_DIR|~/.snm|Installation directory|
-|SNM_NODE_BIN_DIR|~/.snm/bin|Node binary directory|
-|SNM_DOWNLOAD_DIR|~/.snm/download|Download directory|
-|SNM_NODE_MODULES_DIR|~/.snm/node_modules|Node modules directory|
+### Behavior Settings
 
-### Remote resource configuration
+| Variable   | Default | Description                                       |
+| ---------- | ------- | ------------------------------------------------- |
+| SNM_STRICT | false   | Enable strict mode for package manager validation |
 
+## 📖 Documentation
 
-|name|default|description|
-|---|---|---|
-|SNM_NPM_REGISTRY_HOST|https://registry.npmjs.org|Npm host|
-|SNM_YARN_REGISTRY_HOST_KEY|https://registry.yarnpkg.com|Yarn registry , Used by less 2.0.0|
-|SNM_YARN_REPO_HOST_KEY|https://repo.yarnpkg.com|Yarn registry , Used by greater 2.0.0|
-|SNM_NODEJS_DIST_URL_KEY|https://nodejs.org/dist|Nodejs Host|
-|SNM_NODEJS_GITHUB_RESOURCE_HOST_KEY|https://raw.githubusercontent.com|Github resource host|
+For detailed usage instructions and advanced configuration options, please visit our [documentation](https://github.com/sheinsight/snm/wiki).
 
-### Function configuration
+## 🤝 Contributing
 
-|name|default|description|
-|---|---|---|
-|SNM_STRICT|false|strict mode|
-|SNM_NODE_INSTALL_STRATEGY|ask|Install Strategy , Optional `ask`\|`panic`\|`auto`|
-|SNM_PACKAGE_MANAGER_INSTALL_STRATEGY|ask|Install Strategy , Optional `ask`\|`panic`\|`auto`|
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## Todo List
+## 📄 License
 
-
-### Node Manager
-
-- [x] snm node list
-- [x] snm node list-remote
-- [x] snm node install 20.11.1
-- [x] snm node uninstall 20.11.1
-- [x] snm node default 20.11.1
-- [ ] snm node env
-
-### Npm Manager
-
-- [x] snm npm list
-- [ ] snm npm list-remote
-- [x] snm npm install 7.5.6
-- [x] snm npm uninstall 7.5.6
-- [x] snm npm default 7.5.6
-
-### Pnpm Manager
-
-- [x] snm pnpm list
-- [ ] snm pnpm list-remote
-- [x] snm pnpm install 6.7.5
-- [x] snm pnpm uninstall 6.7.5
-- [x] snm pnpm default 6.7.5
-
-### Yarn Manager
-
-- [x] snm yarn list
-- [ ] snm yarn list-remote
-- [x] snm yarn install 1.22.10
-- [x] snm yarn uninstall 1.22.10
-- [x] snm yarn default 1.22.10
-
-
-### CodeWhisperer
-
-- [x] snm fig-spec
-
-### Use the right package manager
-
-- [x] snm install
-- [x] snm ci
-- [x] snm add
-- [ ] snm delete
-- [x] snm run
-- [ ] snm dlx
-- [ ] snm exec
-
-
-### Self Developed
-
-- [ ] snm query
-- [ ] snm bump
-- [ ] snm outdated
-- [ ] snm update
-- [ ] snm dedupe
-
-
-
-- [x] corepack auto download
-- [x] check valid package manager
-- [x] execute package manager command
-
-
-
- ### Run test
-
-use [cargo-nextest](https://nexte.st/book/pre-built-binaries) to run tests
-
-for Mac:
-
- ```bash
- curl -LsSf https://get.nexte.st/latest/mac | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
-
- # Without --test-threads=1, test will fail
- cargo nextest run --test-threads=1
- ```
+MIT License © 2024 [SheinSight](https://github.com/sheinsight)
