@@ -60,10 +60,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // pre_patch.pre = Prerelease::new("0").unwrap();
 
     let mut pre_patch = original.clone();
+    pre_patch.patch = pre_patch.patch + 1;
+    pre_patch.pre = Prerelease::new("0").unwrap();
 
-    if let Some(pre) = pre_patch.pre.split(".").next() {
+    let mut pre_release = original.clone();
+    pre_release.pre = Prerelease::new("0").unwrap();
+
+    if let Some(pre) = pre_release.pre.split(".").next() {
       if let Ok(num) = pre.parse::<u64>() {
-        pre_patch.pre = Prerelease::new(format!("{}", num + 1).as_str()).unwrap();
+        pre_release.pre = Prerelease::new(format!("{}", num + 1).as_str()).unwrap();
       } else {
         eprintln!("无法解析 pre-release 版本号: {}", pre);
       }
@@ -74,8 +79,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     a.push(patch);
     a.push(pre_major);
     a.push(pre_minor);
-    // a.push(pre_patch);
     a.push(pre_patch);
+    a.push(pre_release);
   }
   println!("{:?}", a);
 
