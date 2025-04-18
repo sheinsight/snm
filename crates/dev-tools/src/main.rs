@@ -37,26 +37,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   if let Some(first) = x.first() {
     let original = Version::parse(first)?;
 
-    let mut major = original.clone();
-    major.major = major.major + 1;
-    major.minor = 0;
-    major.patch = 0;
-    major.pre = Prerelease::new("0").unwrap();
+    let major = Version::new(original.major + 1, 0, 0);
+    let minor = Version::new(original.major, original.minor + 1, 0);
+    let patch = Version::new(original.major, original.minor, original.patch + 1);
 
-    let mut minor = original.clone();
-    minor.minor = minor.minor + 1;
-    minor.patch = 0;
-    minor.pre = Prerelease::new("0").unwrap();
+    let mut pre_major = original.clone();
+    pre_major.major = pre_major.major + 1;
+    pre_major.minor = 0;
+    pre_major.patch = 0;
+    pre_major.pre = Prerelease::new("0").unwrap();
 
-    let mut patch = original.clone();
-    patch.patch = patch.patch + 1;
-    patch.pre = Prerelease::new("0").unwrap();
+    let mut pre_minor = original.clone();
+    pre_minor.major = pre_minor.major;
+    pre_minor.minor = pre_minor.minor + 1;
+    pre_minor.patch = 0;
+    pre_minor.pre = Prerelease::new("0").unwrap();
 
-    let mut pre_version = original.clone();
+    // let mut pre_patch = original.clone();
+    // pre_patch.major = pre_patch.major;
+    // pre_patch.minor = pre_patch.minor;
+    // pre_patch.patch = pre_patch.patch + 1;
+    // pre_patch.pre = Prerelease::new("0").unwrap();
 
-    if let Some(pre) = pre_version.pre.split(".").next() {
+    let mut pre_patch = original.clone();
+
+    if let Some(pre) = pre_patch.pre.split(".").next() {
       if let Ok(num) = pre.parse::<u64>() {
-        pre_version.pre = Prerelease::new(format!("{}", num + 1).as_str()).unwrap();
+        pre_patch.pre = Prerelease::new(format!("{}", num + 1).as_str()).unwrap();
       } else {
         eprintln!("无法解析 pre-release 版本号: {}", pre);
       }
@@ -65,7 +72,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     a.push(major);
     a.push(minor);
     a.push(patch);
-    a.push(pre_version);
+    a.push(pre_major);
+    a.push(pre_minor);
+    // a.push(pre_patch);
+    a.push(pre_patch);
   }
   println!("{:?}", a);
 
