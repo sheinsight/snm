@@ -33,11 +33,11 @@ impl fmt::Display for NodeMetadata {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let v = &self.version[1..];
 
-    let nike_name = self
-      .schedule
-      .as_ref()
-      .and_then(|s| s.codename.clone())
-      .unwrap_or(String::new());
+    let lts = match &self.lts {
+      Lts::Str(s) => format!("lts ( {} )", s),
+      Lts::Bool(b) if *b => "lts".to_string(),
+      _ => "".to_string(),
+    };
 
     let died_on = self
       .schedule
@@ -77,7 +77,7 @@ impl fmt::Display for NodeMetadata {
       } else {
         died_on.bright_black()
       },
-      nike_name = nike_name.bright_green(),
+      nike_name = lts.bright_green()
     )
   }
 }
