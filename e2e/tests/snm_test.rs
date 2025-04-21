@@ -116,3 +116,17 @@ async fn test_snm_install_with_node_20_npm(ctx: &mut SnmTestContext) -> anyhow::
   })?;
   Ok(())
 }
+
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_package_json_parse_err(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/package_json_parse_err");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.exec("snm setup", false)?;
+  ctx.add_snapshot("snm i")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
+}

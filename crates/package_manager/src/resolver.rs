@@ -30,28 +30,48 @@ impl PackageManagerResolver {
       }
     }
 
-    let Some(package_manager_raw) = files.iter().find_map(|item| {
-      let Ok(package_json) = PackageJsonParser::parse(item) else {
-        return None;
-      };
+    let package_manager =
+      files
+        .iter()
+        .try_fold(None, |acc, item| -> anyhow::Result<Option<_>> {
+          if acc.is_some() {
+            return Ok(acc);
+          }
+          let package_json = PackageJsonParser::parse(item)?;
 
-      let Some(raw) = package_json.package_manager else {
-        return None;
-      };
+          Ok(package_json.package_manager)
+        })?;
 
-      Some(raw)
-    }) else {
-      // TODO 未来可能在非严格模式下会尝试存在默认的包管理器
+    if let Some(raw) = package_manager {
+      let package_manager = PackageManager::from_str(&raw.0)?;
+
+      Ok(package_manager)
+    } else {
       if self.config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       } else {
         bail!("You have not correctly configured packageManager in package.json");
       }
-    };
+    }
 
-    let package_manager = PackageManager::from_str(&package_manager_raw.0)?;
+    // let Some(package_manager_raw) = files.iter().find_map(|item| {
+    //   let Ok(package_json) = PackageJsonParser::parse(item) else {
+    //     return None;
+    //   };
 
-    Ok(package_manager)
+    //   let Some(raw) = package_json.package_manager else {
+    //     return None;
+    //   };
+
+    //   Some(raw)
+    // }) else {
+    //   // TODO 未来可能在非严格模式下会尝试存在默认的包管理器
+    //   if self.config.strict {
+    //     bail!("You have not correctly configured packageManager in package.json");
+    //   } else {
+    //     bail!("You have not correctly configured packageManager in package.json");
+    //   }
+    // };
   }
 
   pub async fn ensure_package_manager(

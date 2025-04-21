@@ -5,7 +5,6 @@ use std::{
   ops::Not,
 };
 
-use anyhow::bail;
 use clap::{command, crate_authors, crate_name, crate_version, CommandFactory, Parser};
 use colored::Colorize;
 use serde::Serialize;
@@ -120,9 +119,7 @@ impl SnmCli {
       SnmCommands::Install(_) | SnmCommands::Uninstall(_) | SnmCommands::Run(_) => {
         let resolver = PackageManagerResolver::from(snm_config);
 
-        let Ok(package_manager) = resolver.find_up_package_manager() else {
-          bail!("You have not correctly configured packageManager in package.json");
-        };
+        let package_manager = resolver.find_up_package_manager()?;
 
         let handler: Box<dyn Command> = match package_manager.kind() {
           snm_package_manager::PackageManagerKind::Npm => {
