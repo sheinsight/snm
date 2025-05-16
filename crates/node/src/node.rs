@@ -75,8 +75,7 @@ impl NodeResolver {
     }
 
     if let Some(file) = files.first() {
-      let nv = NodeVersion::try_from(file.to_owned())
-        .map_err(|e| anyhow::anyhow!("Failed to parse Node version from file: {:?}", e))?;
+      let nv = NodeVersion::try_from(file.to_owned())?;
       Ok(Some(nv))
     } else {
       Ok(None)

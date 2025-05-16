@@ -17,7 +17,11 @@ impl TryFrom<String> for NodeVersion {
     let r = regex!(r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$");
 
     if !r.is_match(&raw_trim) {
-      bail!("Invalid Node.js version format: {}", raw);
+      bail!(
+        r#"Invalid node version format: {}, Only supports '{}'. e.g. '20.19.2' "#,
+        raw,
+        r.as_str()
+      );
     }
 
     let val = raw_trim.trim_start_matches("v").to_owned();
