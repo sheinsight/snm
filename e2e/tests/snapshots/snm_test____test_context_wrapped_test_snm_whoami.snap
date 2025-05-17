@@ -1,0 +1,11 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+---
+id: 1
+is: snm whoami
+
+
+stdout:npm@9.0.0
+stderr:
+status:0

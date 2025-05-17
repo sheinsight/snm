@@ -159,6 +159,13 @@ impl SnmCli {
         setup_fig()?;
         setup_symlink()?;
       }
+      SnmCommands::Whoami => {
+        let resolver = PackageManagerResolver::from(snm_config);
+
+        let package_manager = resolver.find_up_package_manager()?;
+
+        println!("{}@{}", package_manager.name(), package_manager.version());
+      }
     }
     Ok(())
   }
