@@ -28,29 +28,13 @@ impl PmShim {
 
     let resolver = snm_package_manager::PackageManagerResolver::from(self.snm_config.clone());
 
-    let Ok(package_manager) = resolver.find_up_package_manager() else {
-      // 考虑到 npx 这种情况，找不要必须要透传
+    let Some(package_manager) = resolver.find_up_package_manager()? else {
       return exec_cli(
         &[&[bin_name.clone(), command.to_owned()], args].concat(),
         &self.paths,
         true,
       );
     };
-
-    // let Some(spm) = SPM::from_config_file(&self.snm_config) else {
-    //   if self.snm_config.strict {
-    //     bail!("You have not correctly configured packageManager in package.json");
-    //   }
-    //   return exec_cli(
-    //     &[&[bin_name.clone(), command.to_owned()], args].concat(),
-    //     &self.paths,
-    //     true,
-    //   );
-    // };
-
-    // 处理配置了包管理器的情况
-    // let spm = SPM::try_from(&self.snm_config.workspace, &self.snm_config)?;
-    // let pm = &spm.pm;
 
     // 传进来的有可能是绝对路径, 如果是绝对路径的的话，取 file_name 判断一下。
     // 同时需要保证直取命令的名称，方便 后续的 json.get_bin_with_name(bin_name) 获取到对应 js 的真实路径
@@ -81,7 +65,9 @@ impl PmShim {
 
     let dir = resolver.ensure_package_manager(&package_manager).await?;
 
-    let json = PackageJsonParser::parse(dir.join("package.json"))?;
+    let Ok(json) = PackageJsonParser::parse(dir.join("package.json")) else {
+      bail!("Failed to parse package.json");
+    };
 
     // let json = PJson::from(dir)?;
 

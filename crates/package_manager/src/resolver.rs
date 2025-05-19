@@ -19,7 +19,7 @@ impl From<SnmConfig> for PackageManagerResolver {
 }
 
 impl PackageManagerResolver {
-  pub fn find_up_package_manager(&self) -> anyhow::Result<PackageManager> {
+  pub fn find_up_package_manager(&self) -> anyhow::Result<Option<PackageManager>> {
     let find_up = UpFinder::builder().cwd(&self.config.workspace).build();
 
     let files = find_up.find_up("package.json");
@@ -45,12 +45,13 @@ impl PackageManagerResolver {
     if let Some(raw) = package_manager {
       let package_manager = PackageManager::from_str(&raw.0)?;
 
-      Ok(package_manager)
+      Ok(Some(package_manager))
     } else {
       if self.config.strict {
         bail!("You have not correctly configured packageManager in package.json");
       } else {
-        bail!("You have not correctly configured packageManager in package.json");
+        // bail!("You have not correctly configured packageManager in package.json");
+        Ok(None)
       }
     }
 
