@@ -25,12 +25,15 @@ impl Command for YarnBerryCommandLine {
       if args.frozen {
         command.push(String::from("--immutable"));
       }
+      command.extend(args.passthrough_args);
       return Ok(command);
     }
 
     command.push(String::from("add"));
 
-    command.push(args.package_spec.join(" "));
+    // command.push(args.package_spec.join(" "));
+
+    command.extend(args.package_spec.clone());
 
     if let Some(flag) = self.get_save_flag(&args)? {
       command.push(flag);
@@ -39,6 +42,8 @@ impl Command for YarnBerryCommandLine {
     if args.save_exact {
       command.push(String::from("--exact"));
     }
+
+    command.extend(args.passthrough_args);
 
     return Ok(command);
   }
@@ -103,6 +108,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express"]);
@@ -121,6 +127,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: true,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "install", "--immutable"]);
@@ -139,6 +146,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express"]);
@@ -157,6 +165,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--peer"]);
@@ -175,6 +184,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--dev"]);
@@ -193,6 +203,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--optional"]);
@@ -211,6 +222,7 @@ mod tests {
       save_optional: false,
       save_exact: true,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--exact"]);
@@ -255,6 +267,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     });
 
     assert!(result.is_err());
@@ -303,11 +316,12 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(
       cmd,
-      vec!["yarn", "add", "@scope/package package-with-space"]
+      vec!["yarn", "add", "@scope/package", "package-with-space"]
     );
     Ok(())
   }

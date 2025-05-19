@@ -44,16 +44,20 @@ impl Command for NpmCommandLine {
 
     if args.frozen {
       command.push(String::from("ci"));
+      command.extend(args.passthrough_args);
       return Ok(command);
     }
 
     command.push(String::from("install"));
 
     if args.package_spec.is_empty() {
+      command.extend(args.passthrough_args);
       return Ok(command);
     }
 
-    command.push(args.package_spec.join(" "));
+    // command.push(args.package_spec.join(" "));
+
+    command.extend(args.package_spec.clone());
 
     if let Some(flag) = self.get_save_flag(&args)? {
       command.push(flag);
@@ -62,7 +66,7 @@ impl Command for NpmCommandLine {
     if args.save_exact {
       command.push(String::from("--save-exact"));
     }
-
+    command.extend(args.passthrough_args);
     return Ok(command);
   }
 
@@ -110,6 +114,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express"]);
@@ -129,6 +134,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: true,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "ci"]);
@@ -148,6 +154,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express", "--save-prod"]);
@@ -167,6 +174,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express", "--save-peer"]);
@@ -186,6 +194,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express", "--save-dev"]);
@@ -205,6 +214,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express", "--save-optional"]);
@@ -224,6 +234,7 @@ mod tests {
       save_optional: false,
       save_exact: true,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["npm", "install", "express", "--save-exact"]);
@@ -271,6 +282,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     });
 
     assert!(result.is_err());
@@ -305,11 +317,12 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(
       cmd,
-      vec!["npm", "install", "@scope/package package-with-space"]
+      vec!["npm", "install", "@scope/package", "package-with-space"]
     );
     Ok(())
   }

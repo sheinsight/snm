@@ -25,35 +25,25 @@ impl Command for YarnCommandLine {
       if args.frozen {
         command.push(String::from("--frozen-lockfile"));
       }
+      command.extend(args.passthrough_args);
       return Ok(command);
     }
 
     command.push(String::from("add"));
 
-    command.push(args.package_spec.join(" "));
+    // command.push(args.package_spec.join(" "));
+
+    command.extend(args.package_spec.clone());
 
     if let Some(flag) = self.get_save_flag(&args)? {
       command.push(flag);
     }
 
-    // {
-    //   if args.save_prod {
-    //     // nothing
-    //   }
-    //   if args.save_dev {
-    //     command.push(String::from("--dev"));
-    //   }
-    //   if args.save_peer {
-    //     command.push(String::from("--peer"));
-    //   }
-    //   if args.save_optional {
-    //     command.push(String::from("--optional"));
-    //   }
-    // }
-
     if args.save_exact {
       command.push(String::from("--exact"));
     }
+
+    command.extend(args.passthrough_args);
 
     return Ok(command);
   }
@@ -118,6 +108,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express"]);
@@ -136,6 +127,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: true,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "install", "--frozen-lockfile"]);
@@ -154,6 +146,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     // 生产依赖是默认的,不需要标志
@@ -173,6 +166,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--dev"]);
@@ -191,6 +185,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--peer"]);
@@ -209,6 +204,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--optional"]);
@@ -227,6 +223,7 @@ mod tests {
       save_optional: false,
       save_exact: true,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["yarn", "add", "express", "--exact"]);
@@ -271,6 +268,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     });
 
     assert!(result.is_err());
@@ -319,11 +317,12 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(
       cmd,
-      vec!["yarn", "add", "@scope/package package-with-space"]
+      vec!["yarn", "add", "@scope/package", "package-with-space"]
     );
     Ok(())
   }

@@ -79,6 +79,13 @@ pub struct InstallArgs {
     help_heading = SAVE_OPTIONS_HELP_HEADING
   )]
   pub save_exact: bool,
+
+  #[arg(
+    help = "Pass through arguments, arguments after -- will be passed directly to the package manager",
+    last = true,
+    raw = true
+  )]
+  pub passthrough_args: Vec<String>,
 }
 
 impl Default for InstallArgs {
@@ -91,6 +98,7 @@ impl Default for InstallArgs {
       save_dev: false,
       save_optional: false,
       save_exact: false,
+      passthrough_args: vec![],
     }
   }
 }

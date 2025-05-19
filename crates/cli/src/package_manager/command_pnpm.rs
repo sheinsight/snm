@@ -27,12 +27,14 @@ impl Command for PnpmCommandLine {
         command.push(String::from("--frozen-lockfile"));
       }
 
+      command.extend(args.passthrough_args);
+
       return Ok(command);
     }
 
     command.push(String::from("add"));
 
-    command.push(args.package_spec.join(" "));
+    command.extend(args.package_spec.clone());
 
     if let Some(flag) = self.get_save_flag(&args)? {
       command.push(flag);
@@ -41,6 +43,10 @@ impl Command for PnpmCommandLine {
     if args.save_exact {
       command.push(String::from("--save-exact"));
     }
+
+    command.extend(args.passthrough_args);
+
+    println!("-->{:#?}", command);
 
     return Ok(command);
   }
@@ -106,6 +112,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express"]);
@@ -124,6 +131,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: true,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "install", "--frozen-lockfile"]);
@@ -142,6 +150,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express", "--save-prod"]);
@@ -160,6 +169,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express", "--save-peer"]);
@@ -178,6 +188,7 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express", "--save-dev"]);
@@ -196,6 +207,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express", "--save-optional"]);
@@ -214,6 +226,7 @@ mod tests {
       save_optional: false,
       save_exact: true,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(cmd, vec!["pnpm", "add", "express", "--save-exact"]);
@@ -258,6 +271,7 @@ mod tests {
       save_optional: true,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     });
 
     assert!(result.is_err());
@@ -306,11 +320,12 @@ mod tests {
       save_optional: false,
       save_exact: false,
       frozen: false,
+      passthrough_args: vec![],
     })?;
 
     assert_eq!(
       cmd,
-      vec!["pnpm", "add", "@scope/package package-with-space"]
+      vec!["pnpm", "add", "@scope/package", "package-with-space"]
     );
     Ok(())
   }
