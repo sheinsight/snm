@@ -46,8 +46,6 @@ impl Command for PnpmCommandLine {
 
     command.extend(args.passthrough_args);
 
-    println!("-->{:#?}", command);
-
     return Ok(command);
   }
 
