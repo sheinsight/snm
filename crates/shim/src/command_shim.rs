@@ -45,7 +45,7 @@ impl CommandShim {
 
     let paths = vec![bin_dir.to_string_lossy().into_owned()];
 
-    if actual_bin_name == "node" {
+    if actual_bin_name.ends_with("node") {
       Ok(CommandShim::Node(NodeShim::new(args, paths)))
     } else {
       Ok(CommandShim::Pm(PmShim::new(args, paths, snm_config)))
