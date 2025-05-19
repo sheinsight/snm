@@ -3,7 +3,7 @@ use std::{
   path::Path,
 };
 
-use anyhow::bail;
+use anyhow::{bail, Context};
 use snm_config::snm_config::SnmConfig;
 use snm_utils::consts::SNM_PREFIX;
 use tracing::trace;
@@ -45,7 +45,17 @@ impl CommandShim {
 
     let paths = vec![bin_dir.to_string_lossy().into_owned()];
 
-    if actual_bin_name.ends_with("node") {
+    let actual_bin_name = if Path::new(actual_bin_name).is_absolute() {
+      Path::new(actual_bin_name)
+        .file_name()
+        .context(format!("Invalid absolute path {:#?}", actual_bin_name))?
+        .to_string_lossy()
+        .into_owned()
+    } else {
+      actual_bin_name.to_string()
+    };
+
+    if actual_bin_name == "node" {
       Ok(CommandShim::Node(NodeShim::new(args, paths)))
     } else {
       Ok(CommandShim::Pm(PmShim::new(args, paths, snm_config)))
