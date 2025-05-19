@@ -1,0 +1,11 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+---
+id: 1
+is: snm i
+
+
+stdout:
+stderr:Error: invalid type: string "true", expected a boolean at line 5 column 18
+status:1

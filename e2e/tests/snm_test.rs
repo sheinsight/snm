@@ -144,3 +144,19 @@ async fn test_snm_whoami(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
   })?;
   Ok(())
 }
+
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_snm_install_with_invalid_private_package_json(
+  ctx: &mut SnmTestContext,
+) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/invalid_package_json");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.exec("snm setup", false)?;
+  ctx.add_snapshot("snm i")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
+}
