@@ -341,6 +341,10 @@ is: {}
 
     let res = self.snapshots.join("\n");
 
+    let current_dir = current_dir().unwrap();
+
+    let res = res.replace(&current_dir.display().to_string(), ".");
+
     f(&res);
 
     Ok(())

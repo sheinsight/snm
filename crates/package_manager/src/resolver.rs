@@ -37,9 +37,13 @@ impl PackageManagerResolver {
           if acc.is_some() {
             return Ok(acc);
           }
-          let package_json = PackageJsonParser::parse(item)?;
 
-          Ok(package_json.package_manager)
+          let res = PackageJsonParser::parse(item).map_err(|e| {
+            eprintln!("{:?}", e);
+            anyhow::anyhow!("parse package.json failed, err: {:?}", e)
+          })?;
+
+          return Ok(res.package_manager);
         })?;
 
     if let Some(raw) = package_manager {

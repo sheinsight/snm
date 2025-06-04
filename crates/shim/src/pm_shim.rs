@@ -65,15 +65,14 @@ impl PmShim {
 
     let dir = resolver.ensure_package_manager(&package_manager).await?;
 
-    let Ok(json) = PackageJsonParser::parse(dir.join("package.json")) else {
-      bail!("Failed to parse package.json");
-    };
+    let json = PackageJsonParser::parse(dir.join("package.json")).map_err(|e| {
+      eprintln!("{:?}", e);
+      anyhow::anyhow!("parse package.json failed, err: {:?}", e)
+    })?;
 
-    // let json = PJson::from(dir)?;
-
-    let map = json.bin_to_hash_map()?;
-
-    // let x = map.get(bin_name);
+    let map = json
+      .bin_to_hash_map()
+      .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     if let Some(file) = map.get(bin_name) {
       let file = dir.join(file);
