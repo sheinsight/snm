@@ -348,6 +348,7 @@ is: {}
 
     let res = res.replace(&current_dir.display().to_string(), ".");
     let res = res.replace('\\', "/");
+    let res = res.replace("\r\n", "\n");
 
     f(&res);
 
