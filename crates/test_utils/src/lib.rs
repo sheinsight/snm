@@ -339,6 +339,9 @@ is: {}
 
     // self.snapshots.insert(0, envs);
 
+    #[cfg(windows)]
+    let res = self.snapshots.join("\r\n");
+    #[cfg(not(windows))]
     let res = self.snapshots.join("\n");
 
     let current_dir = current_dir().unwrap();
