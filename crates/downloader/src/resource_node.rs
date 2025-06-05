@@ -1,6 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, pin::Pin, time::Duration};
 
 use anyhow::Context;
+use reqwest::StatusCode;
 use robust_downloader::{DownloadItem, Integrity};
 use snm_config::snm_config::SnmConfig;
 use typed_builder::TypedBuilder;
@@ -88,6 +89,7 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
   where
     Self: 'async_trait,
   {
+    let bin_name = self.bin_name.clone();
     let version = self.version.clone();
     let node_dist_url = self.config.node_dist_url.clone();
     let timeout = self.get_timeout_secs();
@@ -108,7 +110,17 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
 
       let client = reqwest::Client::builder().timeout(timeout).build()?;
 
-      let sha256_str = client.get(sha256_url).send().await?.text().await?;
+      let resp = client.head(&sha256_url).send().await?;
+
+      if resp.status() == StatusCode::NOT_FOUND {
+        anyhow::bail!(
+          "Not found node: {}@{}, please check your node version",
+          bin_name,
+          version
+        );
+      }
+
+      let sha256_str = client.get(&sha256_url).send().await?.text().await?;
 
       let shasums = Self::parse_shasum(&sha256_str);
 

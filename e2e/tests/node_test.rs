@@ -96,3 +96,17 @@ async fn should_show_node_version(ctx: &mut SnmTestContext) -> anyhow::Result<()
   })?;
   Ok(())
 }
+
+#[test_context(SnmTestContext)]
+#[tokio::test]
+async fn test_invalid_node_version(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
+  let cwd = current_dir()?.join("tests/fixtures/invalid_node_version");
+  ctx.start_server().await?;
+  ctx.set_cwd(&cwd);
+  ctx.exec("snm setup", false)?;
+  ctx.add_snapshot("node -v")?;
+  ctx.assert_snapshots(|res| {
+    insta::assert_snapshot!(res);
+  })?;
+  Ok(())
+}

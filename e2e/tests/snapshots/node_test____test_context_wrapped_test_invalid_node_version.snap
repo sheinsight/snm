@@ -1,0 +1,11 @@
+---
+source: e2e/tests/node_test.rs
+expression: res
+---
+id: 1
+is: node -v
+
+
+stdout:
+stderr:Error: Not found node: node@100.0.0, please check your node version
+status:1
