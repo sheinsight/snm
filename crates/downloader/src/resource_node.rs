@@ -110,7 +110,7 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
 
       let client = reqwest::Client::builder().timeout(timeout).build()?;
 
-      let resp = client.head(&sha256_url).send().await?;
+      let resp = client.get(&sha256_url).send().await?;
 
       if resp.status() == StatusCode::NOT_FOUND {
         anyhow::bail!(
@@ -120,7 +120,7 @@ impl<'a> DownloadResource for DownloadNodeResource<'a> {
         );
       }
 
-      let sha256_str = client.get(&sha256_url).send().await?.text().await?;
+      let sha256_str = resp.text().await?;
 
       let shasums = Self::parse_shasum(&sha256_str);
 

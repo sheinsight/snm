@@ -95,8 +95,6 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace!(r#"Unpacking file: {:?} -> {:?}"#, path, target);
-
           pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 
           entry.unpack(&target)?;
@@ -126,8 +124,6 @@ target: {:?}"#,
             self.ensure_parent_dir(&target)?;
           }
 
-          trace!(r#"Unpacking file: {:?} -> {:?}"#, path, target);
-
           pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 
           entry.unpack(&target)?;
@@ -156,8 +152,6 @@ target: {:?}"#,
           }
 
           self.ensure_parent_dir(&target)?;
-
-          trace!(r#"Copying file: {:?} -> {:?}"#, path, target);
 
           pb.set_message(format!("Unpacking to {}", target.display().to_string()));
 

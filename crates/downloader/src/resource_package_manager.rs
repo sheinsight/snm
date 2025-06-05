@@ -98,8 +98,7 @@ impl<'a> DownloadResource for DownloadPackageManagerResource<'a> {
 
       let client = reqwest::Client::builder().timeout(timeout).build()?;
 
-      let resp = client.head(&url).send().await?;
-
+      let resp = client.get(&url).send().await?;
       if resp.status() == StatusCode::NOT_FOUND {
         anyhow::bail!(
           "Not found package manager: {}@{}, please check your {} version",
@@ -109,7 +108,7 @@ impl<'a> DownloadResource for DownloadPackageManagerResource<'a> {
         );
       }
 
-      let resp = client.get(&url).send().await?.json::<NpmResponse>().await?;
+      let resp = resp.json::<NpmResponse>().await?;
 
       Ok(Integrity::SHA1(resp.dist.shasum))
     })
