@@ -1,5 +1,6 @@
 use std::{path::PathBuf, pin::Pin, time::Duration};
 
+use reqwest::StatusCode;
 use robust_downloader::{DownloadItem, Integrity};
 use snm_config::snm_config::SnmConfig;
 use snm_utils::ver::ver_gt_1;
@@ -96,6 +97,17 @@ impl<'a> DownloadResource for DownloadPackageManagerResource<'a> {
       let url = format!("{}/{namespace}/{}", npm_registry, &version);
 
       let client = reqwest::Client::builder().timeout(timeout).build()?;
+
+      let resp = client.head(&url).send().await?;
+
+      if resp.status() == StatusCode::NOT_FOUND {
+        anyhow::bail!(
+          "Not found package manager: {}@{}, please check your {} version",
+          bin_name,
+          version,
+          bin_name
+        );
+      }
 
       let resp = client.get(&url).send().await?.json::<NpmResponse>().await?;
 

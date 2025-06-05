@@ -1,0 +1,11 @@
+---
+source: e2e/tests/snm_test.rs
+expression: res
+---
+id: 1
+is: snm i
+
+
+stdout:
+stderr:Error: Not found package manager: npm@100.0.0, please check your npm version
+status:1
