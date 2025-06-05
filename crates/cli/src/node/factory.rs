@@ -222,6 +222,8 @@ impl<'a> NodeFactory<'a> {
   pub async fn uninstall(&self, args: UninstallArgs) -> anyhow::Result<()> {
     let node_dir = self.get_node_dir(&args.version);
 
+    trace!("Node dir: {:?}", &node_dir);
+
     let (_, binary_exists) = self.get_node_binary(&node_dir)?;
 
     if !binary_exists {
@@ -237,8 +239,7 @@ impl<'a> NodeFactory<'a> {
       let eq = link.eq(&node_dir);
 
       trace!(
-        r#"Symlink Relation: 
-{:?} -> {:?}"#,
+        r#"Symlink Relation: {:?} -> {:?}"#,
         &self.default_dir,
         &link
       );
@@ -250,11 +251,11 @@ impl<'a> NodeFactory<'a> {
           "🎉 Node v{} is uninstalled , Now there is no default node .",
           &args.version.bright_green()
         );
+        return Ok(());
       }
-    } else {
-      fs::remove_dir_all(&node_dir)?;
-      println!("🎉 Node v{} is uninstalled", &args.version.bright_green());
     }
+    fs::remove_dir_all(&node_dir)?;
+    println!("🎉 Node v{} is uninstalled", &args.version.bright_green());
 
     Ok(())
   }
