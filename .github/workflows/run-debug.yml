@@ -1,0 +1,64 @@
+name: Run Debug Build
+
+on:
+  workflow_dispatch:
+    
+
+permissions:
+  # To publish packages with provenance
+  id-token: write
+  contents: write 
+  # Allow commenting on issues for `reusable-build.yml`
+  issues: write
+
+jobs:
+  matrix-build:
+    strategy:
+      matrix:
+        include:
+          # Linux targets (GNU)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu    # 64位 Linux (GNU)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge
+          # Linux targets (MUSL)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl   # 64位 Linux (MUSL)
+            use-cross: true
+            cross-image: ghcr.io/cross-rs/x86_64-unknown-linux-musl:edge
+
+          # Windows targets
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc      # 64位 Windows (MSVC)
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu       # 64位 Windows (MinGW)
+
+          # macOS targets
+          - os: macos-14
+            target: aarch64-apple-darwin        # Apple Silicon Mac
+          - os: macos-13
+            target: x86_64-apple-darwin         # Intel Mac
+
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Build ${{ matrix.target }}
+        uses: ./.github/actions/build
+        with:
+          target: ${{ matrix.target }}
+          os: ${{ matrix.os }}
+          use-cross: ${{ matrix.use-cross }}
+          cross-image: ${{ matrix.cross-image }}
+
+      - name: Upload ${{ matrix.target }}
+        uses: ./.github/actions/upload
+        with:
+          target: ${{ matrix.target }}
