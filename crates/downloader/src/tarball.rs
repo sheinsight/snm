@@ -88,7 +88,7 @@ target: {:?}"#,
           let target = path.components().skip(1).collect::<PathBuf>();
           let target = target_dir.join(target);
 
-          if path.is_dir() {
+          if path.is_dir() && !target.exists() {
             std::fs::create_dir_all(&target)?;
             continue;
           } else {
@@ -117,7 +117,7 @@ target: {:?}"#,
           let target = path.components().skip(1).collect::<PathBuf>();
           let target = target_dir.join(target);
 
-          if path.is_dir() {
+          if path.is_dir() && !target.exists() {
             std::fs::create_dir_all(&target)?;
             continue;
           } else {
@@ -146,7 +146,7 @@ target: {:?}"#,
           let target = path.components().skip(1).collect::<PathBuf>();
           let target = target_dir.join(target);
 
-          if file.is_dir() {
+          if file.is_dir() && !target.exists() {
             std::fs::create_dir_all(&target)?;
             continue;
           }
