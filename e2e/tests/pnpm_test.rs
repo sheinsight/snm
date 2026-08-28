@@ -81,7 +81,19 @@ async fn test_nested_pnpx(ctx: &mut SnmTestContext) -> anyhow::Result<()> {
 async fn test_pnpm_12_native_bootstrap_uses_its_own_registry(
   ctx: &mut SnmTestContext,
 ) -> anyhow::Result<()> {
-  let cwd = current_dir()?.join("tests/fixtures/pm_pnpm_12");
+  // 在临时目录创建项目，避免 pnpm 写入锁文件等运行状态时污染仓库中的固定 fixture。
+  let cwd = ctx.get_temp_dir().join("pnpm-12-project");
+  std::fs::create_dir_all(&cwd)?;
+  std::fs::write(
+    cwd.join("package.json"),
+    format!(
+      r#"{{
+  "name": "pnpm-12-native-bootstrap",
+  "private": true,
+  "packageManager": "pnpm@{PNPM_12_VERSION}"
+}}"#
+    ),
+  )?;
   let mock_server = ctx.start_server().await?;
   mirror_pnpm_12_wrapper(&mock_server).await?;
   ctx.set_cwd(&cwd);
