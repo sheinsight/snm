@@ -1,3 +1,4 @@
 [toolchain]
-channel = "1.85.0"
+# 本地开发、CI 与发布统一使用同一精确版本，避免不同 stable 版本产生行为差异。
+channel = "1.97.1"
 profile = "default"

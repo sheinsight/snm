@@ -36,7 +36,8 @@ runs:
       if: inputs.use-cross == 'true'
       shell: bash
       run: |
-        cross build --verbose --release --target ${{ inputs.target }}
+        # 发布矩阵只接受仓库中已经审核并提交的依赖锁文件。
+        cross build --locked --verbose --release --target ${{ inputs.target }}
       env:
         CROSS_IMAGE: ${{ inputs.cross-image }}
 
@@ -45,7 +46,8 @@ runs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --verbose --release --target ${{ inputs.target }}
+        # 与 cross 分支保持一致，避免原生平台静默更新依赖图。
+        args: --locked --verbose --release --target ${{ inputs.target }}
 
     - name: Strip Binary
       if: ${{ !contains(inputs.os, 'windows') }}

@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::bail;
-use clap::{command, crate_authors, crate_name, crate_version, CommandFactory, Parser};
+use clap::{crate_authors, crate_name, crate_version, CommandFactory, Parser};
 use colored::Colorize;
 use serde::Serialize;
 use snm_config::snm_config::SnmConfig;
@@ -19,6 +19,7 @@ use crate::{
 };
 
 /// SnmCli 是 snm 的命令行工具
+/// `command` 和 `arg` 由 `Parser` 派生宏注册为辅助属性，无需导入同名宏。
 /// Example:
 /// ```rust
 /// use snm::cli::SnmCli;

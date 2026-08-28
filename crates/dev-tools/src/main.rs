@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     pre_major.pre = Prerelease::new("0").unwrap();
 
     let mut pre_minor = original.clone();
-    pre_minor.major = pre_minor.major;
+    // 主版本沿用原值，只递增次版本并重置后续版本段。
     pre_minor.minor = pre_minor.minor + 1;
     pre_minor.patch = 0;
     pre_minor.pre = Prerelease::new("0").unwrap();
