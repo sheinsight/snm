@@ -22,6 +22,7 @@
 
 4. 开发工具安装统一传入 `--locked`。当某个工具缺少当前平台的预编译产物时，`cargo-binstall` 会依据该 crate 发布时携带的 `Cargo.lock` 回退编译。
 5. 清理 Rust 1.97.1 严格警告检查发现的无效自赋值和未使用导入，继续保持 CI 的 `-D warnings` 策略。
+6. 将已移除的 `macos-13` 和已弃用的 `macos-14` runner 迁移到 `macos-15-intel` 和 `macos-15`，并同步所有构建、测试及调试 workflow。
 
 升级 Rust 后，`cargo-deny` 恢复为 0.20.2；该版本要求 Rust 1.88，与项目的 Rust 1.97.1 兼容。
 

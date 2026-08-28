@@ -33,10 +33,10 @@ jobs:
           - os: windows-latest
             target: i686-pc-windows-gnu         # 32位 Windows (MinGW)
 
-            # macOS targets
-          - os: macos-14
+            # 使用当前受支持的 macOS 15 runner，并显式区分 Apple Silicon 与 Intel。
+          - os: macos-15
             target: aarch64-apple-darwin        # Apple Silicon Mac
-          - os: macos-13
+          - os: macos-15-intel
             target: x86_64-apple-darwin         # Intel Mac
       fail-fast: false
     runs-on: ${{ matrix.os }}
