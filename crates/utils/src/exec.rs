@@ -6,18 +6,8 @@ use std::{
 use anyhow::bail;
 use tracing::trace;
 
-/// 使用当前进程环境执行命令，保持原有调用行为不变。
-pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> anyhow::Result<()> {
-  exec_cli_with_envs(args, paths, check_snm, &[])
-}
-
-/// 仅为子进程附加环境变量，避免通过修改全局环境影响同进程中的其他任务。
-pub fn exec_cli_with_envs(
-  args: &[String],
-  paths: &[String],
-  check_snm: bool,
-  env_overrides: &[(&str, &str)],
-) -> anyhow::Result<()> {
+/// 使用当前进程环境执行命令，让调用方显式设置的配置自然传递给子进程。
+pub fn exec_cli(args: &[String], paths: &[String], check_snm: bool) -> anyhow::Result<()> {
   trace!("exec_cli args: {:#?}", args);
 
   let [bin_name, args @ ..] = args else {
@@ -46,8 +36,6 @@ pub fn exec_cli_with_envs(
     let output = Command::new(program)
       .args(args)
       .env("PATH", new_path.clone())
-      // 覆盖值只作用于即将启动的子进程，父进程环境保持不变。
-      .envs(env_overrides.iter().copied())
       .stdout(Stdio::inherit())
       .stderr(Stdio::inherit())
       .stdin(Stdio::inherit())
@@ -91,11 +79,12 @@ fn check_snm_binary(bin_name: &str, binaries: &[std::path::PathBuf]) -> anyhow::
   trace!("Binaries: {:?}", binaries);
   trace!("Snm: {:?}", snm);
 
+  // 只拦截再次解析到 snm 安装目录的命令，避免 shim 递归调用自身。
   if binaries
     .first()
     .and_then(|b| b.parent())
     .zip(snm.clone())
-    .map_or(false, |(p1, p2)| p1 == p2)
+    .is_some_and(|(p1, p2)| p1 == p2)
   {
     bail!("'{}' is not a valid command", bin_name);
   }

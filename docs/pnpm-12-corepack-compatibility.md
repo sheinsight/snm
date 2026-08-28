@@ -35,17 +35,24 @@ pnpm 11 及以下版本、npm、Yarn，以及项目中调用的其他命令，�
 
 ## Registry 与安全配置
 
-pnpm 引导层读取 `COREPACK_NPM_REGISTRY` 下载平台原生包。snm 遵循以下优先级：
+pnpm 主包和平台原生包属于两条独立的下载链路：
 
-1. 如果用户已经设置 `COREPACK_NPM_REGISTRY`，完整保留用户配置。
-2. 如果用户没有设置，则仅在子进程中将 snm 的 `npm_registry` 映射为 `COREPACK_NPM_REGISTRY`。
+1. snm 的 `npm_registry`（包括 `SNM_NPM_REGISTRY` 和 `.npmrc`）只负责下载 `pnpm@<version>` 主包。
+2. pnpm 官方引导层读取 `COREPACK_NPM_REGISTRY` 下载 `@pnpm/exe.<platform>` 原生包。
+3. 如果用户没有显式设置 `COREPACK_NPM_REGISTRY`，pnpm 官方引导层使用自己的默认源 `https://registry.npmjs.org`。
 
-该环境变量不会写入 snm 父进程的全局环境。`COREPACK_NPM_TOKEN`、`COREPACK_NPM_USERNAME`、`COREPACK_NPM_PASSWORD`、`COREPACK_INTEGRITY_KEYS` 和 `COREPACK_ENABLE_NETWORK` 等现有变量由子进程自然继承，继续由 pnpm 官方引导层处理。
+snm 不再把 `npm_registry` 隐式映射为 `COREPACK_NPM_REGISTRY`。企业镜像可能已经同步 pnpm 主包，却没有同步 pnpm 12 新增的 `@pnpm/exe.*` 平台包；混用两个配置会让原本可用的官方默认下载路径错误地指向不完整镜像。
+
+snm 也不做企业源失败后自动回退公网的逻辑，避免绕过企业网络策略或掩盖镜像配置错误。无法访问公网的环境应显式设置 `COREPACK_NPM_REGISTRY`，并确保目标源完整同步当前平台的 `@pnpm/exe.*` 包。
+
+`COREPACK_NPM_REGISTRY`、`COREPACK_NPM_TOKEN`、`COREPACK_NPM_USERNAME`、`COREPACK_NPM_PASSWORD`、`COREPACK_INTEGRITY_KEYS` 和 `COREPACK_ENABLE_NETWORK` 等现有变量由子进程自然继承，继续由 pnpm 官方引导层处理。
 
 ## 改动边界
 
-- `crates/shim/src/pm_shim.rs`：为 pnpm 12+ 选择官方 `.mjs` 入口，并传入 registry 子进程环境。
-- `crates/utils/src/exec.rs`：增加只作用于子进程的环境变量覆盖能力；原 `exec_cli` 接口和行为保持不变。
+- `crates/shim/src/pm_shim.rs`：为 pnpm 12+ 选择官方 `.mjs` 入口，并保持 pnpm 主包源与原生包源相互独立。
+- `crates/utils/src/exec.rs`：继续使用单一的 `exec_cli` 执行接口，不为 pnpm 注入隐式环境覆盖。
+- `e2e/tests/pnpm_test.rs`：使用真实 pnpm 12 主包和当前平台原生程序验证完整引导流程。
+- `crates/test_utils/src/lib.rs`：支持仅对子进程移除环境变量，让跨平台 E2E 能稳定验证默认配置。
 - `crates/shim/Cargo.toml`：使用 `semver` 准确识别 pnpm 12+。
 
 下载器、包管理器 resolver、平台配置及 npm/Yarn/pnpm 旧版本执行链路均未修改。
@@ -58,6 +65,8 @@ pnpm 引导层读取 `COREPACK_NPM_REGISTRY` 下载平台原生包。snm 遵循�
 
 - pnpm 12 的 `pnpm`/`pnpx` 入口选择单元测试。
 - pnpm 9 既有端到端测试，确认旧链路不变。
+- pnpm 12 真实端到端测试：主包由本地企业镜像模拟源提供，平台原生包由官方默认源下载。
+- pnpm 12 缓存测试：首次下载后禁用网络，第二次执行仍能输出正确版本。
+- pnpm 12 显式源测试：清理缓存后设置 `COREPACK_NPM_REGISTRY`，确认请求严格发往用户指定源。
 - 全工作区单元测试与端到端测试。
-- 真实 pnpm 12 主包烟测：首次下载原生程序，第二次复用缓存并正常输出版本。
 - 格式化、差异检查和受影响 crate 的 Clippy 检查。

@@ -6,7 +6,7 @@ use package_json_parser::PackageJsonParser;
 use semver::Version;
 use snm_config::snm_config::SnmConfig;
 use snm_package_manager::{PackageManager, PackageManagerKind};
-use snm_utils::exec::{exec_cli, exec_cli_with_envs};
+use snm_utils::exec::exec_cli;
 
 pub struct PmShim {
   pub args: Vec<String>,
@@ -78,16 +78,9 @@ impl PmShim {
         );
       }
 
-      // 用户显式设置的 Corepack registry 优先；否则让原生二进制下载沿用 snm 的 registry。
-      let corepack_env_overrides = if std::env::var_os("COREPACK_NPM_REGISTRY").is_none() {
-        vec![(
-          "COREPACK_NPM_REGISTRY",
-          self.snm_config.npm_registry.as_str(),
-        )]
-      } else {
-        Vec::new()
-      };
-      exec_cli_with_envs(
+      // SNM_NPM_REGISTRY 只负责下载 pnpm 主包，不能隐式复用为平台原生包源：企业镜像可能未同步 @pnpm/exe.*。
+      // 子进程自然继承用户显式配置的 COREPACK_NPM_REGISTRY；未配置时由 pnpm 官方引导层使用公共默认源。
+      exec_cli(
         &[
           &[
             "node".to_string(),
@@ -99,7 +92,6 @@ impl PmShim {
         .concat(),
         &self.paths,
         true,
-        &corepack_env_overrides,
       )?;
       return Ok(());
     }

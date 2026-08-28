@@ -28,6 +28,7 @@ pub struct SnmTestContext {
   cwd: String,
   temp_dir: PathBuf,
   pub env_vars: HashMap<String, String>,
+  removed_env_vars: Vec<String>,
   snapshots: Vec<String>,
 }
 
@@ -46,6 +47,7 @@ impl AsyncTestContext for SnmTestContext {
       cwd: cwd.to_string_lossy().to_string(),
       temp_dir: temp_dir.into_path(),
       env_vars,
+      removed_env_vars: Vec::new(),
       snapshots: vec![],
     }
   }
@@ -102,10 +104,20 @@ impl SnmTestContext {
 
   pub fn set_envs(&mut self, envs: &[(String, String)]) {
     for (key, value) in envs {
+      // 显式设置优先于之前登记的子进程移除，保持测试环境覆盖顺序可预测。
+      self.removed_env_vars.retain(|removed| removed != key);
       self.env_vars.insert(key.to_owned(), value.to_owned());
       unsafe {
         env::set_var(key, value);
       }
+    }
+  }
+
+  pub fn remove_env(&mut self, key: &str) {
+    // 只从测试命令的子进程移除变量，避免并行测试通过全局环境互相干扰。
+    self.env_vars.remove(key);
+    if !self.removed_env_vars.iter().any(|removed| removed == key) {
+      self.removed_env_vars.push(key.to_owned());
     }
   }
 
@@ -280,6 +292,10 @@ impl SnmTestContext {
 
     self.env_vars.iter().for_each(|(key, value)| {
       cmd.env(key, value);
+    });
+    // Command::env_remove 在 Unix 和 Windows 上都能构造不继承指定变量的干净子进程。
+    self.removed_env_vars.iter().for_each(|key| {
+      cmd.env_remove(key);
     });
 
     cmd.current_dir(self.cwd.clone());

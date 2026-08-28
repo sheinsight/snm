@@ -645,7 +645,7 @@ dependencies = [
 
 [[package]]
 name = "dev-tools"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "glob",
  "inquire",
@@ -2610,7 +2610,7 @@ checksum = "b7c388c1b5e93756d0c740965c41e8822f866621d41acbdf6336a6a168f8840c"
 
 [[package]]
 name = "snm"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2640,7 +2640,7 @@ dependencies = [
 
 [[package]]
 name = "snm_config"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "config",
@@ -2656,7 +2656,7 @@ dependencies = [
 
 [[package]]
 name = "snm_downloader"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2676,7 +2676,7 @@ dependencies = [
 
 [[package]]
 name = "snm_node"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "lazy-regex",
@@ -2690,7 +2690,7 @@ dependencies = [
 
 [[package]]
 name = "snm_npmrc"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "config",
@@ -2702,7 +2702,7 @@ dependencies = [
 
 [[package]]
 name = "snm_package_manager"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "lazy-regex",
@@ -2715,7 +2715,7 @@ dependencies = [
 
 [[package]]
 name = "snm_shim"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2740,7 +2740,7 @@ dependencies = [
 
 [[package]]
 name = "snm_test_utils"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "dunce",
@@ -2753,7 +2753,7 @@ dependencies = [
 
 [[package]]
 name = "snm_utils"
-version = "1.2.8"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "colored",
