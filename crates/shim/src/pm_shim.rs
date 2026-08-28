@@ -3,8 +3,10 @@ use std::path::Path;
 use anyhow::bail;
 use colored::Colorize;
 use package_json_parser::PackageJsonParser;
+use semver::Version;
 use snm_config::snm_config::SnmConfig;
-use snm_utils::exec::exec_cli;
+use snm_package_manager::{PackageManager, PackageManagerKind};
+use snm_utils::exec::{exec_cli, exec_cli_with_envs};
 
 pub struct PmShim {
   pub args: Vec<String>,
@@ -65,6 +67,43 @@ impl PmShim {
 
     let dir = resolver.ensure_package_manager(&package_manager).await?;
 
+    // snm 与 Corepack 一样只解压主包，不安装可选依赖，也不执行 preinstall。
+    // pnpm 12 因此必须走官方保留的 .mjs 引导入口，不能执行 package.json#bin 中的占位文件。
+    if let Some(entrypoint) = pnpm_corepack_entrypoint(&package_manager, bin_name) {
+      let file = dir.join(entrypoint);
+      if !file.is_file() {
+        bail!(
+          "pnpm Corepack entrypoint does not exist: {}",
+          file.display()
+        );
+      }
+
+      // 用户显式设置的 Corepack registry 优先；否则让原生二进制下载沿用 snm 的 registry。
+      let corepack_env_overrides = if std::env::var_os("COREPACK_NPM_REGISTRY").is_none() {
+        vec![(
+          "COREPACK_NPM_REGISTRY",
+          self.snm_config.npm_registry.as_str(),
+        )]
+      } else {
+        Vec::new()
+      };
+      exec_cli_with_envs(
+        &[
+          &[
+            "node".to_string(),
+            file.to_string_lossy().into_owned(),
+            command.to_owned(),
+          ],
+          args,
+        ]
+        .concat(),
+        &self.paths,
+        true,
+        &corepack_env_overrides,
+      )?;
+      return Ok(());
+    }
+
     let json = PackageJsonParser::parse(dir.join("package.json")).map_err(|e| {
       eprintln!("{:?}", e);
       anyhow::anyhow!("parse package.json failed, err: {:?}", e)
@@ -119,6 +158,55 @@ impl PmShim {
     //   )?;
     // }
 
+    Ok(())
+  }
+}
+
+/// 仅对 pnpm 12+ 的 pnpm/pnpx 命令选择官方 Corepack 入口，其他版本继续走原有 bin 解析。
+fn pnpm_corepack_entrypoint(
+  package_manager: &PackageManager,
+  bin_name: &str,
+) -> Option<&'static str> {
+  if package_manager.kind() != PackageManagerKind::Pnpm {
+    return None;
+  }
+
+  let version = Version::parse(package_manager.version()).ok()?;
+  if version.major < 12 {
+    return None;
+  }
+
+  match bin_name {
+    "pnpm" => Some("bin/pnpm.mjs"),
+    "pnpx" => Some("bin/pnpx.mjs"),
+    _ => None,
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use std::str::FromStr;
+
+  use super::*;
+
+  #[test]
+  fn should_only_use_corepack_entrypoints_for_pnpm_12() -> anyhow::Result<()> {
+    let pnpm_11 = PackageManager::from_str("pnpm@11.0.0")?;
+    let pnpm_12 = PackageManager::from_str("pnpm@12.0.0")?;
+    let npm_12 = PackageManager::from_str("npm@12.0.0")?;
+
+    // 版本、包管理器或命令任一不匹配时，都不能改变旧执行链路。
+    assert_eq!(pnpm_corepack_entrypoint(&pnpm_11, "pnpm"), None);
+    assert_eq!(pnpm_corepack_entrypoint(&npm_12, "npm"), None);
+    assert_eq!(pnpm_corepack_entrypoint(&pnpm_12, "npx"), None);
+    assert_eq!(
+      pnpm_corepack_entrypoint(&pnpm_12, "pnpm"),
+      Some("bin/pnpm.mjs")
+    );
+    assert_eq!(
+      pnpm_corepack_entrypoint(&pnpm_12, "pnpx"),
+      Some("bin/pnpx.mjs")
+    );
     Ok(())
   }
 }

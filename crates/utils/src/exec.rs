@@ -6,14 +6,25 @@ use std::{
 use anyhow::bail;
 use tracing::trace;
 
+/// 使用当前进程环境执行命令，保持原有调用行为不变。
 pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> anyhow::Result<()> {
+  exec_cli_with_envs(args, paths, check_snm, &[])
+}
+
+/// 仅为子进程附加环境变量，避免通过修改全局环境影响同进程中的其他任务。
+pub fn exec_cli_with_envs(
+  args: &[String],
+  paths: &[String],
+  check_snm: bool,
+  env_overrides: &[(&str, &str)],
+) -> anyhow::Result<()> {
   trace!("exec_cli args: {:#?}", args);
 
-  let [bin_name, args @ ..] = args.as_slice() else {
+  let [bin_name, args @ ..] = args else {
     bail!("No binary name provided in arguments");
   };
 
-  let new_path = create_path_with_additional_dirs(paths.clone())?;
+  let new_path = create_path_with_additional_dirs(paths.to_owned())?;
 
   let cwd = std::env::current_dir()?;
 
@@ -35,6 +46,8 @@ pub fn exec_cli(args: &Vec<String>, paths: &Vec<String>, check_snm: bool) -> any
     let output = Command::new(program)
       .args(args)
       .env("PATH", new_path.clone())
+      // 覆盖值只作用于即将启动的子进程，父进程环境保持不变。
+      .envs(env_overrides.iter().copied())
       .stdout(Stdio::inherit())
       .stderr(Stdio::inherit())
       .stdin(Stdio::inherit())

@@ -19,6 +19,8 @@ dirs                = { workspace = true }
 lazy-regex          = { workspace = true }
 once_cell           = "1.19"
 package_json_parser = { workspace = true }
+# 仅用于识别需要走 Corepack 兼容入口的 pnpm 12+ 版本。
+semver              = { workspace = true }
 thiserror           = "1.0"
 tokio               = { workspace = true, features = ["full"] }
 tracing             = { workspace = true }
