@@ -1,10 +1,12 @@
-
-
-    
+# CI 与本地开发统一使用固定版本，避免工具或传递依赖升级导致构建结果随时间漂移。
+cargo_binstall_version := "1.22.0"
+dev_tools := "cargo-insta@1.48.0 taplo-cli@0.10.0 cargo-deny@0.18.3 watchexec-cli@2.2.1"
 
 setup:
-  curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-  cargo binstall cargo-insta taplo-cli cargo-deny watchexec-cli@2.2.1 -y --force
+  # 同时固定安装脚本和安装器版本，防止脚本内容或默认下载版本发生非预期变化。
+  curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/v{{cargo_binstall_version}}/install-from-binstall-release.sh | env BINSTALL_VERSION={{cargo_binstall_version}} bash
+  # 固定工具版本并锁定源码依赖；即使预编译产物缺失，回退编译也保持 Rust 1.85 兼容。
+  cargo binstall {{dev_tools}} --locked -y --force
   @echo '✅ Setup complete!'
 
 ready:
